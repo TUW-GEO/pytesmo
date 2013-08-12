@@ -1,0 +1,258 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>grid Package &mdash; pytesmo 0.1a1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.1a1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="pytesmo 0.1a1 documentation" href="index.html" />
+    <link rel="up" title="pytesmo Package" href="pytesmo.html" />
+    <link rel="next" title="io Package" href="pytesmo.io.html" />
+    <link rel="prev" title="pytesmo Package" href="pytesmo.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="pytesmo.io.html" title="io Package"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="pytesmo.html" title="pytesmo Package"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">pytesmo 0.1a1 documentation</a> &raquo;</li>
+          <li><a href="pytesmo.html" accesskey="U">pytesmo Package</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="grid-package">
+<h1>grid Package<a class="headerlink" href="#grid-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-pytesmo.grid.nearest_neighbor">
+<span id="nearest-neighbor-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">nearest_neighbor</span></tt> Module<a class="headerlink" href="#module-pytesmo.grid.nearest_neighbor" title="Permalink to this headline">¶</a></h2>
+<p>Created on Jul 30, 2013</p>
+<p>&#64;author: Christoph Paulik <a class="reference external" href="mailto:christoph&#46;paulik&#37;&#52;&#48;geo&#46;tuwien&#46;ac&#46;at">christoph<span>&#46;</span>paulik<span>&#64;</span>geo<span>&#46;</span>tuwien<span>&#46;</span>ac<span>&#46;</span>at</a></p>
+<dl class="class">
+<dt id="pytesmo.grid.nearest_neighbor.findGeoNN">
+<em class="property">class </em><tt class="descclassname">pytesmo.grid.nearest_neighbor.</tt><tt class="descname">findGeoNN</tt><big>(</big><em>lon</em>, <em>lat</em>, <em>R=6370997.0</em>, <em>grid=False</em>, <em>kd_tree_name='pykdtree'</em><big>)</big><a class="reference internal" href="_modules/pytesmo/grid/nearest_neighbor.html#findGeoNN"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytesmo.grid.nearest_neighbor.findGeoNN" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>class that takes lat,lon coordinates, transformes them to cartesian (X,Y,Z) 
+coordinates and provides a interface to scipy.spatial.kdTree 
+as well as pykdtree if installed</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>lon</strong> : numpy.array or list</p>
+<blockquote>
+<div><p>longitudes of the points in the grid</p>
+</div></blockquote>
+<p><strong>lat</strong> : numpy.array or list</p>
+<blockquote>
+<div><p>latitudes of the points in the grid</p>
+</div></blockquote>
+<p><strong>R</strong> : float, optional</p>
+<blockquote>
+<div><p>Radius of the earth to use for calculating 3D coordinates</p>
+</div></blockquote>
+<p><strong>grid</strong> : boolean, optional</p>
+<blockquote>
+<div><p>if True then lon and lat are assumed to be the coordinates of a grid
+and will be used in numpy.meshgrid to get coordinates for all
+grid points</p>
+</div></blockquote>
+<p><strong>kd_tree_name</strong> : string, optional</p>
+<blockquote class="last">
+<div><p>name of kdTree implementation to use, either 
+&#8216;pykdtree&#8217; to use pykdtree or
+&#8216;scipy&#8217; to use scipy.spatial.kdTree
+Fallback is always scipy if any other string is given 
+or if pykdtree is not installed. standard is pykdtree since it is faster</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="21%" />
+<col width="11%" />
+<col width="68%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>R</td>
+<td>float</td>
+<td>earth radius to use in computation of x,y,z coordinates</td>
+</tr>
+<tr class="row-even"><td>coords</td>
+<td>numpy.array</td>
+<td>3D array of cartesian x,y,z coordinates</td>
+</tr>
+<tr class="row-odd"><td>kd_tree_name: string</td>
+<td>&nbsp;</td>
+<td>name of kdTree implementation to use, either
+&#8216;pykdtree&#8217; to use pykdtree or
+&#8216;scipy&#8217; to use scipy.spatial.kdTree
+Fallback is always scipy if any other string is given
+or if pykdtree is not installed</td>
+</tr>
+<tr class="row-even"><td>kdtree: object</td>
+<td>&nbsp;</td>
+<td>kdTree object that is built only once and saved in this attribute</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<dl class="method">
+<dt id="pytesmo.grid.nearest_neighbor.findGeoNN.find_nearest_index">
+<tt class="descname">find_nearest_index</tt><big>(</big><em>lon</em>, <em>lat</em><big>)</big><a class="reference internal" href="_modules/pytesmo/grid/nearest_neighbor.html#findGeoNN.find_nearest_index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytesmo.grid.nearest_neighbor.findGeoNN.find_nearest_index" title="Permalink to this definition">¶</a></dt>
+<dd><p>finds nearest index, builds kdTree if it does not yet exist</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>lon</strong> : float, list or numpy.array</p>
+<blockquote>
+<div><p>longitude of point</p>
+</div></blockquote>
+<p><strong>lat</strong> : float, list or numpy.array</p>
+<blockquote>
+<div><p>latitude of point</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>d</strong> : float, numpy.array</p>
+<blockquote>
+<div><p>distances of query coordinates to the nearest grid point,
+distance is given in cartesian coordinates and is not the 
+great circle distance at the moment. This should be OK for 
+most applications that look for the nearest neighbor which 
+should not be hundreds of kilometers away.</p>
+</div></blockquote>
+<p><strong>ind</strong> : int, numpy.array</p>
+<blockquote>
+<div><p>indices of nearest neighbor</p>
+</div></blockquote>
+<p><strong>index_lon</strong> : numpy.array, optional</p>
+<blockquote>
+<div><p>if self.grid is True then return index into lon array of grid definition</p>
+</div></blockquote>
+<p><strong>index_lat</strong> : numpy.array, optional</p>
+<blockquote class="last">
+<div><p>if self.grid is True then return index into lat array of grid definition</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">grid Package</a><ul>
+<li><a class="reference internal" href="#module-pytesmo.grid.nearest_neighbor"><tt class="docutils literal"><span class="pre">nearest_neighbor</span></tt> Module</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="pytesmo.html"
+                        title="previous chapter">pytesmo Package</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="pytesmo.io.html"
+                        title="next chapter">io Package</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/pytesmo.grid.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="pytesmo.io.html" title="io Package"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="pytesmo.html" title="pytesmo Package"
+             >previous</a> |</li>
+        <li><a href="index.html">pytesmo 0.1a1 documentation</a> &raquo;</li>
+          <li><a href="pytesmo.html" >pytesmo Package</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Technical University of Vienna, Department of Geodesy and Geoinformation.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

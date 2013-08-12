@@ -1,0 +1,10 @@
+ISMN time series: OZNET Balranald-Bolton_Park 0.00 m - 0.08 m soil moisture measured with CS615 
+compared to
+ASCAT time series gpi:1821003 lat:-33.990 lon:146.381
+Results:
+Pearson's (R,p_value) (0.65811087356086551, 9.1620935528699124e-126)
+Spearman's (rho,p_value) (0.65874491635978671, 4.3707663858540222e-126)
+Kendalls's (tau,p_value) (0.48451720923430946, 4.6613967263363183e-117)
+RMSD 0.0283269899964
+Bias -0.000181669876467
+Nash Sutcliffe 0.314284186192

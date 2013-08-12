@@ -1,0 +1,198 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>&lt;no title&gt; &mdash; pytesmo 0.1a1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.1a1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="pytesmo 0.1a1 documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">pytesmo 0.1a1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <p>In[1]:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">pytesmo.io.sat.ascat</span> <span class="kn">as</span> <span class="nn">ascat</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+</pre></div>
+</div>
+<p>In[2]:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c">#I&#39;ve downloaded my ASCAT data to a folder on my D drive</span>
+<span class="n">path_to_ascat_ssm_data</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;D:</span><span class="se">\\</span><span class="s">&#39;</span><span class="p">,</span><span class="s">&#39;small_projects&#39;</span><span class="p">,</span><span class="s">&#39;cpa_2013_07_userformat_reader&#39;</span><span class="p">,</span>
+                                      <span class="s">&#39;data&#39;</span><span class="p">,</span><span class="s">&#39;ASCAT_SSM_25km_ts_WARP5.5_R0.1&#39;</span><span class="p">,</span><span class="s">&#39;data&#39;</span><span class="p">)</span>
+<span class="n">path_to_ascat_swi_data</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;D:</span><span class="se">\\</span><span class="s">&#39;</span><span class="p">,</span><span class="s">&#39;small_projects&#39;</span><span class="p">,</span><span class="s">&#39;cpa_2013_07_userformat_reader&#39;</span><span class="p">,</span>
+                                      <span class="s">&#39;data&#39;</span><span class="p">,</span><span class="s">&#39;ASCAT_SWI_25km_ts_WARP5.5_R0.1&#39;</span><span class="p">,</span><span class="s">&#39;data&#39;</span><span class="p">)</span>
+<span class="c">#path to grid definition file, default name TUW_W54_01_lonlat-ld-land.txt</span>
+<span class="n">path_to_grid_definition</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;D:</span><span class="se">\\</span><span class="s">&#39;</span><span class="p">,</span><span class="s">&#39;small_projects&#39;</span><span class="p">,</span><span class="s">&#39;cpa_2013_07_userformat_reader&#39;</span><span class="p">,</span>
+                                      <span class="s">&#39;data&#39;</span><span class="p">,</span><span class="s">&#39;auxiliary_data&#39;</span><span class="p">,</span><span class="s">&#39;grid_info&#39;</span><span class="p">)</span>
+<span class="c">#path to advisory flags from FTP Server</span>
+<span class="n">path_to_adv_flags</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;D:</span><span class="se">\\</span><span class="s">&#39;</span><span class="p">,</span><span class="s">&#39;small_projects&#39;</span><span class="p">,</span><span class="s">&#39;cpa_2013_07_userformat_reader&#39;</span><span class="p">,</span>
+                                      <span class="s">&#39;data&#39;</span><span class="p">,</span><span class="s">&#39;auxiliary_data&#39;</span><span class="p">,</span><span class="s">&#39;advisory_flags&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In[3]:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c">#init the ASCAT_SSM reader with the paths</span>
+<span class="n">ascat_SSM_reader</span> <span class="o">=</span> <span class="n">ascat</span><span class="o">.</span><span class="n">Ascat_SSM</span><span class="p">(</span><span class="n">path_to_ascat_ssm_data</span><span class="p">,</span><span class="n">path_to_grid_definition</span><span class="p">,</span>
+                                   <span class="n">advisory_flags_path</span> <span class="o">=</span> <span class="n">path_to_adv_flags</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In[4]:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">lon</span><span class="p">,</span> <span class="n">lat</span> <span class="o">=</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">48</span>
+
+<span class="c">#reads ssm data nearest to this lon,lat coordinates</span>
+<span class="n">ssm_data_raw</span> <span class="o">=</span> <span class="n">ascat_SSM_reader</span><span class="o">.</span><span class="n">read_ssm</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span><span class="n">lat</span><span class="p">)</span>
+
+<span class="c">#plot the data using pandas builtin plot functionality</span>
+<span class="n">ssm_data_raw</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img alt="_images/plot_ascat_data_3_0.png" src="_images/plot_ascat_data_3_0.png" />
+<p>In[5]:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c">#read the same data but mask observations where the SSF shows frozen</span>
+<span class="c">#and where frozen and snow probabilty are greater than 20%</span>
+<span class="n">ssm_data_masked</span> <span class="o">=</span> <span class="n">ascat_SSM_reader</span><span class="o">.</span><span class="n">read_ssm</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span><span class="n">lat</span><span class="p">,</span><span class="n">mask_ssf</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">mask_frozen_prob</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span><span class="n">mask_snow_prob</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+
+<span class="c">#plot the data using pandas builtin plot functionality</span>
+<span class="c">#this time using a subplot for each variable in the DataFrame</span>
+<span class="n">ssm_data_masked</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">subplots</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img alt="_images/plot_ascat_data_4_0.png" src="_images/plot_ascat_data_4_0.png" />
+<p>In[6]:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c">#plot raw and masked SSM data in one plot to compare them</span>
+
+<span class="n">ssm_data_raw</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s">&#39;SSM&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s">&#39;raw SSM data&#39;</span><span class="p">)</span>
+<span class="n">ssm_data_masked</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s">&#39;SSM&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s">&#39;masked SSM data&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img alt="_images/plot_ascat_data_5_0.png" src="_images/plot_ascat_data_5_0.png" />
+<p>In[7]:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">ascat_SWI_reader</span> <span class="o">=</span> <span class="n">ascat</span><span class="o">.</span><span class="n">Ascat_SWI</span><span class="p">(</span><span class="n">path_to_ascat_swi_data</span><span class="p">,</span><span class="n">path_to_grid_definition</span><span class="p">,</span>
+                                   <span class="n">advisory_flags_path</span> <span class="o">=</span> <span class="n">path_to_adv_flags</span><span class="p">)</span>
+
+
+<span class="c">#reads swi data nearest to this lon,lat coordinates</span>
+<span class="c">#without any additional keywords all unmasked T values and</span>
+<span class="c">#Quality flags will be read</span>
+<span class="n">swi_data_raw</span> <span class="o">=</span> <span class="n">ascat_SWI_reader</span><span class="o">.</span><span class="n">read_swi</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span><span class="n">lat</span><span class="p">)</span>
+
+<span class="c">#plot the data using pandas builtin plot functionality</span>
+<span class="n">swi_data_raw</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img alt="_images/plot_ascat_data_6_0.png" src="_images/plot_ascat_data_6_0.png" />
+<p>In[8]:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c">#read the same data but this time only SWI with a T value</span>
+<span class="c">#of 20 is returned</span>
+<span class="n">swi_data_T_20</span> <span class="o">=</span> <span class="n">ascat_SWI_reader</span><span class="o">.</span><span class="n">read_swi</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span><span class="n">lat</span><span class="p">,</span><span class="n">T</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+
+<span class="c">#plot the data using pandas builtin plot functionality</span>
+<span class="c">#this time using a subplot for each variable in the DataFrame</span>
+<span class="n">swi_data_T_20</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">subplots</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img alt="_images/plot_ascat_data_7_0.png" src="_images/plot_ascat_data_7_0.png" />
+<p>In[9]:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c">#you can also mask manually if you prefer</span>
+<span class="n">swi_data_T_20</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">swi_data_T_20</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">swi_data_T_20</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s">&#39;frozen_prob&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">]</span>
+
+<span class="n">swi_data_T_20</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">subplots</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img alt="_images/plot_ascat_data_8_0.png" src="_images/plot_ascat_data_8_0.png" />
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/plot_ascat_data.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">pytesmo 0.1a1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Technical University of Vienna, Department of Geodesy and Geoinformation.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

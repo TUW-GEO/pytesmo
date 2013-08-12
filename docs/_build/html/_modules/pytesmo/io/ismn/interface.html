@@ -1,0 +1,512 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pytesmo.io.ismn.interface &mdash; pytesmo 0.1a1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.1a1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="pytesmo 0.1a1 documentation" href="../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">pytesmo 0.1a1 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for pytesmo.io.ismn.interface</h1><div class="highlight"><pre>
+<span class="c">#Copyright (c) 2013,Vienna University of Technology, Department of Geodesy and Geoinformation</span>
+<span class="c">#All rights reserved.</span>
+
+<span class="c">#Redistribution and use in source and binary forms, with or without</span>
+<span class="c">#modification, are permitted provided that the following conditions are met:</span>
+<span class="c">#   * Redistributions of source code must retain the above copyright</span>
+<span class="c">#     notice, this list of conditions and the following disclaimer.</span>
+<span class="c">#    * Redistributions in binary form must reproduce the above copyright</span>
+<span class="c">#      notice, this list of conditions and the following disclaimer in the</span>
+<span class="c">#      documentation and/or other materials provided with the distribution.</span>
+<span class="c">#    * Neither the name of the Vienna University of Technology, Department of Geodesy and Geoinformation nor the</span>
+<span class="c">#      names of its contributors may be used to endorse or promote products</span>
+<span class="c">#      derived from this software without specific prior written permission.</span>
+
+<span class="c">#THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot; AND</span>
+<span class="c">#ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED</span>
+<span class="c">#WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE</span>
+<span class="c">#DISCLAIMED. IN NO EVENT SHALL VIENNA UNIVERSITY OF TECHNOLOGY, </span>
+<span class="c">#DEPARTMENT OF GEODESY AND GEOINFORMATION BE LIABLE FOR ANY</span>
+<span class="c">#DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES</span>
+<span class="c">#(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;</span>
+<span class="c">#LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND</span>
+<span class="c">#ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT</span>
+<span class="c">#(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS</span>
+<span class="c">#SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</span>
+
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Created on Aug 5, 2013</span>
+
+<span class="sd">@author: Christoph Paulik Christoph.Paulik@geo.tuwien.ac.at</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="kn">import</span> <span class="nn">metadata_collector</span>
+<span class="kn">import</span> <span class="nn">readers</span>
+<span class="kn">import</span> <span class="nn">pytesmo.grid.nearest_neighbor</span> <span class="kn">as</span> <span class="nn">NN</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<div class="viewcode-block" id="ISMNError"><a class="viewcode-back" href="../../../../pytesmo.io.ismn.html#pytesmo.io.ismn.interface.ISMNError">[docs]</a><span class="k">class</span> <span class="nc">ISMNError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">pass</span>
+</div>
+<div class="viewcode-block" id="ISMN_station"><a class="viewcode-back" href="../../../../pytesmo.io.ismn.html#pytesmo.io.ismn.interface.ISMN_station">[docs]</a><span class="k">class</span> <span class="nc">ISMN_station</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Knows everything about the station, like which variables are measured there in which depths</span>
+<span class="sd">    and in which files the data is stored. This is not completely true for the CEOP format</span>
+<span class="sd">    since depth_from and depth_to are not easily knowable without parsing the whole file.</span>
+<span class="sd">    For CEOP format depth_from and depth_to will only contain the phrase &#39;multiple&#39; instead</span>
+<span class="sd">    of the actual depth</span>
+<span class="sd">    </span>
+<span class="sd">    Attributes:</span>
+<span class="sd">    -----------</span>
+<span class="sd">    network : string</span>
+<span class="sd">        network the time series belongs to</span>
+<span class="sd">    station : string</span>
+<span class="sd">        station name the time series belongs to</span>
+<span class="sd">    latitude : float</span>
+<span class="sd">        latitude of station</span>
+<span class="sd">    longitude : float</span>
+<span class="sd">        longitude of station</span>
+<span class="sd">    elevation : float</span>
+<span class="sd">        elevation of station</span>
+<span class="sd">    variables : numpy.array</span>
+<span class="sd">        variables measured at this station</span>
+<span class="sd">    depth_from : numpy.array</span>
+<span class="sd">        shallower depth of layer the variable with same index was measured at</span>
+<span class="sd">    depth_to : numpy.array</span>
+<span class="sd">        deeper depth of layer the variable with same index was measured at</span>
+<span class="sd">    sensors : numpy.array</span>
+<span class="sd">        sensor names of variables</span>
+<span class="sd">    filenames : numpy.array</span>
+<span class="sd">        filenames in which the data is stored</span>
+<span class="sd">        </span>
+<span class="sd">    Methods:</span>
+<span class="sd">    --------</span>
+<span class="sd">    get_variables()</span>
+<span class="sd">        returns the variables measured at this station</span>
+<span class="sd">    get_depths(variable)</span>
+<span class="sd">        get the depths in which a variable was measured at this station</span>
+<span class="sd">    get_sensors(variable,depth_from,depth_to)</span>
+<span class="sd">        get the sensors for the given variable, depth combination</span>
+<span class="sd">    read_variable(variable,depth_from=None,depth_to=None,sensor=None)</span>
+<span class="sd">        read the data for the given parameter combination</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">metadata</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Goes through the passed metadata array and fills the attributes accordingly.</span>
+<span class="sd">        Parameters:</span>
+<span class="sd">        -----------</span>
+<span class="sd">        metadata : numpy.array</span>
+<span class="sd">            part or the structured array from metadata_collector.collect_from_folder()</span>
+<span class="sd">            which contains only fields for one station</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">network</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">station</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">latitude</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">longitude</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">elevation</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">variables</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">depth_from</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">depth_to</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sensors</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filenames</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="k">for</span> <span class="n">dataset</span> <span class="ow">in</span> <span class="n">metadata</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">network</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">network</span> <span class="o">=</span> <span class="n">dataset</span><span class="p">[</span><span class="s">&#39;network&#39;</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">network</span> <span class="o">!=</span> <span class="n">dataset</span><span class="p">[</span><span class="s">&#39;network&#39;</span><span class="p">]:</span>
+                <span class="k">raise</span> <span class="n">ISMNError</span><span class="p">(</span><span class="s">&quot;Networks in Station metadata are not the same&quot;</span><span class="p">)</span>   
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">station</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">station</span> <span class="o">=</span> <span class="n">dataset</span><span class="p">[</span><span class="s">&#39;station&#39;</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">station</span> <span class="o">!=</span> <span class="n">dataset</span><span class="p">[</span><span class="s">&#39;station&#39;</span><span class="p">]:</span>
+                <span class="k">raise</span> <span class="n">ISMNError</span><span class="p">(</span><span class="s">&quot;Station names in Station metadata are not the same&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">latitude</span> <span class="o">=</span> <span class="n">dataset</span><span class="p">[</span><span class="s">&#39;latitude&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">longitude</span> <span class="o">=</span> <span class="n">dataset</span><span class="p">[</span><span class="s">&#39;longitude&#39;</span><span class="p">]</span>   
+            <span class="bp">self</span><span class="o">.</span><span class="n">elevation</span> <span class="o">=</span> <span class="n">dataset</span><span class="p">[</span><span class="s">&#39;elevation&#39;</span><span class="p">]</span>   
+            <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dataset</span><span class="p">[</span><span class="s">&#39;variable&#39;</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">depth_from</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dataset</span><span class="p">[</span><span class="s">&#39;depth_from&#39;</span><span class="p">])</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">depth_to</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dataset</span><span class="p">[</span><span class="s">&#39;depth_to&#39;</span><span class="p">])</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">sensors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dataset</span><span class="p">[</span><span class="s">&#39;sensor&#39;</span><span class="p">])</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">filenames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dataset</span><span class="p">[</span><span class="s">&#39;filename&#39;</span><span class="p">])</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">variables</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">depth_from</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">depth_from</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">depth_to</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">depth_to</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sensors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sensors</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filenames</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filenames</span><span class="p">)</span>
+          
+<div class="viewcode-block" id="ISMN_station.get_variables"><a class="viewcode-back" href="../../../../pytesmo.io.ismn.html#pytesmo.io.ismn.interface.ISMN_station.get_variables">[docs]</a>    <span class="k">def</span> <span class="nf">get_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        get a list of variables measured at this station</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">        --------</span>
+<span class="sd">        variables : numpy.array</span>
+<span class="sd">            array of variables measured at this station</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="ISMN_station.get_depths"><a class="viewcode-back" href="../../../../pytesmo.io.ismn.html#pytesmo.io.ismn.interface.ISMN_station.get_depths">[docs]</a>    <span class="k">def</span> <span class="nf">get_depths</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">variable</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        get depths at which the given variable was measured at this station</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters:</span>
+<span class="sd">        -----------</span>
+<span class="sd">        variable : string</span>
+<span class="sd">            variable string best one of those returned by get_variables()</span>
+<span class="sd">            </span>
+<span class="sd">        Returns:</span>
+<span class="sd">        --------</span>
+<span class="sd">        depth_from : numpy.array</span>
+<span class="sd">        depth_to : numpy.array</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">variable</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">variable</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">depth_from</span><span class="p">[</span><span class="n">index</span><span class="p">],</span><span class="bp">self</span><span class="o">.</span><span class="n">depth_to</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span><span class="p">,</span><span class="bp">None</span>
+    </div>
+<div class="viewcode-block" id="ISMN_station.get_sensors"><a class="viewcode-back" href="../../../../pytesmo.io.ismn.html#pytesmo.io.ismn.interface.ISMN_station.get_sensors">[docs]</a>    <span class="k">def</span> <span class="nf">get_sensors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">variable</span><span class="p">,</span><span class="n">depth_from</span><span class="p">,</span><span class="n">depth_to</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        get the sensors at which the variable was measured at the </span>
+<span class="sd">        given depth</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters:</span>
+<span class="sd">        -----------</span>
+<span class="sd">        variable : string</span>
+<span class="sd">            variable abbreviation</span>
+<span class="sd">        depth_from : float</span>
+<span class="sd">            shallower depth of layer the variable was measured at</span>
+<span class="sd">        depth_to : float</span>
+<span class="sd">            deeper depth of layer the variable was measured at </span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">        --------</span>
+<span class="sd">        sensors : numpy.array</span>
+<span class="sd">            array of sensors found for the given combination of variable and depths</span>
+<span class="sd">        </span>
+<span class="sd">        Raises:</span>
+<span class="sd">        -------</span>
+<span class="sd">        ISMNError</span>
+<span class="sd">            if no sensor was found for the given combination of variable and depths</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ind_sensors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">variable</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">)</span> <span class="o">&amp;</span> 
+                                  <span class="p">(</span><span class="n">depth_from</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">depth_from</span><span class="p">)</span> <span class="o">&amp;</span> 
+                                  <span class="p">(</span><span class="n">depth_to</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">depth_to</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+                
+        <span class="k">if</span> <span class="n">ind_sensors</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ISMNError</span><span class="p">(</span><span class="s">&quot;variable-depth_from-depth_to combination does not exist.&quot;</span>
+                            <span class="s">&quot;Please check which depths do exist with get_depths_for_variable&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">sensors</span><span class="p">[</span><span class="n">ind_sensors</span><span class="p">]</span>
+        </div>
+<div class="viewcode-block" id="ISMN_station.read_variable"><a class="viewcode-back" href="../../../../pytesmo.io.ismn.html#pytesmo.io.ismn.interface.ISMN_station.read_variable">[docs]</a>    <span class="k">def</span> <span class="nf">read_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">variable</span><span class="p">,</span><span class="n">depth_from</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">depth_to</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">sensor</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>  
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        actually reads the given variable from the file. Parameters are </span>
+<span class="sd">        required until any ambiguity is resolved. If there is only one depth for </span>
+<span class="sd">        the given variable then only variable is required. If there are multiple</span>
+<span class="sd">        depths at least depth_from is required. If there are multiple depth_to </span>
+<span class="sd">        possibilities for one variable-depth_from combination also depth_to has to</span>
+<span class="sd">        be specified. If 2 sensors are measuring the same variable in the same</span>
+<span class="sd">        depth then also the sensor has to be specified.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters:</span>
+<span class="sd">        -----------</span>
+<span class="sd">        variable: string</span>
+<span class="sd">            variable to read</span>
+<span class="sd">        depth_from : float, optional</span>
+<span class="sd">            shallower depth of layer the variable was measured at</span>
+<span class="sd">        depth_to : float, optional</span>
+<span class="sd">            deeper depth of layer the variable was measured at</span>
+<span class="sd">        sensor : string, optional</span>
+<span class="sd">            name of the sensor</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">        --------</span>
+<span class="sd">        data : readers.ISMNTimeSeries</span>
+<span class="sd">            ISMNTimeSeries object containing the relevant metadata for the time series</span>
+<span class="sd">            as well as a .data pointing to a pandas.DataFrame</span>
+<span class="sd">            </span>
+<span class="sd">        Raises:</span>
+<span class="sd">        -------</span>
+<span class="sd">        ISMNError:</span>
+<span class="sd">            if not all ambiguity was resolved by the given input parameters or</span>
+<span class="sd">            if no data was found for the given input parameters</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">depth_from</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">depth_f</span><span class="p">,</span><span class="n">depth_t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_depths_for_variable</span><span class="p">(</span><span class="n">variable</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">depth_f</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">ISMNError</span><span class="p">(</span><span class="s">&quot;there are multiple depths for this variable&quot;</span>
+                                <span class="s">&quot;Please specify the one you want to read&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">depth_f</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">depth_from</span> <span class="o">=</span> <span class="n">depth_f</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>    
+            <span class="k">elif</span> <span class="n">depth_f</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">ISMNError</span><span class="p">(</span><span class="s">&quot;there are no depths for this variable&quot;</span>
+                                <span class="s">&quot;Something went wrong&quot;</span><span class="p">)</span>    
+        <span class="k">if</span> <span class="n">depth_to</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">depth_f</span><span class="p">,</span><span class="n">depth_t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_depths_for_variable</span><span class="p">(</span><span class="n">variable</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">depth_t</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">ISMNError</span><span class="p">(</span><span class="s">&quot;there are multiple depths with the same depth_from value&quot;</span>
+                                <span class="s">&quot;Please specify the depth_to value you want to read&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">depth_t</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">depth_to</span> <span class="o">=</span> <span class="n">depth_t</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>    
+            <span class="k">elif</span> <span class="n">depth_t</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">ISMNError</span><span class="p">(</span><span class="s">&quot;there are no depths for this variable&quot;</span>
+                                <span class="s">&quot;Something went wrong&quot;</span><span class="p">)</span>        
+
+        <span class="k">if</span> <span class="n">sensor</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">sensors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_sensors_for_variable_depth</span><span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="n">depth_from</span><span class="p">,</span> <span class="n">depth_to</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">sensors</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">ISMNError</span><span class="p">(</span><span class="s">&quot;there are multiple sensors for this combination of &quot;</span>
+                                <span class="s">&quot;variable, depth_to, depth_from. Please specify which one &quot;</span>
+                                <span class="s">&quot;you want to read&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">sensors</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">sensor</span> <span class="o">=</span> <span class="n">sensors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">sensors</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">ISMNError</span><span class="p">(</span><span class="s">&quot;there are no sensors for this variable, depth_from, depth_to &quot;</span>
+                                <span class="s">&quot;combination. Please make sure you specified valid depths&quot;</span><span class="p">)</span>
+        
+        <span class="n">index_filename</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">variable</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">)</span> <span class="o">&amp;</span> 
+                                  <span class="p">(</span><span class="n">depth_from</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">depth_from</span><span class="p">)</span> <span class="o">&amp;</span> 
+                                  <span class="p">(</span><span class="n">depth_to</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">depth_to</span><span class="p">)</span> <span class="o">&amp;</span>
+                                  <span class="p">(</span><span class="n">sensor</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">sensors</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+                                  
+        <span class="k">if</span> <span class="n">index_filename</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ISMNError</span><span class="p">(</span><span class="s">&quot;There is no data for this combination of variable, depth_from, &quot;</span>
+                            <span class="s">&quot;depth_to and sensor. Please check.&quot;</span><span class="p">)</span>                          
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">readers</span><span class="o">.</span><span class="n">read_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filenames</span><span class="p">[</span><span class="n">index_filename</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
+        
+        
+                            
+</div></div>
+<div class="viewcode-block" id="ISMN_Interface"><a class="viewcode-back" href="../../../../pytesmo.io.ismn.html#pytesmo.io.ismn.interface.ISMN_Interface">[docs]</a><span class="k">class</span> <span class="nc">ISMN_Interface</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    class provides interface to ISMN data downloaded from the ISMN website</span>
+<span class="sd">    </span>
+<span class="sd">    Attributes:</span>
+<span class="sd">    -----------</span>
+<span class="sd">    metadata : numpy.array</span>
+<span class="sd">        metadata array for all stations contained in the path given during initialization</span>
+<span class="sd">    kdTree : general.grid.nearest_neighbor.findGeoNN</span>
+<span class="sd">        kdTree for finding nearest insitu station for given lon lat</span>
+<span class="sd">    </span>
+<span class="sd">    Methods:</span>
+<span class="sd">    --------</span>
+<span class="sd">    find_nearest_station(lon,lat)</span>
+<span class="sd">        find nearest station for given coordinates</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">path_to_data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        collects metadata from all files in path_to_data and saves metadata information</span>
+<span class="sd">        in numpy file in folder path_to_data/python_metadata/</span>
+<span class="sd">        First initialization can take a minute or so if all ISMN</span>
+<span class="sd">        data is present in path_to_data</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters:</span>
+<span class="sd">        -----------</span>
+<span class="sd">        path_to_data : string</span>
+<span class="sd">            filepath to unzipped ISMN data containing the Network folders</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path_to_data</span><span class="p">,</span><span class="s">&#39;python_metadata&#39;</span><span class="p">,</span><span class="s">&#39;metadata.npy&#39;</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span> <span class="o">=</span> <span class="n">metadata_collector</span><span class="o">.</span><span class="n">collect_from_folder</span><span class="p">(</span><span class="n">path_to_data</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path_to_data</span><span class="p">,</span><span class="s">&#39;python_metadata&#39;</span><span class="p">))</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path_to_data</span><span class="p">,</span><span class="s">&#39;python_metadata&#39;</span><span class="p">,</span><span class="s">&#39;metadata.npy&#39;</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">)</span>
+            <span class="c">#np.savetxt(os.path.join(path_to_data,&#39;python_metadata&#39;,&#39;metadata.npy&#39;), self.metadata,delimiter=&#39;,&#39;)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path_to_data</span><span class="p">,</span><span class="s">&#39;python_metadata&#39;</span><span class="p">,</span><span class="s">&#39;metadata.npy&#39;</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">kdTree</span> <span class="o">=</span> <span class="bp">None</span>    
+            
+<div class="viewcode-block" id="ISMN_Interface.find_nearest_station"><a class="viewcode-back" href="../../../../pytesmo.io.ismn.html#pytesmo.io.ismn.interface.ISMN_Interface.find_nearest_station">[docs]</a>    <span class="k">def</span> <span class="nf">find_nearest_station</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">lon</span><span class="p">,</span><span class="n">lat</span><span class="p">,</span><span class="n">return_distance</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        finds the nearest station available in downloaded data</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters:</span>
+<span class="sd">        -----------</span>
+<span class="sd">        lon : float</span>
+<span class="sd">            Longitude of point</span>
+<span class="sd">        lat : float</span>
+<span class="sd">            Latitude of point</span>
+<span class="sd">        return_distance : boolean, optional</span>
+<span class="sd">            if True also distance is returned</span>
+<span class="sd">        Returns:   </span>
+<span class="sd">        --------</span>
+<span class="sd">        station : ISMN_station</span>
+<span class="sd">            ISMN_station object</span>
+<span class="sd">        distance : float, optional</span>
+<span class="sd">            distance to station in meters, measured in cartesian coordinates and not on </span>
+<span class="sd">            a great circle. Should be OK for small distances</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">kdTree</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">kdTree</span> <span class="o">=</span> <span class="n">NN</span><span class="o">.</span><span class="n">findGeoNN</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s">&#39;longitude&#39;</span><span class="p">],</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s">&#39;latitude&#39;</span><span class="p">])</span>
+            
+        <span class="n">d</span><span class="p">,</span><span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kdTree</span><span class="o">.</span><span class="n">find_nearest_index</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">)</span>
+        
+        <span class="n">all_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s">&#39;station&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s">&#39;station&#39;</span><span class="p">][</span><span class="n">index</span><span class="p">])</span>
+        
+        <span class="k">if</span> <span class="n">return_distance</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">ISMN_station</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="n">all_index</span><span class="p">]),</span><span class="n">d</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">ISMN_station</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="n">all_index</span><span class="p">])</span>
+        </div>
+<div class="viewcode-block" id="ISMN_Interface.get_all_data_for_variable_depth_min_max"><a class="viewcode-back" href="../../../../pytesmo.io.ismn.html#pytesmo.io.ismn.interface.ISMN_Interface.get_all_data_for_variable_depth_min_max">[docs]</a>    <span class="k">def</span> <span class="nf">get_all_data_for_variable_depth_min_max</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">variable</span><span class="p">,</span><span class="n">min_depth</span><span class="p">,</span><span class="n">max_depth</span><span class="p">):</span>    
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        function to go through all downloaded data and read the data</span>
+<span class="sd">        for the given variable if the depth it was measured at lies completely</span>
+<span class="sd">        between min_depth and max_depth</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters:</span>
+<span class="sd">        -----------</span>
+<span class="sd">        variable: string</span>
+<span class="sd">            variable to read</span>
+<span class="sd">        min_depth : float</span>
+<span class="sd">            depth_from of variable has to be &gt;= min_depth in order to be </span>
+<span class="sd">            included.</span>
+<span class="sd">        max_depth : float</span>
+<span class="sd">            depth_to of variable has to be &lt;= max_depth in order to be </span>
+<span class="sd">            included.  </span>
+<span class="sd">            </span>
+<span class="sd">        Yields:</span>
+<span class="sd">        -------</span>
+<span class="sd">        time_series : readers.ISMNTimeSeries  </span>
+<span class="sd">            ISMNTimeSeries object containing data and metadata</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">time_series</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">time_series</span><span class="p">[</span><span class="s">&#39;variable&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">variable</span><span class="p">:</span> <span class="k">continue</span>
+            
+            <span class="k">if</span> <span class="p">((</span><span class="n">time_series</span><span class="p">[</span><span class="s">&#39;depth_from&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">min_depth</span><span class="p">)</span> <span class="o">&amp;</span> 
+                <span class="p">(</span><span class="n">time_series</span><span class="p">[</span><span class="s">&#39;depth_to&#39;</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">max_depth</span><span class="p">)):</span>
+                
+                <span class="k">yield</span> <span class="n">readers</span><span class="o">.</span><span class="n">read_data</span><span class="p">(</span><span class="n">time_series</span><span class="p">[</span><span class="s">&#39;filename&#39;</span><span class="p">])</span>
+            
+        
+
+</div></div>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+
+<span class="c">#===============================================================================</span>
+<span class="c"># start = datetime.now()</span>
+<span class="c"># </span>
+<span class="n">rootdir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="o">+</span><span class="s">&#39;media&#39;</span><span class="p">,</span><span class="s">&#39;sf_D&#39;</span><span class="p">,</span><span class="s">&#39;small_projects&#39;</span><span class="p">,</span><span class="s">&#39;cpa_2013_07_ISMN_userformat_reader&#39;</span><span class="p">,</span><span class="s">&#39;ISMN_parser_test&#39;</span><span class="p">)</span>        
+<span class="n">MyISMN</span> <span class="o">=</span> <span class="n">ISMN_Interface</span><span class="p">(</span><span class="n">rootdir</span><span class="p">)</span>
+<span class="c"># </span>
+<span class="c"># print datetime.now() - start</span>
+<span class="c"># </span>
+<span class="c"># lat,lon = 13.548,2.68</span>
+<span class="c"># </span>
+<span class="c"># Station,distance = MyISMN.find_nearest_station(lon, lat)</span>
+<span class="c"># </span>
+<span class="c"># print Station.latitude,Station.longitude</span>
+<span class="c"># </span>
+<span class="c"># print distance</span>
+<span class="c"># print Station.get_depths(&#39;sm&#39;)</span>
+<span class="c"># print Station.get_sensors(&#39;sm&#39;, 0.05, 0.05)</span>
+<span class="c"># data = Station.read_variable(&#39;sm&#39;,0.05,0.05,&#39;CS616_1&#39;)</span>
+<span class="c">#===============================================================================</span>
+
+<span class="k">for</span> <span class="n">time_series</span> <span class="ow">in</span> <span class="n">MyISMN</span><span class="o">.</span><span class="n">get_all_data_for_variable_depth_min_max</span><span class="p">(</span><span class="s">&#39;sm&#39;</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
+   
+    <span class="k">print</span> <span class="p">(</span><span class="n">time_series</span><span class="o">.</span><span class="n">network</span><span class="p">,</span><span class="n">time_series</span><span class="o">.</span><span class="n">station</span><span class="p">,</span>
+           <span class="n">time_series</span><span class="o">.</span><span class="n">sensor</span><span class="p">)</span>
+   
+    <span class="n">time_series</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+
+
+        
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">pytesmo 0.1a1 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Technical University of Vienna, Department of Geodesy and Geoinformation.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

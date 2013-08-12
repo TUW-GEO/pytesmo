@@ -1,0 +1,755 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sat Package &mdash; pytesmo 0.1a1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.1a1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="pytesmo 0.1a1 documentation" href="index.html" />
+    <link rel="up" title="io Package" href="pytesmo.io.html" />
+    <link rel="next" title="timedate Package" href="pytesmo.timedate.html" />
+    <link rel="prev" title="test Package" href="pytesmo.io.ismn.test.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="pytesmo.timedate.html" title="timedate Package"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="pytesmo.io.ismn.test.html" title="test Package"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">pytesmo 0.1a1 documentation</a> &raquo;</li>
+          <li><a href="pytesmo.html" >pytesmo Package</a> &raquo;</li>
+          <li><a href="pytesmo.io.html" accesskey="U">io Package</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="sat-package">
+<h1>sat Package<a class="headerlink" href="#sat-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-pytesmo.io.sat.ascat">
+<span id="ascat-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">ascat</span></tt> Module<a class="headerlink" href="#module-pytesmo.io.sat.ascat" title="Permalink to this headline">¶</a></h2>
+<p>Created on Jul 29, 2013</p>
+<p>&#64;author: Christoph Paulik <a class="reference external" href="mailto:christoph&#46;paulik&#37;&#52;&#48;geo&#46;tuwien&#46;ac&#46;at">christoph<span>&#46;</span>paulik<span>&#64;</span>geo<span>&#46;</span>tuwien<span>&#46;</span>ac<span>&#46;</span>at</a></p>
+<dl class="exception">
+<dt id="pytesmo.io.sat.ascat.ASCATReaderException">
+<em class="property">exception </em><tt class="descclassname">pytesmo.io.sat.ascat.</tt><tt class="descname">ASCATReaderException</tt><a class="reference internal" href="_modules/pytesmo/io/sat/ascat.html#ASCATReaderException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytesmo.io.sat.ascat.ASCATReaderException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></tt></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pytesmo.io.sat.ascat.ASCATTimeSeries">
+<em class="property">class </em><tt class="descclassname">pytesmo.io.sat.ascat.</tt><tt class="descname">ASCATTimeSeries</tt><big>(</big><em>gpi</em>, <em>lon</em>, <em>lat</em>, <em>cell</em>, <em>data</em><big>)</big><a class="headerlink" href="#pytesmo.io.sat.ascat.ASCATTimeSeries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Container class for ASCAT time series</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>gpi</strong> : int</p>
+<blockquote>
+<div><p>grid point index</p>
+</div></blockquote>
+<p><strong>lon</strong> : float</p>
+<blockquote>
+<div><p>longitude of grid point</p>
+</div></blockquote>
+<p><strong>lat</strong> : float</p>
+<blockquote>
+<div><p>latitude of grid point</p>
+</div></blockquote>
+<p><strong>cell</strong> : int</p>
+<blockquote>
+<div><p>cell number of grid point</p>
+</div></blockquote>
+<p><strong>data: pandas.DataFrame</strong> :</p>
+<blockquote class="last">
+<div><p>DataFrame which contains the data</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="37%" />
+<col width="8%" />
+<col width="55%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>gpi</td>
+<td>int</td>
+<td>grid point index</td>
+</tr>
+<tr class="row-even"><td>longitude</td>
+<td>float</td>
+<td>longitude of grid point</td>
+</tr>
+<tr class="row-odd"><td>latitude</td>
+<td>float</td>
+<td>latitude of grid point</td>
+</tr>
+<tr class="row-even"><td>cell</td>
+<td>int</td>
+<td>cell number of grid point</td>
+</tr>
+<tr class="row-odd"><td>data: pandas.DataFrame</td>
+<td>&nbsp;</td>
+<td>DataFrame which contains the data</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<dl class="method">
+<dt id="pytesmo.io.sat.ascat.ASCATTimeSeries.plot">
+<tt class="descname">plot</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pytesmo.io.sat.ascat.ASCATTimeSeries.plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>wrapper for pandas.DataFrame.plot which adds title to plot
+and drops NaN values for plotting
+Returns
+&#8212;&#8212;-
+ax : axes</p>
+<blockquote>
+<div>matplotlib axes of the plot</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Raises :</th><td class="field-body"><p class="first"><strong>ASCATReaderException</strong> :</p>
+<blockquote class="last">
+<div><p>if data attribute is not a pandas.DataFrame</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pytesmo.io.sat.ascat.Ascat_SSM">
+<em class="property">class </em><tt class="descclassname">pytesmo.io.sat.ascat.</tt><tt class="descname">Ascat_SSM</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/pytesmo/io/sat/ascat.html#Ascat_SSM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytesmo.io.sat.ascat.Ascat_SSM" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#pytesmo.io.sat.ascat.Ascat_data" title="pytesmo.io.sat.ascat.Ascat_data"><tt class="xref py py-class docutils literal"><span class="pre">pytesmo.io.sat.ascat.Ascat_data</span></tt></a></p>
+<p>class for reading ASCAT SSM data. It extends Ascat_data and provides the 
+information necessary for reading SSM data</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>path</strong> : string</p>
+<blockquote>
+<div><p>path to data folder which contains the zip files from the FTP server</p>
+</div></blockquote>
+<p><strong>grid_path</strong> : string</p>
+<blockquote>
+<div><p>path to grid_info folder which contains txt files with information about
+grid point index,latitude, longitude and cell</p>
+</div></blockquote>
+<p><strong>grid_info_filename</strong> : string, optional</p>
+<blockquote>
+<div><p>name of the grid info txt file in grid_path</p>
+</div></blockquote>
+<p><strong>advisory_flags_path</strong> : string, optional</p>
+<blockquote>
+<div><p>path to advisory flags .dat files, if not provided they will not be used</p>
+</div></blockquote>
+<p><strong>topo_threshold</strong> : int, optional</p>
+<blockquote>
+<div><p>if topographic complexity of read grid point is above this 
+threshold a warning is output during reading</p>
+</div></blockquote>
+<p><strong>water_threshold</strong> : int, optional</p>
+<blockquote class="last">
+<div><p>if water fraction of read grid point is above this 
+threshold a warning is output during reading</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="19%" />
+<col width="11%" />
+<col width="70%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>gp_filename_template</td>
+<td>string</td>
+<td>defines how the gpi is put into the template string to make the filename</td>
+</tr>
+<tr class="row-even"><td>gp_filestruct</td>
+<td>numpy.dtype</td>
+<td>structure template of the SSM .dat file</td>
+</tr>
+<tr class="row-odd"><td>scale_factor</td>
+<td>dict</td>
+<td>factor by which to multiply the raw data to get the correct values
+for each field in the gp_filestruct</td>
+</tr>
+<tr class="row-even"><td>include_in_df</td>
+<td>list</td>
+<td>list of fields that should be returned to the user after reading</td>
+</tr>
+<tr class="row-odd"><td>nan_values</td>
+<td>dict</td>
+<td>nan value saved in the file which will be replaced by numpy.nan values
+during reading</td>
+</tr>
+<tr class="row-even"><td>datatype</td>
+<td>dict</td>
+<td>datatype of the fields that the return data should have</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="48%" />
+<col width="52%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>read_ssm(<a href="#id1"><span class="problematic" id="id2">*</span></a>args,**kwargs)</td>
+<td>read surface soil moisture</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="pytesmo.io.sat.ascat.Ascat_SSM.read_ssm">
+<tt class="descname">read_ssm</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/pytesmo/io/sat/ascat.html#Ascat_SSM.read_ssm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytesmo.io.sat.ascat.Ascat_SSM.read_ssm" title="Permalink to this definition">¶</a></dt>
+<dd><p>function to read SSM takes either 1 or 2 arguments.
+It can be called as read_ssm(gpi,**kwargs) or read_ssm(lon,lat,**kwargs)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>gpi</strong> : int</p>
+<blockquote>
+<div><p>grid point index</p>
+</div></blockquote>
+<p><strong>lon</strong> : float</p>
+<blockquote>
+<div><p>longitude of point</p>
+</div></blockquote>
+<p><strong>lat</strong> : float</p>
+<blockquote>
+<div><p>latitude of point</p>
+</div></blockquote>
+<p><strong>mask_ssf</strong> : boolean, optional</p>
+<blockquote>
+<div><p>default False, if True only SSF values of 1 will be allowed, all others are removed</p>
+</div></blockquote>
+<p><strong>mask_frozen_prob</strong> : int,optional</p>
+<blockquote>
+<div><p>if included in kwargs then all observations taken when 
+frozen probability &gt; mask_frozen_prob are removed from the result</p>
+</div></blockquote>
+<p><strong>mask_snow_prob</strong> : int,optional</p>
+<blockquote>
+<div><p>if included in kwargs then all observations taken when 
+snow probability &gt; mask_snow_prob are removed from the result</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>df</strong> : pandas.DataFrame</p>
+<blockquote class="last">
+<div><p>containing all fields in self.include_in_df plus frozen_prob and snow_prob if
+advisory_flags_path was set</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pytesmo.io.sat.ascat.Ascat_SWI">
+<em class="property">class </em><tt class="descclassname">pytesmo.io.sat.ascat.</tt><tt class="descname">Ascat_SWI</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/pytesmo/io/sat/ascat.html#Ascat_SWI"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytesmo.io.sat.ascat.Ascat_SWI" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#pytesmo.io.sat.ascat.Ascat_data" title="pytesmo.io.sat.ascat.Ascat_data"><tt class="xref py py-class docutils literal"><span class="pre">pytesmo.io.sat.ascat.Ascat_data</span></tt></a></p>
+<p>class for reading ASCAT SWI data. It extends Ascat_data and provides the 
+information necessary for reading SWI data</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>path</strong> : string</p>
+<blockquote>
+<div><p>path to data folder which contains the zip files from the FTP server</p>
+</div></blockquote>
+<p><strong>grid_path</strong> : string</p>
+<blockquote>
+<div><p>path to grid_info folder which contains txt files with information about
+grid point index,latitude, longitude and cell</p>
+</div></blockquote>
+<p><strong>grid_info_filename</strong> : string, optional</p>
+<blockquote>
+<div><p>name of the grid info txt file in grid_path</p>
+</div></blockquote>
+<p><strong>advisory_flags_path</strong> : string, optional</p>
+<blockquote>
+<div><p>path to advisory flags .dat files, if not provided they will not be used</p>
+</div></blockquote>
+<p><strong>topo_threshold</strong> : int, optional</p>
+<blockquote>
+<div><p>if topographic complexity of read grid point is above this 
+threshold a warning is output during reading</p>
+</div></blockquote>
+<p><strong>water_threshold</strong> : int, optional</p>
+<blockquote class="last">
+<div><p>if water fraction of read grid point is above this 
+threshold a warning is output during reading</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="19%" />
+<col width="11%" />
+<col width="70%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>gp_filename_template</td>
+<td>string</td>
+<td>defines how the gpi is put into the template string to make the filename</td>
+</tr>
+<tr class="row-even"><td>gp_filestruct</td>
+<td>numpy.dtype</td>
+<td>structure template of the SSM .dat file</td>
+</tr>
+<tr class="row-odd"><td>scale_factor</td>
+<td>dict</td>
+<td>factor by which to multiply the raw data to get the correct values
+for each field in the gp_filestruct</td>
+</tr>
+<tr class="row-even"><td>include_in_df</td>
+<td>list</td>
+<td>list of fields that should be returned to the user after reading</td>
+</tr>
+<tr class="row-odd"><td>nan_values</td>
+<td>dict</td>
+<td>nan value saved in the file which will be replaced by numpy.nan values
+during reading</td>
+</tr>
+<tr class="row-even"><td>datatype</td>
+<td>dict</td>
+<td>datatype of the fields that the return data should have</td>
+</tr>
+<tr class="row-odd"><td>T_SWI</td>
+<td>dict</td>
+<td>information about which numerical T-Value maps to which entry in the
+datastructure</td>
+</tr>
+<tr class="row-even"><td>T_QFLAG</td>
+<td>dict</td>
+<td>information about which numerical T-Value maps to which entry in the
+datastructure</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="53%" />
+<col width="47%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>read_swi(<a href="#id3"><span class="problematic" id="id4">*</span></a>args,**kwargs)</td>
+<td>read soil water index</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="pytesmo.io.sat.ascat.Ascat_SWI.read_swi">
+<tt class="descname">read_swi</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/pytesmo/io/sat/ascat.html#Ascat_SWI.read_swi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytesmo.io.sat.ascat.Ascat_SWI.read_swi" title="Permalink to this definition">¶</a></dt>
+<dd><p>function to read SWI takes either 1 or 2 arguments being.
+It can be called as read_swi(gpi,**kwargs) or read_swi(lon,lat,**kwargs)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>gpi</strong> : int</p>
+<blockquote>
+<div><p>grid point index</p>
+</div></blockquote>
+<p><strong>lon</strong> : float</p>
+<blockquote>
+<div><p>longitude of point</p>
+</div></blockquote>
+<p><strong>lat</strong> : float</p>
+<blockquote>
+<div><p>latitude of point</p>
+</div></blockquote>
+<p><strong>T</strong> : int, optional</p>
+<blockquote>
+<div><p>if set only the SWI and QFLAG of this T-Value will be returned</p>
+</div></blockquote>
+<p><strong>mask_qf</strong> : int, optional</p>
+<blockquote>
+<div><p>if set, SWI values with a QFLAG value lower than the mask_qf value will be masked. 
+This is done for each T value independently</p>
+</div></blockquote>
+<p><strong>mask_frozen_prob</strong> : int,optional</p>
+<blockquote>
+<div><p>if included in kwargs then all observations taken when 
+frozen probability &gt; mask_frozen_prob are removed from the result</p>
+</div></blockquote>
+<p><strong>mask_snow_prob</strong> : int,optional</p>
+<blockquote>
+<div><p>if included in kwargs then all observations taken when 
+snow probability &gt; mask_snow_prob are removed from the result</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>df</strong> : pandas.DataFrame</p>
+<blockquote class="last">
+<div><p>containing all fields in self.include_in_df plus frozen_prob and snow_prob if
+advisory_flags_path was set. If T was set then only SWI and QFLAG values for the
+selected T value are included plut frozen_prob and snow_prob if applicable</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pytesmo.io.sat.ascat.Ascat_data">
+<em class="property">class </em><tt class="descclassname">pytesmo.io.sat.ascat.</tt><tt class="descname">Ascat_data</tt><big>(</big><em>path</em>, <em>grid_path</em>, <em>grid_info_filename='TUW_W54_01_lonlat-ld-land.txt'</em>, <em>advisory_flags_path=None</em>, <em>topo_threshold=50</em>, <em>water_threshold=50</em><big>)</big><a class="reference internal" href="_modules/pytesmo/io/sat/ascat.html#Ascat_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytesmo.io.sat.ascat.Ascat_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Class that provides access to ASCAT data stored in userformat which is downloadable from
+the TU Wien FTP Server after registration at <a class="reference external" href="http://rs.geo.tuwien.ac.at">http://rs.geo.tuwien.ac.at</a> .</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>path</strong> : string</p>
+<blockquote>
+<div><p>path to data folder which contains the zip files from the FTP server</p>
+</div></blockquote>
+<p><strong>grid_path</strong> : string</p>
+<blockquote>
+<div><p>path to grid_info folder which contains txt files with information about
+grid point index,latitude, longitude and cell</p>
+</div></blockquote>
+<p><strong>grid_info_filename</strong> : string, optional</p>
+<blockquote>
+<div><p>name of the grid info txt file in grid_path</p>
+</div></blockquote>
+<p><strong>advisory_flags_path</strong> : string, optional</p>
+<blockquote>
+<div><p>path to advisory flags .dat files, if not provided they will not be used</p>
+</div></blockquote>
+<p><strong>topo_threshold</strong> : int, optional</p>
+<blockquote>
+<div><p>if topographic complexity of read grid point is above this 
+threshold a warning is output during reading</p>
+</div></blockquote>
+<p><strong>water_threshold</strong> : int, optional</p>
+<blockquote class="last">
+<div><p>if water fraction of read grid point is above this 
+threshold a warning is output during reading</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="19%" />
+<col width="17%" />
+<col width="64%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>path</td>
+<td>string</td>
+<td>path to data folder which contains the zip files from the FTP server</td>
+</tr>
+<tr class="row-even"><td>grid_path</td>
+<td>string</td>
+<td>path to grid_info folder which contains txt files with information about
+grid point index,latitude, longitude and cell</td>
+</tr>
+<tr class="row-odd"><td>grid_info_filename</td>
+<td>string</td>
+<td>name of the grid info txt file in grid_path</td>
+</tr>
+<tr class="row-even"><td>grid_info_np_filename</td>
+<td>string</td>
+<td>name of the numpy save file to the grid information</td>
+</tr>
+<tr class="row-odd"><td>topo_threshold</td>
+<td>int</td>
+<td>if topographic complexity of read grid point is above this
+threshold a warning is output during reading</td>
+</tr>
+<tr class="row-even"><td>water_threshold</td>
+<td>int</td>
+<td>if water fraction of read grid point is above this
+threshold a warning is output during reading</td>
+</tr>
+<tr class="row-odd"><td>grid_info_loaded</td>
+<td>boolean</td>
+<td>true if the grid information has already been loaded</td>
+</tr>
+<tr class="row-even"><td>kdTree</td>
+<td>NN.findGeoNN object</td>
+<td>kdTree wrapper object used for finding the nearest neighbor</td>
+</tr>
+<tr class="row-odd"><td>advisory_flags_path</td>
+<td>string</td>
+<td>path to advisory flags .dat files, if not provided they will not be used</td>
+</tr>
+<tr class="row-even"><td>include_advflags</td>
+<td>boolean</td>
+<td>True if advisory flags are available</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="30%" />
+<col width="70%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>unzip_cell(cell)</td>
+<td>unzips zipped grid point files into subdirectory</td>
+</tr>
+<tr class="row-even"><td>find_nearest_gpi(lon,lat)</td>
+<td>finds nearest grid point index given longitude and latitude</td>
+</tr>
+<tr class="row-odd"><td>read_advisory_flags(gpi)</td>
+<td>reads the advisory flags for a given grid point index</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="pytesmo.io.sat.ascat.Ascat_data.find_nearest_gpi">
+<tt class="descname">find_nearest_gpi</tt><big>(</big><em>lon</em>, <em>lat</em><big>)</big><a class="reference internal" href="_modules/pytesmo/io/sat/ascat.html#Ascat_data.find_nearest_gpi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytesmo.io.sat.ascat.Ascat_data.find_nearest_gpi" title="Permalink to this definition">¶</a></dt>
+<dd><p>finds nearest gpi, builds kdTree if it does not yet exist</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>lon</strong> : float</p>
+<blockquote>
+<div><p>longitude of point</p>
+</div></blockquote>
+<p><strong>lat</strong> : float</p>
+<blockquote>
+<div><p>latitude of point</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>gpi</strong> : long</p>
+<blockquote class="last">
+<div><p>grid point index</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pytesmo.io.sat.ascat.Ascat_data.gpi2lonlat">
+<tt class="descname">gpi2lonlat</tt><big>(</big><em>gpi</em><big>)</big><a class="headerlink" href="#pytesmo.io.sat.ascat.Ascat_data.gpi2lonlat" title="Permalink to this definition">¶</a></dt>
+<dd><p>gets lon lat coordinates for given gpi</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>gpi</strong> : int</p>
+<blockquote>
+<div><p>grid point index</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>longitude</strong> : float</p>
+<p><strong>latitude</strong> : float</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises :</th><td class="field-body"><p class="first"><strong>ASCATReaderException</strong> :</p>
+<blockquote class="last">
+<div><p>if gpi was not found</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pytesmo.io.sat.ascat.Ascat_data.read_advisory_flags">
+<tt class="descname">read_advisory_flags</tt><big>(</big><em>gpi</em><big>)</big><a class="reference internal" href="_modules/pytesmo/io/sat/ascat.html#Ascat_data.read_advisory_flags"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytesmo.io.sat.ascat.Ascat_data.read_advisory_flags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read the advisory flags located in the self.advisory_flags_path
+Advisory flags include frozen probability, snow cover probability
+topographic complexity and water fraction.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>gpi</strong> : long</p>
+<blockquote>
+<div><p>grid point index</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>df</strong> : pandas.DataFrame</p>
+<blockquote>
+<div><p>containing the columns frozen_prob and snow_prob. lenght 366 with one entry for
+every day of the year, including February 29th</p>
+</div></blockquote>
+<p><strong>topo</strong> : numpy.uint8</p>
+<blockquote>
+<div><p>topographic complexity ranging from 0-100</p>
+</div></blockquote>
+<p><strong>water</strong> : numpy.uint8</p>
+<blockquote class="last">
+<div><p>water fraction of pixel in percent</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pytesmo.io.sat.ascat.Ascat_data.unzip_cell">
+<tt class="descname">unzip_cell</tt><big>(</big><em>cell</em><big>)</big><a class="reference internal" href="_modules/pytesmo/io/sat/ascat.html#Ascat_data.unzip_cell"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytesmo.io.sat.ascat.Ascat_data.unzip_cell" title="Permalink to this definition">¶</a></dt>
+<dd><p>unzips the downloaded .zip cell file into the directory of os.path.join(self.path,cell)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>cell</strong> : int</p>
+<blockquote class="last">
+<div><p>cell number</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">sat Package</a><ul>
+<li><a class="reference internal" href="#module-pytesmo.io.sat.ascat"><tt class="docutils literal"><span class="pre">ascat</span></tt> Module</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="pytesmo.io.ismn.test.html"
+                        title="previous chapter">test Package</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="pytesmo.timedate.html"
+                        title="next chapter">timedate Package</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/pytesmo.io.sat.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="pytesmo.timedate.html" title="timedate Package"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="pytesmo.io.ismn.test.html" title="test Package"
+             >previous</a> |</li>
+        <li><a href="index.html">pytesmo 0.1a1 documentation</a> &raquo;</li>
+          <li><a href="pytesmo.html" >pytesmo Package</a> &raquo;</li>
+          <li><a href="pytesmo.io.html" >io Package</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Technical University of Vienna, Department of Geodesy and Geoinformation.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>
