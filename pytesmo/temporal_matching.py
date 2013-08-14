@@ -17,9 +17,9 @@ def df_match(reference, *args, **kwds):
 
     Parameters
     ----------
-    reference : pandas.DataFrame
+    reference : pandas.DataFrame or pandas.TimeSeries
         The index of this dataframe will be the reference.
-    *args : pandas.DataFrame
+    *args : pandas.DataFrame or pandas.TimeSeries
         The index of this dataframe(s) will be matched.
     window : float
         Fraction of days of the maximum pos./neg. distance allowed, i.e. the
@@ -44,6 +44,8 @@ def df_match(reference, *args, **kwds):
     ref_step = reference.index.values - reference.index.values[0]
 
     for arg in args:
+        
+        if type(arg) == pd.TimeSeries: arg=pd.DataFrame(arg) 
         comp_step = arg.index.values - reference.index.values[0]
         matched = sc_int.griddata(comp_step, np.arange(comp_step.size),
                                   ref_step, "nearest")
@@ -84,3 +86,38 @@ def df_match(reference, *args, **kwds):
 
     if len(temporal_matched_args) == 1: return temporal_matched_args[0]    
     else: return tuple(temporal_matched_args)
+
+
+def matching(reference,*args,**kwargs):
+    '''
+    Finds temporal match between the reference pandas.TimeSeries (index has to
+    be datetime) and n other pandas.TimeSeries (index has to be datetime).
+
+    Parameters
+    ----------
+    reference : pandas.TimeSeries
+        The index of this Series will be the reference.
+    *args : pandas.TimeSeries
+        The index of these Series(s) will be matched.
+    window : float
+        Fraction of days of the maximum pos./neg. distance allowed, i.e. the
+        value of window represents the half-winow size (e.g. window=0.5, will
+        search for matches between -12 and +12 hours) (default: None)
+
+    Returns
+    -------
+    temporal_match : pandas.DataFrame 
+        containing the index of the reference Series and a column for each of the 
+        other input Series
+    '''
+    matched_datasets = df_match(reference, *args,dropna=True,dropduplicates=True,**kwargs)
+    
+    if type(matched_datasets) != tuple: matched_datasets = (matched_datasets)
+    
+    matched_data = pd.DataFrame(reference)
+    
+    for match in matched_datasets:
+        match = match.drop(['distance','index'],axis=1)
+        matched_data = matched_data.join(match)
+        
+    return matched_data.dropna()
