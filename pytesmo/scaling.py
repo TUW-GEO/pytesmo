@@ -60,6 +60,45 @@ def add_scaled(df, method='linreg', label_in=None, label_scale=None):
     
     return df    
 
+def scale(df,method='linreg',reference_index=0):
+    """
+    takes pandas.DataFrame and scales all columns to the column specified
+    by reference_index with the chosen method
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        containing matched time series that should be scaled
+    method : string, optional
+        method definition, has to be a function in globals() that takes 2 numpy.array
+        as input and returns one numpy.array of same length
+    reference_index : int, optional
+        default 0, column index of reference dataset in dataframe
+    
+    Returns
+    -------
+    scaled data : pandas.DataFrame
+        all time series of the input DataFrame scaled to the one specified by
+        reference_index
+    """
+    dicton = globals()
+    try:
+        scaling_func = dicton[method]
+    except KeyError:
+        print 'scaling method not found'
+        return None    
+    
+    reference = df[df.columns.values[reference_index]]
+    df = df.drop([df.columns.values[reference_index]],axis=1)
+    #new_df = pd.DataFrame
+    for series in df:
+        df[series] = pd.Series(scaling_func(df[series].values, reference.values),index=df.index)
+    
+    df.insert(reference_index,reference.name,reference)
+    
+    return df
+
+
 def min_max(in_data, scale_to):
     """
     scales the input datasets so that they have the same minimum
