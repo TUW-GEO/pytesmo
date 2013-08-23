@@ -17,6 +17,11 @@ Features
 * calculate standard metrics like correlation coefficients, RMSD, bias, 
   as well as more complex ones like triple collocation or MSE as a decomposition of the RMSD see :mod:`pytesmo.metrics`
 
+Examples
+========
+
+See the :ref:`examples-page`
+
 
 Supported Datasets
 ==================
@@ -71,6 +76,12 @@ this issue should be fixed.
 Installation
 ============
 
+Download
+--------
+The package source code can be downloaded from http://rs.geo.tuwien.ac.at/validation_tool/pytesmo/pytesmo-0.1.zip
+
+It can also be installed using pip see `Windows and Linux`_
+
 Prerequisites
 --------------
 
@@ -113,6 +124,15 @@ or if you'd rather use pip then do::
 	
 	pip install pytesmo
 	
+
+Contribute
+==========
+
+If you want to contribute please contact http://rs.geo.tuwien.ac.at/our-team/christoph-paulik/ to see if the feature you want to work on 
+is not already implemented. 
+
+You can also just check out the code at https://github.com/TUW-GEO/pytesmo
+
 
 
 
