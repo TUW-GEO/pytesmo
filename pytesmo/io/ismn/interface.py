@@ -591,6 +591,40 @@ class ISMN_Interface(object):
         
                 if variable in station.variables:
                     yield station
+    
+    
+    def get_dataset_ids(self, variable, min_depth=0, max_depth=0.1):
+        """
+        returnes list of dataset_id's that can be used to read a 
+        dataset directly through the read_ts function
+        """
+        if max_depth < min_depth:
+            raise ValueError("max_depth can not be less than min_depth")
+        
+        ids = np.where((self.metadata['variable'] == variable) & 
+                       (self.metadata['depth_to'] <= max_depth) &
+                       (self.metadata['depth_from'] >= min_depth))[0]
+        
+        return ids
+        
+    
+    def read_ts(self,idx):
+        """
+        read a time series directly by the id
+        
+        Parameters
+        ----------
+        idx : int
+            id into self.metadata, best one of those returned 
+            from get_dataset_ids()
+        
+        Returns
+        -------
+        timeseries : pandas.DataFrame
+            of the read data
+        """    
+        ts = readers.read_data(self.metadata['filename'][idx])
+        return ts.data 
         
         
     def find_nearest_station(self,lon,lat,return_distance=False):
