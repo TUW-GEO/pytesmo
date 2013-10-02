@@ -1,6 +1,14 @@
 io Package
 ==========
 
+:mod:`io` Package
+-----------------
+
+.. automodule:: pytesmo.io
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 Subpackages
 -----------
 

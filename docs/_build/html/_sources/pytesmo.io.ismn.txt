@@ -1,6 +1,14 @@
 ismn Package
 ============
 
+:mod:`ismn` Package
+-------------------
+
+.. automodule:: pytesmo.io.ismn
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`interface` Module
 -----------------------
 

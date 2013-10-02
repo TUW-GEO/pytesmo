@@ -1,10 +1,26 @@
 pytesmo Package
 ===============
 
+:mod:`pytesmo` Package
+----------------------
+
+.. automodule:: pytesmo.__init__
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`anomaly` Module
 ---------------------
 
 .. automodule:: pytesmo.anomaly
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`df_metrics` Module
+------------------------
+
+.. automodule:: pytesmo.df_metrics
     :members:
     :undoc-members:
     :show-inheritance:

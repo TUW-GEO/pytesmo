@@ -1,6 +1,14 @@
 sat Package
 ===========
 
+:mod:`sat` Package
+------------------
+
+.. automodule:: pytesmo.io.sat
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`ascat` Module
 -------------------
 
@@ -8,4 +16,11 @@ sat Package
     :members:
     :undoc-members:
     :show-inheritance:
+
+Subpackages
+-----------
+
+.. toctree::
+
+    pytesmo.io.sat.test
 

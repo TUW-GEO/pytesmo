@@ -1,5 +1,4 @@
 
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -10,7 +9,7 @@
     
     <title>pytesmo Package &mdash; pytesmo 0.1a1 documentation</title>
     
-    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
@@ -59,6 +58,9 @@
             
   <div class="section" id="pytesmo-package">
 <h1>pytesmo Package<a class="headerlink" href="#pytesmo-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="id1">
+<h2><tt class="xref py py-mod docutils literal"><span class="pre">pytesmo</span></tt> Package<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-pytesmo.__init__"></span></div>
 <div class="section" id="module-pytesmo.anomaly">
 <span id="anomaly-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">anomaly</span></tt> Module<a class="headerlink" href="#module-pytesmo.anomaly" title="Permalink to this headline">¶</a></h2>
 <p>Created on June 20, 2013</p>
@@ -181,6 +183,299 @@ the timeseries end-window/2 with NaN values</p>
 </tr>
 </tbody>
 </table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-pytesmo.df_metrics">
+<span id="df-metrics-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">df_metrics</span></tt> Module<a class="headerlink" href="#module-pytesmo.df_metrics" title="Permalink to this headline">¶</a></h2>
+<p>Module contains wrappers for methods in pytesmo.metrics which can be given pandas.DataFrames
+instead of single numpy.arrays . If the DataFrame has more columns than the function has input parameters
+the function will be applied pairwise</p>
+<p>Created on Aug 14, 2013</p>
+<p>&#64;author: Christoph Paulik <a class="reference external" href="mailto:Christoph&#46;Paulik&#37;&#52;&#48;geo&#46;tuwien&#46;ac&#46;at">Christoph<span>&#46;</span>Paulik<span>&#64;</span>geo<span>&#46;</span>tuwien<span>&#46;</span>ac<span>&#46;</span>at</a></p>
+<dl class="exception">
+<dt id="pytesmo.df_metrics.DataFrameDimensionError">
+<em class="property">exception </em><tt class="descclassname">pytesmo.df_metrics.</tt><tt class="descname">DataFrameDimensionError</tt><a class="reference internal" href="_modules/pytesmo/df_metrics.html#DataFrameDimensionError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytesmo.df_metrics.DataFrameDimensionError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></tt></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pytesmo.df_metrics.RSS">
+<tt class="descclassname">pytesmo.df_metrics.</tt><tt class="descname">RSS</tt><big>(</big><em>df</em><big>)</big><a class="reference internal" href="_modules/pytesmo/df_metrics.html#RSS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytesmo.df_metrics.RSS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Redidual sum of squares</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>result</strong> : namedtuple</p>
+<blockquote class="last">
+<div><p>with column names of df for which the calculation was done as name of the
+element separated by &#8216;_and_&#8217;</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#pytesmo.metrics.RSS" title="pytesmo.metrics.RSS"><tt class="xref py py-obj docutils literal"><span class="pre">pytesmo.metrics.RSS</span></tt></a></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pytesmo.df_metrics.bias">
+<tt class="descclassname">pytesmo.df_metrics.</tt><tt class="descname">bias</tt><big>(</big><em>df</em><big>)</big><a class="reference internal" href="_modules/pytesmo/df_metrics.html#bias"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytesmo.df_metrics.bias" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bias</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>bias</strong> : pandas.Dataframe</p>
+<blockquote>
+<div><p>of shape (len(df.columns),len(df.columns))</p>
+</div></blockquote>
+<p><strong>See Also</strong> :</p>
+<p><strong>&#8212;&#8212;&#8211;</strong> :</p>
+<p class="last"><strong>pytesmo.metrics.bias</strong> :</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pytesmo.df_metrics.kendalltau">
+<tt class="descclassname">pytesmo.df_metrics.</tt><tt class="descname">kendalltau</tt><big>(</big><em>df</em><big>)</big><a class="reference internal" href="_modules/pytesmo/df_metrics.html#kendalltau"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytesmo.df_metrics.kendalltau" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper for scipy.stats.kendalltau</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>result</strong> : namedtuple</p>
+<blockquote class="last">
+<div><p>with column names of df for which the calculation was done as name of the
+element separated by &#8216;_and_&#8217;</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#pytesmo.metrics.kendalltau" title="pytesmo.metrics.kendalltau"><tt class="xref py py-obj docutils literal"><span class="pre">pytesmo.metrics.kendalltau</span></tt></a>, <tt class="xref py py-obj docutils literal"><span class="pre">scipy.stats.kendalltau</span></tt></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pytesmo.df_metrics.mse">
+<tt class="descclassname">pytesmo.df_metrics.</tt><tt class="descname">mse</tt><big>(</big><em>df</em><big>)</big><a class="reference internal" href="_modules/pytesmo/df_metrics.html#mse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytesmo.df_metrics.mse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mean square error (MSE) as a decomposition of the RMSD into individual error components</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>result</strong> : namedtuple</p>
+<blockquote class="last">
+<div><p>with column names of df for which the calculation was done as name of the
+element separated by &#8216;_and_&#8217;</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#pytesmo.metrics.mse" title="pytesmo.metrics.mse"><tt class="xref py py-obj docutils literal"><span class="pre">pytesmo.metrics.mse</span></tt></a></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pytesmo.df_metrics.nash_sutcliffe">
+<tt class="descclassname">pytesmo.df_metrics.</tt><tt class="descname">nash_sutcliffe</tt><big>(</big><em>df</em><big>)</big><a class="reference internal" href="_modules/pytesmo/df_metrics.html#nash_sutcliffe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytesmo.df_metrics.nash_sutcliffe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Nash Sutcliffe model efficiency coefficient</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>result</strong> : namedtuple</p>
+<blockquote class="last">
+<div><p>with column names of df for which the calculation was done as name of the
+element separated by &#8216;_and_&#8217;</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#pytesmo.metrics.nash_sutcliffe" title="pytesmo.metrics.nash_sutcliffe"><tt class="xref py py-obj docutils literal"><span class="pre">pytesmo.metrics.nash_sutcliffe</span></tt></a></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pytesmo.df_metrics.nrmsd">
+<tt class="descclassname">pytesmo.df_metrics.</tt><tt class="descname">nrmsd</tt><big>(</big><em>df</em><big>)</big><a class="reference internal" href="_modules/pytesmo/df_metrics.html#nrmsd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytesmo.df_metrics.nrmsd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Normalized root-mean-square deviation</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>result</strong> : namedtuple</p>
+<blockquote class="last">
+<div><p>with column names of df for which the calculation was done as name of the
+element separated by &#8216;_and_&#8217;</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#pytesmo.metrics.nrmsd" title="pytesmo.metrics.nrmsd"><tt class="xref py py-obj docutils literal"><span class="pre">pytesmo.metrics.nrmsd</span></tt></a></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pytesmo.df_metrics.pairwise_apply">
+<tt class="descclassname">pytesmo.df_metrics.</tt><tt class="descname">pairwise_apply</tt><big>(</big><em>df</em>, <em>method</em>, <em>comm=False</em><big>)</big><a class="reference internal" href="_modules/pytesmo/df_metrics.html#pairwise_apply"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytesmo.df_metrics.pairwise_apply" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute given method pairwise for all columns, excluding NA/null values</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>df</strong> : pandas.DataFrame</p>
+<blockquote>
+<div><p>input data, method will be applied to each column pair</p>
+</div></blockquote>
+<p><strong>method</strong> : function</p>
+<blockquote>
+<div><p>method to apply to each column pair. has to take 2 input arguments of
+type numpy.array and return one value or tuple of values</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first last"><strong>results</strong> : pandas.DataFrame</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pytesmo.df_metrics.pearsonr">
+<tt class="descclassname">pytesmo.df_metrics.</tt><tt class="descname">pearsonr</tt><big>(</big><em>df</em><big>)</big><a class="reference internal" href="_modules/pytesmo/df_metrics.html#pearsonr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytesmo.df_metrics.pearsonr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper for scipy.stats.pearsonr</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>result</strong> : namedtuple</p>
+<blockquote class="last">
+<div><p>with column names of df for which the calculation was done as name of the
+element separated by &#8216;_and_&#8217;</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#pytesmo.metrics.pearsonr" title="pytesmo.metrics.pearsonr"><tt class="xref py py-obj docutils literal"><span class="pre">pytesmo.metrics.pearsonr</span></tt></a>, <tt class="xref py py-obj docutils literal"><span class="pre">scipy.stats.pearsonr</span></tt></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pytesmo.df_metrics.rmsd">
+<tt class="descclassname">pytesmo.df_metrics.</tt><tt class="descname">rmsd</tt><big>(</big><em>df</em><big>)</big><a class="reference internal" href="_modules/pytesmo/df_metrics.html#rmsd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytesmo.df_metrics.rmsd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Root-mean-square deviation</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>result</strong> : namedtuple</p>
+<blockquote class="last">
+<div><p>with column names of df for which the calculation was done as name of the
+element separated by &#8216;_and_&#8217;</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#pytesmo.metrics.rmsd" title="pytesmo.metrics.rmsd"><tt class="xref py py-obj docutils literal"><span class="pre">pytesmo.metrics.rmsd</span></tt></a></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pytesmo.df_metrics.spearmanr">
+<tt class="descclassname">pytesmo.df_metrics.</tt><tt class="descname">spearmanr</tt><big>(</big><em>df</em><big>)</big><a class="reference internal" href="_modules/pytesmo/df_metrics.html#spearmanr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytesmo.df_metrics.spearmanr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper for scipy.stats.spearmanr</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>result</strong> : namedtuple</p>
+<blockquote class="last">
+<div><p>with column names of df for which the calculation was done as name of the
+element separated by &#8216;_and_&#8217;</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">pytesmo.metrics.spearmenr</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">scipy.stats.spearmenr</span></tt></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pytesmo.df_metrics.tcol_error">
+<tt class="descclassname">pytesmo.df_metrics.</tt><tt class="descname">tcol_error</tt><big>(</big><em>df</em><big>)</big><a class="reference internal" href="_modules/pytesmo/df_metrics.html#tcol_error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytesmo.df_metrics.tcol_error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Triple collocation error estimate
+In this case df has to have exactly 3 columns, since triple wise
+application of a function is not yet implemented and would probably return a 
+complicated structure</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>result</strong> : namedtuple</p>
+<blockquote class="last">
+<div><p>with column names of df</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#pytesmo.metrics.tcol_error" title="pytesmo.metrics.tcol_error"><tt class="xref py py-obj docutils literal"><span class="pre">pytesmo.metrics.tcol_error</span></tt></a></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pytesmo.df_metrics.ubrmsd">
+<tt class="descclassname">pytesmo.df_metrics.</tt><tt class="descname">ubrmsd</tt><big>(</big><em>df</em><big>)</big><a class="reference internal" href="_modules/pytesmo/df_metrics.html#ubrmsd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytesmo.df_metrics.ubrmsd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unbiased root-mean-square deviation</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>result</strong> : namedtuple</p>
+<blockquote class="last">
+<div><p>with column names of df for which the calculation was done as name of the
+element separated by &#8216;_and_&#8217;</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#pytesmo.metrics.ubrmsd" title="pytesmo.metrics.ubrmsd"><tt class="xref py py-obj docutils literal"><span class="pre">pytesmo.metrics.ubrmsd</span></tt></a></p>
+</div>
 </dd></dl>
 
 </div>
@@ -603,6 +898,41 @@ and maximum afterwards</p>
 </table>
 </dd></dl>
 
+<dl class="function">
+<dt id="pytesmo.scaling.scale">
+<tt class="descclassname">pytesmo.scaling.</tt><tt class="descname">scale</tt><big>(</big><em>df</em>, <em>method='linreg'</em>, <em>reference_index=0</em><big>)</big><a class="headerlink" href="#pytesmo.scaling.scale" title="Permalink to this definition">¶</a></dt>
+<dd><p>takes pandas.DataFrame and scales all columns to the column specified
+by reference_index with the chosen method</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>df</strong> : pandas.DataFrame</p>
+<blockquote>
+<div><p>containing matched time series that should be scaled</p>
+</div></blockquote>
+<p><strong>method</strong> : string, optional</p>
+<blockquote>
+<div><p>method definition, has to be a function in globals() that takes 2 numpy.array
+as input and returns one numpy.array of same length</p>
+</div></blockquote>
+<p><strong>reference_index</strong> : int, optional</p>
+<blockquote>
+<div><p>default 0, column index of reference dataset in dataframe</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>scaled data</strong> : pandas.DataFrame</p>
+<blockquote class="last">
+<div><p>all time series of the input DataFrame scaled to the one specified by
+reference_index</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </div>
 <div class="section" id="module-pytesmo.temporal_matching">
 <span id="temporal-matching-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">temporal_matching</span></tt> Module<a class="headerlink" href="#module-pytesmo.temporal_matching" title="Permalink to this headline">¶</a></h2>
@@ -618,11 +948,11 @@ be datetime) and n other pandas.DataFrame (index has to be datetime).</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>reference</strong> : pandas.DataFrame</p>
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>reference</strong> : pandas.DataFrame or pandas.TimeSeries</p>
 <blockquote>
 <div><p>The index of this dataframe will be the reference.</p>
 </div></blockquote>
-<p><strong>*args</strong> : pandas.DataFrame</p>
+<p><strong>*args</strong> : pandas.DataFrame or pandas.TimeSeries</p>
 <blockquote>
 <div><p>The index of this dataframe(s) will be matched.</p>
 </div></blockquote>
@@ -652,18 +982,58 @@ search for matches between -12 and +12 hours) (default: None)</p>
 </table>
 </dd></dl>
 
+<dl class="function">
+<dt id="pytesmo.temporal_matching.matching">
+<tt class="descclassname">pytesmo.temporal_matching.</tt><tt class="descname">matching</tt><big>(</big><em>reference</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pytesmo.temporal_matching.matching" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds temporal match between the reference pandas.TimeSeries (index has to
+be datetime) and n other pandas.TimeSeries (index has to be datetime).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>reference</strong> : pandas.TimeSeries</p>
+<blockquote>
+<div><p>The index of this Series will be the reference.</p>
+</div></blockquote>
+<p><strong>*args</strong> : pandas.TimeSeries</p>
+<blockquote>
+<div><p>The index of these Series(s) will be matched.</p>
+</div></blockquote>
+<p><strong>window</strong> : float</p>
+<blockquote>
+<div><p>Fraction of days of the maximum pos./neg. distance allowed, i.e. the
+value of window represents the half-winow size (e.g. window=0.5, will
+search for matches between -12 and +12 hours) (default: None)</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>temporal_match</strong> : pandas.DataFrame</p>
+<blockquote class="last">
+<div><p>containing the index of the reference Series and a column for each of the 
+other input Series</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </div>
 <div class="section" id="subpackages">
 <h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="pytesmo.grid.html">grid Package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pytesmo.grid.html#id1"><tt class="docutils literal"><span class="pre">grid</span></tt> Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pytesmo.grid.html#module-pytesmo.grid.grids"><tt class="docutils literal"><span class="pre">grids</span></tt> Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pytesmo.grid.html#module-pytesmo.grid.nearest_neighbor"><tt class="docutils literal"><span class="pre">nearest_neighbor</span></tt> Module</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="pytesmo.io.html">io Package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pytesmo.io.html#id1"><tt class="docutils literal"><span class="pre">io</span></tt> Package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pytesmo.io.html#subpackages">Subpackages</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="pytesmo.io.ismn.html">ismn Package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="pytesmo.io.ismn.html#id1"><tt class="docutils literal"><span class="pre">ismn</span></tt> Package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="pytesmo.io.ismn.html#module-pytesmo.io.ismn.interface"><tt class="docutils literal"><span class="pre">interface</span></tt> Module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="pytesmo.io.ismn.html#module-pytesmo.io.ismn.metadata_collector"><tt class="docutils literal"><span class="pre">metadata_collector</span></tt> Module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="pytesmo.io.ismn.html#module-pytesmo.io.ismn.readers"><tt class="docutils literal"><span class="pre">readers</span></tt> Module</a></li>
@@ -677,7 +1047,15 @@ search for matches between -12 and +12 hours) (default: None)</p>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="pytesmo.io.sat.html">sat Package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="pytesmo.io.sat.html#id1"><tt class="docutils literal"><span class="pre">sat</span></tt> Package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="pytesmo.io.sat.html#module-pytesmo.io.sat.ascat"><tt class="docutils literal"><span class="pre">ascat</span></tt> Module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pytesmo.io.sat.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="pytesmo.io.sat.test.html">test Package</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="pytesmo.io.sat.test.html#module-pytesmo.io.sat.test.test_ascat"><tt class="docutils literal"><span class="pre">test_ascat</span></tt> Module</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -685,6 +1063,7 @@ search for matches between -12 and +12 hours) (default: None)</p>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="pytesmo.timedate.html">timedate Package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pytesmo.timedate.html#id1"><tt class="docutils literal"><span class="pre">timedate</span></tt> Package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pytesmo.timedate.html#module-pytesmo.timedate.julian"><tt class="docutils literal"><span class="pre">julian</span></tt> Module</a></li>
 </ul>
 </li>
@@ -702,7 +1081,9 @@ search for matches between -12 and +12 hours) (default: None)</p>
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">pytesmo Package</a><ul>
+<li><a class="reference internal" href="#id1"><tt class="docutils literal"><span class="pre">pytesmo</span></tt> Package</a></li>
 <li><a class="reference internal" href="#module-pytesmo.anomaly"><tt class="docutils literal"><span class="pre">anomaly</span></tt> Module</a></li>
+<li><a class="reference internal" href="#module-pytesmo.df_metrics"><tt class="docutils literal"><span class="pre">df_metrics</span></tt> Module</a></li>
 <li><a class="reference internal" href="#module-pytesmo.metrics"><tt class="docutils literal"><span class="pre">metrics</span></tt> Module</a></li>
 <li><a class="reference internal" href="#module-pytesmo.scaling"><tt class="docutils literal"><span class="pre">scaling</span></tt> Module</a></li>
 <li><a class="reference internal" href="#module-pytesmo.temporal_matching"><tt class="docutils literal"><span class="pre">temporal_matching</span></tt> Module</a></li>
@@ -763,7 +1144,7 @@ search for matches between -12 and +12 hours) (default: None)</p>
       </ul>
     </div>
     <div class="footer">
-        &copy; Copyright 2013, Technical University of Vienna, Department of Geodesy and Geoinformation.
+        &copy; Copyright 2013, Vienna University of Technology, Department of Geodesy and Geoinformation.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
     </div>
   </body>

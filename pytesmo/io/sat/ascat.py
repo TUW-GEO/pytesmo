@@ -62,7 +62,7 @@ class ASCATTimeSeries(object):
         latitude of grid point
     cell : int
         cell number of grid point
-    data: pandas.DataFrame
+    data : pandas.DataFrame
         DataFrame which contains the data
     
     Attributes
@@ -75,7 +75,7 @@ class ASCATTimeSeries(object):
         latitude of grid point
     cell : int
         cell number of grid point
-    data: pandas.DataFrame
+    data : pandas.DataFrame
         DataFrame which contains the data  
     """
     def __init__(self,gpi,lon,lat,cell,data):

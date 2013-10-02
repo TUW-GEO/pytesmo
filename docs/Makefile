@@ -3,6 +3,7 @@
 
 # You can set these variables from the command line.
 SPHINXOPTS    =
+SPINXAPIDOC   = sphinx-apidoc
 SPHINXBUILD   = sphinx-build
 PAPER         =
 BUILDDIR      = _build
@@ -14,7 +15,8 @@ ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 # the i18n builder cannot share the environment and doctrees with the others
 I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 
-.PHONY: help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest gettext
+
+.PHONY: help updateapi clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest gettext
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
@@ -38,6 +40,13 @@ help:
 	@echo "  linkcheck  to check all external links for integrity"
 	@echo "  doctest    to run all doctests embedded in the documentation (if enabled)"
 
+	
+updateapi:
+     
+	$(SPINXAPIDOC) -o ../docs ../pytesmo -H pytesmo -f
+	@echo
+	@echo "API information updated"
+	
 clean:
 	-rm -rf $(BUILDDIR)/*
 
