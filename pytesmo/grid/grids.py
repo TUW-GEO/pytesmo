@@ -71,6 +71,56 @@ class BasicGrid(object):
         define the grid only be the meridian coordinates(self.londim) and
         the coordinates of the circles of latitude(self.latdim).
         The shape has to be given as (latdim, londim) 
+    
+    Attributes
+    ----------
+    arrlon : numpy.array
+        array of all longitudes of the grid
+    arrlat : numpy.array
+        array of all latitudes of the grid
+    n_gpi : int
+        number of gpis in the grid
+    gpidirect : boolean
+        if true the gpi number is equal to the index
+        of arrlon and arrlat
+    gpis : numpy.array
+        gpi number for elements in arrlon and arrlat
+        gpi[i] is located at arrlon[i],arrlat[i]
+    subset : numpy.array
+        if given then this contains the indices of a subset of
+        the grid. This can be used if only a part of a grid is 
+        interesting for a application. e.g. land points, or only
+        a specific country
+    allpoints : boolean
+        if False only a subset of the grid is active
+    activearrlon : numpy.array
+        array of longitudes that are active, is defined by
+        arrlon[subset] if a subset is given otherwise equal to 
+        arrlon
+    activearrlat : numpy.array
+        array of latitudes that are active, is defined by
+        arrlat[subset] if a subset is given otherwise equal to 
+        arrlat
+    activegpis : numpy.array
+        array of gpis that are active, is defined by
+        gpis[subset] if a subset is given otherwise equal to 
+        gpis        
+    issplit : boolean
+        if True then the array was split in n parts with 
+        the self.split function
+    kdTree : object
+        :mod:`pytesmo.grid.nearest_neighbor.findGeoNN` object for
+        nearest neighbor search
+    shape : tuple, optional
+        if given during initialization then this is
+        the shape the grid can be reshaped to
+        this only makes sense for regular lat,lon grids
+    latdim : numpy.array, optional
+        if shape is given this attribute has contains
+        all latitudes that make up the regular lat,lon grid
+    londim : numpy.array, optional
+        if shape is given this attribute has contains
+        all longitudes that make up the regular lat,lon grid    
     """
     
     def __init__(self, lon, lat, gpis=None, subset=None, setup_kdTree=True,
@@ -138,8 +188,8 @@ class BasicGrid(object):
         the argument n and will only iterate through this part of 
         the grid
         
-        Paramters
-        ---------
+        Parameters
+        ----------
         n : int
             number of parts the grid should be split into
         """
@@ -156,6 +206,25 @@ class BasicGrid(object):
         self.issplit = False
     
     def grid_points(self,*args):
+        """
+        Yields all grid points in order
+        
+        Parameters
+        ----------
+        n : int, optional
+            if the grid is split in n parts using the split function
+            then this iterator will only iterate of the nth part of the
+            grid
+        
+        Returns
+        -------
+        gpi : long
+            grid point index
+        lon : float
+            longitude of gpi
+        lat : float
+            longitude of gpi
+        """
          
         if not self.issplit and len(args) == 0:
             return self._normal_grid_points()
@@ -264,8 +333,8 @@ class BasicGrid(object):
         
         Parameters
         ----------
-        other : grid object
-            grid object to which to calculate the lut to
+        other : :mod:`pytesmo.grid.grids.BasicGrid` or :mod:`pytesmo.grid.grids.CellGrid` object
+            to which to calculate the lut to
         max_dist : float, optional
             maximum allowed distance in meters
         into_subset : boolean, optional
@@ -332,7 +401,15 @@ class CellGrid(BasicGrid):
     subset : numpy.array, optional
         if the active part of the array is only a subset of
         all the points then the subset array which is a index
-        into lon, lat and cells can be given here    
+        into lon, lat and cells can be given here   
+        
+    Attributes     
+    ----------
+    arrcell : numpy.array
+        array of cell number with same shape as arrlon,arrlat
+    activearrcell : numpy.array
+        array of longitudes that are active, 
+        is defined by arrlon[subset] if a subset is given otherwise equal to arrlon
     """
     
     def __init__(self, lon, lat, cells, gpis = None, subset=None):
@@ -371,11 +448,30 @@ class CellGrid(BasicGrid):
             return self.activearrcell[index]
     
     def get_cells(self):
+        """
+        function to get all cell numbers of the grid
         
+        Returns
+        -------
+        cells : numpy.array
+            unique cell numbers
+        """
         return np.unique(self.activearrcell)
     
     def grid_points_for_cell(self, cell):
+        """
+        get all grid points for a given cell number
         
+        Parameters
+        ----------
+        cell : int
+            cell number
+        
+        Returns
+        -------
+        gpis : numpy.array
+            gpis belonging to cell
+        """
         cell_index = np.where(cell == self.activearrcell)
         
         return (self.activegpis[cell_index], 
@@ -383,7 +479,16 @@ class CellGrid(BasicGrid):
                 self.activearrlat[cell_index])
     
     def split(self, n):
+        """function splits the grid into n parts
+        this changes not function but grid_points() which takes
+        the argument n and will only iterate through this part of 
+        the grid
         
+        Parameters
+        ----------
+        n : int
+            number of parts the grid should be split into
+        """
         self.issplit = True
         #sort by cell number to split correctly
         sorted_index = np.argsort(self.activearrcell)
