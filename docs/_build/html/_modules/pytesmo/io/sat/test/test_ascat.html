@@ -1,0 +1,212 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pytesmo.io.sat.test.test_ascat &mdash; pytesmo 0.1a1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../../',
+        VERSION:     '0.1a1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../../_static/doctools.js"></script>
+    <link rel="top" title="pytesmo 0.1a1 documentation" href="../../../../../index.html" />
+    <link rel="up" title="Module code" href="../../../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../../index.html">pytesmo 0.1a1 documentation</a> &raquo;</li>
+          <li><a href="../../../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for pytesmo.io.sat.test.test_ascat</h1><div class="highlight"><pre>
+<span class="c">#Copyright (c) 2013,Vienna University of Technology, Department of Geodesy and Geoinformation</span>
+<span class="c">#All rights reserved.</span>
+
+<span class="c">#Redistribution and use in source and binary forms, with or without</span>
+<span class="c">#modification, are permitted provided that the following conditions are met:</span>
+<span class="c">#   * Redistributions of source code must retain the above copyright</span>
+<span class="c">#     notice, this list of conditions and the following disclaimer.</span>
+<span class="c">#    * Redistributions in binary form must reproduce the above copyright</span>
+<span class="c">#      notice, this list of conditions and the following disclaimer in the</span>
+<span class="c">#      documentation and/or other materials provided with the distribution.</span>
+<span class="c">#    * Neither the name of the Vienna University of Technology, Department of Geodesy and Geoinformation nor the</span>
+<span class="c">#      names of its contributors may be used to endorse or promote products</span>
+<span class="c">#      derived from this software without specific prior written permission.</span>
+
+<span class="c">#THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot; AND</span>
+<span class="c">#ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED</span>
+<span class="c">#WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE</span>
+<span class="c">#DISCLAIMED. IN NO EVENT SHALL VIENNA UNIVERSITY OF TECHNOLOGY, </span>
+<span class="c">#DEPARTMENT OF GEODESY AND GEOINFORMATION BE LIABLE FOR ANY</span>
+<span class="c">#DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES</span>
+<span class="c">#(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;</span>
+<span class="c">#LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND</span>
+<span class="c">#ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT</span>
+<span class="c">#(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS</span>
+<span class="c">#SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</span>
+
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Created on Sep 30, 2013</span>
+
+<span class="sd">@author: Christoph Paulik Christoph.Paulik@geo.tuwien.ac.at</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">unittest</span>
+<span class="kn">from</span> <span class="nn">pytesmo.io.sat</span> <span class="kn">import</span> <span class="n">ascat</span>
+
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+
+<div class="viewcode-block" id="TestAscat"><a class="viewcode-back" href="../../../../../pytesmo.io.sat.test.html#pytesmo.io.sat.test.test_ascat.TestAscat">[docs]</a><span class="k">class</span> <span class="nc">TestAscat</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+    
+<div class="viewcode-block" id="TestAscat.setUp"><a class="viewcode-back" href="../../../../../pytesmo.io.sat.test.html#pytesmo.io.sat.test.test_ascat.TestAscat.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ascat_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">__file__</span><span class="p">),</span><span class="s">&#39;test_data&#39;</span><span class="p">,</span><span class="s">&#39;ascat&#39;</span><span class="p">,</span><span class="s">&#39;SSM&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ascat_adv_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">__file__</span><span class="p">),</span><span class="s">&#39;test_data&#39;</span><span class="p">,</span><span class="s">&#39;ascat&#39;</span><span class="p">,</span><span class="s">&#39;advisory_flags&#39;</span><span class="p">)</span>
+        <span class="c">#grid info file is too big to include on github</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ascat_grid_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;/media&#39;</span><span class="p">,</span><span class="s">&#39;sf_D&#39;</span><span class="p">,</span><span class="s">&#39;pytesmo&#39;</span><span class="p">,</span><span class="s">&#39;test_data&#39;</span><span class="p">,</span><span class="s">&#39;ascat&#39;</span><span class="p">,</span><span class="s">&#39;grid&#39;</span><span class="p">)</span>
+        <span class="c">#init the ASCAT_SSM reader with the paths</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ascat_SSM_reader</span> <span class="o">=</span> <span class="n">ascat</span><span class="o">.</span><span class="n">Ascat_SSM</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ascat_folder</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">ascat_grid_folder</span><span class="p">,</span>
+                                   <span class="n">advisory_flags_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ascat_adv_folder</span><span class="p">)</span>
+        
+        </div>
+<div class="viewcode-block" id="TestAscat.test_read_ssm"><a class="viewcode-back" href="../../../../../pytesmo.io.sat.test.html#pytesmo.io.sat.test.test_ascat.TestAscat.test_read_ssm">[docs]</a>    <span class="k">def</span> <span class="nf">test_read_ssm</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        
+        <span class="n">gpi</span> <span class="o">=</span> <span class="mi">2329253</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ascat_SSM_reader</span><span class="o">.</span><span class="n">read_ssm</span><span class="p">(</span><span class="n">gpi</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">gpi</span> <span class="o">==</span> <span class="n">gpi</span>
+        <span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">longitude</span> <span class="o">==</span> <span class="mf">14.28413</span>
+        <span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">latitude</span> <span class="o">==</span> <span class="mf">45.698074</span>
+        <span class="k">assert</span> <span class="nb">list</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span> <span class="o">==</span> <span class="p">[</span><span class="s">&#39;ERR&#39;</span><span class="p">,</span><span class="s">&#39;SSF&#39;</span><span class="p">,</span><span class="s">&#39;SSM&#39;</span><span class="p">,</span><span class="s">&#39;frozen_prob&#39;</span><span class="p">,</span><span class="s">&#39;snow_prob&#39;</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2058</span>
+        <span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="mi">15</span><span class="p">]</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">datetime</span><span class="p">(</span><span class="mi">2007</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">15</span><span class="p">,</span><span class="mi">19</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="mi">15</span><span class="p">][</span><span class="s">&#39;ERR&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">7</span>
+        <span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="mi">15</span><span class="p">][</span><span class="s">&#39;SSF&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span>
+        <span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="mi">15</span><span class="p">][</span><span class="s">&#39;SSM&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">53</span>
+        <span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="mi">15</span><span class="p">][</span><span class="s">&#39;frozen_prob&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">29</span>
+        <span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="mi">15</span><span class="p">][</span><span class="s">&#39;snow_prob&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span>
+        </div>
+<div class="viewcode-block" id="TestAscat.test_neighbor_search"><a class="viewcode-back" href="../../../../../pytesmo.io.sat.test.html#pytesmo.io.sat.test.test_ascat.TestAscat.test_neighbor_search">[docs]</a>    <span class="k">def</span> <span class="nf">test_neighbor_search</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">ascat_SSM_reader</span><span class="o">.</span><span class="n">_load_grid_info</span><span class="p">()</span>
+        <span class="n">gpi</span><span class="p">,</span> <span class="n">distance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ascat_SSM_reader</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">find_nearest_gpi</span><span class="p">(</span><span class="mf">3.25</span><span class="p">,</span> <span class="mf">46.13</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">gpi</span> <span class="o">==</span> <span class="mi">2346869</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_approx_equal</span><span class="p">(</span><span class="n">distance</span><span class="p">,</span> <span class="mf">2267.42</span><span class="p">,</span> <span class="n">significant</span> <span class="o">=</span> <span class="mi">2</span><span class="p">)</span>    
+            
+            </div></div>
+<div class="viewcode-block" id="TestAscatNetCDF"><a class="viewcode-back" href="../../../../../pytesmo.io.sat.test.html#pytesmo.io.sat.test.test_ascat.TestAscatNetCDF">[docs]</a><span class="k">class</span> <span class="nc">TestAscatNetCDF</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+    
+<div class="viewcode-block" id="TestAscatNetCDF.setUp"><a class="viewcode-back" href="../../../../../pytesmo.io.sat.test.html#pytesmo.io.sat.test.test_ascat.TestAscatNetCDF.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ascat_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;/media&#39;</span><span class="p">,</span><span class="s">&#39;sf_R&#39;</span><span class="p">,</span><span class="s">&#39;Datapool_processed&#39;</span><span class="p">,</span><span class="s">&#39;WARP&#39;</span><span class="p">,</span><span class="s">&#39;WARP5.5&#39;</span><span class="p">,</span>
+                                         <span class="s">&#39;ASCAT_WARP5.5_R1.2&#39;</span><span class="p">,</span><span class="s">&#39;080_ssm&#39;</span><span class="p">,</span><span class="s">&#39;netcdf&#39;</span><span class="p">)</span>
+        <span class="c">#grid info file is too big to include on github</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ascat_grid_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;/media&#39;</span><span class="p">,</span><span class="s">&#39;sf_R&#39;</span><span class="p">,</span><span class="s">&#39;Datapool_processed&#39;</span><span class="p">,</span><span class="s">&#39;WARP&#39;</span><span class="p">,</span><span class="s">&#39;ancillary&#39;</span><span class="p">,</span><span class="s">&#39;warp5_grid&#39;</span><span class="p">)</span>
+        <span class="c">#init the ASCAT_SSM reader with the paths</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ascat_SSM_reader</span> <span class="o">=</span> <span class="n">ascat</span><span class="o">.</span><span class="n">AscatH25_SSM</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ascat_folder</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">ascat_grid_folder</span><span class="p">)</span>
+        </div>
+<div class="viewcode-block" id="TestAscatNetCDF.test_read_ssm"><a class="viewcode-back" href="../../../../../pytesmo.io.sat.test.html#pytesmo.io.sat.test.test_ascat.TestAscatNetCDF.test_read_ssm">[docs]</a>    <span class="k">def</span> <span class="nf">test_read_ssm</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        
+        <span class="n">gpi</span> <span class="o">=</span> <span class="mi">2329253</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ascat_SSM_reader</span><span class="o">.</span><span class="n">read_ssm</span><span class="p">(</span><span class="n">gpi</span><span class="p">,</span><span class="n">absolute_values</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">gpi</span> <span class="o">==</span> <span class="n">gpi</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_approx_equal</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">longitude</span><span class="p">,</span> <span class="mf">14.28413</span><span class="p">,</span> <span class="n">significant</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_approx_equal</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">latitude</span><span class="p">,</span> <span class="mf">45.698074</span><span class="p">,</span> <span class="n">significant</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">list</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span> <span class="o">==</span> <span class="p">[</span><span class="s">&#39;sm&#39;</span><span class="p">,</span><span class="s">&#39;sm_noise&#39;</span><span class="p">,</span><span class="s">&#39;ssf&#39;</span><span class="p">,</span>
+                                             <span class="s">&#39;sm_por_gldas&#39;</span><span class="p">,</span><span class="s">&#39;sm_noise_por_gldas&#39;</span><span class="p">,</span>
+                                             <span class="s">&#39;sm_por_hwsd&#39;</span><span class="p">,</span><span class="s">&#39;sm_noise_por_hwsd&#39;</span><span class="p">,</span>
+                                             <span class="s">&#39;frozen_prob&#39;</span><span class="p">,</span><span class="s">&#39;snow_prob&#39;</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2292</span>
+        <span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="mi">15</span><span class="p">]</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">datetime</span><span class="p">(</span><span class="mi">2007</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">15</span><span class="p">,</span><span class="mi">19</span><span class="p">,</span><span class="mi">34</span><span class="p">,</span><span class="mi">42</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="mi">15</span><span class="p">][</span><span class="s">&#39;sm&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">52</span>
+        <span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="mi">15</span><span class="p">][</span><span class="s">&#39;ssf&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span>
+        <span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="mi">15</span><span class="p">][</span><span class="s">&#39;sm_noise&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">7</span>
+        <span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="mi">15</span><span class="p">][</span><span class="s">&#39;frozen_prob&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">29</span>
+        <span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="mi">15</span><span class="p">][</span><span class="s">&#39;snow_prob&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span>
+        </div>
+<div class="viewcode-block" id="TestAscatNetCDF.test_neighbor_search"><a class="viewcode-back" href="../../../../../pytesmo.io.sat.test.html#pytesmo.io.sat.test.test_ascat.TestAscatNetCDF.test_neighbor_search">[docs]</a>    <span class="k">def</span> <span class="nf">test_neighbor_search</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">ascat_SSM_reader</span><span class="o">.</span><span class="n">_load_grid_info</span><span class="p">()</span>
+        <span class="n">gpi</span><span class="p">,</span> <span class="n">distance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ascat_SSM_reader</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">find_nearest_gpi</span><span class="p">(</span><span class="mf">3.25</span><span class="p">,</span> <span class="mf">46.13</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">gpi</span> <span class="o">==</span> <span class="mi">2346869</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_approx_equal</span><span class="p">(</span><span class="n">distance</span><span class="p">,</span> <span class="mf">2267.42</span><span class="p">,</span> <span class="n">significant</span> <span class="o">=</span> <span class="mi">2</span><span class="p">)</span>                
+        </div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../../index.html">pytesmo 0.1a1 documentation</a> &raquo;</li>
+          <li><a href="../../../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Vienna University of Technology, Department of Geodesy and Geoinformation.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>
