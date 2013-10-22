@@ -1,8 +1,8 @@
-#Copyright (c) 2013,Vienna University of Technology, Department of Geodesy and Geoinformation
-#All rights reserved.
+# Copyright (c) 2013,Vienna University of Technology, Department of Geodesy and Geoinformation
+# All rights reserved.
 
-#Redistribution and use in source and binary forms, with or without
-#modification, are permitted provided that the following conditions are met:
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
 #   * Redistributions of source code must retain the above copyright
 #     notice, this list of conditions and the following disclaimer.
 #    * Redistributions in binary form must reproduce the above copyright
@@ -12,17 +12,17 @@
 #      names of its contributors may be used to endorse or promote products
 #      derived from this software without specific prior written permission.
 
-#THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-#ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-#WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-#DISCLAIMED. IN NO EVENT SHALL VIENNA UNIVERSITY OF TECHNOLOGY, 
-#DEPARTMENT OF GEODESY AND GEOINFORMATION BE LIABLE FOR ANY
-#DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-#(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-#LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-#ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-#(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-#SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL VIENNA UNIVERSITY OF TECHNOLOGY, 
+# DEPARTMENT OF GEODESY AND GEOINFORMATION BE LIABLE FOR ANY
+# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 '''
 Created on Aug 26, 2013
@@ -124,7 +124,7 @@ class BasicGrid(object):
     """
     
     def __init__(self, lon, lat, gpis=None, subset=None, setup_kdTree=True,
-                 shape = None):
+                 shape=None):
         """
         init method, prepares lon and lat arrays for _transform_lonlats if 
         necessary
@@ -150,8 +150,8 @@ class BasicGrid(object):
         
             
             self.shape = shape
-            self.latdim = np.reshape(self.arrlat,self.shape)[:,0]
-            self.londim = np.reshape(self.arrlon,self.shape)[0,:]
+            self.latdim = np.reshape(self.arrlat, self.shape)[:, 0]
+            self.londim = np.reshape(self.arrlon, self.shape)[0, :]
             
         
         if gpis is None:
@@ -163,7 +163,7 @@ class BasicGrid(object):
             self.gpis = gpis  
             self.gpidirect = False
         
-        self.subset=subset
+        self.subset = subset
         
         if subset is not None:
             self.activearrlon = self.arrlon[subset]
@@ -205,7 +205,7 @@ class BasicGrid(object):
         """
         self.issplit = False
     
-    def grid_points(self,*args):
+    def grid_points(self, *args):
         """
         Yields all grid points in order
         
@@ -233,6 +233,37 @@ class BasicGrid(object):
         
         raise GridIterationError("this function only takes an argument if the grid is split, "
                                  "and takes no argument if the grid is not split")
+    
+    def get_grid_points(self, *args):
+        """
+        Returns all active grid points
+        
+        Parameters
+        ----------
+        n : int, optional
+            if the grid is split in n parts using the split function
+            then this function will only return the nth part of the
+            grid
+            
+        Returns
+        -------
+        gpis : numpy.array
+        arrlon : numpy.array
+        arrlat :numpy.array
+        """
+        
+        if not self.issplit and len(args) == 0:
+            return (self.activegpis,
+                    self.activearrlon,
+                    self.activearrlat)
+            
+        elif self.issplit and len(args) == 1:
+            n = args[0]
+            return (self.subgpis[n],
+                    self.subarrlons[n],
+                    self.subarrlats[n])
+        
+        
          
     def _normal_grid_points(self):
         """
@@ -248,7 +279,7 @@ class BasicGrid(object):
             longitude of gpi
         """
         
-        for i,(lon,lat) in enumerate(izip(self.activearrlon,self.activearrlat)):
+        for i, (lon, lat) in enumerate(izip(self.activearrlon, self.activearrlat)):
             yield self.activegpis[i], lon, lat
             
     def _split_grid_points(self, n):
@@ -270,10 +301,10 @@ class BasicGrid(object):
             longitude of gpi
         """
         
-        for i,(lon,lat) in enumerate(izip(self.subarrlons[n],self.subarrlats[n])):
+        for i, (lon, lat) in enumerate(izip(self.subarrlons[n], self.subarrlats[n])):
             yield self.subgpis[n][i], lon, lat        
             
-    def find_nearest_gpi(self,lon,lat,max_dist = np.Inf):
+    def find_nearest_gpi(self, lon, lat, max_dist=np.Inf):
         """
         finds nearest gpi, builds kdTree if it does not yet exist
         
@@ -296,7 +327,7 @@ class BasicGrid(object):
         if self.kdTree is None:
             self.kdTree = NN.findGeoNN(self.activearrlon, self.activearrlat)
         
-        d,ind = self.kdTree.find_nearest_index(lon,lat, max_dist = max_dist)    
+        d, ind = self.kdTree.find_nearest_index(lon, lat, max_dist=max_dist)    
         
         if self.gpidirect and self.allpoints:
             return ind[0], d
@@ -354,7 +385,7 @@ class BasicGrid(object):
             other.kdTree._build_kdtree()    
     
         if self.kdTree.kdtree is not None and other.kdTree.kdtree is not None:
-            dist,index=other.kdTree.find_nearest_index(self.activearrlon,self.activearrlat ,max_dist=max_dist)
+            dist, index = other.kdTree.find_nearest_index(self.activearrlon, self.activearrlat , max_dist=max_dist)
             
             valid_index = np.where(dist != np.inf)[0]
             dist = dist[valid_index]
@@ -363,7 +394,7 @@ class BasicGrid(object):
                 if not into_subset:
                     index = other.activegpis[index]
             
-            active_lut = np.empty_like(self.activearrlat,dtype=np.int64)
+            active_lut = np.empty_like(self.activearrlat, dtype=np.int64)
             active_lut.fill(-1)
             active_lut[valid_index] = index
             
@@ -412,8 +443,8 @@ class CellGrid(BasicGrid):
         is defined by arrlon[subset] if a subset is given otherwise equal to arrlon
     """
     
-    def __init__(self, lon, lat, cells, gpis = None, subset=None):
-        super(CellGrid,self).__init__(lon, lat, gpis=gpis, subset=subset, setup_kdTree=False)
+    def __init__(self, lon, lat, cells, gpis=None, subset=None):
+        super(CellGrid, self).__init__(lon, lat, gpis=gpis, subset=subset, setup_kdTree=False)
         
         if self.arrlon.shape != cells.shape:
             raise GridDefinitionError("lat, lon and cells np.arrays have to have equal shapes")
@@ -458,6 +489,40 @@ class CellGrid(BasicGrid):
         """
         return np.unique(self.activearrcell)
     
+    def get_grid_points(self, *args):
+        """
+        Returns all active grid points
+        
+        Parameters
+        ----------
+        n : int, optional
+            if the grid is split in n parts using the split function
+            then this function will only return the nth part of the
+            grid
+            
+        Returns
+        -------
+        gpis : numpy.array
+        arrlon : numpy.array
+        arrlat :numpy.array
+        cells : numpy.array
+        """
+        
+        if not self.issplit and len(args) == 0:
+            return (self.activegpis,
+                    self.activearrlon,
+                    self.activearrlat,
+                    self.activearrcell)
+            
+        elif self.issplit and len(args) == 1:
+            n = args[0]
+            return (self.subgpis[n],
+                    self.subarrlons[n],
+                    self.subarrlats[n],
+                    self.subcells[n])
+    
+    
+    
     def grid_points_for_cell(self, cell):
         """
         get all grid points for a given cell number
@@ -474,7 +539,7 @@ class CellGrid(BasicGrid):
         """
         cell_index = np.where(cell == self.activearrcell)
         
-        return (self.activegpis[cell_index], 
+        return (self.activegpis[cell_index],
                 self.activearrlon[cell_index],
                 self.activearrlat[cell_index])
     
@@ -490,7 +555,7 @@ class CellGrid(BasicGrid):
             number of parts the grid should be split into
         """
         self.issplit = True
-        #sort by cell number to split correctly
+        # sort by cell number to split correctly
         sorted_index = np.argsort(self.activearrcell)
         self.subarrlats = np.array_split(self.activearrlat[sorted_index], n)
         self.subarrlons = np.array_split(self.activearrlon[sorted_index], n)
