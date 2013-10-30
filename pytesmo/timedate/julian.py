@@ -14,7 +14,7 @@ pp. 11
 
 import numpy as np
 
-def julday(month, day, year):
+def julday(month, day, year, hour=0, minute=0, second=0):
     """
     Julian date from month, day, and year (can be scalars or arrays)
 
@@ -26,17 +26,19 @@ def julday(month, day, year):
         Day.
     year : numpy.ndarray or int32
         Year.
+    hour : numpy.ndarray or int32, optional
+        Hour.
+    minute : numpy.ndarray or int32, optional
+        Minute.
+    second : numpy.ndarray or int32, optional
+        Second.
+    
+    
 
     Returns
     -------
     jul : numpy.ndarray or double
         Julian day.
-        
-    Notes
-    -----
-    - no error handling implemented
-    - works only for years past 1582
-    - time not yet supported    
     """
     month = np.array(month)
     day = np.array(day)
@@ -44,10 +46,12 @@ def julday(month, day, year):
     jy = year - inJanFeb
     jm = month + 1 + inJanFeb * 12
 
-    jul = np.int32(np.floor(365.25 * jy) +
+    jul = np.int32(np.floor(365.25 * jy) + 
                    np.floor(30.6001 * jm) + (day + 1720995.0))
     ja = np.int32(0.01 * jy)
     jul += 2 - ja + np.int32(0.25 * ja)
+
+    jul = jul + hour / 24.0 - 0.5 + minute / 1440.0 + second / 86400.0
 
     return jul
 
@@ -118,10 +122,12 @@ def julian2date(julian):
     min_julian = 2299161
     max_julian = 1827933925
 
+    julian = np.array(julian, dtype=float)
+
     if np.min(julian) < min_julian or np.max(julian) > max_julian:
         raise ValueError("Value of Julian date is out of allowed range.")
 
-    jn = np.int32(np.array(julian).round())
+    jn = np.int32(np.round(julian + 0.0000001))
 
     jalpha = np.int32(((jn - 1867216) - 0.25) / 36524.25)
     ja = jn + 1 + jalpha - (np.int32(0.25 * jalpha))
@@ -130,25 +136,25 @@ def julian2date(julian):
     jd = np.int32(365.0 * jc + (0.25 * jc))
     je = np.int32((jb - jd) / 30.6001)
 
-    day = jb - jd - np.int32(30.6001 * je)
+    day = jb - jd - np.int64(30.6001 * je)
     month = je - 1
     month = (month - 1) % 12 + 1
     year = jc - 4715
     year = year - (month > 2)
 
-    fraction = np.float64(julian + 0.5 - jn)
-    eps = np.float64(1e-12 * np.abs(jn))
+    fraction = (julian + 0.5 - jn).astype(np.float64)
+    eps = (1e-12 * np.abs(jn)).astype(np.float64)
     eps.clip(min=np.float64(1e-12), max=None)
-    hour = np.int32(fraction * 24. + eps)
+    hour = (fraction * 24. + eps).astype(np.int64)
     hour.clip(min=0, max=23)
     fraction -= hour / 24.
-    minute = np.int32(fraction * 1440. + eps)
+    minute = (fraction * 1440. + eps).astype(np.int64)
     minute.clip(min=0, max=59)
     second = (fraction - minute / 1440.) * 86400.
     second.clip(min=0, max=None)
-    microsecond = np.int32((second - np.int32(second)) * 1e6)
-    second = np.int32(second)
-
+    second = second.astype(np.int32)
+    microsecond = ((second - np.int32(second)) * 1e6).astype(np.int32)
+    
     return year, month, day, hour, minute, second, microsecond
 
 
