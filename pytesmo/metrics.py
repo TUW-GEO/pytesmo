@@ -56,9 +56,9 @@ def tcol_error(x,y,z):
     triple collocation error for y : float
     triple collocation error for z : float
     """
-    e_x = np.sqrt(np.mean((x-y)*(x-z)))
-    e_y = np.sqrt(np.mean((y-x)*(y-z)))
-    e_z = np.sqrt(np.mean((z-x)*(z-y)))
+    e_x = np.sqrt(np.abs(np.mean((x-y)*(x-z))))
+    e_y = np.sqrt(np.abs(np.mean((y-x)*(y-z))))
+    e_z = np.sqrt(np.abs(np.mean((z-x)*(z-y))))
     
     return e_x, e_y, e_z
 
