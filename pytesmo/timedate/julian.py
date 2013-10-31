@@ -13,6 +13,7 @@ pp. 11
 """
 
 import numpy as np
+import datetime as dt
 
 def julday(month, day, year, hour=0, minute=0, second=0):
     """
@@ -156,6 +157,25 @@ def julian2date(julian):
     microsecond = ((second - np.int32(second)) * 1e6).astype(np.int32)
     
     return year, month, day, hour, minute, second, microsecond
+
+
+def julian2datetime(julian, tz=None):
+    """
+    converts julian date to python datetime
+    default is not time zone aware
+    
+    Parameters
+    ----------
+    julian : float
+        julian date
+    """
+    year, month, day, hour, minute, second, microsecond = julian2date(julian)
+    if type(julian) == np.array or type(julian) == np.memmap:
+        return np.array([dt.datetime(y, m, d, h, mi, s, ms, tz) \
+                             for y, m, d, h, mi, s, ms in \
+                             zip(year, month, day, hour, minute,
+                                 second, microsecond)])    
+    return dt.datetime(year, month, day, hour, minute, second, microsecond, tz)
 
 
 def julian2doy(j, consider_nonleap_years=True):
