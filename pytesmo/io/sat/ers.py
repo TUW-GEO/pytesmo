@@ -35,19 +35,26 @@ from pytesmo.io.sat.ascat import AscatNetcdf, ASCATTimeSeries
 
 
 class ERSTimeSeries(ASCATTimeSeries):
+    """
+    Extends :class:`pytesmo.io.sat.ascat.ASCATTimeSeries` and
+    provides correct string representation for ERS data
     
-    def __init__(self, gpi, lon, lat, cell, data):
-        super(ERSTimeSeries, self).__init__(gpi, lon, lat, cell, data)
+    """
+    def __init__(self, gpi, lon, lat, cell, data,
+                 topo_complex=None, wetland_frac=None,
+                 porosity_gldas=None, porosity_hwsd=None):
+        super(ERSTimeSeries, self).__init__(gpi, lon, lat, cell, data,
+                                            topo_complex=topo_complex, wetland_frac=wetland_frac,
+                                            porosity_gldas=porosity_gldas, porosity_hwsd=porosity_hwsd)
         
     def __repr__(self):
-        
         return "ERS time series gpi:%d lat:%2.3f lon:%3.3f" % (self.gpi, self.latitude, self.longitude) 
-
 
 
 class ERS_SSM(AscatNetcdf):        
     """
-    class for reading ASCAT SSM data. It extends AscatNetcdf and provides the 
+    class for reading ERS SSM data. It extends :class:`pytesmo.io.sat.ascat.AscatNetcdf` 
+    instance and provides the 
     information necessary for reading SSM data
     
     Parameters
@@ -58,7 +65,8 @@ class ERS_SSM(AscatNetcdf):
         path to grid_info folder which contains txt files with information about
         grid point index,latitude, longitude and cell
     grid_info_filename : string, optional
-        name of the grid info txt file in grid_path    
+        name of the grid info netCDF file in grid_path    
+        default 'TUW_WARP5_grid_info_2_1.nc'      
     advisory_flags_path : string, optional
         path to advisory flags .dat files, if not provided they will not be used    
     topo_threshold : int, optional
@@ -69,9 +77,12 @@ class ERS_SSM(AscatNetcdf):
         threshold a warning is output during reading
     netcdftemplate : string, optional
         string template for the netCDF filename. This specifies where the cell number is
-        in the netCDF filename. Standard value is 'TUW_METOP_ASCAT_WARP55R12_%04d.nc' in 
+        in the netCDF filename. Standard value is 'TUW_ERS_AMI_SSM_WARP55R11_%04d.nc' in 
         which %04d will be substituded for the cell number during reading of the data
-    
+    include_in_df : list, optional
+        list of variables which should be included in the returned DataFrame.
+        Default is all variables
+        ['sm', 'sm_noise', 'proc_flag', 'orbit_dir']
     
     Attributes
     ----------
@@ -84,13 +95,14 @@ class ERS_SSM(AscatNetcdf):
     read_ssm(*args,**kwargs)
         read surface soil moisture
     """
-    def __init__(self, path, grid_path, grid_info_filename='warp5_grid.nc',
-                 topo_threshold=50, wetland_threshold=50, netcdftemplate='%04d.nc'):
+    def __init__(self, path, grid_path, grid_info_filename='TUW_WARP5_grid_info_2_1.nc',
+                 topo_threshold=50, wetland_threshold=50, netcdftemplate='TUW_ERS_AMI_SSM_WARP55R11_%04d.nc',
+                 include_in_df=['sm', 'sm_noise', 'proc_flag', 'orbit_dir']):
         
         super(ERS_SSM, self).__init__(path, grid_path, grid_info_filename=grid_info_filename,
                  topo_threshold=topo_threshold, wetland_threshold=wetland_threshold,
                  netcdftemplate=netcdftemplate)
-        self.include_in_df = ['sm', 'sm_noise']
+        self.include_in_df = include_in_df
         self.to_absolute = ['sm', 'sm_noise']
         
         
@@ -122,10 +134,12 @@ class ERS_SSM(AscatNetcdf):
              
         Returns
         -------
-        df : pandas.DataFrame
-            containing all fields in self.include_in_df plus frozen_prob and snow_prob if
-            advisory_flags_path was set
+        ERSTimeSeries : object
+            :class:`pytesmo.io.sat.ers.ERSTimeSeries` instance
         """
-        df, gpi, lon, lat, cell = super(ERS_SSM, self)._read_ts(*args, **kwargs)
+        df, gpi, lon, lat, cell, topo, wetland, porosity = super(ERS_SSM, self)._read_ts(*args, **kwargs)
                 
-        return ERSTimeSeries(gpi, lon, lat, cell, df)    
+        return ERSTimeSeries(gpi, lon, lat, cell, df,
+                               topo_complex=topo, wetland_frac=wetland,
+                               porosity_gldas=porosity['gldas'],
+                               porosity_hwsd=porosity['hwsd'])    

@@ -64,6 +64,14 @@ class ASCATTimeSeries(object):
         cell number of grid point
     data : pandas.DataFrame
         DataFrame which contains the data
+    topo_complex : int, optional
+        topographic complexity at the grid point
+    wetland_frac : int, optional
+        wetland fraction at the grid point
+    porosity_gldas : float, optional
+        porosity taken from GLDAS model
+    porosity_hwsd : float, optional
+        porosity calculated from Harmonised World Soil Database
     
     Attributes
     ----------
@@ -77,13 +85,27 @@ class ASCATTimeSeries(object):
         cell number of grid point
     data : pandas.DataFrame
         DataFrame which contains the data  
+    topo_complex : int
+        topographic complexity at the grid point
+    wetland_frac : int
+        wetland fraction at the grid point
+    porosity_gldas : float
+        porosity taken from GLDAS model
+    porosity_hwsd : float
+        porosity calculated from Harmonised World Soil Database
     """
-    def __init__(self, gpi, lon, lat, cell, data):
+    def __init__(self, gpi, lon, lat, cell, data,
+                 topo_complex=None, wetland_frac=None,
+                 porosity_gldas=None, porosity_hwsd=None):
         
         self.gpi = gpi
         self.longitude = lon
         self.latitude = lat
         self.cell = cell
+        self.topo_complex = topo_complex
+        self.wetland_frac = wetland_frac
+        self.porosity_gldas = porosity_gldas
+        self.porosity_hwsd = porosity_hwsd
         self.data = data
     
     def __repr__(self):
@@ -410,7 +432,8 @@ class AscatNetcdf(object):
         path to grid_info folder which contains a netcdf file with information about
         grid point index,latitude, longitude and cell
     grid_info_filename : string, optional
-        name of the grid info netcdf file in grid_path    
+        name of the grid info netCDF file in grid_path    
+        default 'TUW_WARP5_grid_info_2_1.nc'   
     topo_threshold : int, optional
         if topographic complexity of read grid point is above this 
         threshold a warning is output during reading
@@ -430,8 +453,9 @@ class AscatNetcdf(object):
     grid_path : string
         path to grid_info folder which contains txt files with information about
         grid point index,latitude, longitude and cell
-    grid_info_filename : string
-        name of the grid info txt file in grid_path
+    grid_info_filename : string, optional
+        name of the grid info netCDF file in grid_path    
+        default 'TUW_WARP5_grid_info_2_1.nc'   
     topo_threshold : int
         if topographic complexity of read grid point is above this 
         threshold a warning is output during reading
@@ -447,7 +471,7 @@ class AscatNetcdf(object):
     include_advflags : boolean
         True if advisory flags are available
     """
-    def __init__(self, path, grid_path, grid_info_filename='warp5_grid.nc',
+    def __init__(self, path, grid_path, grid_info_filename='TUW_WARP5_grid_info_2_1.nc',
                  topo_threshold=50, wetland_threshold=50, netcdftemplate='TUW_METOP_ASCAT_WARP55R12_%04d.nc'):
         
         self.path = path
@@ -528,6 +552,20 @@ class AscatNetcdf(object):
             containing all fields in the list self.include_in_df 
             plus frozen_prob and snow_prob if a path to advisory flags was set during
             initialization
+        gpi : long
+            grid point index
+        lon : float
+            longitude
+        lat : float
+            latitude
+        cell : int
+            cell number
+        topo : int
+            topographic complexity
+        wetland : int
+            wetland fraction
+        porosity : dict
+            porosity values for 'gldas' and 'hwsd'
         """    
         if not self.grid_info_loaded: self._load_grid_info()
         cell = self.grid.gpi2cell(gpi)
@@ -546,17 +584,22 @@ class AscatNetcdf(object):
             
         df = pd.DataFrame(dict_df, index=timestamps)
         
+        # read porosity values
+        porosity = {}
+        for por_source in ['gldas', 'hwsd']:
+            porosity[por_source] = ncfile.variables['por_%s' % por_source][gpi_index][0]
+        
+        
         if 'absolute_values' in kwargs:
             
             if kwargs['absolute_values']:
                 for por_source in ['gldas', 'hwsd']:
-                    porosity = ncfile.variables['por_%s' % por_source][gpi_index]
                     for el in self.to_absolute:
-                        df['%s_por_%s' % (el, por_source)] = (df[el] / 100.0) * (porosity)
+                        df['%s_por_%s' % (el, por_source)] = (df[el] / 100.0) * (porosity[por_source])
                 
         
-        topo = ncfile.variables['topo'][gpi_index]
-        wetland = ncfile.variables['wetland'][gpi_index]
+        topo = ncfile.variables['topo'][gpi_index][0]
+        wetland = ncfile.variables['wetland'][gpi_index][0]
         
         snow = np.squeeze(ncfile.variables['snow'][gpi_index, :])
         frozen = np.squeeze(ncfile.variables['frozen'][gpi_index, :])
@@ -584,7 +627,7 @@ class AscatNetcdf(object):
        
         lon, lat = self.grid.gpi2lonlat(gpi)
         
-        return df, gpi, lon, lat, cell        
+        return df, gpi, lon, lat, cell, topo, wetland, porosity        
         
         
 class AscatH25_SSM(AscatNetcdf):        
@@ -600,7 +643,8 @@ class AscatH25_SSM(AscatNetcdf):
         path to grid_info folder which contains txt files with information about
         grid point index,latitude, longitude and cell
     grid_info_filename : string, optional
-        name of the grid info txt file in grid_path    
+        name of the grid info netCDF file in grid_path    
+        default 'TUW_WARP5_grid_info_2_1.nc'
     advisory_flags_path : string, optional
         path to advisory flags .dat files, if not provided they will not be used    
     topo_threshold : int, optional
@@ -609,7 +653,14 @@ class AscatH25_SSM(AscatNetcdf):
     wetland_threshold : int, optional
         if wetland fraction of read grid point is above this 
         threshold a warning is output during reading
-    
+    netcdftemplate : string, optional
+        string template for the netCDF filename. This specifies where the cell number is
+        in the netCDF filename. Standard value is 'TUW_METOP_ASCAT_WARP55R12_%04d.nc' in 
+        which %04d will be substituded for the cell number during reading of the data
+    include_in_df : list, optional
+        list of variables which should be included in the returned DataFrame.
+        Default is all variables
+        ['sm', 'sm_noise', 'ssf', 'proc_flag', 'orbit_dir']
     
     Attributes
     ----------
@@ -622,9 +673,13 @@ class AscatH25_SSM(AscatNetcdf):
     read_ssm(*args,**kwargs)
         read surface soil moisture
     """
-    def __init__(self, *args, **kwargs):
-        super(AscatH25_SSM, self).__init__(*args, **kwargs)
-        self.include_in_df = ['sm', 'sm_noise', 'ssf']
+    def __init__(self, path, grid_path, grid_info_filename='TUW_WARP5_grid_info_2_1.nc',
+                 topo_threshold=50, wetland_threshold=50, netcdftemplate='TUW_METOP_ASCAT_WARP55R12_%04d.nc',
+                 include_in_df=['sm', 'sm_noise', 'ssf', 'proc_flag', 'orbit_dir']):
+        super(AscatH25_SSM, self).__init__(path, grid_path, grid_info_filename=grid_info_filename,
+                                           topo_threshold=topo_threshold, wetland_threshold=wetland_threshold,
+                                           netcdftemplate=netcdftemplate)
+        self.include_in_df = include_in_df
         self.to_absolute = ['sm', 'sm_noise']
         
         
@@ -658,17 +713,19 @@ class AscatH25_SSM(AscatNetcdf):
              
         Returns
         -------
-        df : pandas.DataFrame
-            containing all fields in self.include_in_df plus frozen_prob and snow_prob if
-            advisory_flags_path was set
+        ASCATTimeSeries : object
+            :class:`pytesmo.io.sat.ascat.ASCATTimeSeries` instance
         """
-        df, gpi, lon, lat, cell = super(AscatH25_SSM, self)._read_ts(*args, **kwargs)
+        df, gpi, lon, lat, cell, topo, wetland, porosity = super(AscatH25_SSM, self)._read_ts(*args, **kwargs)
         if 'mask_ssf' in kwargs:
             mask_ssf = kwargs['mask_ssf']
             if mask_ssf:
                 df = df[df['ssf'] == 1]
                 
-        return ASCATTimeSeries(gpi, lon, lat, cell, df)    
+        return ASCATTimeSeries(gpi, lon, lat, cell, df,
+                               topo_complex=topo, wetland_frac=wetland,
+                               porosity_gldas=porosity['gldas'],
+                               porosity_hwsd=porosity['hwsd'])    
     
             
 class Ascat_SSM(Ascat_data):
@@ -755,9 +812,8 @@ class Ascat_SSM(Ascat_data):
              
         Returns
         -------
-        df : pandas.DataFrame
-            containing all fields in self.include_in_df plus frozen_prob and snow_prob if
-            advisory_flags_path was set
+        ASCATTimeSeries : object
+            :class:`pytesmo.io.sat.ascat.ASCATTimeSeries` instance
         """
         df, gpi, lon, lat, cell = super(Ascat_SSM, self)._read_ts(*args, **kwargs)
         if 'mask_ssf' in kwargs:
