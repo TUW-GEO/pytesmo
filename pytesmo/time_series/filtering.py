@@ -34,8 +34,7 @@ import pandas as pd
 import numpy as np
 
 from pytesmo.timedate.julian import julday
-import pyximport; pyximport.install(setup_args={'include_dirs':[np.get_include()]})
-from pytesmo.time_series.filtering_cy import boxcar_filter
+from pytesmo.time_series.filters import boxcar_filter
 
 def moving_average(Ser,
                    window_size=1):
@@ -51,6 +50,7 @@ def moving_average(Ser,
         input Series
         Default: 1
 
+    Returns
     -------
     Ser : pandas.Series
         moving-average filtered time series
@@ -64,7 +64,7 @@ def moving_average(Ser,
     else:
         jd_index = Ser.index.values
     
-    filtered = boxcar_filter(Ser.values, jd_index.astype(np.double), window=window_size)
+    filtered = boxcar_filter(np.squeeze(Ser.values.astype(np.double)), jd_index.astype(np.double), window=window_size)
 
     result = pd.Series(filtered, index=Ser.index)   
         

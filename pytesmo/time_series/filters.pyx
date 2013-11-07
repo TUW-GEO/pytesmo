@@ -1,3 +1,5 @@
+#!python
+#cython: embedsignature=True
 #Copyright (c) 2013,Vienna University of Technology, Department of Geodesy and Geoinformation
 #All rights reserved.
 
