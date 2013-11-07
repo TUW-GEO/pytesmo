@@ -109,7 +109,7 @@ class BasicGrid(object):
         if True then the array was split in n parts with 
         the self.split function
     kdTree : object
-        :mod:`pytesmo.grid.nearest_neighbor.findGeoNN` object for
+        grid.nearest_neighbor.findGeoNN object for
         nearest neighbor search
     shape : tuple, optional
         if given during initialization then this is
@@ -364,7 +364,7 @@ class BasicGrid(object):
         
         Parameters
         ----------
-        other : :mod:`pytesmo.grid.grids.BasicGrid` or :mod:`pytesmo.grid.grids.CellGrid` object
+        other : grid object
             to which to calculate the lut to
         max_dist : float, optional
             maximum allowed distance in meters
@@ -613,6 +613,7 @@ class CellGrid(BasicGrid):
             cell_gpis = np.where(cell == self.subcells[n])[0]
             for gpi in cell_gpis:
                 yield self.subgpis[n][gpi], self.subarrlons[n][gpi], self.subarrlats[n][gpi], cell
+
 
 
         
