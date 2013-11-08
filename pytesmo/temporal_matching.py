@@ -45,7 +45,7 @@ def df_match(reference, *args, **kwds):
 
     for arg in args:
         
-        if type(arg) == pd.TimeSeries: arg=pd.DataFrame(arg) 
+        if type(arg) == pd.TimeSeries: arg = pd.DataFrame(arg) 
         comp_step = arg.index.values - reference.index.values[0]
         matched = sc_int.griddata(comp_step, np.arange(comp_step.size),
                                   ref_step, "nearest")
@@ -55,7 +55,7 @@ def df_match(reference, *args, **kwds):
         valid_match = np.invert(np.isnan(matched))
 
         distance[valid_match] = \
-            (arg.index.values[np.int32(matched[valid_match])] -
+            (arg.index.values[np.int32(matched[valid_match])] - 
              reference.index.values[valid_match]) / np.timedelta64(1, 'D')
 
         arg['index'] = arg.index.values
@@ -88,7 +88,7 @@ def df_match(reference, *args, **kwds):
     else: return tuple(temporal_matched_args)
 
 
-def matching(reference,*args,**kwargs):
+def matching(reference, *args, **kwargs):
     '''
     Finds temporal match between the reference pandas.TimeSeries (index has to
     be datetime) and n other pandas.TimeSeries (index has to be datetime).
@@ -110,14 +110,14 @@ def matching(reference,*args,**kwargs):
         containing the index of the reference Series and a column for each of the 
         other input Series
     '''
-    matched_datasets = df_match(reference, *args,dropna=True,dropduplicates=True,**kwargs)
+    matched_datasets = df_match(reference, *args, dropna=True, dropduplicates=True, **kwargs)
     
-    if type(matched_datasets) != tuple: matched_datasets = (matched_datasets)
+    if type(matched_datasets) != tuple: matched_datasets = [matched_datasets]
     
     matched_data = pd.DataFrame(reference)
     
     for match in matched_datasets:
-        match = match.drop(['distance','index'],axis=1)
+        match = match.drop(['distance', 'index'], axis=1)
         matched_data = matched_data.join(match)
         
     return matched_data.dropna()
