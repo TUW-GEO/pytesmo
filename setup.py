@@ -8,7 +8,7 @@ class sdist(_sdist):
     def run(self):
         # Make sure the compiled Cython files in the distribution are up-to-date
         from Cython.Build import cythonize
-        cythonize(['pytesmo/time_series/mycythonmodule.pyx'])
+        cythonize(['pytesmo/time_series/filters.pyx'])
         _sdist.run(self)
 cmdclass = {}
 cmdclass['sdist'] = sdist
@@ -28,7 +28,8 @@ setup(
               'pytesmo.time_series', 'pytesmo.timedate'],
     ext_modules=ext_modules,
     cmdclass=cmdclass,
-    scripts=['bin/plot_ASCAT_data.py', 'bin/plot_ISMN_data.py', 'bin/compare_ISMN_ASCAT.py'],
+    scripts=['bin/plot_ASCAT_data.py', 'bin/plot_ISMN_data.py', 'bin/compare_ISMN_ASCAT.py',
+             'bin/read_ASCAT_H25.py', 'bin/anomalies.py'],
     url='http://rs.geo.tuwien.ac.at/validation_tool/pytesmo/',
     license='LICENSE.txt',
     description='python Toolbox for the Evaluation of Soil Moisture Observations',
@@ -38,5 +39,6 @@ setup(
         "pandas >= 0.11.0",
         "scipy >= 0.12.0",
         "statsmodels >= 0.4.3",
+        "netCDF4 >= 1.0.1",
     ],
 )
