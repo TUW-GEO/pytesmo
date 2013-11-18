@@ -1,4 +1,9 @@
-from distutils.core import setup
+try:
+    from setuptools import setup
+    have_setuptools = True
+except ImportError:
+    have_setuptools = False
+    from distutils.core import setup
 from distutils.extension import Extension
 import numpy as np
 from distutils.command.sdist import sdist as _sdist
@@ -19,6 +24,19 @@ ext_modules = [
               include_dirs=[np.get_include()]),
 ]
 
+
+
+if not have_setuptools:
+    setuptools_kwargs = {}
+else:
+    setuptools_kwargs = {'install_requires':[ "numpy >= 1.7.1",
+                                            "pandas >= 0.11.0",
+                                            "scipy >= 0.12.0",
+                                            "statsmodels >= 0.4.3",
+                                            "netcdf4 >= 1.0.1",
+                                           ]
+                       }
+
 setup(
     name='pytesmo',
     version='0.1.1',
@@ -34,11 +52,4 @@ setup(
     license='LICENSE.txt',
     description='python Toolbox for the Evaluation of Soil Moisture Observations',
     long_description=open('README.txt').read(),
-    install_requires=[
-        "numpy >= 1.7.1",
-        "pandas >= 0.11.0",
-        "scipy >= 0.12.0",
-        "statsmodels >= 0.4.3",
-        "netCDF4 >= 1.0.1",
-    ],
-)
+    **setuptools_kwargs)
