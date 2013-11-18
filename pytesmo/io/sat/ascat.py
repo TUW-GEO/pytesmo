@@ -181,7 +181,7 @@ class Ascat_data(object):
         threshold a warning is output during reading
     grid_info_loaded : boolean
         true if the grid information has already been loaded
-    grid : grids.CellGrid object
+    grid : :class:`pytesmo.grid.grids.CellGrid` object
         CellGrid object, which provides nearest neighbor search and other features
     advisory_flags_path : string
         path to advisory flags .dat files, if not provided they will not be used
