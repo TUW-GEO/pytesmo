@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -8,15 +6,15 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Examples &mdash; pytesmo 0.1a1 documentation</title>
+    <title>Examples &mdash; pytesmo 0.1.1 documentation</title>
     
-    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
-        VERSION:     '0.1a1',
+        URL_ROOT:    './',
+        VERSION:     '0.1.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -25,8 +23,8 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="pytesmo 0.1a1 documentation" href="index.html" />
-    <link rel="next" title="pytesmo Package" href="pytesmo.html" />
+    <link rel="top" title="pytesmo 0.1.1 documentation" href="index.html" />
+    <link rel="next" title="pytesmo package" href="pytesmo.html" />
     <link rel="prev" title="Introduction to pytesmo a python Toolbox for the Evaluation of Soil Moisture Observations" href="introduction.html" /> 
   </head>
   <body>
@@ -43,12 +41,12 @@
           <a href="np-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="pytesmo.html" title="pytesmo Package"
+          <a href="pytesmo.html" title="pytesmo package"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="introduction.html" title="Introduction to pytesmo a python Toolbox for the Evaluation of Soil Moisture Observations"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">pytesmo 0.1a1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">pytesmo 0.1.1 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -59,8 +57,8 @@
             
   <div class="section" id="examples">
 <span id="examples-page"></span><h1>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="reading-and-plotting-ascat-data">
-<h2>Reading and plotting ASCAT data<a class="headerlink" href="#reading-and-plotting-ascat-data" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="reading-and-plotting-ascat-data-from-binary-format">
+<h2>Reading and plotting ASCAT data from binary format<a class="headerlink" href="#reading-and-plotting-ascat-data-from-binary-format" title="Permalink to this headline">¶</a></h2>
 <p>This example program reads and plots ASCAT SSM and SWI data with different masking options.
 It can be found in the /bin folder of the pytesmo package under the name plot_ASCAT_data.py.</p>
 <p>In[1]:</p>
@@ -160,6 +158,146 @@ It can be found in the /bin folder of the pytesmo package under the name plot_AS
 </pre></div>
 </div>
 <img alt="_images/plot_ascat_data_8_0.png" src="_images/plot_ascat_data_8_0.png" />
+</div>
+<div class="section" id="reading-and-plotting-ascat-h25-data-from-netcdf-format">
+<h2>Reading and plotting ASCAT H25 data from netCDF format<a class="headerlink" href="#reading-and-plotting-ascat-h25-data-from-netcdf-format" title="Permalink to this headline">¶</a></h2>
+<p>This Example script reads and plots ASCAT H25 SSM data with different masking options
+and also converts the data to absolute values using the included porosity data.
+It can be found in the /bin folder of the pytesmo package under the name read_ASCAT_H25.py</p>
+<p>In[1]:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">pytesmo.io.sat.ascat</span> <span class="kn">as</span> <span class="nn">ascat</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="n">ascat_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;R:</span><span class="se">\\</span><span class="s">&#39;</span><span class="p">,</span><span class="s">&#39;Datapool_processed&#39;</span><span class="p">,</span><span class="s">&#39;WARP&#39;</span><span class="p">,</span><span class="s">&#39;WARP5.5&#39;</span><span class="p">,</span>
+                                         <span class="s">&#39;ASCAT_WARP5.5_R1.2&#39;</span><span class="p">,</span><span class="s">&#39;080_ssm&#39;</span><span class="p">,</span><span class="s">&#39;netcdf&#39;</span><span class="p">)</span>
+<span class="n">ascat_grid_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;R:</span><span class="se">\\</span><span class="s">&#39;</span><span class="p">,</span><span class="s">&#39;Datapool_processed&#39;</span><span class="p">,</span><span class="s">&#39;WARP&#39;</span><span class="p">,</span><span class="s">&#39;ancillary&#39;</span><span class="p">,</span><span class="s">&#39;warp5_grid&#39;</span><span class="p">)</span>
+<span class="c">#init the ASCAT_SSM reader with the paths</span>
+
+<span class="c">#let&#39;s not include the orbit direction since it is saved as &#39;A&#39;</span>
+<span class="c">#or &#39;D&#39; it can not be plotted</span>
+<span class="n">ascat_SSM_reader</span> <span class="o">=</span> <span class="n">ascat</span><span class="o">.</span><span class="n">AscatH25_SSM</span><span class="p">(</span><span class="n">ascat_folder</span><span class="p">,</span><span class="n">ascat_grid_folder</span><span class="p">,</span>
+                                      <span class="n">include_in_df</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;sm&#39;</span><span class="p">,</span> <span class="s">&#39;sm_noise&#39;</span><span class="p">,</span> <span class="s">&#39;ssf&#39;</span><span class="p">,</span> <span class="s">&#39;proc_flag&#39;</span><span class="p">])</span>
+
+<span class="n">gpi</span> <span class="o">=</span> <span class="mi">2329253</span>
+<span class="n">ascat_ts</span> <span class="o">=</span> <span class="n">ascat_SSM_reader</span><span class="o">.</span><span class="n">read_ssm</span><span class="p">(</span><span class="n">gpi</span><span class="p">)</span>
+
+<span class="n">ascat_ts</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img alt="_images/read_ASCAT_H25_0_0.png" src="_images/read_ASCAT_H25_0_0.png" />
+<p>In[2]:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c">#the ASCATTimeSeries object also contains metadata</span>
+
+<span class="k">print</span> <span class="s">&quot;Topographic complexity&quot;</span><span class="p">,</span> <span class="n">ascat_ts</span><span class="o">.</span><span class="n">topo_complex</span>
+<span class="k">print</span> <span class="s">&quot;Wetland fraction&quot;</span><span class="p">,</span> <span class="n">ascat_ts</span><span class="o">.</span><span class="n">wetland_frac</span>
+<span class="k">print</span> <span class="s">&quot;Porosity from GLDAS model&quot;</span><span class="p">,</span> <span class="n">ascat_ts</span><span class="o">.</span><span class="n">porosity_gldas</span>
+<span class="k">print</span> <span class="s">&quot;Porosity from Harmonized World Soil Database&quot;</span><span class="p">,</span> <span class="n">ascat_ts</span><span class="o">.</span><span class="n">porosity_hwsd</span>
+</pre></div>
+</div>
+<div class="highlight-python"><pre>Topographic complexity 14
+Wetland fraction 0
+Porosity from GLDAS model 0.542222
+Porosity from Harmonized World Soil Database 0.430234</pre>
+</div>
+<p>In[3]:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c">#It is also possible to automatically convert the soil moisture to absolute values using</span>
+
+<span class="n">ascat_ts_absolute</span> <span class="o">=</span> <span class="n">ascat_SSM_reader</span><span class="o">.</span><span class="n">read_ssm</span><span class="p">(</span><span class="n">gpi</span><span class="p">,</span> <span class="n">absolute_values</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="c">#this introduces 4 new columns in the returned data</span>
+<span class="c">#scaled sm and sm_noise with porosity_gldas</span>
+<span class="c">#scaled sm and sm_noise with porosity_hwsd</span>
+<span class="k">print</span> <span class="n">ascat_ts_absolute</span><span class="o">.</span><span class="n">data</span>
+
+<span class="c">#select relevant columns and plot</span>
+<span class="n">ascat_ts_absolute</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">ascat_ts_absolute</span><span class="o">.</span><span class="n">data</span><span class="p">[[</span><span class="s">&#39;sm_por_gldas&#39;</span><span class="p">,</span><span class="s">&#39;sm_por_hwsd&#39;</span><span class="p">]]</span>
+<span class="n">ascat_ts_absolute</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="highlight-python"><pre>&lt;class 'pandas.core.frame.DataFrame'&gt;
+DatetimeIndex: 2292 entries, 2007-01-01 09:39:39 to 2013-07-12 20:39:08
+Data columns (total 10 columns):
+proc_flag             2292  non-null values
+sm                    2285  non-null values
+sm_noise              2285  non-null values
+ssf                   2292  non-null values
+sm_por_gldas          2285  non-null values
+sm_noise_por_gldas    2285  non-null values
+sm_por_hwsd           2285  non-null values
+sm_noise_por_hwsd     2285  non-null values
+frozen_prob           2285  non-null values
+snow_prob             2285  non-null values
+dtypes: float64(8), int16(1), int8(1)</pre>
+</div>
+<img alt="_images/read_ASCAT_H25_2_1.png" src="_images/read_ASCAT_H25_2_1.png" />
+<p>In[4]:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c">#We can also automatically mask the data during reading</span>
+<span class="c">#In this example all measurements where the Surface State Flag</span>
+<span class="c">#shows frozen or where the frozen or snow probabilities are more</span>
+<span class="c">#than 10 percent are removed from the time series</span>
+<span class="n">ascat_ts</span> <span class="o">=</span> <span class="n">ascat_SSM_reader</span><span class="o">.</span><span class="n">read_ssm</span><span class="p">(</span><span class="n">gpi</span><span class="p">,</span> <span class="n">mask_ssf</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                                     <span class="n">mask_frozen_prob</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+                                     <span class="n">mask_snow_pro</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="n">ascat_ts</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<img alt="_images/read_ASCAT_H25_3_0.png" src="_images/read_ASCAT_H25_3_0.png" />
+</div>
+<div class="section" id="calculating-anomalies-and-climatologies">
+<h2>Calculating anomalies and climatologies<a class="headerlink" href="#calculating-anomalies-and-climatologies" title="Permalink to this headline">¶</a></h2>
+<p>This Example script reads and plots ASCAT H25 SSM data. The <a class="reference internal" href="pytesmo.time_series.html#module-pytesmo.time_series.anomaly" title="pytesmo.time_series.anomaly"><tt class="xref py py-mod docutils literal"><span class="pre">pytesmo.time_series.anomaly</span></tt></a> module
+is then used to calculate anomalies and climatologies of the time series.
+It can be found in the /bin folder of the pytesmo package under the name anomalies.py</p>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">pytesmo.io.sat.ascat</span> <span class="kn">as</span> <span class="nn">ascat</span>
+<span class="kn">import</span> <span class="nn">pytesmo.time_series</span> <span class="kn">as</span> <span class="nn">ts</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+</pre></div>
+</div>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="n">ascat_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;R:</span><span class="se">\\</span><span class="s">&#39;</span><span class="p">,</span><span class="s">&#39;Datapool_processed&#39;</span><span class="p">,</span><span class="s">&#39;WARP&#39;</span><span class="p">,</span><span class="s">&#39;WARP5.5&#39;</span><span class="p">,</span>
+                                         <span class="s">&#39;ASCAT_WARP5.5_R1.2&#39;</span><span class="p">,</span><span class="s">&#39;080_ssm&#39;</span><span class="p">,</span><span class="s">&#39;netcdf&#39;</span><span class="p">)</span>
+<span class="n">ascat_grid_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;R:</span><span class="se">\\</span><span class="s">&#39;</span><span class="p">,</span><span class="s">&#39;Datapool_processed&#39;</span><span class="p">,</span><span class="s">&#39;WARP&#39;</span><span class="p">,</span><span class="s">&#39;ancillary&#39;</span><span class="p">,</span><span class="s">&#39;warp5_grid&#39;</span><span class="p">)</span>
+<span class="c">#init the ASCAT_SSM reader with the paths</span>
+
+<span class="n">ascat_SSM_reader</span> <span class="o">=</span> <span class="n">ascat</span><span class="o">.</span><span class="n">AscatH25_SSM</span><span class="p">(</span><span class="n">ascat_folder</span><span class="p">,</span><span class="n">ascat_grid_folder</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="n">ascat_ts</span> <span class="o">=</span> <span class="n">ascat_SSM_reader</span><span class="o">.</span><span class="n">read_ssm</span><span class="p">(</span><span class="mi">45</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+<span class="c">#plot soil moisture</span>
+<span class="n">ascat_ts</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s">&#39;sm&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="highlight-python"><pre>&lt;matplotlib.axes.AxesSubplot at 0x22ee3550&gt;</pre>
+</div>
+<img alt="_images/anomalies_2_1.png" src="_images/anomalies_2_1.png" />
+<div class="code python highlight-python"><div class="highlight"><pre><span class="c">#calculate anomaly based on moving +- 17 day window</span>
+<span class="n">anomaly</span> <span class="o">=</span> <span class="n">ts</span><span class="o">.</span><span class="n">anomaly</span><span class="o">.</span><span class="n">calc_anomaly</span><span class="p">(</span><span class="n">ascat_ts</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s">&#39;sm&#39;</span><span class="p">],</span> <span class="n">window_size</span><span class="o">=</span><span class="mi">35</span><span class="p">)</span>
+<span class="n">anomaly</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="highlight-python"><pre>&lt;matplotlib.axes.AxesSubplot at 0x269109e8&gt;</pre>
+</div>
+<img alt="_images/anomalies_3_1.png" src="_images/anomalies_3_1.png" />
+<div class="code python highlight-python"><div class="highlight"><pre><span class="c">#calculate climatology</span>
+<span class="n">climatology</span> <span class="o">=</span> <span class="n">ts</span><span class="o">.</span><span class="n">anomaly</span><span class="o">.</span><span class="n">calc_climatology</span><span class="p">(</span><span class="n">ascat_ts</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s">&#39;sm&#39;</span><span class="p">])</span>
+<span class="n">climatology</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="highlight-python"><pre>&lt;matplotlib.axes.AxesSubplot at 0x1bc54ef0&gt;</pre>
+</div>
+<img alt="_images/anomalies_4_1.png" src="_images/anomalies_4_1.png" />
+<div class="code python highlight-python"><div class="highlight"><pre><span class="c">#calculate anomaly based on climatology</span>
+<span class="n">anomaly_clim</span> <span class="o">=</span> <span class="n">ts</span><span class="o">.</span><span class="n">anomaly</span><span class="o">.</span><span class="n">calc_anomaly</span><span class="p">(</span><span class="n">ascat_ts</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s">&#39;sm&#39;</span><span class="p">],</span> <span class="n">climatology</span><span class="o">=</span><span class="n">climatology</span><span class="p">)</span>
+<span class="n">anomaly_clim</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="highlight-python"><pre>&lt;matplotlib.axes.AxesSubplot at 0x1bc76860&gt;</pre>
+</div>
+<img alt="_images/anomalies_5_1.png" src="_images/anomalies_5_1.png" />
 </div>
 <div class="section" id="reading-and-plotting-data-from-the-ismn">
 <h2>Reading and plotting data from the ISMN<a class="headerlink" href="#reading-and-plotting-data-from-the-ismn" title="Permalink to this headline">¶</a></h2>
@@ -281,53 +419,44 @@ OZNET Evergreen -0.50 m - -0.50 m precipitation measured with TB4-0.2-mm-tipping
 <p>This example program loops through all insitu stations that measure soil moisture with a depth between 0 and 0.1m
 it then finds the nearest ASCAT grid point and reads the ASCAT data. After temporal matching and scaling using linear CDF matching it computes
 several metrics, like the correlation coefficients(Pearson&#8217;s, Spearman&#8217;s and Kendall&#8217;s), Bias, RMSD as well as the Nash–Sutcliffe model efficiency coefficient.</p>
+<p>It also shows the usage of the <a class="reference internal" href="pytesmo.html#module-pytesmo.df_metrics" title="pytesmo.df_metrics"><tt class="xref py py-mod docutils literal"><span class="pre">pytesmo.df_metrics</span></tt></a> module.</p>
 <p>It is stopped after 2 stations to not take to long to run and produce a lot of plots</p>
 <p>It can be found in the /bin folder of the pytesmo package under the name compare_ISMN_ASCAT.py.</p>
-<p>In[1]:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">pytesmo.io.ismn.interface</span> <span class="kn">as</span> <span class="nn">ismn</span>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">pytesmo.io.ismn.interface</span> <span class="kn">as</span> <span class="nn">ismn</span>
 <span class="kn">import</span> <span class="nn">pytesmo.io.sat.ascat</span> <span class="kn">as</span> <span class="nn">ascat</span>
 <span class="kn">import</span> <span class="nn">pytesmo.temporal_matching</span> <span class="kn">as</span> <span class="nn">temp_match</span>
 <span class="kn">import</span> <span class="nn">pytesmo.scaling</span> <span class="kn">as</span> <span class="nn">scaling</span>
+<span class="kn">import</span> <span class="nn">pytesmo.df_metrics</span> <span class="kn">as</span> <span class="nn">df_metrics</span>
 <span class="kn">import</span> <span class="nn">pytesmo.metrics</span> <span class="kn">as</span> <span class="nn">metrics</span>
 
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
 </pre></div>
 </div>
-<p>In[2]:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="c">#set paths for ASCAT SSM</span>
-<span class="n">path_to_ascat_ssm_data</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;D:</span><span class="se">\\</span><span class="s">&#39;</span><span class="p">,</span><span class="s">&#39;small_projects&#39;</span><span class="p">,</span>
-                                      <span class="s">&#39;cpa_2013_07_userformat_reader&#39;</span><span class="p">,</span><span class="s">&#39;data&#39;</span><span class="p">,</span><span class="s">&#39;ASCAT_SSM_25km_ts_WARP5.5_R0.1&#39;</span><span class="p">,</span><span class="s">&#39;data&#39;</span><span class="p">)</span>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="n">ascat_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;R:</span><span class="se">\\</span><span class="s">&#39;</span><span class="p">,</span><span class="s">&#39;Datapool_processed&#39;</span><span class="p">,</span><span class="s">&#39;WARP&#39;</span><span class="p">,</span><span class="s">&#39;WARP5.5&#39;</span><span class="p">,</span>
+                                         <span class="s">&#39;ASCAT_WARP5.5_R1.2&#39;</span><span class="p">,</span><span class="s">&#39;080_ssm&#39;</span><span class="p">,</span><span class="s">&#39;netcdf&#39;</span><span class="p">)</span>
+<span class="n">ascat_grid_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;R:</span><span class="se">\\</span><span class="s">&#39;</span><span class="p">,</span><span class="s">&#39;Datapool_processed&#39;</span><span class="p">,</span><span class="s">&#39;WARP&#39;</span><span class="p">,</span><span class="s">&#39;ancillary&#39;</span><span class="p">,</span><span class="s">&#39;warp5_grid&#39;</span><span class="p">)</span>
+<span class="c">#init the ASCAT_SSM reader with the paths</span>
 
-<span class="n">path_to_grid_definition</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;D:</span><span class="se">\\</span><span class="s">&#39;</span><span class="p">,</span><span class="s">&#39;small_projects&#39;</span><span class="p">,</span>
-                                      <span class="s">&#39;cpa_2013_07_userformat_reader&#39;</span><span class="p">,</span><span class="s">&#39;data&#39;</span><span class="p">,</span><span class="s">&#39;auxiliary_data&#39;</span><span class="p">,</span><span class="s">&#39;grid_info&#39;</span><span class="p">)</span>
-
-<span class="n">path_to_adv_flags</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;D:</span><span class="se">\\</span><span class="s">&#39;</span><span class="p">,</span><span class="s">&#39;small_projects&#39;</span><span class="p">,</span>
-                                      <span class="s">&#39;cpa_2013_07_userformat_reader&#39;</span><span class="p">,</span><span class="s">&#39;data&#39;</span><span class="p">,</span><span class="s">&#39;auxiliary_data&#39;</span><span class="p">,</span><span class="s">&#39;advisory_flags&#39;</span><span class="p">)</span>
+<span class="c">#let&#39;s not include the orbit direction since it is saved as &#39;A&#39;</span>
+<span class="c">#or &#39;D&#39; it can not be plotted</span>
+<span class="n">ascat_SSM_reader</span> <span class="o">=</span> <span class="n">ascat</span><span class="o">.</span><span class="n">AscatH25_SSM</span><span class="p">(</span><span class="n">ascat_folder</span><span class="p">,</span><span class="n">ascat_grid_folder</span><span class="p">,</span>
+                                      <span class="n">include_in_df</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;sm&#39;</span><span class="p">,</span> <span class="s">&#39;sm_noise&#39;</span><span class="p">,</span> <span class="s">&#39;ssf&#39;</span><span class="p">,</span> <span class="s">&#39;proc_flag&#39;</span><span class="p">])</span>
 </pre></div>
 </div>
-<p>In[3]:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="c">#set path to ISMN data</span>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="c">#set path to ISMN data</span>
 <span class="n">path_to_ismn_data</span> <span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;D:</span><span class="se">\\</span><span class="s">&#39;</span><span class="p">,</span><span class="s">&#39;small_projects&#39;</span><span class="p">,</span><span class="s">&#39;cpa_2013_07_ISMN_userformat_reader&#39;</span><span class="p">,</span><span class="s">&#39;header_values_parser_test&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>In[4]:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="c">#Initialize readers</span>
-<span class="n">ascat_SSM_reader</span> <span class="o">=</span> <span class="n">ascat</span><span class="o">.</span><span class="n">Ascat_SSM</span><span class="p">(</span><span class="n">path_to_ascat_ssm_data</span><span class="p">,</span><span class="n">path_to_grid_definition</span><span class="p">,</span>
-                                   <span class="n">advisory_flags_path</span> <span class="o">=</span> <span class="n">path_to_adv_flags</span><span class="p">)</span>
-
+<span class="c">#Initialize reader</span>
 <span class="n">ISMN_reader</span> <span class="o">=</span> <span class="n">ismn</span><span class="o">.</span><span class="n">ISMN_Interface</span><span class="p">(</span><span class="n">path_to_ismn_data</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>In[5]:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
 
-<span class="n">label_ascat</span><span class="o">=</span><span class="s">&#39;SSM&#39;</span>
+<span class="n">label_ascat</span><span class="o">=</span><span class="s">&#39;sm&#39;</span>
 <span class="n">label_insitu</span><span class="o">=</span><span class="s">&#39;insitu_sm&#39;</span>
 </pre></div>
 </div>
-<p>In[6]:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="c">#this loops through all stations that measure soil moisture</span>
+<div class="code python highlight-python"><div class="highlight"><pre><span class="c">#this loops through all stations that measure soil moisture</span>
 <span class="k">for</span> <span class="n">station</span> <span class="ow">in</span> <span class="n">ISMN_reader</span><span class="o">.</span><span class="n">stations_that_measure</span><span class="p">(</span><span class="s">&#39;soil moisture&#39;</span><span class="p">):</span>
 
     <span class="c">#this loops through all time series of this station that measure soil moisture</span>
@@ -343,6 +472,7 @@ several metrics, like the correlation coefficients(Pearson&#8217;s, Spearman&#82
 
         <span class="c">#drop nan values before doing any matching</span>
         <span class="n">ascat_time_series</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">ascat_time_series</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
+
         <span class="n">ISMN_time_series</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">ISMN_time_series</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
 
         <span class="c">#rename the soil moisture column in ISMN_time_series.data to insitu_sm</span>
@@ -351,50 +481,49 @@ several metrics, like the correlation coefficients(Pearson&#8217;s, Spearman&#82
 
         <span class="c">#get ISMN data that was observerd within +- 1 hour(1/24. day) of the ASCAT observation</span>
         <span class="c">#do not include those indexes where no observation was found</span>
-        <span class="n">matched_ISMN_data</span> <span class="o">=</span> <span class="n">temp_match</span><span class="o">.</span><span class="n">df_match</span><span class="p">(</span><span class="n">ascat_time_series</span><span class="o">.</span><span class="n">data</span><span class="p">,</span><span class="n">ISMN_time_series</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
-                                                <span class="n">window</span><span class="o">=</span><span class="mi">1</span><span class="o">/</span><span class="mf">24.</span><span class="p">,</span><span class="n">dropna</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">matched_data</span> <span class="o">=</span> <span class="n">temp_match</span><span class="o">.</span><span class="n">matching</span><span class="p">(</span><span class="n">ascat_time_series</span><span class="o">.</span><span class="n">data</span><span class="p">,</span><span class="n">ISMN_time_series</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+                                                <span class="n">window</span><span class="o">=</span><span class="mi">1</span><span class="o">/</span><span class="mf">24.</span><span class="p">)</span>
         <span class="c">#matched ISMN data is now a dataframe with the same datetime index</span>
         <span class="c">#as ascat_time_series.data and the nearest insitu observation</span>
-
-        <span class="c">#temporal matching also includes distance information</span>
-        <span class="c">#but we are not interested in it right now so let&#39;s drop it</span>
-        <span class="n">matched_ISMN_data</span> <span class="o">=</span> <span class="n">matched_ISMN_data</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s">&#39;distance&#39;</span><span class="p">],</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-
-        <span class="c">#this joins the SSM column of the ASCAT data to the matched ISMN data</span>
-        <span class="n">matched_data</span> <span class="o">=</span> <span class="n">matched_ISMN_data</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ascat_time_series</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">label_ascat</span><span class="p">])</span>
 
         <span class="c">#continue only with relevant columns</span>
         <span class="n">matched_data</span> <span class="o">=</span> <span class="n">matched_data</span><span class="p">[[</span><span class="n">label_ascat</span><span class="p">,</span><span class="n">label_insitu</span><span class="p">]]</span>
 
         <span class="c">#the plot shows that ISMN and ASCAT are observed in different units</span>
-        <span class="n">matched_data</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span><span class="mi">5</span><span class="p">),</span><span class="n">secondary_y</span><span class="o">=</span><span class="p">[</span><span class="n">label_ascat</span><span class="p">])</span>
+        <span class="n">matched_data</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span><span class="mi">5</span><span class="p">),</span><span class="n">secondary_y</span><span class="o">=</span><span class="p">[</span><span class="n">label_ascat</span><span class="p">],</span>
+                          <span class="n">title</span><span class="o">=</span><span class="s">&#39;temporally merged data&#39;</span><span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 
-        <span class="c">#this takes the matched_data DataFrame and adds a column</span>
-        <span class="n">scaled_data</span> <span class="o">=</span> <span class="n">scaling</span><span class="o">.</span><span class="n">add_scaled</span><span class="p">(</span><span class="n">matched_data</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s">&#39;lin_cdf_match&#39;</span><span class="p">,</span>
-                                         <span class="n">label_in</span><span class="o">=</span><span class="n">label_ascat</span><span class="p">,</span><span class="n">label_scale</span><span class="o">=</span><span class="n">label_insitu</span><span class="p">)</span>
-        <span class="c">#the label of the scaled data is construced as label_in+&#39;_scaled_&#39;+method</span>
-        <span class="n">scaled_ascat_label</span> <span class="o">=</span> <span class="n">label_ascat</span><span class="o">+</span><span class="s">&#39;_scaled_&#39;</span><span class="o">+</span><span class="s">&#39;lin_cdf_match&#39;</span>
+        <span class="c">#this takes the matched_data DataFrame and scales all columns to the</span>
+        <span class="c">#column with the given reference_index, in this case in situ</span>
+        <span class="n">scaled_data</span> <span class="o">=</span> <span class="n">scaling</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="n">matched_data</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s">&#39;lin_cdf_match&#39;</span><span class="p">,</span>
+                                         <span class="n">reference_index</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
         <span class="c">#now the scaled ascat data and insitu_sm are in the same space</span>
-        <span class="n">scaled_data</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span><span class="mi">5</span><span class="p">),</span><span class="n">secondary_y</span><span class="o">=</span><span class="p">[</span><span class="n">label_ascat</span><span class="p">])</span>
+        <span class="n">scaled_data</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span><span class="mi">5</span><span class="p">),</span> <span class="n">title</span><span class="o">=</span><span class="s">&#39;scaled data&#39;</span><span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 
-        <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">scaled_data</span><span class="p">[</span><span class="n">scaled_ascat_label</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span><span class="n">scaled_data</span><span class="p">[</span><span class="n">label_insitu</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="n">scaled_ascat_label</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">scaled_data</span><span class="p">[</span><span class="n">label_ascat</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span><span class="n">scaled_data</span><span class="p">[</span><span class="n">label_insitu</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="n">label_ascat</span><span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="n">label_insitu</span><span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 
         <span class="c">#calculate correlation coefficients, RMSD, bias, Nash Sutcliffe</span>
-        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">scaled_data</span><span class="p">[</span><span class="n">scaled_ascat_label</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">scaled_data</span><span class="p">[</span><span class="n">label_insitu</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">scaled_data</span><span class="p">[</span><span class="n">label_ascat</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">scaled_data</span><span class="p">[</span><span class="n">label_insitu</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
 
         <span class="k">print</span> <span class="s">&quot;ISMN time series:&quot;</span><span class="p">,</span><span class="n">ISMN_time_series</span>
         <span class="k">print</span> <span class="s">&quot;compared to&quot;</span>
         <span class="k">print</span> <span class="n">ascat_time_series</span>
         <span class="k">print</span> <span class="s">&quot;Results:&quot;</span>
-        <span class="k">print</span> <span class="s">&quot;Pearson&#39;s (R,p_value)&quot;</span><span class="p">,</span> <span class="n">metrics</span><span class="o">.</span><span class="n">pearsonr</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
+        <span class="c">#df_metrics takes a DataFrame as input and automatically</span>
+        <span class="c">#calculates the metric on all combinations of columns</span>
+        <span class="c">#returns a named tuple for easy printing</span>
+        <span class="k">print</span> <span class="n">df_metrics</span><span class="o">.</span><span class="n">pearsonr</span><span class="p">(</span><span class="n">scaled_data</span><span class="p">)</span>
         <span class="k">print</span> <span class="s">&quot;Spearman&#39;s (rho,p_value)&quot;</span><span class="p">,</span> <span class="n">metrics</span><span class="o">.</span><span class="n">spearmanr</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
         <span class="k">print</span> <span class="s">&quot;Kendalls&#39;s (tau,p_value)&quot;</span><span class="p">,</span> <span class="n">metrics</span><span class="o">.</span><span class="n">kendalltau</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
-        <span class="k">print</span> <span class="s">&quot;RMSD&quot;</span><span class="p">,</span> <span class="n">metrics</span><span class="o">.</span><span class="n">rmsd</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="k">print</span> <span class="n">df_metrics</span><span class="o">.</span><span class="n">kendalltau</span><span class="p">(</span><span class="n">scaled_data</span><span class="p">)</span>
+        <span class="k">print</span> <span class="n">df_metrics</span><span class="o">.</span><span class="n">rmsd</span><span class="p">(</span><span class="n">scaled_data</span><span class="p">)</span>
         <span class="k">print</span> <span class="s">&quot;Bias&quot;</span><span class="p">,</span> <span class="n">metrics</span><span class="o">.</span><span class="n">bias</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
         <span class="k">print</span> <span class="s">&quot;Nash Sutcliffe&quot;</span><span class="p">,</span> <span class="n">metrics</span><span class="o">.</span><span class="n">nash_sutcliffe</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
 
@@ -414,12 +543,13 @@ several metrics, like the correlation coefficients(Pearson&#8217;s, Spearman&#82
 compared to
 ASCAT time series gpi:1884359 lat:-35.342 lon:147.541
 Results:
-Pearson's (R,p_value) (0.59736953256517777, 1.4810058830429653e-60)
-Spearman's (rho,p_value) (0.63684906343988457, 4.8971200217989799e-71)
-Kendalls's (tau,p_value) (0.45994629380576146, 4.6771942474849024e-65)
-RMSD 0.0807313501609
-Bias 0.00258302466701
-Nash Sutcliffe 0.221824420266</pre>
+(Pearsons_r(sm_and_insitu_sm=0.61607679781575175), p_value(sm_and_insitu_sm=3.1170801211098453e-65))
+Spearman's (rho,p_value) (0.64651747115098912, 1.0057610194056589e-73)
+Kendalls's (tau,p_value) (0.4685441550995097, 2.4676437876515864e-67)
+(Kendall_tau(sm_and_insitu_sm=0.4685441550995097), p_value(sm_and_insitu_sm=2.4676437876515864e-67))
+rmsd(sm_and_insitu_sm=0.078018684719599857)
+Bias 0.00168114697282
+Nash Sutcliffe 0.246416864767</pre>
 </div>
 <img alt="_images/compare_ASCAT_ISMN_5_4.png" src="_images/compare_ASCAT_ISMN_5_4.png" />
 <img alt="_images/compare_ASCAT_ISMN_5_5.png" src="_images/compare_ASCAT_ISMN_5_5.png" />
@@ -428,12 +558,13 @@ Nash Sutcliffe 0.221824420266</pre>
 compared to
 ASCAT time series gpi:1821003 lat:-33.990 lon:146.381
 Results:
-Pearson's (R,p_value) (0.65811087356086551, 9.1620935528699124e-126)
-Spearman's (rho,p_value) (0.65874491635978671, 4.3707663858540222e-126)
-Kendalls's (tau,p_value) (0.48451720923430946, 4.6613967263363183e-117)
-RMSD 0.0283269899964
-Bias -0.000181669876467
-Nash Sutcliffe 0.314284186192</pre>
+(Pearsons_r(sm_and_insitu_sm=0.66000287576696759), p_value(sm_and_insitu_sm=1.3332742454781072e-126))
+Spearman's (rho,p_value) (0.65889275747696652, 4.890533231776912e-126)
+Kendalls's (tau,p_value) (0.48653686844813893, 6.6517671082477896e-118)
+(Kendall_tau(sm_and_insitu_sm=0.48653686844813893), p_value(sm_and_insitu_sm=6.6517671082477896e-118))
+rmsd(sm_and_insitu_sm=0.028314835540753237)
+Bias 4.56170862568e-05
+Nash Sutcliffe 0.316925662899</pre>
 </div>
 </div>
 </div>
@@ -447,7 +578,9 @@ Nash Sutcliffe 0.314284186192</pre>
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Examples</a><ul>
-<li><a class="reference internal" href="#reading-and-plotting-ascat-data">Reading and plotting ASCAT data</a></li>
+<li><a class="reference internal" href="#reading-and-plotting-ascat-data-from-binary-format">Reading and plotting ASCAT data from binary format</a></li>
+<li><a class="reference internal" href="#reading-and-plotting-ascat-h25-data-from-netcdf-format">Reading and plotting ASCAT H25 data from netCDF format</a></li>
+<li><a class="reference internal" href="#calculating-anomalies-and-climatologies">Calculating anomalies and climatologies</a></li>
 <li><a class="reference internal" href="#reading-and-plotting-data-from-the-ismn">Reading and plotting data from the ISMN</a></li>
 <li><a class="reference internal" href="#comparing-ascat-and-insitu-data-from-the-ismn">Comparing ASCAT and insitu data from the ISMN</a></li>
 </ul>
@@ -459,7 +592,7 @@ Nash Sutcliffe 0.314284186192</pre>
                         title="previous chapter">Introduction to pytesmo a python Toolbox for the Evaluation of Soil Moisture Observations</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="pytesmo.html"
-                        title="next chapter">pytesmo Package</a></p>
+                        title="next chapter">pytesmo package</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/examples.txt"
@@ -495,17 +628,17 @@ Nash Sutcliffe 0.314284186192</pre>
           <a href="np-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="pytesmo.html" title="pytesmo Package"
+          <a href="pytesmo.html" title="pytesmo package"
              >next</a> |</li>
         <li class="right" >
           <a href="introduction.html" title="Introduction to pytesmo a python Toolbox for the Evaluation of Soil Moisture Observations"
              >previous</a> |</li>
-        <li><a href="index.html">pytesmo 0.1a1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">pytesmo 0.1.1 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
-        &copy; Copyright 2013, Technical University of Vienna, Department of Geodesy and Geoinformation.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+        &copy; Copyright 2013, Vienna University of Technology, Department of Geodesy and Geoinformation.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
     </div>
   </body>
 </html>

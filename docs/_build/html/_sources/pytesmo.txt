@@ -1,37 +1,5 @@
-pytesmo Package
+pytesmo package
 ===============
-
-:mod:`anomaly` Module
----------------------
-
-.. automodule:: pytesmo.anomaly
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`metrics` Module
----------------------
-
-.. automodule:: pytesmo.metrics
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`scaling` Module
----------------------
-
-.. automodule:: pytesmo.scaling
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`temporal_matching` Module
--------------------------------
-
-.. automodule:: pytesmo.temporal_matching
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 Subpackages
 -----------
@@ -40,5 +8,49 @@ Subpackages
 
     pytesmo.grid
     pytesmo.io
+    pytesmo.time_series
     pytesmo.timedate
 
+Submodules
+----------
+
+pytesmo.df_metrics module
+-------------------------
+
+.. automodule:: pytesmo.df_metrics
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+pytesmo.metrics module
+----------------------
+
+.. automodule:: pytesmo.metrics
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+pytesmo.scaling module
+----------------------
+
+.. automodule:: pytesmo.scaling
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+pytesmo.temporal_matching module
+--------------------------------
+
+.. automodule:: pytesmo.temporal_matching
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: pytesmo
+    :members:
+    :undoc-members:
+    :show-inheritance:

@@ -1,3 +1,3 @@
 __all__ = ['julian']
 
-import pytesmo.timedate.julian
+import julian

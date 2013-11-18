@@ -1,0 +1,407 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pytesmo.df_metrics &mdash; pytesmo 0.1.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="pytesmo 0.1.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">pytesmo 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for pytesmo.df_metrics</h1><div class="highlight"><pre>
+<span class="c">#Copyright (c) 2013,Vienna University of Technology, Department of Geodesy and Geoinformation</span>
+<span class="c">#All rights reserved.</span>
+
+<span class="c">#Redistribution and use in source and binary forms, with or without</span>
+<span class="c">#modification, are permitted provided that the following conditions are met:</span>
+<span class="c">#   * Redistributions of source code must retain the above copyright</span>
+<span class="c">#     notice, this list of conditions and the following disclaimer.</span>
+<span class="c">#    * Redistributions in binary form must reproduce the above copyright</span>
+<span class="c">#      notice, this list of conditions and the following disclaimer in the</span>
+<span class="c">#      documentation and/or other materials provided with the distribution.</span>
+<span class="c">#    * Neither the name of the Vienna University of Technology, Department of Geodesy and Geoinformation nor the</span>
+<span class="c">#      names of its contributors may be used to endorse or promote products</span>
+<span class="c">#      derived from this software without specific prior written permission.</span>
+
+<span class="c">#THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot; AND</span>
+<span class="c">#ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED</span>
+<span class="c">#WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE</span>
+<span class="c">#DISCLAIMED. IN NO EVENT SHALL VIENNA UNIVERSITY OF TECHNOLOGY, </span>
+<span class="c">#DEPARTMENT OF GEODESY AND GEOINFORMATION BE LIABLE FOR ANY</span>
+<span class="c">#DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES</span>
+<span class="c">#(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;</span>
+<span class="c">#LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND</span>
+<span class="c">#ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT</span>
+<span class="c">#(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS</span>
+<span class="c">#SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</span>
+
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Module contains wrappers for methods in pytesmo.metrics which can be given pandas.DataFrames</span>
+<span class="sd">instead of single numpy.arrays . If the DataFrame has more columns than the function has input parameters</span>
+<span class="sd">the function will be applied pairwise</span>
+
+<span class="sd">Created on Aug 14, 2013</span>
+
+<span class="sd">@author: Christoph Paulik Christoph.Paulik@geo.tuwien.ac.at </span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pytesmo.metrics</span> <span class="kn">as</span> <span class="nn">metrics</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">namedtuple</span>
+
+
+<div class="viewcode-block" id="DataFrameDimensionError"><a class="viewcode-back" href="../../pytesmo.html#pytesmo.df_metrics.DataFrameDimensionError">[docs]</a><span class="k">class</span> <span class="nc">DataFrameDimensionError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+</div>
+<div class="viewcode-block" id="bias"><a class="viewcode-back" href="../../pytesmo.html#pytesmo.df_metrics.bias">[docs]</a><span class="k">def</span> <span class="nf">bias</span><span class="p">(</span><span class="n">df</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Bias</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bias : pandas.Dataframe</span>
+<span class="sd">        of shape (len(df.columns),len(df.columns))</span>
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    pytesmo.metrics.bias</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">pairwise_apply</span><span class="p">(</span><span class="n">df</span><span class="p">,</span><span class="n">metrics</span><span class="o">.</span><span class="n">bias</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="rmsd"><a class="viewcode-back" href="../../pytesmo.html#pytesmo.df_metrics.rmsd">[docs]</a><span class="k">def</span> <span class="nf">rmsd</span><span class="p">(</span><span class="n">df</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Root-mean-square deviation</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    result : namedtuple</span>
+<span class="sd">        with column names of df for which the calculation was done as name of the</span>
+<span class="sd">        element separated by &#39;_and_&#39;</span>
+<span class="sd">    </span>
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    pytesmo.metrics.rmsd</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_to_namedtuple</span><span class="p">(</span><span class="n">pairwise_apply</span><span class="p">(</span><span class="n">df</span><span class="p">,</span><span class="n">metrics</span><span class="o">.</span><span class="n">rmsd</span><span class="p">,</span><span class="n">comm</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span><span class="s">&#39;rmsd&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="nrmsd"><a class="viewcode-back" href="../../pytesmo.html#pytesmo.df_metrics.nrmsd">[docs]</a><span class="k">def</span> <span class="nf">nrmsd</span><span class="p">(</span><span class="n">df</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Normalized root-mean-square deviation</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    result : namedtuple</span>
+<span class="sd">        with column names of df for which the calculation was done as name of the</span>
+<span class="sd">        element separated by &#39;_and_&#39;</span>
+<span class="sd">    </span>
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    pytesmo.metrics.nrmsd</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_to_namedtuple</span><span class="p">(</span><span class="n">pairwise_apply</span><span class="p">(</span><span class="n">df</span><span class="p">,</span><span class="n">metrics</span><span class="o">.</span><span class="n">nrmsd</span><span class="p">,</span><span class="n">comm</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span><span class="s">&#39;nrmsd&#39;</span><span class="p">)</span>
+    </div>
+<div class="viewcode-block" id="ubrmsd"><a class="viewcode-back" href="../../pytesmo.html#pytesmo.df_metrics.ubrmsd">[docs]</a><span class="k">def</span> <span class="nf">ubrmsd</span><span class="p">(</span><span class="n">df</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Unbiased root-mean-square deviation</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    result : namedtuple</span>
+<span class="sd">        with column names of df for which the calculation was done as name of the</span>
+<span class="sd">        element separated by &#39;_and_&#39;</span>
+<span class="sd">    </span>
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    pytesmo.metrics.ubrmsd</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_to_namedtuple</span><span class="p">(</span><span class="n">pairwise_apply</span><span class="p">(</span><span class="n">df</span><span class="p">,</span><span class="n">metrics</span><span class="o">.</span><span class="n">ubrmsd</span><span class="p">,</span><span class="n">comm</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span><span class="s">&#39;ubrmsd&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="mse"><a class="viewcode-back" href="../../pytesmo.html#pytesmo.df_metrics.mse">[docs]</a><span class="k">def</span> <span class="nf">mse</span><span class="p">(</span><span class="n">df</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Mean square error (MSE) as a decomposition of the RMSD into individual error components    </span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    result : namedtuple</span>
+<span class="sd">        with column names of df for which the calculation was done as name of the</span>
+<span class="sd">        element separated by &#39;_and_&#39;</span>
+<span class="sd">    </span>
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    pytesmo.metrics.mse</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">MSE</span><span class="p">,</span> <span class="n">MSEcorr</span><span class="p">,</span> <span class="n">MSEbias</span><span class="p">,</span> <span class="n">MSEvar</span> <span class="o">=</span> <span class="n">pairwise_apply</span><span class="p">(</span><span class="n">df</span><span class="p">,</span><span class="n">metrics</span><span class="o">.</span><span class="n">mse</span><span class="p">,</span><span class="n">comm</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">_to_namedtuple</span><span class="p">(</span><span class="n">MSE</span><span class="p">,</span> <span class="s">&#39;MSE&#39;</span><span class="p">),</span> <span class="n">_to_namedtuple</span><span class="p">(</span><span class="n">MSEcorr</span><span class="p">,</span> <span class="s">&#39;MSEcorr&#39;</span><span class="p">),</span>
+            <span class="n">_to_namedtuple</span><span class="p">(</span><span class="n">MSEbias</span><span class="p">,</span> <span class="s">&#39;MSEbias&#39;</span><span class="p">),</span> <span class="n">_to_namedtuple</span><span class="p">(</span><span class="n">MSEvar</span><span class="p">,</span> <span class="s">&#39;MSEvar&#39;</span><span class="p">))</span> 
+    
+    </div>
+<div class="viewcode-block" id="tcol_error"><a class="viewcode-back" href="../../pytesmo.html#pytesmo.df_metrics.tcol_error">[docs]</a><span class="k">def</span> <span class="nf">tcol_error</span><span class="p">(</span><span class="n">df</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Triple collocation error estimate</span>
+<span class="sd">    In this case df has to have exactly 3 columns, since triple wise</span>
+<span class="sd">    application of a function is not yet implemented and would probably return a </span>
+<span class="sd">    complicated structure</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    result : namedtuple</span>
+<span class="sd">        with column names of df</span>
+<span class="sd">    </span>
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    pytesmo.metrics.tcol_error</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">DataFrameDimensionError</span><span class="p">(</span><span class="s">&quot;DataFrame has to have 3 columns&quot;</span><span class="p">)</span>
+
+    
+    <span class="n">tcol_result</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s">&#39;triple_collocation_error&#39;</span><span class="p">,</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span> 
+    
+    <span class="k">return</span> <span class="n">tcol_result</span><span class="o">.</span><span class="n">_make</span><span class="p">(</span><span class="n">metrics</span><span class="o">.</span><span class="n">tcol_error</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">ix</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">ix</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">ix</span><span class="p">[:,</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="nash_sutcliffe"><a class="viewcode-back" href="../../pytesmo.html#pytesmo.df_metrics.nash_sutcliffe">[docs]</a><span class="k">def</span> <span class="nf">nash_sutcliffe</span><span class="p">(</span><span class="n">df</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Nash Sutcliffe model efficiency coefficient</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    result : namedtuple</span>
+<span class="sd">        with column names of df for which the calculation was done as name of the</span>
+<span class="sd">        element separated by &#39;_and_&#39;</span>
+<span class="sd">    </span>
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    pytesmo.metrics.nash_sutcliffe</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_to_namedtuple</span><span class="p">(</span><span class="n">pairwise_apply</span><span class="p">(</span><span class="n">df</span><span class="p">,</span><span class="n">metrics</span><span class="o">.</span><span class="n">nash_sutcliffe</span><span class="p">,</span><span class="n">comm</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span><span class="s">&#39;Nash_Sutcliffe&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="RSS"><a class="viewcode-back" href="../../pytesmo.html#pytesmo.df_metrics.RSS">[docs]</a><span class="k">def</span> <span class="nf">RSS</span><span class="p">(</span><span class="n">df</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Redidual sum of squares</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    result : namedtuple</span>
+<span class="sd">        with column names of df for which the calculation was done as name of the</span>
+<span class="sd">        element separated by &#39;_and_&#39;</span>
+<span class="sd">    </span>
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    pytesmo.metrics.RSS    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_to_namedtuple</span><span class="p">(</span><span class="n">pairwise_apply</span><span class="p">(</span><span class="n">df</span><span class="p">,</span><span class="n">metrics</span><span class="o">.</span><span class="n">RSS</span><span class="p">,</span><span class="n">comm</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span><span class="s">&#39;RSS&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="pearsonr"><a class="viewcode-back" href="../../pytesmo.html#pytesmo.df_metrics.pearsonr">[docs]</a><span class="k">def</span> <span class="nf">pearsonr</span><span class="p">(</span><span class="n">df</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Wrapper for scipy.stats.pearsonr</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    result : namedtuple</span>
+<span class="sd">        with column names of df for which the calculation was done as name of the</span>
+<span class="sd">        element separated by &#39;_and_&#39;</span>
+<span class="sd">    </span>
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    pytesmo.metrics.pearsonr</span>
+<span class="sd">    scipy.stats.pearsonr    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">r</span><span class="p">,</span> <span class="n">p</span> <span class="o">=</span> <span class="n">pairwise_apply</span><span class="p">(</span><span class="n">df</span><span class="p">,</span><span class="n">metrics</span><span class="o">.</span><span class="n">pearsonr</span><span class="p">,</span><span class="n">comm</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_to_namedtuple</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="s">&#39;Pearsons_r&#39;</span><span class="p">),</span> <span class="n">_to_namedtuple</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="s">&#39;p_value&#39;</span><span class="p">)</span>
+    
+    
+</div>
+<div class="viewcode-block" id="spearmanr"><a class="viewcode-back" href="../../pytesmo.html#pytesmo.df_metrics.spearmanr">[docs]</a><span class="k">def</span> <span class="nf">spearmanr</span><span class="p">(</span><span class="n">df</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Wrapper for scipy.stats.spearmanr</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    result : namedtuple</span>
+<span class="sd">        with column names of df for which the calculation was done as name of the</span>
+<span class="sd">        element separated by &#39;_and_&#39;</span>
+<span class="sd">    </span>
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    pytesmo.metrics.spearmenr</span>
+<span class="sd">    scipy.stats.spearmenr    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">r</span><span class="p">,</span> <span class="n">p</span> <span class="o">=</span> <span class="n">pairwise_apply</span><span class="p">(</span><span class="n">df</span><span class="p">,</span><span class="n">metrics</span><span class="o">.</span><span class="n">spearmanr</span><span class="p">,</span><span class="n">comm</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_to_namedtuple</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="s">&#39;Spearman_r&#39;</span><span class="p">),</span> <span class="n">_to_namedtuple</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="s">&#39;p_value&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="kendalltau"><a class="viewcode-back" href="../../pytesmo.html#pytesmo.df_metrics.kendalltau">[docs]</a><span class="k">def</span> <span class="nf">kendalltau</span><span class="p">(</span><span class="n">df</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Wrapper for scipy.stats.kendalltau</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    result : namedtuple</span>
+<span class="sd">        with column names of df for which the calculation was done as name of the</span>
+<span class="sd">        element separated by &#39;_and_&#39;</span>
+<span class="sd">    </span>
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    pytesmo.metrics.kendalltau</span>
+<span class="sd">    scipy.stats.kendalltau    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">r</span><span class="p">,</span> <span class="n">p</span> <span class="o">=</span> <span class="n">pairwise_apply</span><span class="p">(</span><span class="n">df</span><span class="p">,</span><span class="n">metrics</span><span class="o">.</span><span class="n">kendalltau</span><span class="p">,</span><span class="n">comm</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_to_namedtuple</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="s">&#39;Kendall_tau&#39;</span><span class="p">),</span> <span class="n">_to_namedtuple</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="s">&#39;p_value&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="pairwise_apply"><a class="viewcode-back" href="../../pytesmo.html#pytesmo.df_metrics.pairwise_apply">[docs]</a><span class="k">def</span> <span class="nf">pairwise_apply</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">comm</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute given method pairwise for all columns, excluding NA/null values</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    df : pandas.DataFrame</span>
+<span class="sd">        input data, method will be applied to each column pair</span>
+<span class="sd">    method : function</span>
+<span class="sd">        method to apply to each column pair. has to take 2 input arguments of</span>
+<span class="sd">        type numpy.array and return one value or tuple of values</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    results : pandas.DataFrame</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">numeric_df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">_get_numeric_data</span><span class="p">()</span>
+    <span class="n">cols</span> <span class="o">=</span> <span class="n">numeric_df</span><span class="o">.</span><span class="n">columns</span>
+    <span class="n">mat</span> <span class="o">=</span> <span class="n">numeric_df</span><span class="o">.</span><span class="n">values</span>
+    <span class="n">mat</span> <span class="o">=</span> <span class="n">mat</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">applyf</span> <span class="o">=</span> <span class="n">method</span> 
+    <span class="n">K</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">cols</span><span class="p">)</span>
+    <span class="n">result_empty</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">K</span><span class="p">,</span> <span class="n">K</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">result_empty</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+    
+    <span class="c"># find out how many variables the applyf returns</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">applyf</span><span class="p">(</span><span class="n">mat</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mat</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>   
+    <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">c</span><span class="p">)):</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result_empty</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>    
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">mat</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ac</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">mat</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">bc</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">mat</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="n">j</span><span class="p">:</span> <span class="k">continue</span>
+            <span class="k">if</span> <span class="n">comm</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]):</span> <span class="k">continue</span>
+            <span class="n">valid</span> <span class="o">=</span> <span class="n">mask</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&amp;</span> <span class="n">mask</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">valid</span><span class="o">.</span><span class="n">any</span><span class="p">():</span><span class="k">continue</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">valid</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+                <span class="n">c</span> <span class="o">=</span> <span class="n">applyf</span><span class="p">(</span><span class="n">ac</span><span class="p">[</span><span class="n">valid</span><span class="p">],</span> <span class="n">bc</span><span class="p">[</span><span class="n">valid</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">c</span> <span class="o">=</span> <span class="n">applyf</span><span class="p">(</span><span class="n">ac</span><span class="p">,</span> <span class="n">bc</span><span class="p">)</span>    
+            
+            <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">c</span><span class="p">)):</span>
+                <span class="n">result</span><span class="p">[</span><span class="n">index</span><span class="p">][</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>    
+                <span class="k">if</span> <span class="n">comm</span><span class="p">:</span> <span class="n">result</span><span class="p">[</span><span class="n">index</span><span class="p">][</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>  
+    <span class="n">return_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
+        <span class="n">return_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">_constructor</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">cols</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">cols</span><span class="p">))</span>
+    
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">return_list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">return_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">return_list</span><span class="p">)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">_to_namedtuple</span><span class="p">(</span><span class="n">df</span><span class="p">,</span><span class="n">name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    takes df produced by pairwise apply and produces named tuple</span>
+<span class="sd">    of the non duplicate values for commutative operations(the triangle</span>
+<span class="sd">    above the diagonal)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">names</span><span class="o">=</span><span class="p">[]</span>
+    <span class="n">values</span><span class="o">=</span><span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">column</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span>
+        <span class="k">for</span> <span class="n">column_names</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">:]:</span> 
+            <span class="n">names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;_and_&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="n">column_names</span><span class="p">]))</span>
+        <span class="n">values</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">column</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">:])</span>
+    
+    
+    <span class="n">result</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="n">name</span><span class="p">,</span><span class="n">names</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">_make</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+    
+    
+    
+    
+    
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">pytesmo 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Vienna University of Technology, Department of Geodesy and Geoinformation.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
+    </div>
+  </body>
+</html>

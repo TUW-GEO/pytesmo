@@ -1,2 +1,3 @@
-include *.txt 
+include *.txt
 recursive-include docs *.txt *.html *.css *.png *.gif *.js
+recursive-include pytesmo *.pyx

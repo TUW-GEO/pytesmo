@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -8,15 +6,15 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pytesmo.temporal_matching &mdash; pytesmo 0.1a1 documentation</title>
+    <title>pytesmo.temporal_matching &mdash; pytesmo 0.1.1 documentation</title>
     
-    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '0.1a1',
+        VERSION:     '0.1.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -25,7 +23,7 @@
     <script type="text/javascript" src="../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <link rel="top" title="pytesmo 0.1a1 documentation" href="../../index.html" />
+    <link rel="top" title="pytesmo 0.1.1 documentation" href="../../index.html" />
     <link rel="up" title="Module code" href="../index.html" /> 
   </head>
   <body>
@@ -41,7 +39,7 @@
         <li class="right" >
           <a href="../../np-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../index.html">pytesmo 0.1a1 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pytesmo 0.1.1 documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -71,9 +69,9 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    reference : pandas.DataFrame</span>
+<span class="sd">    reference : pandas.DataFrame or pandas.TimeSeries</span>
 <span class="sd">        The index of this dataframe will be the reference.</span>
-<span class="sd">    *args : pandas.DataFrame</span>
+<span class="sd">    *args : pandas.DataFrame or pandas.TimeSeries</span>
 <span class="sd">        The index of this dataframe(s) will be matched.</span>
 <span class="sd">    window : float</span>
 <span class="sd">        Fraction of days of the maximum pos./neg. distance allowed, i.e. the</span>
@@ -98,6 +96,8 @@
     <span class="n">ref_step</span> <span class="o">=</span> <span class="n">reference</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span> <span class="o">-</span> <span class="n">reference</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
     <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+        
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="o">==</span> <span class="n">pd</span><span class="o">.</span><span class="n">TimeSeries</span><span class="p">:</span> <span class="n">arg</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> 
         <span class="n">comp_step</span> <span class="o">=</span> <span class="n">arg</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span> <span class="o">-</span> <span class="n">reference</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">matched</span> <span class="o">=</span> <span class="n">sc_int</span><span class="o">.</span><span class="n">griddata</span><span class="p">(</span><span class="n">comp_step</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">comp_step</span><span class="o">.</span><span class="n">size</span><span class="p">),</span>
                                   <span class="n">ref_step</span><span class="p">,</span> <span class="s">&quot;nearest&quot;</span><span class="p">)</span>
@@ -107,7 +107,7 @@
         <span class="n">valid_match</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">matched</span><span class="p">))</span>
 
         <span class="n">distance</span><span class="p">[</span><span class="n">valid_match</span><span class="p">]</span> <span class="o">=</span> \
-            <span class="p">(</span><span class="n">arg</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="n">matched</span><span class="p">[</span><span class="n">valid_match</span><span class="p">])]</span> <span class="o">-</span>
+            <span class="p">(</span><span class="n">arg</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="n">matched</span><span class="p">[</span><span class="n">valid_match</span><span class="p">])]</span> <span class="o">-</span> 
              <span class="n">reference</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="n">valid_match</span><span class="p">])</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">timedelta64</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s">&#39;D&#39;</span><span class="p">)</span>
 
         <span class="n">arg</span><span class="p">[</span><span class="s">&#39;index&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">arg</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span>
@@ -136,7 +136,43 @@
         <span class="n">temporal_matched_args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>\
                 <span class="n">arg_matched</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s">&#39;merge_key&#39;</span><span class="p">,</span> <span class="s">&#39;ref_index&#39;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
 
-    <span class="k">return</span> <span class="n">temporal_matched_args</span></div>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">temporal_matched_args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span> <span class="k">return</span> <span class="n">temporal_matched_args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>    
+    <span class="k">else</span><span class="p">:</span> <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">temporal_matched_args</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="matching"><a class="viewcode-back" href="../../pytesmo.html#pytesmo.temporal_matching.matching">[docs]</a><span class="k">def</span> <span class="nf">matching</span><span class="p">(</span><span class="n">reference</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Finds temporal match between the reference pandas.TimeSeries (index has to</span>
+<span class="sd">    be datetime) and n other pandas.TimeSeries (index has to be datetime).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    reference : pandas.TimeSeries</span>
+<span class="sd">        The index of this Series will be the reference.</span>
+<span class="sd">    *args : pandas.TimeSeries</span>
+<span class="sd">        The index of these Series(s) will be matched.</span>
+<span class="sd">    window : float</span>
+<span class="sd">        Fraction of days of the maximum pos./neg. distance allowed, i.e. the</span>
+<span class="sd">        value of window represents the half-winow size (e.g. window=0.5, will</span>
+<span class="sd">        search for matches between -12 and +12 hours) (default: None)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    temporal_match : pandas.DataFrame </span>
+<span class="sd">        containing the index of the reference Series and a column for each of the </span>
+<span class="sd">        other input Series</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">matched_datasets</span> <span class="o">=</span> <span class="n">df_match</span><span class="p">(</span><span class="n">reference</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">dropna</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">dropduplicates</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">matched_datasets</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">tuple</span><span class="p">:</span> <span class="n">matched_datasets</span> <span class="o">=</span> <span class="p">[</span><span class="n">matched_datasets</span><span class="p">]</span>
+    
+    <span class="n">matched_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">reference</span><span class="p">)</span>
+    
+    <span class="k">for</span> <span class="n">match</span> <span class="ow">in</span> <span class="n">matched_datasets</span><span class="p">:</span>
+        <span class="n">match</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s">&#39;distance&#39;</span><span class="p">,</span> <span class="s">&#39;index&#39;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">matched_data</span> <span class="o">=</span> <span class="n">matched_data</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">match</span><span class="p">)</span>
+        
+    <span class="k">return</span> <span class="n">matched_data</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span></div>
 </pre></div>
 
           </div>
@@ -173,13 +209,13 @@
         <li class="right" >
           <a href="../../np-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../index.html">pytesmo 0.1a1 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pytesmo 0.1.1 documentation</a> &raquo;</li>
           <li><a href="../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
-        &copy; Copyright 2013, Technical University of Vienna, Department of Geodesy and Geoinformation.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+        &copy; Copyright 2013, Vienna University of Technology, Department of Geodesy and Geoinformation.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
     </div>
   </body>
 </html>

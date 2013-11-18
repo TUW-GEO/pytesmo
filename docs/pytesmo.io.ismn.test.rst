@@ -1,11 +1,22 @@
-test Package
-============
+pytesmo.io.ismn.test package
+============================
 
-:mod:`test_readers` Module
---------------------------
+Submodules
+----------
+
+pytesmo.io.ismn.test.test_readers module
+----------------------------------------
 
 .. automodule:: pytesmo.io.ismn.test.test_readers
     :members:
     :undoc-members:
     :show-inheritance:
 
+
+Module contents
+---------------
+
+.. automodule:: pytesmo.io.ismn.test
+    :members:
+    :undoc-members:
+    :show-inheritance:

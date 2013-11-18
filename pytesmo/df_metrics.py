@@ -266,6 +266,7 @@ def pairwise_apply(df, method, comm=False):
             if i == j: continue
             if comm and np.isfinite(result[0][i, j]): continue
             valid = mask[i] & mask[j]
+            if not valid.any():continue
             if not valid.all():
                 c = applyf(ac[valid], bc[valid])
             else:

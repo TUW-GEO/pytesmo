@@ -1,9 +1,16 @@
 Introduction to pytesmo a python Toolbox for the Evaluation of Soil Moisture Observations
 *****************************************************************************************
 
-pytesmo is a package which aims it is not provide a standard library that can be used for the comparison and validation
-of soil moisture datasets from different sources. It contains the code used by the 
-`Satellite Soil Moisture Validation Tool For ASCAT <http://rs.geo.tuwien.ac.at/validation_tool/ascat.html>`_.
+pytesmo is a package which aims it is to provide a standard library that can be used for the comparison and validation
+of geospatial time series datasets with a focus on soil moisture.
+
+It contains an expanding collection of readers for different soil moisture datasets (see `Supported Datasets`_) as well as routines for comparing them.
+Special classes in the module :mod:`pytesmo.grid.grids` provide easy nearest neighbor searching between datasets as well as 
+the calculation of lookup tables of nearest neighbours. They also provide possibilities to easily read all 
+grid points of a dataset in the correct order.
+
+It contains the code used for the calculation of metrics by the 
+`Satellite Soil Moisture Validation Tool For ASCAT <http://rs.geo.tuwien.ac.at/validation_tool/ascat.html>`_. See :mod:`pytesmo.metrics`.
 
 
 
@@ -11,7 +18,7 @@ Features
 ========
 
 * easily read data from the `Supported Datasets`_
-* anomaly calculation based on climatology or using a moving window see :mod:`pytesmo.anomaly`
+* anomaly calculation based on climatology or using a moving window see :mod:`pytesmo.time_series.anomaly`
 * easy temporal matching of time series see :mod:`pytesmo.temporal_matching`
 * multiple methods for scaling between different observation domains (CDF matching, linear regreesion, min-max matching) see :mod:`pytesmo.scaling`
 * calculate standard metrics like correlation coefficients, RMSD, bias, 
@@ -26,27 +33,32 @@ See the :ref:`examples-page`
 Supported Datasets
 ==================
 
-Soil moisture is observed using different methods and instruments, in this version the following datasets are supported.
+Soil moisture is observed using different methods and instruments, in this version several satellite datasets as well as in situ data are supported.
 
-Remotely sensed products
-------------------------
+ERS
+---
 
-Right now only soil moisture observations made with the ASCAT sensor on board the METOP satellites are
-supported but we are working on support for more products.
+* ERS-1/2 AMI 25km SSM (Surface Soil Moisture)
+
+  available from http://rs.geo.tuwien.ac.at/products
 
 ASCAT
-~~~~~
+-----
 
-* ASCAT SSM(Surface Soil Moisture)
-* ASCAT SWI(Soil Water Index)
+* ASCAT SSM(Surface Soil Moisture) Time Series
 
-which can both be downloaded for free after registration at http://rs.geo.tuwien.ac.at/products/
+  Available in binary format from http://rs.geo.tuwien.ac.at/products/
+  
+  Available in netCDF format from http://hsaf.meteoam.it/soil-moisture.php (H25 product)
 
-insitu obervations
-------------------
+
+* ASCAT SWI(Soil Water Index) Time Series
+
+  Available in binary format from http://rs.geo.tuwien.ac.at/products/
+
 
 Data from the International Soil Moisture Network (ISMN)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------------------------------------
 
 ISMN data can be downloaded for free after registration from http://ismn.geo.tuwien.ac.at/
 
@@ -93,6 +105,7 @@ In order to enjoy all pytesmo features python version 2.7.5 with the following p
 * statsmodels >= 0.4.3 http://statsmodels.sourceforge.net/
 * matplotlib >= 1.2.0 http://matplotlib.org/
 * matplotlib - basemap >= 1.0.5 http://matplotlib.org/basemap/
+* netCDF4 >= 1.0.1 https://pypi.python.org/pypi/netCDF4
 
 optional
 
@@ -103,37 +116,53 @@ optional
 Windows - new python users
 --------------------------
 
-For users with little python experience, using Windows, the easiest way to install everything but matplotlib-basemap is to install 
-winpython from https://code.google.com/p/winpython/ and then download basemap from http://sourceforge.net/projects/matplotlib/files/matplotlib-toolkits/
+For users with little python experience, using Windows, the easiest way to install everything but matplotlib-basemap and netCDF4 is to install 
+winpython from https://code.google.com/p/winpython/ and then download basemap from http://sourceforge.net/projects/matplotlib/files/matplotlib-toolkits/ and netCDF4 
+from https://code.google.com/p/netcdf4-python/
 and add it to your winpython installation using the winpython Control Panel.
 
-Just make sure that you download both for the same architecture (32/64 bit) and the same python version (2.7)
+Just make sure that you download both for the same architecture (32/64 bit) and the same python version (2.7.x)
 
-You can then add pytesmo-0.1.zip to your winpython installation with the winpython Control Panel
+After that you can also use the winpython control panel to add the relevant pytesmo `Windows binaries`_
 
-After that you can open spyder from the winpython installation directory and start testing pytesmo.
+After that you can open spyder or the Ipython notebook from the winpython installation directory and start testing pytesmo.
 
-Windows and Linux
------------------
+If you want a system installation of python download the following files and install them in order.
 
-If you already have a working python installation with the necessary packages just cd to the unzipped pytesmo-0.1 folder and use::
+* Python 2.7.x windows installer from http://python.org/download/
+* Scipy-stack installer from http://www.lfd.uci.edu/~gohlke/pythonlibs/
+* netCDF4 installer from http://www.lfd.uci.edu/~gohlke/pythonlibs/
+* pytesmo windows binary
+
+Windows binaries
+----------------
+
+pytesmo windows binaries are available for 32 and 64 bit systems:
+
+* 32-bit http://rs.geo.tuwien.ac.at/validation_tool/pytesmo/pytesmo-0.1.1/pytesmo-0.1.1.win32-py2.7.exe
+* 64-bit http://rs.geo.tuwien.ac.at/validation_tool/pytesmo/pytesmo-0.1.1/pytesmo-0.1.1.win-amd64-py2.7.exe
+
+
+Linux
+-----
+
+If you already have a working python installation with the necessary packages just change directory to the unzipped pytesmo-0.1.1 folder and use the following command in the command line::
 	
 	python setup.py install
 
-or if you'd rather use pip then do::
+or if you'd rather use pip then use the command::
 	
 	pip install pytesmo
 	
-
 Contribute
 ==========
 
-If you want to contribute please contact http://rs.geo.tuwien.ac.at/our-team/christoph-paulik/ to see if the feature you want to work on 
-is not already implemented. 
+If you would like to help this project by improving the documentation, 
+providing examples of how you use it or by extending the functionality of pytesmo we would be very happy.
 
-You can also just check out the code at https://github.com/TUW-GEO/pytesmo
+Please browse the source code which is available at http://github.com/TUW-GEO/pytesmo
 
-
+Feel free to contact `Christoph Paulik <http://rs.geo.tuwien.ac.at/our-team/christoph-paulik/>`_ in case of any questions or requests.
 
 
 
