@@ -34,6 +34,8 @@ Fast cython functions for calculating various filters
 @author: Christoph Paulik christoph.paulik@geo.tuwien.ac.at
 '''
 
+import platform
+
 cimport numpy as np
 import numpy as np
 from libc.math cimport exp, fabs
@@ -46,8 +48,8 @@ ctypedef np.float_t DTYPE_f
 ctypedef np.double_t DTYPE_d
 ctypedef np.int_t DTYPE_i
 
-cdef extern from "math.h":
-    bint isnan(float x)
+cdef extern from "numpy/npy_math.h":
+    bint npy_isnan(double x)
 
 
 @cython.boundscheck(False)
@@ -83,7 +85,7 @@ def exp_filter(np.ndarray[DTYPE_d, ndim=1] in_data, np.ndarray[DTYPE_d, ndim=1] 
     last_jd_var = in_jd[0]
 
     for i in range(in_jd.shape[0]):
-        if in_data[i] != nan or not isnan(in_data[i]):
+        if in_data[i] != nan or not npy_isnan(in_data[i]):
             tdiff =   in_jd[i] - last_jd_var
             ef = exp(-tdiff/ctime)    
             nom =  ef * nom + in_data[i]
@@ -125,11 +127,11 @@ def boxcar_filter(np.ndarray[DTYPE_d, ndim=1] in_data, np.ndarray[DTYPE_d, ndim=
     filtered.fill(np.nan)
 
     for i in range(in_jd.shape[0]):
-        if in_data[i] != nan or not isnan(in_data[i]):
+        if in_data[i] != nan or not npy_isnan(in_data[i]):
             sum = 0
             nobs = 0
             for j in range(in_jd.shape[0]):
-                if not isnan(in_data[j]):
+                if not npy_isnan(in_data[j]):
                     tdiff = in_jd[j] - in_jd[i]
                     if fabs(tdiff) <= window/2:
                         sum = sum + in_data[j]
