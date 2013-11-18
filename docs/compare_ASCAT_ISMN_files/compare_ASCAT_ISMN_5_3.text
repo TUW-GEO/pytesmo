@@ -2,9 +2,10 @@ ISMN time series: OZNET Alabama 0.00 m - 0.05 m soil moisture measured with Stev
 compared to
 ASCAT time series gpi:1884359 lat:-35.342 lon:147.541
 Results:
-Pearson's (R,p_value) (0.59736953256517777, 1.4810058830429653e-60)
-Spearman's (rho,p_value) (0.63684906343988457, 4.8971200217989799e-71)
-Kendalls's (tau,p_value) (0.45994629380576146, 4.6771942474849024e-65)
-RMSD 0.0807313501609
-Bias 0.00258302466701
-Nash Sutcliffe 0.221824420266
+(Pearsons_r(sm_and_insitu_sm=0.61607679781575175), p_value(sm_and_insitu_sm=3.1170801211098453e-65))
+Spearman's (rho,p_value) (0.64651747115098912, 1.0057610194056589e-73)
+Kendalls's (tau,p_value) (0.4685441550995097, 2.4676437876515864e-67)
+(Kendall_tau(sm_and_insitu_sm=0.4685441550995097), p_value(sm_and_insitu_sm=2.4676437876515864e-67))
+rmsd(sm_and_insitu_sm=0.078018684719599857)
+Bias 0.00168114697282
+Nash Sutcliffe 0.246416864767

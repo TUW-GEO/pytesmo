@@ -1,11 +1,30 @@
-test Package
-============
+pytesmo.io.sat.test package
+===========================
 
-:mod:`test_ascat` Module
-------------------------
+Submodules
+----------
+
+pytesmo.io.sat.test.test_ascat module
+-------------------------------------
 
 .. automodule:: pytesmo.io.sat.test.test_ascat
     :members:
     :undoc-members:
     :show-inheritance:
 
+pytesmo.io.sat.test.test_ers module
+-----------------------------------
+
+.. automodule:: pytesmo.io.sat.test.test_ers
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: pytesmo.io.sat.test
+    :members:
+    :undoc-members:
+    :show-inheritance:

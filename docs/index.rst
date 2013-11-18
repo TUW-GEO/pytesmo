@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to pytesmo's documentation!
-===================================
+Welcome to the documentation of pytesmo - a python Toolbox for the Evaluation of Soil Moisture Observations
+===========================================================================================================
 
 Contents:
 

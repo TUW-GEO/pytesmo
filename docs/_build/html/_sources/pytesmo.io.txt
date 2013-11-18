@@ -1,13 +1,5 @@
-io Package
-==========
-
-:mod:`io` Package
------------------
-
-.. automodule:: pytesmo.io
-    :members:
-    :undoc-members:
-    :show-inheritance:
+pytesmo.io package
+==================
 
 Subpackages
 -----------
@@ -17,3 +9,10 @@ Subpackages
     pytesmo.io.ismn
     pytesmo.io.sat
 
+Module contents
+---------------
+
+.. automodule:: pytesmo.io
+    :members:
+    :undoc-members:
+    :show-inheritance:

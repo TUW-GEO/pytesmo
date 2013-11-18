@@ -1,4 +1,3 @@
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -7,15 +6,15 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Introduction to pytesmo a python Toolbox for the Evaluation of Soil Moisture Observations &mdash; pytesmo 0.1a1 documentation</title>
+    <title>Introduction to pytesmo a python Toolbox for the Evaluation of Soil Moisture Observations &mdash; pytesmo 0.1.1 documentation</title>
     
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
-        VERSION:     '0.1a1',
+        URL_ROOT:    './',
+        VERSION:     '0.1.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,9 +23,9 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="pytesmo 0.1a1 documentation" href="index.html" />
+    <link rel="top" title="pytesmo 0.1.1 documentation" href="index.html" />
     <link rel="next" title="Examples" href="examples.html" />
-    <link rel="prev" title="Welcome to pytesmo’s documentation!" href="index.html" /> 
+    <link rel="prev" title="Welcome to the documentation of pytesmo - a python Toolbox for the Evaluation of Soil Moisture Observations" href="index.html" /> 
   </head>
   <body>
     <div class="related">
@@ -45,9 +44,9 @@
           <a href="examples.html" title="Examples"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="index.html" title="Welcome to pytesmo’s documentation!"
+          <a href="index.html" title="Welcome to the documentation of pytesmo - a python Toolbox for the Evaluation of Soil Moisture Observations"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">pytesmo 0.1a1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">pytesmo 0.1.1 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -58,14 +57,19 @@
             
   <div class="section" id="introduction-to-pytesmo-a-python-toolbox-for-the-evaluation-of-soil-moisture-observations">
 <h1>Introduction to pytesmo a python Toolbox for the Evaluation of Soil Moisture Observations<a class="headerlink" href="#introduction-to-pytesmo-a-python-toolbox-for-the-evaluation-of-soil-moisture-observations" title="Permalink to this headline">¶</a></h1>
-<p>pytesmo is a package which aims it is not provide a standard library that can be used for the comparison and validation
-of soil moisture datasets from different sources. It contains the code used by the
-<a class="reference external" href="http://rs.geo.tuwien.ac.at/validation_tool/ascat.html">Satellite Soil Moisture Validation Tool For ASCAT</a>.</p>
+<p>pytesmo is a package which aims it is to provide a standard library that can be used for the comparison and validation
+of geospatial time series datasets with a focus on soil moisture.</p>
+<p>It contains an expanding collection of readers for different soil moisture datasets (see <a class="reference internal" href="#supported-datasets">Supported Datasets</a>) as well as routines for comparing them.
+Special classes in the module <a class="reference internal" href="pytesmo.grid.html#module-pytesmo.grid.grids" title="pytesmo.grid.grids"><tt class="xref py py-mod docutils literal"><span class="pre">pytesmo.grid.grids</span></tt></a> provide easy nearest neighbor searching between datasets as well as
+the calculation of lookup tables of nearest neighbours. They also provide possibilities to easily read all
+grid points of a dataset in the correct order.</p>
+<p>It contains the code used for the calculation of metrics by the
+<a class="reference external" href="http://rs.geo.tuwien.ac.at/validation_tool/ascat.html">Satellite Soil Moisture Validation Tool For ASCAT</a>. See <a class="reference internal" href="pytesmo.html#module-pytesmo.metrics" title="pytesmo.metrics"><tt class="xref py py-mod docutils literal"><span class="pre">pytesmo.metrics</span></tt></a>.</p>
 <div class="section" id="features">
 <h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>easily read data from the <a class="reference internal" href="#supported-datasets">Supported Datasets</a></li>
-<li>anomaly calculation based on climatology or using a moving window see <a class="reference internal" href="pytesmo.html#module-pytesmo.anomaly" title="pytesmo.anomaly"><tt class="xref py py-mod docutils literal"><span class="pre">pytesmo.anomaly</span></tt></a></li>
+<li>anomaly calculation based on climatology or using a moving window see <a class="reference internal" href="pytesmo.time_series.html#module-pytesmo.time_series.anomaly" title="pytesmo.time_series.anomaly"><tt class="xref py py-mod docutils literal"><span class="pre">pytesmo.time_series.anomaly</span></tt></a></li>
 <li>easy temporal matching of time series see <a class="reference internal" href="pytesmo.html#module-pytesmo.temporal_matching" title="pytesmo.temporal_matching"><tt class="xref py py-mod docutils literal"><span class="pre">pytesmo.temporal_matching</span></tt></a></li>
 <li>multiple methods for scaling between different observation domains (CDF matching, linear regreesion, min-max matching) see <a class="reference internal" href="pytesmo.html#module-pytesmo.scaling" title="pytesmo.scaling"><tt class="xref py py-mod docutils literal"><span class="pre">pytesmo.scaling</span></tt></a></li>
 <li>calculate standard metrics like correlation coefficients, RMSD, bias,
@@ -74,24 +78,29 @@ as well as more complex ones like triple collocation or MSE as a decomposition o
 </div>
 <div class="section" id="supported-datasets">
 <h2>Supported Datasets<a class="headerlink" href="#supported-datasets" title="Permalink to this headline">¶</a></h2>
-<p>Soil moisture is observed using different methods and instruments, in this version the following datasets are supported.</p>
-<div class="section" id="remotely-sensed-products">
-<h3>Remotely sensed products<a class="headerlink" href="#remotely-sensed-products" title="Permalink to this headline">¶</a></h3>
-<p>Right now only soil moisture observations made with the ASCAT sensor on board the METOP satellites are
-supported but we are working on support for more products.</p>
-<div class="section" id="ascat">
-<h4>ASCAT<a class="headerlink" href="#ascat" title="Permalink to this headline">¶</a></h4>
-<ul class="simple">
-<li>ASCAT SSM(Surface Soil Moisture)</li>
-<li>ASCAT SWI(Soil Water Index)</li>
+<p>Soil moisture is observed using different methods and instruments, in this version several satellite datasets as well as in situ data are supported.</p>
+<div class="section" id="ers">
+<h3>ERS<a class="headerlink" href="#ers" title="Permalink to this headline">¶</a></h3>
+<ul>
+<li><p class="first">ERS-1/2 AMI 25km SSM (Surface Soil Moisture)</p>
+<p>available from <a class="reference external" href="http://rs.geo.tuwien.ac.at/products">http://rs.geo.tuwien.ac.at/products</a></p>
+</li>
 </ul>
-<p>which can both be downloaded for free after registration at <a class="reference external" href="http://rs.geo.tuwien.ac.at/products/">http://rs.geo.tuwien.ac.at/products/</a></p>
 </div>
+<div class="section" id="ascat">
+<h3>ASCAT<a class="headerlink" href="#ascat" title="Permalink to this headline">¶</a></h3>
+<ul>
+<li><p class="first">ASCAT SSM(Surface Soil Moisture) Time Series</p>
+<p>Available in binary format from <a class="reference external" href="http://rs.geo.tuwien.ac.at/products/">http://rs.geo.tuwien.ac.at/products/</a></p>
+<p>Available in netCDF format from <a class="reference external" href="http://hsaf.meteoam.it/soil-moisture.php">http://hsaf.meteoam.it/soil-moisture.php</a> (H25 product)</p>
+</li>
+<li><p class="first">ASCAT SWI(Soil Water Index) Time Series</p>
+<p>Available in binary format from <a class="reference external" href="http://rs.geo.tuwien.ac.at/products/">http://rs.geo.tuwien.ac.at/products/</a></p>
+</li>
+</ul>
 </div>
-<div class="section" id="insitu-obervations">
-<h3>insitu obervations<a class="headerlink" href="#insitu-obervations" title="Permalink to this headline">¶</a></h3>
 <div class="section" id="data-from-the-international-soil-moisture-network-ismn">
-<h4>Data from the International Soil Moisture Network (ISMN)<a class="headerlink" href="#data-from-the-international-soil-moisture-network-ismn" title="Permalink to this headline">¶</a></h4>
+<h3>Data from the International Soil Moisture Network (ISMN)<a class="headerlink" href="#data-from-the-international-soil-moisture-network-ismn" title="Permalink to this headline">¶</a></h3>
 <p>ISMN data can be downloaded for free after registration from <a class="reference external" href="http://ismn.geo.tuwien.ac.at/">http://ismn.geo.tuwien.ac.at/</a></p>
 <p>In case of the ISMN, 3 different formats are provided:</p>
 <ul>
@@ -120,7 +129,6 @@ the seperator. If you experience problems because of this please download new da
 this issue should be fixed.</p>
 </div>
 </div>
-</div>
 <div class="section" id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="prerequisites">
@@ -133,6 +141,7 @@ this issue should be fixed.</p>
 <li>statsmodels &gt;= 0.4.3 <a class="reference external" href="http://statsmodels.sourceforge.net/">http://statsmodels.sourceforge.net/</a></li>
 <li>matplotlib &gt;= 1.2.0 <a class="reference external" href="http://matplotlib.org/">http://matplotlib.org/</a></li>
 <li>matplotlib - basemap &gt;= 1.0.5 <a class="reference external" href="http://matplotlib.org/basemap/">http://matplotlib.org/basemap/</a></li>
+<li>netCDF4 &gt;= 1.0.1 <a class="reference external" href="https://pypi.python.org/pypi/netCDF4">https://pypi.python.org/pypi/netCDF4</a></li>
 </ul>
 <p>optional</p>
 <ul>
@@ -145,22 +154,45 @@ this issue should be fixed.</p>
 </div>
 <div class="section" id="windows-new-python-users">
 <h3>Windows - new python users<a class="headerlink" href="#windows-new-python-users" title="Permalink to this headline">¶</a></h3>
-<p>For users with little python experience, using Windows, the easiest way to install everything but matplotlib-basemap is to install
-winpython from <a class="reference external" href="https://code.google.com/p/winpython/">https://code.google.com/p/winpython/</a> and then download basemap from <a class="reference external" href="http://sourceforge.net/projects/matplotlib/files/matplotlib-toolkits/">http://sourceforge.net/projects/matplotlib/files/matplotlib-toolkits/</a>
+<p>For users with little python experience, using Windows, the easiest way to install everything but matplotlib-basemap and netCDF4 is to install
+winpython from <a class="reference external" href="https://code.google.com/p/winpython/">https://code.google.com/p/winpython/</a> and then download basemap from <a class="reference external" href="http://sourceforge.net/projects/matplotlib/files/matplotlib-toolkits/">http://sourceforge.net/projects/matplotlib/files/matplotlib-toolkits/</a> and netCDF4
+from <a class="reference external" href="https://code.google.com/p/netcdf4-python/">https://code.google.com/p/netcdf4-python/</a>
 and add it to your winpython installation using the winpython Control Panel.</p>
-<p>Just make sure that you download both for the same architecture (32/64 bit) and the same python version (2.7)</p>
-<p>You can then add pytesmo-0.1.zip to your winpython installation with the winpython Control Panel</p>
-<p>After that you can open spyder from the winpython installation directory and start testing pytesmo.</p>
+<p>Just make sure that you download both for the same architecture (32/64 bit) and the same python version (2.7.x)</p>
+<p>After that you can also use the winpython control panel to add the relevant pytesmo <a class="reference internal" href="#windows-binaries">Windows binaries</a></p>
+<p>After that you can open spyder or the Ipython notebook from the winpython installation directory and start testing pytesmo.</p>
+<p>If you want a system installation of python download the following files and install them in order.</p>
+<ul class="simple">
+<li>Python 2.7.x windows installer from <a class="reference external" href="http://python.org/download/">http://python.org/download/</a></li>
+<li>Scipy-stack installer from <a class="reference external" href="http://www.lfd.uci.edu/~gohlke/pythonlibs/">http://www.lfd.uci.edu/~gohlke/pythonlibs/</a></li>
+<li>netCDF4 installer from <a class="reference external" href="http://www.lfd.uci.edu/~gohlke/pythonlibs/">http://www.lfd.uci.edu/~gohlke/pythonlibs/</a></li>
+<li>pytesmo windows binary</li>
+</ul>
 </div>
-<div class="section" id="windows-and-linux">
-<h3>Windows and Linux<a class="headerlink" href="#windows-and-linux" title="Permalink to this headline">¶</a></h3>
-<p>If you already have a working python installation with the necessary packages just cd to the unzipped pytesmo-0.1 folder and use:</p>
+<div class="section" id="windows-binaries">
+<h3>Windows binaries<a class="headerlink" href="#windows-binaries" title="Permalink to this headline">¶</a></h3>
+<p>pytesmo windows binaries are available for 32 and 64 bit systems:</p>
+<ul class="simple">
+<li>32-bit <a class="reference external" href="http://rs.geo.tuwien.ac.at/validation_tool/pytesmo/pytesmo-0.1.1/pytesmo-0.1.1.win32-py2.7.exe">http://rs.geo.tuwien.ac.at/validation_tool/pytesmo/pytesmo-0.1.1/pytesmo-0.1.1.win32-py2.7.exe</a></li>
+<li>64-bit <a class="reference external" href="http://rs.geo.tuwien.ac.at/validation_tool/pytesmo/pytesmo-0.1.1/pytesmo-0.1.1.win-amd64-py2.7.exe">http://rs.geo.tuwien.ac.at/validation_tool/pytesmo/pytesmo-0.1.1/pytesmo-0.1.1.win-amd64-py2.7.exe</a></li>
+</ul>
+</div>
+<div class="section" id="linux">
+<h3>Linux<a class="headerlink" href="#linux" title="Permalink to this headline">¶</a></h3>
+<p>If you already have a working python installation with the necessary packages just change directory to the unzipped pytesmo-0.1.1 folder and use the following command in the command line:</p>
 <div class="highlight-python"><pre>python setup.py install</pre>
 </div>
-<p>or if you&#8217;d rather use pip then do:</p>
+<p>or if you&#8217;d rather use pip then use the command:</p>
 <div class="highlight-python"><pre>pip install pytesmo</pre>
 </div>
 </div>
+</div>
+<div class="section" id="contribute">
+<h2>Contribute<a class="headerlink" href="#contribute" title="Permalink to this headline">¶</a></h2>
+<p>If you would like to help this project by improving the documentation,
+providing examples of how you use it or by extending the functionality of pytesmo we would be very happy.</p>
+<p>Please browse the source code which is available at <a class="reference external" href="http://github.com/TUW-GEO/pytesmo">http://github.com/TUW-GEO/pytesmo</a></p>
+<p>Feel free to contact <a class="reference external" href="http://rs.geo.tuwien.ac.at/our-team/christoph-paulik/">Christoph Paulik</a> in case of any questions or requests.</p>
 </div>
 </div>
 
@@ -175,29 +207,26 @@ and add it to your winpython installation using the winpython Control Panel.</p>
 <li><a class="reference internal" href="#">Introduction to pytesmo a python Toolbox for the Evaluation of Soil Moisture Observations</a><ul>
 <li><a class="reference internal" href="#features">Features</a></li>
 <li><a class="reference internal" href="#supported-datasets">Supported Datasets</a><ul>
-<li><a class="reference internal" href="#remotely-sensed-products">Remotely sensed products</a><ul>
+<li><a class="reference internal" href="#ers">ERS</a></li>
 <li><a class="reference internal" href="#ascat">ASCAT</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#insitu-obervations">insitu obervations</a><ul>
 <li><a class="reference internal" href="#data-from-the-international-soil-moisture-network-ismn">Data from the International Soil Moisture Network (ISMN)</a></li>
-</ul>
-</li>
 </ul>
 </li>
 <li><a class="reference internal" href="#installation">Installation</a><ul>
 <li><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
 <li><a class="reference internal" href="#windows-new-python-users">Windows - new python users</a></li>
-<li><a class="reference internal" href="#windows-and-linux">Windows and Linux</a></li>
+<li><a class="reference internal" href="#windows-binaries">Windows binaries</a></li>
+<li><a class="reference internal" href="#linux">Linux</a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#contribute">Contribute</a></li>
 </ul>
 </li>
 </ul>
 
   <h4>Previous topic</h4>
   <p class="topless"><a href="index.html"
-                        title="previous chapter">Welcome to pytesmo&#8217;s documentation!</a></p>
+                        title="previous chapter">Welcome to the documentation of pytesmo - a python Toolbox for the Evaluation of Soil Moisture Observations</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="examples.html"
                         title="next chapter">Examples</a></p>
@@ -239,14 +268,14 @@ and add it to your winpython installation using the winpython Control Panel.</p>
           <a href="examples.html" title="Examples"
              >next</a> |</li>
         <li class="right" >
-          <a href="index.html" title="Welcome to pytesmo’s documentation!"
+          <a href="index.html" title="Welcome to the documentation of pytesmo - a python Toolbox for the Evaluation of Soil Moisture Observations"
              >previous</a> |</li>
-        <li><a href="index.html">pytesmo 0.1a1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">pytesmo 0.1.1 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
         &copy; Copyright 2013, Vienna University of Technology, Department of Geodesy and Geoinformation.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
     </div>
   </body>
 </html>

@@ -1,27 +1,30 @@
-grid Package
-============
+pytesmo.grid package
+====================
 
-:mod:`grid` Package
--------------------
+Submodules
+----------
 
-.. automodule:: pytesmo.grid
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`grids` Module
--------------------
+pytesmo.grid.grids module
+-------------------------
 
 .. automodule:: pytesmo.grid.grids
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`nearest_neighbor` Module
-------------------------------
+pytesmo.grid.nearest_neighbor module
+------------------------------------
 
 .. automodule:: pytesmo.grid.nearest_neighbor
     :members:
     :undoc-members:
     :show-inheritance:
 
+
+Module contents
+---------------
+
+.. automodule:: pytesmo.grid
+    :members:
+    :undoc-members:
+    :show-inheritance:

@@ -1,4 +1,3 @@
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -7,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pytesmo.io.ismn.readers &mdash; pytesmo 0.1a1 documentation</title>
+    <title>pytesmo.io.ismn.readers &mdash; pytesmo 0.1.1 documentation</title>
     
     <link rel="stylesheet" href="../../../../_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
@@ -15,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../../',
-        VERSION:     '0.1a1',
+        VERSION:     '0.1.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +23,7 @@
     <script type="text/javascript" src="../../../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../../../_static/doctools.js"></script>
-    <link rel="top" title="pytesmo 0.1a1 documentation" href="../../../../index.html" />
+    <link rel="top" title="pytesmo 0.1.1 documentation" href="../../../../index.html" />
     <link rel="up" title="Module code" href="../../../index.html" /> 
   </head>
   <body>
@@ -40,7 +39,7 @@
         <li class="right" >
           <a href="../../../../np-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../../index.html">pytesmo 0.1a1 documentation</a> &raquo;</li>
+        <li><a href="../../../../index.html">pytesmo 0.1.1 documentation</a> &raquo;</li>
           <li><a href="../../../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -88,6 +87,28 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 
 
+
+<span class="n">variable_lookup</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;sm&#39;</span><span class="p">:</span><span class="s">&#39;soil moisture&#39;</span><span class="p">,</span>    
+                   <span class="s">&#39;ts&#39;</span><span class="p">:</span><span class="s">&#39;soil temperature&#39;</span><span class="p">,</span>
+                   <span class="s">&#39;su&#39;</span><span class="p">:</span><span class="s">&#39;soil suction&#39;</span><span class="p">,</span>    
+                   <span class="s">&#39;p&#39;</span><span class="p">:</span><span class="s">&#39;precipitation&#39;</span><span class="p">,</span>    
+                   <span class="s">&#39;ta&#39;</span><span class="p">:</span><span class="s">&#39;air temperature&#39;</span><span class="p">,</span>    
+                   <span class="s">&#39;fc&#39;</span><span class="p">:</span><span class="s">&#39;field capacity&#39;</span><span class="p">,</span>    
+                   <span class="s">&#39;wp&#39;</span><span class="p">:</span><span class="s">&#39;permanent wilting point&#39;</span><span class="p">,</span>    
+                   <span class="s">&#39;paw&#39;</span><span class="p">:</span><span class="s">&#39;plant available water&#39;</span><span class="p">,</span>    
+                   <span class="s">&#39;ppaw&#39;</span><span class="p">:</span><span class="s">&#39;potential plant available water&#39;</span><span class="p">,</span>    
+                   <span class="s">&#39;sat&#39;</span><span class="p">:</span><span class="s">&#39;saturation&#39;</span><span class="p">,</span>    
+                   <span class="s">&#39;si_h&#39;</span><span class="p">:</span><span class="s">&#39;silt fraction&#39;</span><span class="p">,</span>    
+                   <span class="s">&#39;sd&#39;</span><span class="p">:</span><span class="s">&#39;snow depth&#39;</span><span class="p">,</span>    
+                   <span class="s">&#39;sa_h&#39;</span><span class="p">:</span><span class="s">&#39;sand fraction&#39;</span><span class="p">,</span>    
+                   <span class="s">&#39;cl_h&#39;</span><span class="p">:</span><span class="s">&#39;clay fraction&#39;</span><span class="p">,</span>   
+                   <span class="s">&#39;oc_h&#39;</span><span class="p">:</span><span class="s">&#39;organic carbon&#39;</span><span class="p">,</span>   
+                   <span class="s">&#39;sweq&#39;</span><span class="p">:</span><span class="s">&#39;snow water equivalent&#39;</span><span class="p">,</span>    
+                   <span class="s">&#39;tsf&#39;</span><span class="p">:</span><span class="s">&#39;surface temperature&#39;</span><span class="p">,</span>    
+                   <span class="s">&#39;tsfq&#39;</span><span class="p">:</span><span class="s">&#39;surface temperature quality flag original&#39;</span>
+                  <span class="p">}</span>
+
+
 <div class="viewcode-block" id="ReaderException"><a class="viewcode-back" href="../../../../pytesmo.io.ismn.html#pytesmo.io.ismn.readers.ReaderException">[docs]</a><span class="k">class</span> <span class="nc">ReaderException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
     <span class="k">pass</span>
 </div>
@@ -97,8 +118,9 @@
 <div class="viewcode-block" id="ISMNTimeSeries"><a class="viewcode-back" href="../../../../pytesmo.io.ismn.html#pytesmo.io.ismn.readers.ISMNTimeSeries">[docs]</a><span class="k">class</span> <span class="nc">ISMNTimeSeries</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    class that contains a time series of ISMN data read from one text file</span>
-<span class="sd">    Attributes:</span>
-<span class="sd">    -----------</span>
+<span class="sd">	</span>
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
 <span class="sd">    network : string</span>
 <span class="sd">        network the time series belongs to</span>
 <span class="sd">    station : string</span>
@@ -109,11 +131,11 @@
 <span class="sd">        longitude of station</span>
 <span class="sd">    elevation : float</span>
 <span class="sd">        elevation of station</span>
-<span class="sd">    variable : string</span>
+<span class="sd">    variable : list</span>
 <span class="sd">        variable measured</span>
-<span class="sd">    depth_from : float</span>
+<span class="sd">    depth_from : list</span>
 <span class="sd">        shallower depth of layer the variable was measured at</span>
-<span class="sd">    depth_to : float</span>
+<span class="sd">    depth_to : list</span>
 <span class="sd">        deeper depth of layer the variable was measured at</span>
 <span class="sd">    sensor : string</span>
 <span class="sd">        sensor name</span>
@@ -124,24 +146,32 @@
         
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
             <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">key</span><span class="p">,</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>   
-
-<div class="viewcode-block" id="ISMNTimeSeries.plot"><a class="viewcode-back" href="../../../../pytesmo.io.ismn.html#pytesmo.io.ismn.readers.ISMNTimeSeries.plot">[docs]</a>    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        
+        <span class="k">return</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s"> </span><span class="si">%.2f</span><span class="s"> m - </span><span class="si">%.2f</span><span class="s"> m </span><span class="si">%s</span><span class="s"> measured with </span><span class="si">%s</span><span class="s"> &#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">station</span><span class="p">,</span>
+                                                   <span class="bp">self</span><span class="o">.</span><span class="n">depth_from</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="bp">self</span><span class="o">.</span><span class="n">depth_to</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                                   <span class="bp">self</span><span class="o">.</span><span class="n">variable</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="bp">self</span><span class="o">.</span><span class="n">sensor</span><span class="p">)</span>
+    
+<div class="viewcode-block" id="ISMNTimeSeries.plot"><a class="viewcode-back" href="../../../../pytesmo.io.ismn.html#pytesmo.io.ismn.readers.ISMNTimeSeries.plot">[docs]</a>    <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="o">*</span><span class="n">args</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        wrapper for pandas.DataFrame.plot which adds title to plot</span>
-<span class="sd">        </span>
-<span class="sd">        Returns:</span>
-<span class="sd">        --------</span>
+<span class="sd">        and drops NaN values for plotting</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
 <span class="sd">        ax : axes</span>
 <span class="sd">            matplotlib axes of the plot</span>
 <span class="sd">            </span>
-<span class="sd">        Raises:</span>
-<span class="sd">        -------</span>
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
 <span class="sd">        ISMNTSError</span>
 <span class="sd">            if data attribute is not a pandas.DataFrame</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span> <span class="ow">is</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
-            <span class="n">ax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">station</span><span class="p">]))</span>
+            <span class="n">tempdata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
+            <span class="n">tempdata</span> <span class="o">=</span> <span class="n">tempdata</span><span class="p">[</span><span class="n">tempdata</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">tempdata</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span><span class="mi">5</span><span class="p">),</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__repr__</span><span class="p">())</span>
             <span class="k">return</span> <span class="n">ax</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">ISMNTSError</span><span class="p">(</span><span class="s">&quot;data attribute is not a pandas.DataFrame&quot;</span><span class="p">)</span>
@@ -154,12 +184,13 @@
 <span class="sd">    this can be used to construct necessary metadata information</span>
 <span class="sd">    for all ISMN formats</span>
 <span class="sd">    </span>
-<span class="sd">    Parameters:</span>
-<span class="sd">    -----------</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
 <span class="sd">    filename : string</span>
 <span class="sd">        filename including path</span>
-<span class="sd">    Returns:</span>
-<span class="sd">    --------</span>
+<span class="sd">		</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
 <span class="sd">    header_elements : list</span>
 <span class="sd">        first line of file split into list</span>
 <span class="sd">    filename_elements : list</span>
@@ -180,13 +211,13 @@
 <span class="sd">    get metadata from ISMN textfiles in the format called </span>
 <span class="sd">    Variables stored in separate files (CEOP formatted)</span>
 <span class="sd">    </span>
-<span class="sd">    Parameters:</span>
-<span class="sd">    -----------</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
 <span class="sd">    filename : string</span>
 <span class="sd">        path and name of file</span>
 <span class="sd">    </span>
-<span class="sd">    Returns:</span>
-<span class="sd">    --------</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
 <span class="sd">    metadata : dict</span>
 <span class="sd">        dictionary of metadata information</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -197,6 +228,11 @@
         <span class="n">sensor</span> <span class="o">=</span> <span class="s">&#39;_&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">filename_elements</span><span class="p">[</span><span class="mi">6</span><span class="p">:</span><span class="nb">len</span><span class="p">(</span><span class="n">filename_elements</span><span class="p">)</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span>
     <span class="k">else</span><span class="p">:</span> <span class="n">sensor</span> <span class="o">=</span> <span class="n">filename_elements</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> 
     
+    <span class="k">if</span> <span class="n">filename_elements</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="ow">in</span> <span class="n">variable_lookup</span><span class="p">:</span>
+        <span class="n">variable</span> <span class="o">=</span> <span class="p">[</span><span class="n">variable_lookup</span><span class="p">[</span><span class="n">filename_elements</span><span class="p">[</span><span class="mi">3</span><span class="p">]]]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">variable</span> <span class="o">=</span> <span class="p">[</span><span class="n">filename_elements</span><span class="p">[</span><span class="mi">3</span><span class="p">]]</span>
+    
     <span class="n">metadata</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;network&#39;</span><span class="p">:</span><span class="n">header_elements</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
                 <span class="s">&#39;station&#39;</span><span class="p">:</span><span class="n">header_elements</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
                 <span class="s">&#39;latitude&#39;</span><span class="p">:</span><span class="nb">float</span><span class="p">(</span><span class="n">header_elements</span><span class="p">[</span><span class="mi">3</span><span class="p">]),</span>
@@ -204,7 +240,7 @@
                 <span class="s">&#39;elevation&#39;</span><span class="p">:</span><span class="nb">float</span><span class="p">(</span><span class="n">header_elements</span><span class="p">[</span><span class="mi">5</span><span class="p">]),</span>
                 <span class="s">&#39;depth_from&#39;</span><span class="p">:[</span><span class="nb">float</span><span class="p">(</span><span class="n">header_elements</span><span class="p">[</span><span class="mi">6</span><span class="p">])],</span>
                 <span class="s">&#39;depth_to&#39;</span><span class="p">:[</span><span class="nb">float</span><span class="p">(</span><span class="n">header_elements</span><span class="p">[</span><span class="mi">7</span><span class="p">])],</span>
-                <span class="s">&#39;variable&#39;</span><span class="p">:[</span><span class="n">filename_elements</span><span class="p">[</span><span class="mi">3</span><span class="p">]],</span>
+                <span class="s">&#39;variable&#39;</span><span class="p">:</span><span class="n">variable</span><span class="p">,</span>
                 <span class="s">&#39;sensor&#39;</span><span class="p">:</span><span class="n">sensor</span><span class="p">}</span>
     
     <span class="k">return</span> <span class="n">metadata</span>
@@ -214,13 +250,13 @@
 <span class="sd">    Reads ISMN textfiles in the format called </span>
 <span class="sd">    Variables stored in separate files (Header + values)</span>
 <span class="sd">    </span>
-<span class="sd">    Parameters:</span>
-<span class="sd">    -----------</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
 <span class="sd">    filename : string</span>
 <span class="sd">        path and name of file</span>
 <span class="sd">    </span>
-<span class="sd">    Returns:</span>
-<span class="sd">    --------</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
 <span class="sd">    time_series : ISMNTimeSeries</span>
 <span class="sd">        ISMNTimeSeries object initialized with metadata and data from file</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -248,13 +284,13 @@
 <span class="sd">    get metadata from ISMN textfiles in the format called </span>
 <span class="sd">    Variables stored in separate files (CEOP formatted)</span>
 <span class="sd">    </span>
-<span class="sd">    Parameters:</span>
-<span class="sd">    -----------</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
 <span class="sd">    filename : string</span>
 <span class="sd">        path and name of file</span>
 <span class="sd">    </span>
-<span class="sd">    Returns:</span>
-<span class="sd">    --------</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
 <span class="sd">    metadata : dict</span>
 <span class="sd">        dictionary of metadata information</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -265,9 +301,15 @@
         <span class="n">sensor</span> <span class="o">=</span> <span class="s">&#39;_&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">filename_elements</span><span class="p">[</span><span class="mi">6</span><span class="p">:</span><span class="nb">len</span><span class="p">(</span><span class="n">filename_elements</span><span class="p">)</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span>
     <span class="k">else</span><span class="p">:</span> <span class="n">sensor</span> <span class="o">=</span> <span class="n">filename_elements</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span>    
     
+    <span class="k">if</span> <span class="n">filename_elements</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="ow">in</span> <span class="n">variable_lookup</span><span class="p">:</span>
+        <span class="n">variable</span> <span class="o">=</span> <span class="p">[</span><span class="n">variable_lookup</span><span class="p">[</span><span class="n">filename_elements</span><span class="p">[</span><span class="mi">3</span><span class="p">]]]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">variable</span> <span class="o">=</span> <span class="p">[</span><span class="n">filename_elements</span><span class="p">[</span><span class="mi">3</span><span class="p">]]</span>
+    
+    
     <span class="n">metadata</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;network&#39;</span><span class="p">:</span><span class="n">filename_elements</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
                 <span class="s">&#39;station&#39;</span><span class="p">:</span><span class="n">filename_elements</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
-                <span class="s">&#39;variable&#39;</span><span class="p">:[</span><span class="n">filename_elements</span><span class="p">[</span><span class="mi">3</span><span class="p">]],</span>
+                <span class="s">&#39;variable&#39;</span><span class="p">:</span><span class="n">variable</span><span class="p">,</span>
                 <span class="s">&#39;depth_from&#39;</span><span class="p">:[</span><span class="nb">float</span><span class="p">(</span><span class="n">filename_elements</span><span class="p">[</span><span class="mi">4</span><span class="p">])],</span>
                 <span class="s">&#39;depth_to&#39;</span><span class="p">:[</span><span class="nb">float</span><span class="p">(</span><span class="n">filename_elements</span><span class="p">[</span><span class="mi">5</span><span class="p">])],</span>
                 <span class="s">&#39;sensor&#39;</span><span class="p">:</span> <span class="n">sensor</span><span class="p">,</span>
@@ -283,13 +325,13 @@
 <span class="sd">    Reads ISMN textfiles in the format called </span>
 <span class="sd">    Variables stored in separate files (CEOP formatted)</span>
 <span class="sd">    </span>
-<span class="sd">    Parameters:</span>
-<span class="sd">    -----------</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
 <span class="sd">    filename : string</span>
 <span class="sd">        path and name of file</span>
 <span class="sd">    </span>
-<span class="sd">    Returns:</span>
-<span class="sd">    --------</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
 <span class="sd">    time_series : ISMNTimeSeries</span>
 <span class="sd">        ISMNTimeSeries object initialized with metadata and data from file</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -316,13 +358,13 @@
 <span class="sd">    get metadata from ISMN textfiles in the format called </span>
 <span class="sd">    CEOP Reference Data Format </span>
 <span class="sd">    </span>
-<span class="sd">    Parameters:</span>
-<span class="sd">    -----------</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
 <span class="sd">    filename : string</span>
 <span class="sd">        path and name of file</span>
 <span class="sd">    </span>
-<span class="sd">    Returns:</span>
-<span class="sd">    --------</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
 <span class="sd">    metadata : dict</span>
 <span class="sd">        dictionary of metadata information</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -348,13 +390,13 @@
 <span class="sd">    Reads ISMN textfiles in the format called </span>
 <span class="sd">    CEOP Reference Data Format </span>
 <span class="sd">    </span>
-<span class="sd">    Parameters:</span>
-<span class="sd">    -----------</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
 <span class="sd">    filename : string</span>
 <span class="sd">        path and name of file</span>
 <span class="sd">    </span>
-<span class="sd">    Returns:</span>
-<span class="sd">    --------</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
 <span class="sd">    time_series : ISMNTimeSeries</span>
 <span class="sd">        ISMNTimeSeries object initialized with metadata and data from file</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -389,17 +431,17 @@
 <span class="sd">    get&#39;s the file format from the length of</span>
 <span class="sd">    the header and filename information</span>
 <span class="sd">    </span>
-<span class="sd">    Parameters:</span>
-<span class="sd">    -----------</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
 <span class="sd">    filename : string</span>
 <span class="sd">    </span>
-<span class="sd">    Returns:</span>
-<span class="sd">    --------</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
 <span class="sd">    methodname : string</span>
 <span class="sd">        name of method used to read the detected format</span>
 <span class="sd">    </span>
-<span class="sd">    Raises:</span>
-<span class="sd">    -------</span>
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
 <span class="sd">    ReaderException</span>
 <span class="sd">        if filename or header parts do not fit one of the formats</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -414,12 +456,12 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    reads ISMN data in any format</span>
 <span class="sd">    </span>
-<span class="sd">    Parameters:</span>
-<span class="sd">    -----------</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
 <span class="sd">    filename: string</span>
 <span class="sd">    </span>
-<span class="sd">    Returns:</span>
-<span class="sd">    --------</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
 <span class="sd">    timeseries: IMSNTimeSeries</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">dicton</span> <span class="o">=</span> <span class="nb">globals</span><span class="p">()</span>
@@ -430,12 +472,12 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    reads ISMN metadata from any format</span>
 <span class="sd">    </span>
-<span class="sd">    Parameters:</span>
-<span class="sd">    -----------</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
 <span class="sd">    filename: string</span>
 <span class="sd">    </span>
-<span class="sd">    Returns:</span>
-<span class="sd">    --------</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
 <span class="sd">    metadata: dict</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">dicton</span> <span class="o">=</span> <span class="nb">globals</span><span class="p">()</span>
@@ -482,13 +524,13 @@
         <li class="right" >
           <a href="../../../../np-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../../index.html">pytesmo 0.1a1 documentation</a> &raquo;</li>
+        <li><a href="../../../../index.html">pytesmo 0.1.1 documentation</a> &raquo;</li>
           <li><a href="../../../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
         &copy; Copyright 2013, Vienna University of Technology, Department of Geodesy and Geoinformation.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
     </div>
   </body>
 </html>

@@ -1,4 +1,3 @@
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -7,15 +6,15 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>timedate Package &mdash; pytesmo 0.1a1 documentation</title>
+    <title>pytesmo.timedate package &mdash; pytesmo 0.1.1 documentation</title>
     
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
-        VERSION:     '0.1a1',
+        URL_ROOT:    './',
+        VERSION:     '0.1.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,9 +23,9 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="pytesmo 0.1a1 documentation" href="index.html" />
-    <link rel="up" title="pytesmo Package" href="pytesmo.html" />
-    <link rel="prev" title="test Package" href="pytesmo.io.sat.test.html" /> 
+    <link rel="top" title="pytesmo 0.1.1 documentation" href="index.html" />
+    <link rel="up" title="pytesmo package" href="pytesmo.html" />
+    <link rel="prev" title="pytesmo.time_series package" href="pytesmo.time_series.html" /> 
   </head>
   <body>
     <div class="related">
@@ -42,10 +41,10 @@
           <a href="np-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="pytesmo.io.sat.test.html" title="test Package"
+          <a href="pytesmo.time_series.html" title="pytesmo.time_series package"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">pytesmo 0.1a1 documentation</a> &raquo;</li>
-          <li><a href="pytesmo.html" accesskey="U">pytesmo Package</a> &raquo;</li> 
+        <li><a href="index.html">pytesmo 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="pytesmo.html" accesskey="U">pytesmo package</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -54,13 +53,13 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="timedate-package">
-<h1>timedate Package<a class="headerlink" href="#timedate-package" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="id1">
-<h2><tt class="xref py py-mod docutils literal"><span class="pre">timedate</span></tt> Package<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
-<span class="target" id="module-pytesmo.timedate"></span></div>
+  <div class="section" id="pytesmo-timedate-package">
+<h1>pytesmo.timedate package<a class="headerlink" href="#pytesmo-timedate-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
 <div class="section" id="module-pytesmo.timedate.julian">
-<span id="julian-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">julian</span></tt> Module<a class="headerlink" href="#module-pytesmo.timedate.julian" title="Permalink to this headline">¶</a></h2>
+<span id="pytesmo-timedate-julian-module"></span><h2>pytesmo.timedate.julian module<a class="headerlink" href="#module-pytesmo.timedate.julian" title="Permalink to this headline">¶</a></h2>
 <p>Created on Tue Apr 02 16:50:34 2013</p>
 <p>&#64;author: tm</p>
 <p>computes julian date, given month (1..12). day(1..31) and year,
@@ -78,13 +77,13 @@ Works only for years past 1582!</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>julian</strong> : numpy.ndarray or double</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>julian</strong> : numpy.ndarray or double</p>
 <blockquote>
 <div><p>Julian day.</p>
 </div></blockquote>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>month</strong> : numpy.ndarray or int32</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>month</strong> : numpy.ndarray or int32</p>
 <blockquote>
 <div><p>Month.</p>
 </div></blockquote>
@@ -111,7 +110,7 @@ leap years.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>month</strong> : numpy.ndarray or int32</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>month</strong> : numpy.ndarray or int32</p>
 <blockquote>
 <div><p>Month.</p>
 </div></blockquote>
@@ -137,10 +136,10 @@ leap years.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>year</strong> : numpy.ndarray or int32</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>year</strong> : numpy.ndarray or int32</p>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>leap_year</strong> : numpy.ndarray or boolean</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>leap_year</strong> : numpy.ndarray or boolean</p>
 <blockquote class="last">
 <div><p>True if year is a leap year.</p>
 </div></blockquote>
@@ -152,13 +151,13 @@ leap years.</p>
 
 <dl class="function">
 <dt id="pytesmo.timedate.julian.julday">
-<tt class="descclassname">pytesmo.timedate.julian.</tt><tt class="descname">julday</tt><big>(</big><em>month</em>, <em>day</em>, <em>year</em><big>)</big><a class="reference internal" href="_modules/pytesmo/timedate/julian.html#julday"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytesmo.timedate.julian.julday" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">pytesmo.timedate.julian.</tt><tt class="descname">julday</tt><big>(</big><em>month</em>, <em>day</em>, <em>year</em>, <em>hour=0</em>, <em>minute=0</em>, <em>second=0</em><big>)</big><a class="reference internal" href="_modules/pytesmo/timedate/julian.html#julday"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytesmo.timedate.julian.julday" title="Permalink to this definition">¶</a></dt>
 <dd><p>Julian date from month, day, and year (can be scalars or arrays)</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>month</strong> : numpy.ndarray or int32</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>month</strong> : numpy.ndarray or int32</p>
 <blockquote>
 <div><p>Month.</p>
 </div></blockquote>
@@ -170,9 +169,21 @@ leap years.</p>
 <blockquote>
 <div><p>Year.</p>
 </div></blockquote>
+<p><strong>hour</strong> : numpy.ndarray or int32, optional</p>
+<blockquote>
+<div><p>Hour.</p>
+</div></blockquote>
+<p><strong>minute</strong> : numpy.ndarray or int32, optional</p>
+<blockquote>
+<div><p>Minute.</p>
+</div></blockquote>
+<p><strong>second</strong> : numpy.ndarray or int32, optional</p>
+<blockquote>
+<div><p>Second.</p>
+</div></blockquote>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>jul</strong> : numpy.ndarray or double</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>jul</strong> : numpy.ndarray or double</p>
 <blockquote class="last">
 <div><p>Julian day.</p>
 </div></blockquote>
@@ -180,12 +191,6 @@ leap years.</p>
 </tr>
 </tbody>
 </table>
-<p class="rubric">Notes</p>
-<ul class="simple">
-<li>no error handling implemented</li>
-<li>works only for years past 1582</li>
-<li>time not yet supported</li>
-</ul>
 </dd></dl>
 
 <dl class="function">
@@ -197,13 +202,13 @@ Works only for years past 1582!</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>julian</strong> : numpy.ndarray or double</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>julian</strong> : numpy.ndarray or double</p>
 <blockquote>
 <div><p>Julian day.</p>
 </div></blockquote>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>year</strong> : numpy.ndarray or int32</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>year</strong> : numpy.ndarray or int32</p>
 <blockquote>
 <div><p>Year.</p>
 </div></blockquote>
@@ -234,6 +239,25 @@ Works only for years past 1582!</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="pytesmo.timedate.julian.julian2datetime">
+<tt class="descclassname">pytesmo.timedate.julian.</tt><tt class="descname">julian2datetime</tt><big>(</big><em>julian</em>, <em>tz=None</em><big>)</big><a class="reference internal" href="_modules/pytesmo/timedate/julian.html#julian2datetime"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytesmo.timedate.julian.julian2datetime" title="Permalink to this definition">¶</a></dt>
+<dd><p>converts julian date to python datetime
+default is not time zone aware</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>julian</strong> : float</p>
+<blockquote class="last">
+<div><p>julian date</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="pytesmo.timedate.julian.julian2doy">
 <tt class="descclassname">pytesmo.timedate.julian.</tt><tt class="descname">julian2doy</tt><big>(</big><em>j</em>, <em>consider_nonleap_years=True</em><big>)</big><a class="reference internal" href="_modules/pytesmo/timedate/julian.html#julian2doy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytesmo.timedate.julian.julian2doy" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calendar date from julian date.
@@ -242,7 +266,7 @@ Works only for years past 1582!</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>j</strong> : numpy.ndarray or double</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>j</strong> : numpy.ndarray or double</p>
 <blockquote>
 <div><p>Julian days.</p>
 </div></blockquote>
@@ -252,7 +276,7 @@ Works only for years past 1582!</p>
 </div></blockquote>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>doy</strong> : numpy.ndarray or int32</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>doy</strong> : numpy.ndarray or int32</p>
 <blockquote class="last">
 <div><p>Day of year.</p>
 </div></blockquote>
@@ -270,13 +294,13 @@ Works only for years past 1582!</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>j</strong> : numpy.ndarray</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>j</strong> : numpy.ndarray</p>
 <blockquote>
 <div><p>Julian days.</p>
 </div></blockquote>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>num</strong> : numpy.ndarray</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>num</strong> : numpy.ndarray</p>
 <blockquote class="last">
 <div><p>Number of days since 0001-01-01 00:00:00 UTC <em>plus</em> <em>one</em>.</p>
 </div></blockquote>
@@ -294,13 +318,13 @@ Works only for years past 1582!</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>n</strong> : numpy.ndarray</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>n</strong> : numpy.ndarray</p>
 <blockquote>
 <div><p>Number of days since 0001-01-01 00:00:00 UTC <em>plus</em> <em>one</em>.</p>
 </div></blockquote>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>j</strong> : numpy.ndarray</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>j</strong> : numpy.ndarray</p>
 <blockquote class="last">
 <div><p>Julian days.</p>
 </div></blockquote>
@@ -310,6 +334,9 @@ Works only for years past 1582!</p>
 </table>
 </dd></dl>
 
+</div>
+<div class="section" id="module-pytesmo.timedate">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-pytesmo.timedate" title="Permalink to this headline">¶</a></h2>
 </div>
 </div>
 
@@ -321,16 +348,17 @@ Works only for years past 1582!</p>
         <div class="sphinxsidebarwrapper">
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">timedate Package</a><ul>
-<li><a class="reference internal" href="#id1"><tt class="docutils literal"><span class="pre">timedate</span></tt> Package</a></li>
-<li><a class="reference internal" href="#module-pytesmo.timedate.julian"><tt class="docutils literal"><span class="pre">julian</span></tt> Module</a></li>
+<li><a class="reference internal" href="#">pytesmo.timedate package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-pytesmo.timedate.julian">pytesmo.timedate.julian module</a></li>
+<li><a class="reference internal" href="#module-pytesmo.timedate">Module contents</a></li>
 </ul>
 </li>
 </ul>
 
   <h4>Previous topic</h4>
-  <p class="topless"><a href="pytesmo.io.sat.test.html"
-                        title="previous chapter">test Package</a></p>
+  <p class="topless"><a href="pytesmo.time_series.html"
+                        title="previous chapter">pytesmo.time_series package</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/pytesmo.timedate.txt"
@@ -366,15 +394,15 @@ Works only for years past 1582!</p>
           <a href="np-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="pytesmo.io.sat.test.html" title="test Package"
+          <a href="pytesmo.time_series.html" title="pytesmo.time_series package"
              >previous</a> |</li>
-        <li><a href="index.html">pytesmo 0.1a1 documentation</a> &raquo;</li>
-          <li><a href="pytesmo.html" >pytesmo Package</a> &raquo;</li> 
+        <li><a href="index.html">pytesmo 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="pytesmo.html" >pytesmo package</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
         &copy; Copyright 2013, Vienna University of Technology, Department of Geodesy and Geoinformation.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
     </div>
   </body>
 </html>

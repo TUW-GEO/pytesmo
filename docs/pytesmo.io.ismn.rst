@@ -1,37 +1,5 @@
-ismn Package
-============
-
-:mod:`ismn` Package
--------------------
-
-.. automodule:: pytesmo.io.ismn
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`interface` Module
------------------------
-
-.. automodule:: pytesmo.io.ismn.interface
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`metadata_collector` Module
---------------------------------
-
-.. automodule:: pytesmo.io.ismn.metadata_collector
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`readers` Module
----------------------
-
-.. automodule:: pytesmo.io.ismn.readers
-    :members:
-    :undoc-members:
-    :show-inheritance:
+pytesmo.io.ismn package
+=======================
 
 Subpackages
 -----------
@@ -40,3 +8,38 @@ Subpackages
 
     pytesmo.io.ismn.test
 
+Submodules
+----------
+
+pytesmo.io.ismn.interface module
+--------------------------------
+
+.. automodule:: pytesmo.io.ismn.interface
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+pytesmo.io.ismn.metadata_collector module
+-----------------------------------------
+
+.. automodule:: pytesmo.io.ismn.metadata_collector
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+pytesmo.io.ismn.readers module
+------------------------------
+
+.. automodule:: pytesmo.io.ismn.readers
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: pytesmo.io.ismn
+    :members:
+    :undoc-members:
+    :show-inheritance:

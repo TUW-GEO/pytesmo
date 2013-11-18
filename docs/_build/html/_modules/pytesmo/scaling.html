@@ -1,4 +1,3 @@
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -7,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pytesmo.scaling &mdash; pytesmo 0.1a1 documentation</title>
+    <title>pytesmo.scaling &mdash; pytesmo 0.1.1 documentation</title>
     
     <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
@@ -15,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '0.1a1',
+        VERSION:     '0.1.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +23,7 @@
     <script type="text/javascript" src="../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <link rel="top" title="pytesmo 0.1a1 documentation" href="../../index.html" />
+    <link rel="top" title="pytesmo 0.1.1 documentation" href="../../index.html" />
     <link rel="up" title="Module code" href="../index.html" /> 
   </head>
   <body>
@@ -40,7 +39,7 @@
         <li class="right" >
           <a href="../../np-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../index.html">pytesmo 0.1a1 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pytesmo 0.1.1 documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -65,9 +64,10 @@
 
 
 <div class="viewcode-block" id="add_scaled"><a class="viewcode-back" href="../../pytesmo.html#pytesmo.scaling.add_scaled">[docs]</a><span class="k">def</span> <span class="nf">add_scaled</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s">&#39;linreg&#39;</span><span class="p">,</span> <span class="n">label_in</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">label_scale</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    takes a dataframe and appends a scaled time series to it. If no labels are</span>
 <span class="sd">    given the first column will be scaled to the second column of the DataFrame</span>
+<span class="sd">	</span>
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    df : pandas.DataFrame</span>
@@ -76,14 +76,17 @@
 <span class="sd">        scaling method</span>
 <span class="sd">    label_in: string, optional</span>
 <span class="sd">        the column of the dataframe that should be scaled to that with label_scale</span>
+<span class="sd">        default is the first column</span>
 <span class="sd">    label_scale : string, optional</span>
 <span class="sd">        the column of the dataframe the label_in column should be scaled to</span>
+<span class="sd">        default is the second column</span>
 <span class="sd">        </span>
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    df : pandas.DataFrame</span>
 <span class="sd">        input dataframe with new column labeled label_in+&#39;_scaled_&#39;+method</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
     <span class="k">if</span> <span class="n">label_in</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
         <span class="n">label_in</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="k">if</span> <span class="n">label_scale</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
@@ -99,6 +102,9 @@
         <span class="n">scaled</span> <span class="o">=</span> <span class="n">lin_cdf_match</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">label_in</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">df</span><span class="p">[</span><span class="n">label_scale</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s">&#39;cdf_match&#39;</span><span class="p">:</span>
         <span class="n">scaled</span> <span class="o">=</span> <span class="n">cdf_match</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">label_in</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">df</span><span class="p">[</span><span class="n">label_scale</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span> 
+    
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;method not found&quot;</span><span class="p">)</span>
                 
     <span class="n">new_label</span> <span class="o">=</span> <span class="n">label_in</span> <span class="o">+</span> <span class="s">&#39;_scaled_&#39;</span> <span class="o">+</span> <span class="n">method</span>
     
@@ -106,20 +112,59 @@
     
     <span class="k">return</span> <span class="n">df</span>    
 </div>
+<div class="viewcode-block" id="scale"><a class="viewcode-back" href="../../pytesmo.html#pytesmo.scaling.scale">[docs]</a><span class="k">def</span> <span class="nf">scale</span><span class="p">(</span><span class="n">df</span><span class="p">,</span><span class="n">method</span><span class="o">=</span><span class="s">&#39;linreg&#39;</span><span class="p">,</span><span class="n">reference_index</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    takes pandas.DataFrame and scales all columns to the column specified</span>
+<span class="sd">    by reference_index with the chosen method</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    df : pandas.DataFrame</span>
+<span class="sd">        containing matched time series that should be scaled</span>
+<span class="sd">    method : string, optional</span>
+<span class="sd">        method definition, has to be a function in globals() that takes 2 numpy.array</span>
+<span class="sd">        as input and returns one numpy.array of same length</span>
+<span class="sd">    reference_index : int, optional</span>
+<span class="sd">        default 0, column index of reference dataset in dataframe</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    scaled data : pandas.DataFrame</span>
+<span class="sd">        all time series of the input DataFrame scaled to the one specified by</span>
+<span class="sd">        reference_index</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dicton</span> <span class="o">=</span> <span class="nb">globals</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">scaling_func</span> <span class="o">=</span> <span class="n">dicton</span><span class="p">[</span><span class="n">method</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">print</span> <span class="s">&#39;scaling method not found&#39;</span>
+        <span class="k">return</span> <span class="bp">None</span>    
+    
+    <span class="n">reference</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="n">reference_index</span><span class="p">]]</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="n">reference_index</span><span class="p">]],</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="c">#new_df = pd.DataFrame</span>
+    <span class="k">for</span> <span class="n">series</span> <span class="ow">in</span> <span class="n">df</span><span class="p">:</span>
+        <span class="n">df</span><span class="p">[</span><span class="n">series</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">scaling_func</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">series</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">reference</span><span class="o">.</span><span class="n">values</span><span class="p">),</span><span class="n">index</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+    
+    <span class="n">df</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">reference_index</span><span class="p">,</span><span class="n">reference</span><span class="o">.</span><span class="n">name</span><span class="p">,</span><span class="n">reference</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">df</span>
+
+</div>
 <div class="viewcode-block" id="min_max"><a class="viewcode-back" href="../../pytesmo.html#pytesmo.scaling.min_max">[docs]</a><span class="k">def</span> <span class="nf">min_max</span><span class="p">(</span><span class="n">in_data</span><span class="p">,</span> <span class="n">scale_to</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    scales the input datasets so that they have the same minimum</span>
 <span class="sd">    and maximum afterwards</span>
 <span class="sd">    </span>
-<span class="sd">    Parameters:</span>
+<span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    in_data : numpy.array</span>
 <span class="sd">        input dataset which will be scaled</span>
 <span class="sd">    scale_to : numpy.array</span>
 <span class="sd">        in_data will be scaled to this dataset</span>
 <span class="sd">    </span>
-<span class="sd">    Returns:</span>
-<span class="sd">    --------</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
 <span class="sd">    scaled dataset : numpy.array</span>
 <span class="sd">        dataset in_data with same maximum and minimum as scale_to</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -129,15 +174,15 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    scales the input datasets using linear regression</span>
 <span class="sd">    </span>
-<span class="sd">    Parameters:</span>
+<span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    in_data : numpy.array</span>
 <span class="sd">        input dataset which will be scaled</span>
 <span class="sd">    scale_to : numpy.array</span>
 <span class="sd">        in_data will be scaled to this dataset</span>
 <span class="sd">    </span>
-<span class="sd">    Returns:</span>
-<span class="sd">    --------</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
 <span class="sd">    scaled dataset : numpy.array</span>
 <span class="sd">        dataset scaled using linear regression</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -151,15 +196,15 @@
 <span class="sd">    scales the input datasets so that they have the same mean</span>
 <span class="sd">    and standard deviation afterwards</span>
 <span class="sd">    </span>
-<span class="sd">    Parameters:</span>
+<span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    in_data : numpy.array</span>
 <span class="sd">        input dataset which will be scaled</span>
 <span class="sd">    scale_to : numpy.array</span>
 <span class="sd">        in_data will be scaled to this dataset</span>
 <span class="sd">    </span>
-<span class="sd">    Returns:</span>
-<span class="sd">    --------</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
 <span class="sd">    scaled dataset : numpy.array</span>
 <span class="sd">        dataset in_data with same mean and standard deviation as scale_to</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -170,15 +215,15 @@
 <span class="sd">    computes cumulative density functions of in_data and scale_to at their respective bin-edges </span>
 <span class="sd">    by linear interpolation; then matches CDF of in_data to CDF of scale_to  </span>
 <span class="sd">    </span>
-<span class="sd">    Parameters:</span>
-<span class="sd">    -----------</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
 <span class="sd">    in_data: numpy.array</span>
 <span class="sd">        input dataset which will be scaled</span>
 <span class="sd">    scale_to: numpy.array</span>
 <span class="sd">        in_data will be scaled to this dataset</span>
 <span class="sd">        </span>
-<span class="sd">    Returns:</span>
-<span class="sd">    --------</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
 <span class="sd">    CDF matched values: numpy.array</span>
 <span class="sd">        dataset in_data with CDF as scale_to</span>
 <span class="sd">    &#39;&#39;&#39;</span>
@@ -206,15 +251,15 @@
 <span class="sd">    2. computes continuous CDFs by 6th order polynomial fitting; </span>
 <span class="sd">    3. CDF of in_data is matched to CDF of scale_to </span>
 <span class="sd">     </span>
-<span class="sd">    Parameters:</span>
-<span class="sd">    -----------</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
 <span class="sd">    in_data: numpy.array</span>
 <span class="sd">        input dataset which will be scaled</span>
 <span class="sd">    scale_to: numpy.array</span>
 <span class="sd">        in_data will be scaled to this dataset</span>
 <span class="sd">        </span>
-<span class="sd">    Returns:</span>
-<span class="sd">    --------</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
 <span class="sd">    CDF matched values: numpy.array</span>
 <span class="sd">        dataset in_data with CDF as scale_to </span>
 <span class="sd">    &#39;&#39;&#39;</span>  
@@ -290,13 +335,13 @@
         <li class="right" >
           <a href="../../np-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../index.html">pytesmo 0.1a1 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">pytesmo 0.1.1 documentation</a> &raquo;</li>
           <li><a href="../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
         &copy; Copyright 2013, Vienna University of Technology, Department of Geodesy and Geoinformation.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
     </div>
   </body>
 </html>

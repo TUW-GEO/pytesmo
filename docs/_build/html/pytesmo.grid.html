@@ -1,4 +1,3 @@
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -7,15 +6,15 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>grid Package &mdash; pytesmo 0.1a1 documentation</title>
+    <title>pytesmo.grid package &mdash; pytesmo 0.1.1 documentation</title>
     
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
-        VERSION:     '0.1a1',
+        URL_ROOT:    './',
+        VERSION:     '0.1.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,10 +23,10 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="pytesmo 0.1a1 documentation" href="index.html" />
-    <link rel="up" title="pytesmo Package" href="pytesmo.html" />
-    <link rel="next" title="io Package" href="pytesmo.io.html" />
-    <link rel="prev" title="pytesmo Package" href="pytesmo.html" /> 
+    <link rel="top" title="pytesmo 0.1.1 documentation" href="index.html" />
+    <link rel="up" title="pytesmo package" href="pytesmo.html" />
+    <link rel="next" title="pytesmo.io package" href="pytesmo.io.html" />
+    <link rel="prev" title="pytesmo package" href="pytesmo.html" /> 
   </head>
   <body>
     <div class="related">
@@ -43,13 +42,13 @@
           <a href="np-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="pytesmo.io.html" title="io Package"
+          <a href="pytesmo.io.html" title="pytesmo.io package"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="pytesmo.html" title="pytesmo Package"
+          <a href="pytesmo.html" title="pytesmo package"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">pytesmo 0.1a1 documentation</a> &raquo;</li>
-          <li><a href="pytesmo.html" accesskey="U">pytesmo Package</a> &raquo;</li> 
+        <li><a href="index.html">pytesmo 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="pytesmo.html" accesskey="U">pytesmo package</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -58,13 +57,13 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="grid-package">
-<h1>grid Package<a class="headerlink" href="#grid-package" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="id1">
-<h2><tt class="xref py py-mod docutils literal"><span class="pre">grid</span></tt> Package<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
-<span class="target" id="module-pytesmo.grid"></span></div>
+  <div class="section" id="pytesmo-grid-package">
+<h1>pytesmo.grid package<a class="headerlink" href="#pytesmo-grid-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
 <div class="section" id="module-pytesmo.grid.grids">
-<span id="grids-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">grids</span></tt> Module<a class="headerlink" href="#module-pytesmo.grid.grids" title="Permalink to this headline">¶</a></h2>
+<span id="pytesmo-grid-grids-module"></span><h2>pytesmo.grid.grids module<a class="headerlink" href="#module-pytesmo.grid.grids" title="Permalink to this headline">¶</a></h2>
 <p>Created on Aug 26, 2013</p>
 <p>&#64;author: Christoph Paulik <a class="reference external" href="mailto:Christoph&#46;Paulik&#37;&#52;&#48;geo&#46;tuwien&#46;ac&#46;at">Christoph<span>&#46;</span>Paulik<span>&#64;</span>geo<span>&#46;</span>tuwien<span>&#46;</span>ac<span>&#46;</span>at</a></p>
 <dl class="class">
@@ -78,7 +77,7 @@ information in order.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>lon</strong> : numpy.array</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>lon</strong> : numpy.array</p>
 <blockquote>
 <div><p>longitudes of the points in the grid</p>
 </div></blockquote>
@@ -120,7 +119,7 @@ The shape has to be given as (latdim, londim)</p>
 <table border="1" class="docutils">
 <colgroup>
 <col width="13%" />
-<col width="23%" />
+<col width="24%" />
 <col width="63%" />
 </colgroup>
 <tbody valign="top">
@@ -182,7 +181,7 @@ the self.split function</td>
 </tr>
 <tr class="row-even"><td>kdTree</td>
 <td>object</td>
-<td><a class="reference internal" href="#pytesmo.grid.nearest_neighbor.findGeoNN" title="pytesmo.grid.nearest_neighbor.findGeoNN"><tt class="xref py py-mod docutils literal"><span class="pre">pytesmo.grid.nearest_neighbor.findGeoNN</span></tt></a> object for
+<td>grid.nearest_neighbor.findGeoNN object for
 nearest neighbor search</td>
 </tr>
 <tr class="row-odd"><td>shape</td>
@@ -215,7 +214,7 @@ for every grid point have the nearest index into other.arrlon etc.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>other</strong> : <a class="reference internal" href="#pytesmo.grid.grids.BasicGrid" title="pytesmo.grid.grids.BasicGrid"><tt class="xref py py-mod docutils literal"><span class="pre">pytesmo.grid.grids.BasicGrid</span></tt></a> or <a class="reference internal" href="#pytesmo.grid.grids.CellGrid" title="pytesmo.grid.grids.CellGrid"><tt class="xref py py-mod docutils literal"><span class="pre">pytesmo.grid.grids.CellGrid</span></tt></a> object</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>other</strong> : grid object</p>
 <blockquote>
 <div><p>to which to calculate the lut to</p>
 </div></blockquote>
@@ -247,7 +246,7 @@ be indexed with indices into the subset</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>lon</strong> : float</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>lon</strong> : float</p>
 <blockquote>
 <div><p>longitude of point</p>
 </div></blockquote>
@@ -257,7 +256,7 @@ be indexed with indices into the subset</p>
 </div></blockquote>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>gpi</strong> : long</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>gpi</strong> : long</p>
 <blockquote>
 <div><p>grid point index</p>
 </div></blockquote>
@@ -273,6 +272,31 @@ At the moment not on a great circle but in spherical cartesian coordinates</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="pytesmo.grid.grids.BasicGrid.get_grid_points">
+<tt class="descname">get_grid_points</tt><big>(</big><em>*args</em><big>)</big><a class="reference internal" href="_modules/pytesmo/grid/grids.html#BasicGrid.get_grid_points"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytesmo.grid.grids.BasicGrid.get_grid_points" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns all active grid points</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>n</strong> : int, optional</p>
+<blockquote>
+<div><p>if the grid is split in n parts using the split function
+then this function will only return the nth part of the
+grid</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>gpis</strong> : numpy.array</p>
+<p><strong>arrlon</strong> : numpy.array</p>
+<p class="last"><strong>arrlat :numpy.array</strong> :</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="pytesmo.grid.grids.BasicGrid.gpi2lonlat">
 <tt class="descname">gpi2lonlat</tt><big>(</big><em>gpi</em><big>)</big><a class="reference internal" href="_modules/pytesmo/grid/grids.html#BasicGrid.gpi2lonlat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytesmo.grid.grids.BasicGrid.gpi2lonlat" title="Permalink to this definition">¶</a></dt>
 <dd><p>Longitude and Latitude for given GPI.</p>
@@ -280,13 +304,13 @@ At the moment not on a great circle but in spherical cartesian coordinates</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>gpi</strong> : int32</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>gpi</strong> : int32</p>
 <blockquote>
 <div><p>Grid Point Index.</p>
 </div></blockquote>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>lon</strong> : float</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>lon</strong> : float</p>
 <blockquote>
 <div><p>Longitude (deg) of GPI.</p>
 </div></blockquote>
@@ -305,7 +329,7 @@ At the moment not on a great circle but in spherical cartesian coordinates</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>n</strong> : int, optional</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>n</strong> : int, optional</p>
 <blockquote>
 <div><p>if the grid is split in n parts using the split function
 then this iterator will only iterate of the nth part of the
@@ -313,7 +337,7 @@ grid</p>
 </div></blockquote>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>gpi</strong> : long</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>gpi</strong> : long</p>
 <blockquote>
 <div><p>grid point index</p>
 </div></blockquote>
@@ -342,7 +366,7 @@ the grid</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>n</strong> : int</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>n</strong> : int</p>
 <blockquote class="last">
 <div><p>number of parts the grid should be split into</p>
 </div></blockquote>
@@ -374,7 +398,7 @@ with optimized IO performance</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>lon</strong> : numpy.array</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>lon</strong> : numpy.array</p>
 <blockquote>
 <div><p>longitudes of the points in the grid</p>
 </div></blockquote>
@@ -431,10 +455,36 @@ is defined by arrlon[subset] if a subset is given otherwise equal to arrlon</td>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>cells</strong> : numpy.array</p>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>cells</strong> : numpy.array</p>
 <blockquote class="last">
 <div><p>unique cell numbers</p>
 </div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pytesmo.grid.grids.CellGrid.get_grid_points">
+<tt class="descname">get_grid_points</tt><big>(</big><em>*args</em><big>)</big><a class="reference internal" href="_modules/pytesmo/grid/grids.html#CellGrid.get_grid_points"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytesmo.grid.grids.CellGrid.get_grid_points" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns all active grid points</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>n</strong> : int, optional</p>
+<blockquote>
+<div><p>if the grid is split in n parts using the split function
+then this function will only return the nth part of the
+grid</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>gpis</strong> : numpy.array</p>
+<p><strong>arrlon</strong> : numpy.array</p>
+<p><strong>arrlat :numpy.array</strong> :</p>
+<p class="last"><strong>cells</strong> : numpy.array</p>
 </td>
 </tr>
 </tbody>
@@ -449,13 +499,13 @@ is defined by arrlon[subset] if a subset is given otherwise equal to arrlon</td>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>gpi</strong> : int32</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>gpi</strong> : int32</p>
 <blockquote>
 <div><p>Grid Point Index.</p>
 </div></blockquote>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>cell</strong> : int</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>cell</strong> : int</p>
 <blockquote class="last">
 <div><p>Cell number of GPI.</p>
 </div></blockquote>
@@ -473,13 +523,13 @@ is defined by arrlon[subset] if a subset is given otherwise equal to arrlon</td>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>cell</strong> : int</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>cell</strong> : int</p>
 <blockquote>
 <div><p>cell number</p>
 </div></blockquote>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>gpis</strong> : numpy.array</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>gpis</strong> : numpy.array</p>
 <blockquote class="last">
 <div><p>gpis belonging to cell</p>
 </div></blockquote>
@@ -500,7 +550,7 @@ the grid</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>n</strong> : int</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>n</strong> : int</p>
 <blockquote class="last">
 <div><p>number of parts the grid should be split into</p>
 </div></blockquote>
@@ -526,7 +576,7 @@ the grid</p>
 
 </div>
 <div class="section" id="module-pytesmo.grid.nearest_neighbor">
-<span id="nearest-neighbor-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">nearest_neighbor</span></tt> Module<a class="headerlink" href="#module-pytesmo.grid.nearest_neighbor" title="Permalink to this headline">¶</a></h2>
+<span id="pytesmo-grid-nearest-neighbor-module"></span><h2>pytesmo.grid.nearest_neighbor module<a class="headerlink" href="#module-pytesmo.grid.nearest_neighbor" title="Permalink to this headline">¶</a></h2>
 <p>Created on Jul 30, 2013</p>
 <p>&#64;author: Christoph Paulik <a class="reference external" href="mailto:christoph&#46;paulik&#37;&#52;&#48;geo&#46;tuwien&#46;ac&#46;at">christoph<span>&#46;</span>paulik<span>&#64;</span>geo<span>&#46;</span>tuwien<span>&#46;</span>ac<span>&#46;</span>at</a></p>
 <dl class="class">
@@ -540,7 +590,7 @@ as well as pykdtree if installed</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>lon</strong> : numpy.array or list</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>lon</strong> : numpy.array or list</p>
 <blockquote>
 <div><p>longitudes of the points in the grid</p>
 </div></blockquote>
@@ -609,7 +659,7 @@ or if pykdtree is not installed</td>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>lon</strong> : float, list or numpy.array</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>lon</strong> : float, list or numpy.array</p>
 <blockquote>
 <div><p>longitude of point</p>
 </div></blockquote>
@@ -619,7 +669,7 @@ or if pykdtree is not installed</td>
 </div></blockquote>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>d</strong> : float, numpy.array</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>d</strong> : float, numpy.array</p>
 <blockquote>
 <div><p>distances of query coordinates to the nearest grid point,
 distance is given in cartesian coordinates and is not the 
@@ -648,6 +698,9 @@ should not be hundreds of kilometers away.</p>
 </dd></dl>
 
 </div>
+<div class="section" id="module-pytesmo.grid">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-pytesmo.grid" title="Permalink to this headline">¶</a></h2>
+</div>
 </div>
 
 
@@ -658,20 +711,21 @@ should not be hundreds of kilometers away.</p>
         <div class="sphinxsidebarwrapper">
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">grid Package</a><ul>
-<li><a class="reference internal" href="#id1"><tt class="docutils literal"><span class="pre">grid</span></tt> Package</a></li>
-<li><a class="reference internal" href="#module-pytesmo.grid.grids"><tt class="docutils literal"><span class="pre">grids</span></tt> Module</a></li>
-<li><a class="reference internal" href="#module-pytesmo.grid.nearest_neighbor"><tt class="docutils literal"><span class="pre">nearest_neighbor</span></tt> Module</a></li>
+<li><a class="reference internal" href="#">pytesmo.grid package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-pytesmo.grid.grids">pytesmo.grid.grids module</a></li>
+<li><a class="reference internal" href="#module-pytesmo.grid.nearest_neighbor">pytesmo.grid.nearest_neighbor module</a></li>
+<li><a class="reference internal" href="#module-pytesmo.grid">Module contents</a></li>
 </ul>
 </li>
 </ul>
 
   <h4>Previous topic</h4>
   <p class="topless"><a href="pytesmo.html"
-                        title="previous chapter">pytesmo Package</a></p>
+                        title="previous chapter">pytesmo package</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="pytesmo.io.html"
-                        title="next chapter">io Package</a></p>
+                        title="next chapter">pytesmo.io package</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/pytesmo.grid.txt"
@@ -707,18 +761,18 @@ should not be hundreds of kilometers away.</p>
           <a href="np-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="pytesmo.io.html" title="io Package"
+          <a href="pytesmo.io.html" title="pytesmo.io package"
              >next</a> |</li>
         <li class="right" >
-          <a href="pytesmo.html" title="pytesmo Package"
+          <a href="pytesmo.html" title="pytesmo package"
              >previous</a> |</li>
-        <li><a href="index.html">pytesmo 0.1a1 documentation</a> &raquo;</li>
-          <li><a href="pytesmo.html" >pytesmo Package</a> &raquo;</li> 
+        <li><a href="index.html">pytesmo 0.1.1 documentation</a> &raquo;</li>
+          <li><a href="pytesmo.html" >pytesmo package</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
         &copy; Copyright 2013, Vienna University of Technology, Department of Geodesy and Geoinformation.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
     </div>
   </body>
 </html>

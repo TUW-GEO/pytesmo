@@ -1,4 +1,3 @@
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -7,15 +6,15 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pytesmo Package &mdash; pytesmo 0.1a1 documentation</title>
+    <title>pytesmo package &mdash; pytesmo 0.1.1 documentation</title>
     
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
-        VERSION:     '0.1a1',
+        URL_ROOT:    './',
+        VERSION:     '0.1.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,8 +23,8 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="pytesmo 0.1a1 documentation" href="index.html" />
-    <link rel="next" title="grid Package" href="pytesmo.grid.html" />
+    <link rel="top" title="pytesmo 0.1.1 documentation" href="index.html" />
+    <link rel="next" title="pytesmo.grid package" href="pytesmo.grid.html" />
     <link rel="prev" title="Examples" href="examples.html" /> 
   </head>
   <body>
@@ -42,12 +41,12 @@
           <a href="np-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="pytesmo.grid.html" title="grid Package"
+          <a href="pytesmo.grid.html" title="pytesmo.grid package"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="examples.html" title="Examples"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">pytesmo 0.1a1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">pytesmo 0.1.1 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -57,137 +56,81 @@
           <div class="body">
             
   <div class="section" id="pytesmo-package">
-<h1>pytesmo Package<a class="headerlink" href="#pytesmo-package" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="id1">
-<h2><tt class="xref py py-mod docutils literal"><span class="pre">pytesmo</span></tt> Package<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
-<span class="target" id="module-pytesmo.__init__"></span></div>
-<div class="section" id="module-pytesmo.anomaly">
-<span id="anomaly-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">anomaly</span></tt> Module<a class="headerlink" href="#module-pytesmo.anomaly" title="Permalink to this headline">¶</a></h2>
-<p>Created on June 20, 2013</p>
-<p>&#64;author: Alexander Gruber <a class="reference external" href="mailto:Alexander&#46;Gruber&#37;&#52;&#48;geo&#46;tuwien&#46;ac&#46;at">Alexander<span>&#46;</span>Gruber<span>&#64;</span>geo<span>&#46;</span>tuwien<span>&#46;</span>ac<span>&#46;</span>at</a></p>
-<dl class="function">
-<dt id="pytesmo.anomaly.calc_anomaly">
-<tt class="descclassname">pytesmo.anomaly.</tt><tt class="descname">calc_anomaly</tt><big>(</big><em>Ser</em>, <em>window_size=35</em>, <em>climatology=None</em><big>)</big><a class="reference internal" href="_modules/pytesmo/anomaly.html#calc_anomaly"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytesmo.anomaly.calc_anomaly" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculates the anomaly of a time series (Pandas series).
-Both, climatology based, or moving-average based anomalies can be 
-calculated</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>Ser</strong> : pandas.Series (index must be a DateTimeIndex)</p>
-<p><strong>window_size</strong> : float, optional</p>
-<blockquote>
-<div><p>The window-size [days] of the moving-average window to calculate the
-anomaly reference (only used if climatology is not provided)
-Default: 35 (days)</p>
-</div></blockquote>
-<p><strong>climatology</strong> : pandas.Series (index: 1-366), optional</p>
-<blockquote>
-<div><p>if provided, anomalies will be based on the climatology</p>
-</div></blockquote>
-<p><strong>timespann</strong> : [timespan_from, timespan_to], datetime.datetime(y,m,d), optional</p>
-<blockquote>
-<div><p>If set, only a subset</p>
-</div></blockquote>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>anomaly</strong> : pandas.Series</p>
-<blockquote class="last">
-<div><p>Series containing the calculated anomalies</p>
-</div></blockquote>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pytesmo.anomaly.calc_climatology">
-<tt class="descclassname">pytesmo.anomaly.</tt><tt class="descname">calc_climatology</tt><big>(</big><em>Ser</em>, <em>moving_avg_orig=5</em>, <em>moving_avg_clim=30</em>, <em>median=False</em>, <em>timespan=None</em><big>)</big><a class="reference internal" href="_modules/pytesmo/anomaly.html#calc_climatology"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytesmo.anomaly.calc_climatology" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculates the climatology of a data set</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>Ser</strong> : pandas.Series (index must be a DateTimeIndex)</p>
-<p><strong>moving_avg_orig</strong> : float, optional</p>
-<blockquote>
-<div><p>The size of the moving_average window [days] that will be applied on the 
-input Series (gap filling, short-term rainfall correction)
-Default: 5</p>
-</div></blockquote>
-<p><strong>moving_avg_clim</strong> : float, optional</p>
-<blockquote>
-<div><p>The size of the moving_average window [days] that will be applied on the 
-calculated climatology (long-term event correction)
-Default: 35</p>
-</div></blockquote>
-<p><strong>median</strong> : boolean, optional</p>
-<blockquote>
-<div><p>if set to True, the climatology will be based on the median conditions</p>
-</div></blockquote>
-<p><strong>timespan</strong> : [timespan_from, timespan_to], datetime.datetime(y,m,d), optional</p>
-<blockquote>
-<div><p>Set this to calculate the climatology based on a subset of the input
-Series</p>
-</div></blockquote>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>climatology</strong> : pandas.Series</p>
-<blockquote class="last">
-<div><p>Series containing the calculated climatology</p>
-</div></blockquote>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="pytesmo.anomaly.moving_average">
-<tt class="descclassname">pytesmo.anomaly.</tt><tt class="descname">moving_average</tt><big>(</big><em>Ser</em>, <em>window_size=1</em>, <em>no_date=False</em>, <em>sample_to_days=False</em>, <em>fast=False</em><big>)</big><a class="reference internal" href="_modules/pytesmo/anomaly.html#moving_average"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytesmo.anomaly.moving_average" title="Permalink to this definition">¶</a></dt>
-<dd><p>Applies a moving average (box) filter on an input time series</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>Ser</strong> : pandas.Series (index must be a DateTimeIndex)</p>
-<p><strong>window_size</strong> : float, optional</p>
-<blockquote>
-<div><p>The size of the moving_average window [days] that will be applied on the 
-input Series
-Default: 1</p>
-</div></blockquote>
-<p><strong>no_date</strong> : boolean, optional</p>
-<blockquote>
-<div><p>Set this if the index is no DateTimeIndex. The window_size will then
-refer to array elements instead of days.</p>
-</div></blockquote>
-<p><strong>sample_to_days</strong> : boolean, optional</p>
-<blockquote>
-<div><p>If set the series will be sampled to full days (gaps are filled)</p>
-</div></blockquote>
-<p><strong>fast: boolean, optional</strong> :</p>
-<blockquote>
-<div><p>uses the pandas implementation which is faster but does fill
-the timeseries end-window/2 with NaN values</p>
-</div></blockquote>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>Ser</strong> : pandas.Series</p>
-<blockquote class="last">
-<div><p>moving-average filtered time series</p>
-</div></blockquote>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
+<h1>pytesmo package<a class="headerlink" href="#pytesmo-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="pytesmo.grid.html">pytesmo.grid package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pytesmo.grid.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pytesmo.grid.html#module-pytesmo.grid.grids">pytesmo.grid.grids module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pytesmo.grid.html#module-pytesmo.grid.nearest_neighbor">pytesmo.grid.nearest_neighbor module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pytesmo.grid.html#module-pytesmo.grid">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pytesmo.io.html">pytesmo.io package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pytesmo.io.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pytesmo.io.ismn.html">pytesmo.io.ismn package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="pytesmo.io.ismn.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="pytesmo.io.ismn.test.html">pytesmo.io.ismn.test package</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="pytesmo.io.ismn.test.html#submodules">Submodules</a></li>
+<li class="toctree-l6"><a class="reference internal" href="pytesmo.io.ismn.test.html#module-pytesmo.io.ismn.test.test_readers">pytesmo.io.ismn.test.test_readers module</a></li>
+<li class="toctree-l6"><a class="reference internal" href="pytesmo.io.ismn.test.html#module-pytesmo.io.ismn.test">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="pytesmo.io.ismn.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pytesmo.io.ismn.html#module-pytesmo.io.ismn.interface">pytesmo.io.ismn.interface module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pytesmo.io.ismn.html#module-pytesmo.io.ismn.metadata_collector">pytesmo.io.ismn.metadata_collector module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pytesmo.io.ismn.html#module-pytesmo.io.ismn.readers">pytesmo.io.ismn.readers module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pytesmo.io.ismn.html#module-pytesmo.io.ismn">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="pytesmo.io.sat.html">pytesmo.io.sat package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="pytesmo.io.sat.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="pytesmo.io.sat.test.html">pytesmo.io.sat.test package</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="pytesmo.io.sat.test.html#submodules">Submodules</a></li>
+<li class="toctree-l6"><a class="reference internal" href="pytesmo.io.sat.test.html#module-pytesmo.io.sat.test.test_ascat">pytesmo.io.sat.test.test_ascat module</a></li>
+<li class="toctree-l6"><a class="reference internal" href="pytesmo.io.sat.test.html#module-pytesmo.io.sat.test.test_ers">pytesmo.io.sat.test.test_ers module</a></li>
+<li class="toctree-l6"><a class="reference internal" href="pytesmo.io.sat.test.html#module-pytesmo.io.sat.test">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="pytesmo.io.sat.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pytesmo.io.sat.html#module-pytesmo.io.sat.ascat">pytesmo.io.sat.ascat module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pytesmo.io.sat.html#module-pytesmo.io.sat.ers">pytesmo.io.sat.ers module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pytesmo.io.sat.html#module-pytesmo.io.sat">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pytesmo.io.html#module-pytesmo.io">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pytesmo.time_series.html">pytesmo.time_series package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pytesmo.time_series.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pytesmo.time_series.html#module-pytesmo.time_series.anomaly">pytesmo.time_series.anomaly module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pytesmo.time_series.html#module-pytesmo.time_series.filtering">pytesmo.time_series.filtering module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pytesmo.time_series.html#module-pytesmo.time_series.filters">pytesmo.time_series.filters module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pytesmo.time_series.html#module-pytesmo.time_series">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pytesmo.timedate.html">pytesmo.timedate package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pytesmo.timedate.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pytesmo.timedate.html#module-pytesmo.timedate.julian">pytesmo.timedate.julian module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pytesmo.timedate.html#module-pytesmo.timedate">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
 </div>
 <div class="section" id="module-pytesmo.df_metrics">
-<span id="df-metrics-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">df_metrics</span></tt> Module<a class="headerlink" href="#module-pytesmo.df_metrics" title="Permalink to this headline">¶</a></h2>
+<span id="pytesmo-df-metrics-module"></span><h2>pytesmo.df_metrics module<a class="headerlink" href="#module-pytesmo.df_metrics" title="Permalink to this headline">¶</a></h2>
 <p>Module contains wrappers for methods in pytesmo.metrics which can be given pandas.DataFrames
 instead of single numpy.arrays . If the DataFrame has more columns than the function has input parameters
 the function will be applied pairwise</p>
@@ -207,7 +150,7 @@ the function will be applied pairwise</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>result</strong> : namedtuple</p>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>result</strong> : namedtuple</p>
 <blockquote class="last">
 <div><p>with column names of df for which the calculation was done as name of the
 element separated by &#8216;_and_&#8217;</p>
@@ -216,7 +159,7 @@ element separated by &#8216;_and_&#8217;</p>
 </tr>
 </tbody>
 </table>
-<div class="admonition-see-also admonition seealso">
+<div class="admonition seealso">
 <p class="first admonition-title">See also</p>
 <p class="last"><a class="reference internal" href="#pytesmo.metrics.RSS" title="pytesmo.metrics.RSS"><tt class="xref py py-obj docutils literal"><span class="pre">pytesmo.metrics.RSS</span></tt></a></p>
 </div>
@@ -230,7 +173,7 @@ element separated by &#8216;_and_&#8217;</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>bias</strong> : pandas.Dataframe</p>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>bias</strong> : pandas.Dataframe</p>
 <blockquote>
 <div><p>of shape (len(df.columns),len(df.columns))</p>
 </div></blockquote>
@@ -251,7 +194,7 @@ element separated by &#8216;_and_&#8217;</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>result</strong> : namedtuple</p>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>result</strong> : namedtuple</p>
 <blockquote class="last">
 <div><p>with column names of df for which the calculation was done as name of the
 element separated by &#8216;_and_&#8217;</p>
@@ -260,7 +203,7 @@ element separated by &#8216;_and_&#8217;</p>
 </tr>
 </tbody>
 </table>
-<div class="admonition-see-also admonition seealso">
+<div class="admonition seealso">
 <p class="first admonition-title">See also</p>
 <p class="last"><a class="reference internal" href="#pytesmo.metrics.kendalltau" title="pytesmo.metrics.kendalltau"><tt class="xref py py-obj docutils literal"><span class="pre">pytesmo.metrics.kendalltau</span></tt></a>, <tt class="xref py py-obj docutils literal"><span class="pre">scipy.stats.kendalltau</span></tt></p>
 </div>
@@ -274,7 +217,7 @@ element separated by &#8216;_and_&#8217;</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>result</strong> : namedtuple</p>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>result</strong> : namedtuple</p>
 <blockquote class="last">
 <div><p>with column names of df for which the calculation was done as name of the
 element separated by &#8216;_and_&#8217;</p>
@@ -283,7 +226,7 @@ element separated by &#8216;_and_&#8217;</p>
 </tr>
 </tbody>
 </table>
-<div class="admonition-see-also admonition seealso">
+<div class="admonition seealso">
 <p class="first admonition-title">See also</p>
 <p class="last"><a class="reference internal" href="#pytesmo.metrics.mse" title="pytesmo.metrics.mse"><tt class="xref py py-obj docutils literal"><span class="pre">pytesmo.metrics.mse</span></tt></a></p>
 </div>
@@ -297,7 +240,7 @@ element separated by &#8216;_and_&#8217;</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>result</strong> : namedtuple</p>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>result</strong> : namedtuple</p>
 <blockquote class="last">
 <div><p>with column names of df for which the calculation was done as name of the
 element separated by &#8216;_and_&#8217;</p>
@@ -306,7 +249,7 @@ element separated by &#8216;_and_&#8217;</p>
 </tr>
 </tbody>
 </table>
-<div class="admonition-see-also admonition seealso">
+<div class="admonition seealso">
 <p class="first admonition-title">See also</p>
 <p class="last"><a class="reference internal" href="#pytesmo.metrics.nash_sutcliffe" title="pytesmo.metrics.nash_sutcliffe"><tt class="xref py py-obj docutils literal"><span class="pre">pytesmo.metrics.nash_sutcliffe</span></tt></a></p>
 </div>
@@ -320,7 +263,7 @@ element separated by &#8216;_and_&#8217;</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>result</strong> : namedtuple</p>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>result</strong> : namedtuple</p>
 <blockquote class="last">
 <div><p>with column names of df for which the calculation was done as name of the
 element separated by &#8216;_and_&#8217;</p>
@@ -329,7 +272,7 @@ element separated by &#8216;_and_&#8217;</p>
 </tr>
 </tbody>
 </table>
-<div class="admonition-see-also admonition seealso">
+<div class="admonition seealso">
 <p class="first admonition-title">See also</p>
 <p class="last"><a class="reference internal" href="#pytesmo.metrics.nrmsd" title="pytesmo.metrics.nrmsd"><tt class="xref py py-obj docutils literal"><span class="pre">pytesmo.metrics.nrmsd</span></tt></a></p>
 </div>
@@ -343,7 +286,7 @@ element separated by &#8216;_and_&#8217;</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>df</strong> : pandas.DataFrame</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>df</strong> : pandas.DataFrame</p>
 <blockquote>
 <div><p>input data, method will be applied to each column pair</p>
 </div></blockquote>
@@ -354,7 +297,7 @@ type numpy.array and return one value or tuple of values</p>
 </div></blockquote>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first last"><strong>results</strong> : pandas.DataFrame</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><strong>results</strong> : pandas.DataFrame</p>
 </td>
 </tr>
 </tbody>
@@ -369,7 +312,7 @@ type numpy.array and return one value or tuple of values</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>result</strong> : namedtuple</p>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>result</strong> : namedtuple</p>
 <blockquote class="last">
 <div><p>with column names of df for which the calculation was done as name of the
 element separated by &#8216;_and_&#8217;</p>
@@ -378,7 +321,7 @@ element separated by &#8216;_and_&#8217;</p>
 </tr>
 </tbody>
 </table>
-<div class="admonition-see-also admonition seealso">
+<div class="admonition seealso">
 <p class="first admonition-title">See also</p>
 <p class="last"><a class="reference internal" href="#pytesmo.metrics.pearsonr" title="pytesmo.metrics.pearsonr"><tt class="xref py py-obj docutils literal"><span class="pre">pytesmo.metrics.pearsonr</span></tt></a>, <tt class="xref py py-obj docutils literal"><span class="pre">scipy.stats.pearsonr</span></tt></p>
 </div>
@@ -392,7 +335,7 @@ element separated by &#8216;_and_&#8217;</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>result</strong> : namedtuple</p>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>result</strong> : namedtuple</p>
 <blockquote class="last">
 <div><p>with column names of df for which the calculation was done as name of the
 element separated by &#8216;_and_&#8217;</p>
@@ -401,7 +344,7 @@ element separated by &#8216;_and_&#8217;</p>
 </tr>
 </tbody>
 </table>
-<div class="admonition-see-also admonition seealso">
+<div class="admonition seealso">
 <p class="first admonition-title">See also</p>
 <p class="last"><a class="reference internal" href="#pytesmo.metrics.rmsd" title="pytesmo.metrics.rmsd"><tt class="xref py py-obj docutils literal"><span class="pre">pytesmo.metrics.rmsd</span></tt></a></p>
 </div>
@@ -415,7 +358,7 @@ element separated by &#8216;_and_&#8217;</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>result</strong> : namedtuple</p>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>result</strong> : namedtuple</p>
 <blockquote class="last">
 <div><p>with column names of df for which the calculation was done as name of the
 element separated by &#8216;_and_&#8217;</p>
@@ -424,7 +367,7 @@ element separated by &#8216;_and_&#8217;</p>
 </tr>
 </tbody>
 </table>
-<div class="admonition-see-also admonition seealso">
+<div class="admonition seealso">
 <p class="first admonition-title">See also</p>
 <p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">pytesmo.metrics.spearmenr</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">scipy.stats.spearmenr</span></tt></p>
 </div>
@@ -441,7 +384,7 @@ complicated structure</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>result</strong> : namedtuple</p>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>result</strong> : namedtuple</p>
 <blockquote class="last">
 <div><p>with column names of df</p>
 </div></blockquote>
@@ -449,7 +392,7 @@ complicated structure</p>
 </tr>
 </tbody>
 </table>
-<div class="admonition-see-also admonition seealso">
+<div class="admonition seealso">
 <p class="first admonition-title">See also</p>
 <p class="last"><a class="reference internal" href="#pytesmo.metrics.tcol_error" title="pytesmo.metrics.tcol_error"><tt class="xref py py-obj docutils literal"><span class="pre">pytesmo.metrics.tcol_error</span></tt></a></p>
 </div>
@@ -463,7 +406,7 @@ complicated structure</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>result</strong> : namedtuple</p>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>result</strong> : namedtuple</p>
 <blockquote class="last">
 <div><p>with column names of df for which the calculation was done as name of the
 element separated by &#8216;_and_&#8217;</p>
@@ -472,7 +415,7 @@ element separated by &#8216;_and_&#8217;</p>
 </tr>
 </tbody>
 </table>
-<div class="admonition-see-also admonition seealso">
+<div class="admonition seealso">
 <p class="first admonition-title">See also</p>
 <p class="last"><a class="reference internal" href="#pytesmo.metrics.ubrmsd" title="pytesmo.metrics.ubrmsd"><tt class="xref py py-obj docutils literal"><span class="pre">pytesmo.metrics.ubrmsd</span></tt></a></p>
 </div>
@@ -480,7 +423,7 @@ element separated by &#8216;_and_&#8217;</p>
 
 </div>
 <div class="section" id="module-pytesmo.metrics">
-<span id="metrics-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">metrics</span></tt> Module<a class="headerlink" href="#module-pytesmo.metrics" title="Permalink to this headline">¶</a></h2>
+<span id="pytesmo-metrics-module"></span><h2>pytesmo.metrics module<a class="headerlink" href="#module-pytesmo.metrics" title="Permalink to this headline">¶</a></h2>
 <p>Created on Apr 17, 2013</p>
 <p>&#64;author: Christoph Paulik <a class="reference external" href="mailto:christoph&#46;paulik&#37;&#52;&#48;geo&#46;tuwien&#46;ac&#46;at">christoph<span>&#46;</span>paulik<span>&#64;</span>geo<span>&#46;</span>tuwien<span>&#46;</span>ac<span>&#46;</span>at</a>
 &#64;author: Sebastian Hahn <a class="reference external" href="mailto:sebastian&#46;hahn&#37;&#52;&#48;geo&#46;tuwien&#46;ac&#46;at">sebastian<span>&#46;</span>hahn<span>&#64;</span>geo<span>&#46;</span>tuwien<span>&#46;</span>ac<span>&#46;</span>at</a>
@@ -493,7 +436,7 @@ element separated by &#8216;_and_&#8217;</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>x</strong> : numpy.array</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>x</strong> : numpy.array</p>
 <blockquote>
 <div><p>1D numpy array to calculate the metric</p>
 </div></blockquote>
@@ -503,7 +446,7 @@ element separated by &#8216;_and_&#8217;</p>
 </div></blockquote>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first last"><strong>Residual sum of squares</strong> :</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><strong>Residual sum of squares</strong> :</p>
 </td>
 </tr>
 </tbody>
@@ -524,7 +467,7 @@ element separated by &#8216;_and_&#8217;</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>x</strong> : numpy.array</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>x</strong> : numpy.array</p>
 <blockquote>
 <div><p>1D numpy array to calculate the metric</p>
 </div></blockquote>
@@ -534,7 +477,7 @@ element separated by &#8216;_and_&#8217;</p>
 </div></blockquote>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>Kendall&#8217;s tau</strong> : float</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>Kendall&#8217;s tau</strong> : float</p>
 <blockquote>
 <div><p>The tau statistic</p>
 </div></blockquote>
@@ -546,7 +489,7 @@ element separated by &#8216;_and_&#8217;</p>
 </tr>
 </tbody>
 </table>
-<div class="admonition-see-also admonition seealso">
+<div class="admonition seealso">
 <p class="first admonition-title">See also</p>
 <p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">scipy.stats.kendalltau</span></tt></p>
 </div>
@@ -566,7 +509,7 @@ element separated by &#8216;_and_&#8217;</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>x</strong> : numpy.array</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>x</strong> : numpy.array</p>
 <blockquote>
 <div><p>1D numpy array to calculate the metric</p>
 </div></blockquote>
@@ -576,7 +519,7 @@ element separated by &#8216;_and_&#8217;</p>
 </div></blockquote>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>Nash Sutcliffe coefficient</strong> : float</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>Nash Sutcliffe coefficient</strong> : float</p>
 <blockquote class="last">
 <div><p>Nash Sutcliffe model efficiency coefficient</p>
 </div></blockquote>
@@ -600,7 +543,7 @@ element separated by &#8216;_and_&#8217;</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>x</strong> : numpy.array</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>x</strong> : numpy.array</p>
 <blockquote>
 <div><p>1D numpy array to calculate the metric</p>
 </div></blockquote>
@@ -610,7 +553,7 @@ element separated by &#8216;_and_&#8217;</p>
 </div></blockquote>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>Pearson&#8217;s r</strong> : float</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>Pearson&#8217;s r</strong> : float</p>
 <blockquote>
 <div><p>Pearson&#8217;s correlation coefficent</p>
 </div></blockquote>
@@ -622,7 +565,7 @@ element separated by &#8216;_and_&#8217;</p>
 </tr>
 </tbody>
 </table>
-<div class="admonition-see-also admonition seealso">
+<div class="admonition seealso">
 <p class="first admonition-title">See also</p>
 <p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">scipy.stats.pearsonr</span></tt></p>
 </div>
@@ -642,7 +585,7 @@ element separated by &#8216;_and_&#8217;</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>x</strong> : numpy.array</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>x</strong> : numpy.array</p>
 <blockquote>
 <div><p>1D numpy array to calculate the metric</p>
 </div></blockquote>
@@ -652,7 +595,7 @@ element separated by &#8216;_and_&#8217;</p>
 </div></blockquote>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>rho</strong> : float</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>rho</strong> : float</p>
 <blockquote>
 <div><p>Spearman correlation coefficient</p>
 </div></blockquote>
@@ -664,7 +607,7 @@ element separated by &#8216;_and_&#8217;</p>
 </tr>
 </tbody>
 </table>
-<div class="admonition-see-also admonition seealso">
+<div class="admonition seealso">
 <p class="first admonition-title">See also</p>
 <p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">scipy.stats.spearmenr</span></tt></p>
 </div>
@@ -678,7 +621,7 @@ element separated by &#8216;_and_&#8217;</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>x</strong> : numpy.array</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>x</strong> : numpy.array</p>
 <blockquote>
 <div><p>1D numpy array to calculate the errors</p>
 </div></blockquote>
@@ -692,7 +635,7 @@ element separated by &#8216;_and_&#8217;</p>
 </div></blockquote>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>triple collocation error for x</strong> : float</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>triple collocation error for x</strong> : float</p>
 <p><strong>triple collocation error for y</strong> : float</p>
 <p class="last"><strong>triple collocation error for z</strong> : float</p>
 </td>
@@ -709,7 +652,7 @@ element separated by &#8216;_and_&#8217;</p>
 
 </div>
 <div class="section" id="module-pytesmo.scaling">
-<span id="scaling-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">scaling</span></tt> Module<a class="headerlink" href="#module-pytesmo.scaling" title="Permalink to this headline">¶</a></h2>
+<span id="pytesmo-scaling-module"></span><h2>pytesmo.scaling module<a class="headerlink" href="#module-pytesmo.scaling" title="Permalink to this headline">¶</a></h2>
 <p>Created on Apr 17, 2013</p>
 <p>&#64;author: Christoph Paulik <a class="reference external" href="mailto:christoph&#46;paulik&#37;&#52;&#48;geo&#46;tuwien&#46;ac&#46;at">christoph<span>&#46;</span>paulik<span>&#64;</span>geo<span>&#46;</span>tuwien<span>&#46;</span>ac<span>&#46;</span>at</a></p>
 <dl class="function">
@@ -721,7 +664,7 @@ given the first column will be scaled to the second column of the DataFrame</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>df</strong> : pandas.DataFrame</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>df</strong> : pandas.DataFrame</p>
 <blockquote>
 <div><p>input dataframe</p>
 </div></blockquote>
@@ -741,7 +684,7 @@ default is the second column</p>
 </div></blockquote>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>df</strong> : pandas.DataFrame</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>df</strong> : pandas.DataFrame</p>
 <blockquote class="last">
 <div><p>input dataframe with new column labeled label_in+&#8217;_scaled_&#8217;+method</p>
 </div></blockquote>
@@ -763,7 +706,7 @@ default is the second column</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>in_data: numpy.array</strong> :</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>in_data: numpy.array</strong> :</p>
 <blockquote>
 <div><p>input dataset which will be scaled</p>
 </div></blockquote>
@@ -773,7 +716,7 @@ default is the second column</p>
 </div></blockquote>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>CDF matched values: numpy.array</strong> :</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>CDF matched values: numpy.array</strong> :</p>
 <blockquote class="last">
 <div><p>dataset in_data with CDF as scale_to</p>
 </div></blockquote>
@@ -792,7 +735,7 @@ by linear interpolation; then matches CDF of in_data to CDF of scale_to</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>in_data: numpy.array</strong> :</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>in_data: numpy.array</strong> :</p>
 <blockquote>
 <div><p>input dataset which will be scaled</p>
 </div></blockquote>
@@ -802,7 +745,7 @@ by linear interpolation; then matches CDF of in_data to CDF of scale_to</p>
 </div></blockquote>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>CDF matched values: numpy.array</strong> :</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>CDF matched values: numpy.array</strong> :</p>
 <blockquote class="last">
 <div><p>dataset in_data with CDF as scale_to</p>
 </div></blockquote>
@@ -820,7 +763,7 @@ by linear interpolation; then matches CDF of in_data to CDF of scale_to</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>in_data</strong> : numpy.array</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>in_data</strong> : numpy.array</p>
 <blockquote>
 <div><p>input dataset which will be scaled</p>
 </div></blockquote>
@@ -830,7 +773,7 @@ by linear interpolation; then matches CDF of in_data to CDF of scale_to</p>
 </div></blockquote>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>scaled dataset</strong> : numpy.array</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>scaled dataset</strong> : numpy.array</p>
 <blockquote class="last">
 <div><p>dataset scaled using linear regression</p>
 </div></blockquote>
@@ -849,7 +792,7 @@ and standard deviation afterwards</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>in_data</strong> : numpy.array</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>in_data</strong> : numpy.array</p>
 <blockquote>
 <div><p>input dataset which will be scaled</p>
 </div></blockquote>
@@ -859,7 +802,7 @@ and standard deviation afterwards</p>
 </div></blockquote>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>scaled dataset</strong> : numpy.array</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>scaled dataset</strong> : numpy.array</p>
 <blockquote class="last">
 <div><p>dataset in_data with same mean and standard deviation as scale_to</p>
 </div></blockquote>
@@ -878,7 +821,7 @@ and maximum afterwards</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>in_data</strong> : numpy.array</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>in_data</strong> : numpy.array</p>
 <blockquote>
 <div><p>input dataset which will be scaled</p>
 </div></blockquote>
@@ -888,7 +831,7 @@ and maximum afterwards</p>
 </div></blockquote>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>scaled dataset</strong> : numpy.array</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>scaled dataset</strong> : numpy.array</p>
 <blockquote class="last">
 <div><p>dataset in_data with same maximum and minimum as scale_to</p>
 </div></blockquote>
@@ -900,14 +843,14 @@ and maximum afterwards</p>
 
 <dl class="function">
 <dt id="pytesmo.scaling.scale">
-<tt class="descclassname">pytesmo.scaling.</tt><tt class="descname">scale</tt><big>(</big><em>df</em>, <em>method='linreg'</em>, <em>reference_index=0</em><big>)</big><a class="headerlink" href="#pytesmo.scaling.scale" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">pytesmo.scaling.</tt><tt class="descname">scale</tt><big>(</big><em>df</em>, <em>method='linreg'</em>, <em>reference_index=0</em><big>)</big><a class="reference internal" href="_modules/pytesmo/scaling.html#scale"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytesmo.scaling.scale" title="Permalink to this definition">¶</a></dt>
 <dd><p>takes pandas.DataFrame and scales all columns to the column specified
 by reference_index with the chosen method</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>df</strong> : pandas.DataFrame</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>df</strong> : pandas.DataFrame</p>
 <blockquote>
 <div><p>containing matched time series that should be scaled</p>
 </div></blockquote>
@@ -922,7 +865,7 @@ as input and returns one numpy.array of same length</p>
 </div></blockquote>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>scaled data</strong> : pandas.DataFrame</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>scaled data</strong> : pandas.DataFrame</p>
 <blockquote class="last">
 <div><p>all time series of the input DataFrame scaled to the one specified by
 reference_index</p>
@@ -935,7 +878,7 @@ reference_index</p>
 
 </div>
 <div class="section" id="module-pytesmo.temporal_matching">
-<span id="temporal-matching-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">temporal_matching</span></tt> Module<a class="headerlink" href="#module-pytesmo.temporal_matching" title="Permalink to this headline">¶</a></h2>
+<span id="pytesmo-temporal-matching-module"></span><h2>pytesmo.temporal_matching module<a class="headerlink" href="#module-pytesmo.temporal_matching" title="Permalink to this headline">¶</a></h2>
 <p>Created on Apr 12, 2013</p>
 <p>Provides a temporal matching function</p>
 <p>&#64;author: Sebastian Hahn <a class="reference external" href="mailto:Sebastian&#46;Hahn&#37;&#52;&#48;geo&#46;tuwien&#46;ac&#46;at">Sebastian<span>&#46;</span>Hahn<span>&#64;</span>geo<span>&#46;</span>tuwien<span>&#46;</span>ac<span>&#46;</span>at</a></p>
@@ -948,7 +891,7 @@ be datetime) and n other pandas.DataFrame (index has to be datetime).</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>reference</strong> : pandas.DataFrame or pandas.TimeSeries</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>reference</strong> : pandas.DataFrame or pandas.TimeSeries</p>
 <blockquote>
 <div><p>The index of this dataframe will be the reference.</p>
 </div></blockquote>
@@ -972,7 +915,7 @@ search for matches between -12 and +12 hours) (default: None)</p>
 </div></blockquote>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>temporal_matched_args</strong> : pandas.DataFrame or tuple of pandas.DataFrame</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>temporal_matched_args</strong> : pandas.DataFrame or tuple of pandas.DataFrame</p>
 <blockquote class="last">
 <div><p>Dataframe with index from matched reference index</p>
 </div></blockquote>
@@ -984,14 +927,14 @@ search for matches between -12 and +12 hours) (default: None)</p>
 
 <dl class="function">
 <dt id="pytesmo.temporal_matching.matching">
-<tt class="descclassname">pytesmo.temporal_matching.</tt><tt class="descname">matching</tt><big>(</big><em>reference</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pytesmo.temporal_matching.matching" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">pytesmo.temporal_matching.</tt><tt class="descname">matching</tt><big>(</big><em>reference</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/pytesmo/temporal_matching.html#matching"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytesmo.temporal_matching.matching" title="Permalink to this definition">¶</a></dt>
 <dd><p>Finds temporal match between the reference pandas.TimeSeries (index has to
 be datetime) and n other pandas.TimeSeries (index has to be datetime).</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>reference</strong> : pandas.TimeSeries</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>reference</strong> : pandas.TimeSeries</p>
 <blockquote>
 <div><p>The index of this Series will be the reference.</p>
 </div></blockquote>
@@ -1007,7 +950,7 @@ search for matches between -12 and +12 hours) (default: None)</p>
 </div></blockquote>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>temporal_match</strong> : pandas.DataFrame</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>temporal_match</strong> : pandas.DataFrame</p>
 <blockquote class="last">
 <div><p>containing the index of the reference Series and a column for each of the 
 other input Series</p>
@@ -1019,56 +962,8 @@ other input Series</p>
 </dd></dl>
 
 </div>
-<div class="section" id="subpackages">
-<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="pytesmo.grid.html">grid Package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="pytesmo.grid.html#id1"><tt class="docutils literal"><span class="pre">grid</span></tt> Package</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pytesmo.grid.html#module-pytesmo.grid.grids"><tt class="docutils literal"><span class="pre">grids</span></tt> Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pytesmo.grid.html#module-pytesmo.grid.nearest_neighbor"><tt class="docutils literal"><span class="pre">nearest_neighbor</span></tt> Module</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="pytesmo.io.html">io Package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="pytesmo.io.html#id1"><tt class="docutils literal"><span class="pre">io</span></tt> Package</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pytesmo.io.html#subpackages">Subpackages</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="pytesmo.io.ismn.html">ismn Package</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="pytesmo.io.ismn.html#id1"><tt class="docutils literal"><span class="pre">ismn</span></tt> Package</a></li>
-<li class="toctree-l4"><a class="reference internal" href="pytesmo.io.ismn.html#module-pytesmo.io.ismn.interface"><tt class="docutils literal"><span class="pre">interface</span></tt> Module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="pytesmo.io.ismn.html#module-pytesmo.io.ismn.metadata_collector"><tt class="docutils literal"><span class="pre">metadata_collector</span></tt> Module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="pytesmo.io.ismn.html#module-pytesmo.io.ismn.readers"><tt class="docutils literal"><span class="pre">readers</span></tt> Module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="pytesmo.io.ismn.html#subpackages">Subpackages</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="pytesmo.io.ismn.test.html">test Package</a><ul>
-<li class="toctree-l6"><a class="reference internal" href="pytesmo.io.ismn.test.html#module-pytesmo.io.ismn.test.test_readers"><tt class="docutils literal"><span class="pre">test_readers</span></tt> Module</a></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="pytesmo.io.sat.html">sat Package</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="pytesmo.io.sat.html#id1"><tt class="docutils literal"><span class="pre">sat</span></tt> Package</a></li>
-<li class="toctree-l4"><a class="reference internal" href="pytesmo.io.sat.html#module-pytesmo.io.sat.ascat"><tt class="docutils literal"><span class="pre">ascat</span></tt> Module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="pytesmo.io.sat.html#subpackages">Subpackages</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="pytesmo.io.sat.test.html">test Package</a><ul>
-<li class="toctree-l6"><a class="reference internal" href="pytesmo.io.sat.test.html#module-pytesmo.io.sat.test.test_ascat"><tt class="docutils literal"><span class="pre">test_ascat</span></tt> Module</a></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="pytesmo.timedate.html">timedate Package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="pytesmo.timedate.html#id1"><tt class="docutils literal"><span class="pre">timedate</span></tt> Package</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pytesmo.timedate.html#module-pytesmo.timedate.julian"><tt class="docutils literal"><span class="pre">julian</span></tt> Module</a></li>
-</ul>
-</li>
-</ul>
-</div>
+<div class="section" id="module-pytesmo">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-pytesmo" title="Permalink to this headline">¶</a></h2>
 </div>
 </div>
 
@@ -1080,16 +975,16 @@ other input Series</p>
         <div class="sphinxsidebarwrapper">
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">pytesmo Package</a><ul>
-<li><a class="reference internal" href="#id1"><tt class="docutils literal"><span class="pre">pytesmo</span></tt> Package</a></li>
-<li><a class="reference internal" href="#module-pytesmo.anomaly"><tt class="docutils literal"><span class="pre">anomaly</span></tt> Module</a></li>
-<li><a class="reference internal" href="#module-pytesmo.df_metrics"><tt class="docutils literal"><span class="pre">df_metrics</span></tt> Module</a></li>
-<li><a class="reference internal" href="#module-pytesmo.metrics"><tt class="docutils literal"><span class="pre">metrics</span></tt> Module</a></li>
-<li><a class="reference internal" href="#module-pytesmo.scaling"><tt class="docutils literal"><span class="pre">scaling</span></tt> Module</a></li>
-<li><a class="reference internal" href="#module-pytesmo.temporal_matching"><tt class="docutils literal"><span class="pre">temporal_matching</span></tt> Module</a></li>
+<li><a class="reference internal" href="#">pytesmo package</a><ul>
 <li><a class="reference internal" href="#subpackages">Subpackages</a><ul>
 </ul>
 </li>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-pytesmo.df_metrics">pytesmo.df_metrics module</a></li>
+<li><a class="reference internal" href="#module-pytesmo.metrics">pytesmo.metrics module</a></li>
+<li><a class="reference internal" href="#module-pytesmo.scaling">pytesmo.scaling module</a></li>
+<li><a class="reference internal" href="#module-pytesmo.temporal_matching">pytesmo.temporal_matching module</a></li>
+<li><a class="reference internal" href="#module-pytesmo">Module contents</a></li>
 </ul>
 </li>
 </ul>
@@ -1099,7 +994,7 @@ other input Series</p>
                         title="previous chapter">Examples</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="pytesmo.grid.html"
-                        title="next chapter">grid Package</a></p>
+                        title="next chapter">pytesmo.grid package</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/pytesmo.txt"
@@ -1135,17 +1030,17 @@ other input Series</p>
           <a href="np-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="pytesmo.grid.html" title="grid Package"
+          <a href="pytesmo.grid.html" title="pytesmo.grid package"
              >next</a> |</li>
         <li class="right" >
           <a href="examples.html" title="Examples"
              >previous</a> |</li>
-        <li><a href="index.html">pytesmo 0.1a1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">pytesmo 0.1.1 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
         &copy; Copyright 2013, Vienna University of Technology, Department of Geodesy and Geoinformation.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
     </div>
   </body>
 </html>

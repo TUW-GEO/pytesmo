@@ -1,4 +1,3 @@
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -7,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>pytesmo.timedate.julian &mdash; pytesmo 0.1a1 documentation</title>
+    <title>pytesmo.timedate.julian &mdash; pytesmo 0.1.1 documentation</title>
     
     <link rel="stylesheet" href="../../../_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
@@ -15,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '0.1a1',
+        VERSION:     '0.1.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +23,7 @@
     <script type="text/javascript" src="../../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
-    <link rel="top" title="pytesmo 0.1a1 documentation" href="../../../index.html" />
+    <link rel="top" title="pytesmo 0.1.1 documentation" href="../../../index.html" />
     <link rel="up" title="Module code" href="../../index.html" /> 
   </head>
   <body>
@@ -40,7 +39,7 @@
         <li class="right" >
           <a href="../../../np-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">pytesmo 0.1a1 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">pytesmo 0.1.1 documentation</a> &raquo;</li>
           <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -63,19 +62,12 @@
 <span class="sd">julday and caldat are adapted from &quot;Numerical Recipes in C&#39;, 2nd edition,</span>
 <span class="sd">pp. 11</span>
 
-<span class="sd">restrictions</span>
-<span class="sd">- no error handling implemented</span>
-<span class="sd">- works only for years past 1582</span>
-<span class="sd">- time not yet supported</span>
-
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">datetime</span> <span class="kn">as</span> <span class="nn">dt</span>
-<span class="kn">import</span> <span class="nn">pytz</span>
 
-<div class="viewcode-block" id="julday"><a class="viewcode-back" href="../../../pytesmo.timedate.html#pytesmo.timedate.julian.julday">[docs]</a><span class="k">def</span> <span class="nf">julday</span><span class="p">(</span><span class="n">month</span><span class="p">,</span> <span class="n">day</span><span class="p">,</span> <span class="n">year</span><span class="p">):</span>
+<div class="viewcode-block" id="julday"><a class="viewcode-back" href="../../../pytesmo.timedate.html#pytesmo.timedate.julian.julday">[docs]</a><span class="k">def</span> <span class="nf">julday</span><span class="p">(</span><span class="n">month</span><span class="p">,</span> <span class="n">day</span><span class="p">,</span> <span class="n">year</span><span class="p">,</span> <span class="n">hour</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">minute</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">second</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Julian date from month, day, and year (can be scalars or arrays)</span>
 
@@ -87,6 +79,14 @@
 <span class="sd">        Day.</span>
 <span class="sd">    year : numpy.ndarray or int32</span>
 <span class="sd">        Year.</span>
+<span class="sd">    hour : numpy.ndarray or int32, optional</span>
+<span class="sd">        Hour.</span>
+<span class="sd">    minute : numpy.ndarray or int32, optional</span>
+<span class="sd">        Minute.</span>
+<span class="sd">    second : numpy.ndarray or int32, optional</span>
+<span class="sd">        Second.</span>
+<span class="sd">    </span>
+<span class="sd">    </span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -99,10 +99,12 @@
     <span class="n">jy</span> <span class="o">=</span> <span class="n">year</span> <span class="o">-</span> <span class="n">inJanFeb</span>
     <span class="n">jm</span> <span class="o">=</span> <span class="n">month</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">inJanFeb</span> <span class="o">*</span> <span class="mi">12</span>
 
-    <span class="n">jul</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="mf">365.25</span> <span class="o">*</span> <span class="n">jy</span><span class="p">)</span> <span class="o">+</span>
+    <span class="n">jul</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="mf">365.25</span> <span class="o">*</span> <span class="n">jy</span><span class="p">)</span> <span class="o">+</span> 
                    <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="mf">30.6001</span> <span class="o">*</span> <span class="n">jm</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">day</span> <span class="o">+</span> <span class="mf">1720995.0</span><span class="p">))</span>
     <span class="n">ja</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="mf">0.01</span> <span class="o">*</span> <span class="n">jy</span><span class="p">)</span>
     <span class="n">jul</span> <span class="o">+=</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">ja</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="mf">0.25</span> <span class="o">*</span> <span class="n">ja</span><span class="p">)</span>
+
+    <span class="n">jul</span> <span class="o">=</span> <span class="n">jul</span> <span class="o">+</span> <span class="n">hour</span> <span class="o">/</span> <span class="mf">24.0</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="o">+</span> <span class="n">minute</span> <span class="o">/</span> <span class="mf">1440.0</span> <span class="o">+</span> <span class="n">second</span> <span class="o">/</span> <span class="mf">86400.0</span>
 
     <span class="k">return</span> <span class="n">jul</span>
 
@@ -173,10 +175,12 @@
     <span class="n">min_julian</span> <span class="o">=</span> <span class="mi">2299161</span>
     <span class="n">max_julian</span> <span class="o">=</span> <span class="mi">1827933925</span>
 
+    <span class="n">julian</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">julian</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
     <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">julian</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">min_julian</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">julian</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">max_julian</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Value of Julian date is out of allowed range.&quot;</span><span class="p">)</span>
 
-    <span class="n">jn</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">julian</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">())</span>
+    <span class="n">jn</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">julian</span> <span class="o">+</span> <span class="mf">0.0000001</span><span class="p">))</span>
 
     <span class="n">jalpha</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(((</span><span class="n">jn</span> <span class="o">-</span> <span class="mi">1867216</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.25</span><span class="p">)</span> <span class="o">/</span> <span class="mf">36524.25</span><span class="p">)</span>
     <span class="n">ja</span> <span class="o">=</span> <span class="n">jn</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">jalpha</span> <span class="o">-</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="mf">0.25</span> <span class="o">*</span> <span class="n">jalpha</span><span class="p">))</span>
@@ -185,26 +189,45 @@
     <span class="n">jd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="mf">365.0</span> <span class="o">*</span> <span class="n">jc</span> <span class="o">+</span> <span class="p">(</span><span class="mf">0.25</span> <span class="o">*</span> <span class="n">jc</span><span class="p">))</span>
     <span class="n">je</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">((</span><span class="n">jb</span> <span class="o">-</span> <span class="n">jd</span><span class="p">)</span> <span class="o">/</span> <span class="mf">30.6001</span><span class="p">)</span>
 
-    <span class="n">day</span> <span class="o">=</span> <span class="n">jb</span> <span class="o">-</span> <span class="n">jd</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="mf">30.6001</span> <span class="o">*</span> <span class="n">je</span><span class="p">)</span>
+    <span class="n">day</span> <span class="o">=</span> <span class="n">jb</span> <span class="o">-</span> <span class="n">jd</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">(</span><span class="mf">30.6001</span> <span class="o">*</span> <span class="n">je</span><span class="p">)</span>
     <span class="n">month</span> <span class="o">=</span> <span class="n">je</span> <span class="o">-</span> <span class="mi">1</span>
     <span class="n">month</span> <span class="o">=</span> <span class="p">(</span><span class="n">month</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="mi">12</span> <span class="o">+</span> <span class="mi">1</span>
     <span class="n">year</span> <span class="o">=</span> <span class="n">jc</span> <span class="o">-</span> <span class="mi">4715</span>
     <span class="n">year</span> <span class="o">=</span> <span class="n">year</span> <span class="o">-</span> <span class="p">(</span><span class="n">month</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">)</span>
 
-    <span class="n">fraction</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="n">julian</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">-</span> <span class="n">jn</span><span class="p">)</span>
-    <span class="n">eps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="mf">1e-12</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">jn</span><span class="p">))</span>
+    <span class="n">fraction</span> <span class="o">=</span> <span class="p">(</span><span class="n">julian</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">-</span> <span class="n">jn</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="n">eps</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1e-12</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">jn</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
     <span class="n">eps</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="nb">min</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="mf">1e-12</span><span class="p">),</span> <span class="nb">max</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
-    <span class="n">hour</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="n">fraction</span> <span class="o">*</span> <span class="mf">24.</span> <span class="o">+</span> <span class="n">eps</span><span class="p">)</span>
+    <span class="n">hour</span> <span class="o">=</span> <span class="p">(</span><span class="n">fraction</span> <span class="o">*</span> <span class="mf">24.</span> <span class="o">+</span> <span class="n">eps</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
     <span class="n">hour</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">23</span><span class="p">)</span>
     <span class="n">fraction</span> <span class="o">-=</span> <span class="n">hour</span> <span class="o">/</span> <span class="mf">24.</span>
-    <span class="n">minute</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="n">fraction</span> <span class="o">*</span> <span class="mf">1440.</span> <span class="o">+</span> <span class="n">eps</span><span class="p">)</span>
+    <span class="n">minute</span> <span class="o">=</span> <span class="p">(</span><span class="n">fraction</span> <span class="o">*</span> <span class="mf">1440.</span> <span class="o">+</span> <span class="n">eps</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
     <span class="n">minute</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">59</span><span class="p">)</span>
     <span class="n">second</span> <span class="o">=</span> <span class="p">(</span><span class="n">fraction</span> <span class="o">-</span> <span class="n">minute</span> <span class="o">/</span> <span class="mf">1440.</span><span class="p">)</span> <span class="o">*</span> <span class="mf">86400.</span>
     <span class="n">second</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
-    <span class="n">microsecond</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">((</span><span class="n">second</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="n">second</span><span class="p">))</span> <span class="o">*</span> <span class="mf">1e6</span><span class="p">)</span>
-    <span class="n">second</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="n">second</span><span class="p">)</span>
-
+    <span class="n">second</span> <span class="o">=</span> <span class="n">second</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+    <span class="n">microsecond</span> <span class="o">=</span> <span class="p">((</span><span class="n">second</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="n">second</span><span class="p">))</span> <span class="o">*</span> <span class="mf">1e6</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+    
     <span class="k">return</span> <span class="n">year</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="n">day</span><span class="p">,</span> <span class="n">hour</span><span class="p">,</span> <span class="n">minute</span><span class="p">,</span> <span class="n">second</span><span class="p">,</span> <span class="n">microsecond</span>
+
+</div>
+<div class="viewcode-block" id="julian2datetime"><a class="viewcode-back" href="../../../pytesmo.timedate.html#pytesmo.timedate.julian.julian2datetime">[docs]</a><span class="k">def</span> <span class="nf">julian2datetime</span><span class="p">(</span><span class="n">julian</span><span class="p">,</span> <span class="n">tz</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    converts julian date to python datetime</span>
+<span class="sd">    default is not time zone aware</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    julian : float</span>
+<span class="sd">        julian date</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">year</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="n">day</span><span class="p">,</span> <span class="n">hour</span><span class="p">,</span> <span class="n">minute</span><span class="p">,</span> <span class="n">second</span><span class="p">,</span> <span class="n">microsecond</span> <span class="o">=</span> <span class="n">julian2date</span><span class="p">(</span><span class="n">julian</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">julian</span><span class="p">)</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span> <span class="ow">or</span> <span class="nb">type</span><span class="p">(</span><span class="n">julian</span><span class="p">)</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">memmap</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">mi</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">ms</span><span class="p">,</span> <span class="n">tz</span><span class="p">)</span> \
+                             <span class="k">for</span> <span class="n">y</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">mi</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">ms</span> <span class="ow">in</span> \
+                             <span class="nb">zip</span><span class="p">(</span><span class="n">year</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="n">day</span><span class="p">,</span> <span class="n">hour</span><span class="p">,</span> <span class="n">minute</span><span class="p">,</span>
+                                 <span class="n">second</span><span class="p">,</span> <span class="n">microsecond</span><span class="p">)])</span>    
+    <span class="k">return</span> <span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="n">year</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="n">day</span><span class="p">,</span> <span class="n">hour</span><span class="p">,</span> <span class="n">minute</span><span class="p">,</span> <span class="n">second</span><span class="p">,</span> <span class="n">microsecond</span><span class="p">,</span> <span class="n">tz</span><span class="p">)</span>
 
 </div>
 <div class="viewcode-block" id="julian2doy"><a class="viewcode-back" href="../../../pytesmo.timedate.html#pytesmo.timedate.julian.julian2doy">[docs]</a><span class="k">def</span> <span class="nf">julian2doy</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">consider_nonleap_years</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
@@ -230,30 +253,6 @@
         <span class="k">return</span> <span class="n">doy</span><span class="p">(</span><span class="n">month</span><span class="p">,</span> <span class="n">day</span><span class="p">,</span> <span class="n">year</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">doy</span><span class="p">(</span><span class="n">month</span><span class="p">,</span> <span class="n">day</span><span class="p">)</span>
-
-</div>
-<div class="viewcode-block" id="julian2datetimeindex"><a class="viewcode-back" href="../../../pytesmo.timedate.html#pytesmo.timedate.julian.julian2datetimeindex">[docs]</a><span class="k">def</span> <span class="nf">julian2datetimeindex</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">tz</span><span class="o">=</span><span class="n">pytz</span><span class="o">.</span><span class="n">UTC</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Converting Julian days to datetimeindex.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    j : numpy.ndarray or int32</span>
-<span class="sd">        Julian days.</span>
-<span class="sd">    tz : instance of pytz, optional</span>
-<span class="sd">        Time zone. Default: UTC</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    datetime : pandas.DatetimeIndex</span>
-<span class="sd">        Datetime index.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">year</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="n">day</span><span class="p">,</span> <span class="n">hour</span><span class="p">,</span> <span class="n">minute</span><span class="p">,</span> <span class="n">second</span><span class="p">,</span> <span class="n">microsecond</span> <span class="o">=</span> <span class="n">julian2date</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DatetimeIndex</span><span class="p">([</span><span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">mi</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">ms</span><span class="p">,</span> <span class="n">tz</span><span class="p">)</span> \
-                             <span class="k">for</span> <span class="n">y</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">mi</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">ms</span> <span class="ow">in</span> \
-                             <span class="nb">zip</span><span class="p">(</span><span class="n">year</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="n">day</span><span class="p">,</span> <span class="n">hour</span><span class="p">,</span> <span class="n">minute</span><span class="p">,</span>
-                                 <span class="n">second</span><span class="p">,</span> <span class="n">microsecond</span><span class="p">)])</span>
 
 </div>
 <div class="viewcode-block" id="julian2num"><a class="viewcode-back" href="../../../pytesmo.timedate.html#pytesmo.timedate.julian.julian2num">[docs]</a><span class="k">def</span> <span class="nf">julian2num</span><span class="p">(</span><span class="n">j</span><span class="p">):</span>
@@ -373,13 +372,13 @@
         <li class="right" >
           <a href="../../../np-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">pytesmo 0.1a1 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">pytesmo 0.1.1 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
         &copy; Copyright 2013, Vienna University of Technology, Department of Geodesy and Geoinformation.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
     </div>
   </body>
 </html>
