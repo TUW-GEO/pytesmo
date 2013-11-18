@@ -24,12 +24,7 @@ Features
 * calculate standard metrics like correlation coefficients, RMSD, bias, 
   as well as more complex ones like triple collocation or MSE as a decomposition of the RMSD see :mod:`pytesmo.metrics`
 
-Supported Datasets
-==================
 
-Soil moisture is observed using different methods and instruments, in this version the following datasets are supported.
-
-Remotely sensed products
 Supported Datasets
 ==================
 
