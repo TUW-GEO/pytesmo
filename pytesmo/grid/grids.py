@@ -180,7 +180,15 @@ class BasicGrid(object):
 
         self.kdTree = None
         if setup_kdTree:
+            self._setup_kdTree()
+
+    def _setup_kdTree(self):
+        """
+        setup kdTree
+        """
+        if self.kdTree is None:
             self.kdTree = NN.findGeoNN(self.activearrlon, self.activearrlat)
+            self.kdTree._build_kdtree()
 
     def split(self, n):
         """function splits the grid into n parts
@@ -378,11 +386,11 @@ class BasicGrid(object):
             be indexed with indices into the subset
         """
 
-        if self.kdTree.kdtree is None:
-            self.kdTree._build_kdtree()
+        if self.kdTree is None:
+            self._setup_kdTree()
 
-        if other.kdTree.kdtree is None:
-            other.kdTree._build_kdtree()
+        if other.kdTree is None:
+            other._setup_kdTree()
 
         if self.kdTree.kdtree is not None and other.kdTree.kdtree is not None:
             dist, index = other.kdTree.find_nearest_index(self.activearrlon, self.activearrlat , max_dist=max_dist)
@@ -535,6 +543,10 @@ class CellGrid(BasicGrid):
         -------
         gpis : numpy.array
             gpis belonging to cell
+        lons : numpy.array
+            longitudes belonging to the gpis
+        lats : numpy.array
+            latitudes belonging to the gpis
         """
         cell_index = np.where(cell == self.activearrcell)
 
