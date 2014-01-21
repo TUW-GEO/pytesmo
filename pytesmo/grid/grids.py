@@ -35,11 +35,14 @@ import pytesmo.grid.nearest_neighbor as NN
 import numpy as np
 from itertools import izip
 
+
 class GridDefinitionError(Exception):
     pass
 
+
 class GridIterationError(Exception):
     pass
+
 
 class BasicGrid(object):
     """
@@ -138,7 +141,6 @@ class BasicGrid(object):
         self.arrlon = lon
         self.arrlat = lat
 
-
         if shape is not None:
             if len(self.arrlat) % shape[0] != 0:
                 raise GridDefinitionError("Given shape does not have the correct first dimension."
@@ -148,11 +150,9 @@ class BasicGrid(object):
                 raise GridDefinitionError("Given shape does not have the correct second dimension."
                                           " Length of lon array is not divisible by shape[1] without rest")
 
-
             self.shape = shape
             self.latdim = np.reshape(self.arrlat, self.shape)[:, 0]
             self.londim = np.reshape(self.arrlon, self.shape)[0, :]
-
 
         if gpis is None:
             self.gpis = np.arange(self.n_gpi)
@@ -270,8 +270,6 @@ class BasicGrid(object):
             return (self.subgpis[n],
                     self.subarrlons[n],
                     self.subarrlats[n])
-
-
 
     def _normal_grid_points(self):
         """
@@ -393,7 +391,7 @@ class BasicGrid(object):
             other._setup_kdTree()
 
         if self.kdTree.kdtree is not None and other.kdTree.kdtree is not None:
-            dist, index = other.kdTree.find_nearest_index(self.activearrlon, self.activearrlat , max_dist=max_dist)
+            dist, index = other.kdTree.find_nearest_index(self.activearrlon, self.activearrlat, max_dist=max_dist)
 
             valid_index = np.where(dist != np.inf)[0]
             dist = dist[valid_index]
@@ -414,6 +412,67 @@ class BasicGrid(object):
                 gpi_lut = active_lut
 
             return gpi_lut
+
+    def get_bbox_grid_points(self, latmin=-90, latmax=90, lonmin=-180, lonmax=180, coords=False):
+        """
+        Returns all grid points located in a submitted geographic box,
+        optinal as coordinates
+
+        Parameters
+        ----------
+        latmin : float, optional
+            minimum latitude
+        latmax : float, optional
+            maximum latitude
+        lonmin : float, optional
+            minimum latitude
+        lonmax : float, optional
+            maximum latitude
+        coords : boolean, optional
+            set to True if coordinates should be returned
+
+        Returns
+        -------
+        gpi : numpy.array
+            grid point indices, if coords=False
+        lat : numpy.array
+            longitudes of gpis, if coords=True
+        lon : numpy.array
+            longitudes of gpis, if coords=True
+        """
+
+        index = np.where((self.activearrlat <= latmax) &
+                         (self.activearrlat >= latmin) &
+                         (self.activearrlon <= lonmax) &
+                         (self.activearrlon >= lonmin))
+
+        if coords is True:
+            return self.activearrlat[index], self.activearrlon[index]
+        else:
+            return self.activegpis[index]
+
+    def to_cell_grid(self, cellsize=5.0):
+        """
+        convert grid to cellgrid with a cell partition of
+        cellsize
+
+        Parameters
+        ----------
+        cellsize : float
+            cell size in degrees
+
+        Returns
+        -------
+        cell_grid : CellGrid object
+            cell grid object
+        """
+        cells = lonlat2cell(self.arrlon, self.arrlat, cellsize=cellsize)
+
+        if self.gpidirect:
+            gpis = None
+        else:
+            gpis = self.gpis
+        return CellGrid(self.arrlon, self.arrlat, cells, gpis=gpis, subset=self.subset)
 
 
 class CellGrid(BasicGrid):
@@ -463,7 +522,6 @@ class CellGrid(BasicGrid):
             self.activearrcell = self.arrcell[subset]
         else:
             self.activearrcell = self.arrcell
-
 
     def gpi2cell(self, gpi):
         """
@@ -527,8 +585,6 @@ class CellGrid(BasicGrid):
                     self.subarrlons[n],
                     self.subarrlats[n],
                     self.subcells[n])
-
-
 
     def grid_points_for_cell(self, cell):
         """
@@ -596,7 +652,6 @@ class CellGrid(BasicGrid):
             for gpi in cell_gpis:
                 yield self.activegpis[gpi], self.activearrlon[gpi], self.activearrlat[gpi], cell
 
-
     def _split_grid_points(self, n):
         """
         Yields all grid points in cell order
@@ -626,8 +681,26 @@ class CellGrid(BasicGrid):
                 yield self.subgpis[n][gpi], self.subarrlons[n][gpi], self.subarrlats[n][gpi], cell
 
 
+def lonlat2cell(lon, lat, cellsize=5.):
+    """
+    Partition lon, lat points into cells.
 
+    Parameters
+    ----------
+    lat: float64, or numpy.array
+        Latitude.
+    lon: float64, or numpy.array
+        Longitude.
+    cellsize: float
+        Cell size in degrees
 
-
-
-
+    Returns
+    -------
+    cell: int32, or numpy.array
+        Cell.
+    """
+    y = np.clip(np.floor((np.double(lat) +
+                          (np.double(90.0) + 1e-9)) / cellsize), 0, 180)
+    x = np.clip(np.floor((np.double(lon) +
+                          (np.double(180.0) + 1e-9)) / cellsize), 0, 360)
+    return np.int32(x * (np.double(180.0) / cellsize) + y)
