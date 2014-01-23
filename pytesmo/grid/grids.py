@@ -141,6 +141,7 @@ class BasicGrid(object):
         self.arrlon = lon
         self.arrlat = lat
 
+        self.shape = None
         if shape is not None:
             if len(self.arrlat) % shape[0] != 0:
                 raise GridDefinitionError("Given shape does not have the correct first dimension."
@@ -474,6 +475,33 @@ class BasicGrid(object):
             gpis = self.gpis
         return CellGrid(self.arrlon, self.arrlat, cells, gpis=gpis, subset=self.subset)
 
+    def __eq__(self, other):
+        """
+        compare arrlon, arrlat, gpis, subsets and shape
+
+        Returns
+        -------
+        result : boolean
+        """
+        lonsame = np.all(self.arrlon == other.arrlon)
+        latsame = np.all(self.arrlat == other.arrlat)
+        gpisame = np.all(self.gpis == other.gpis)
+        if self.subset is not None and other.subset is not None:
+            subsetsame = np.all(self.subset == other.subset)
+        elif self.subset is None and other.subset is None:
+            subsetsame = True
+        else:
+            subsetsame = False
+
+        if self.shape is None and other.shape is None:
+            shapesame = True
+        elif self.shape is not None and other.shape is not None:
+            shapesame = self.shape == other.shape
+        else:
+            shapesame = False
+
+        return np.all([lonsame, latsame, gpisame, subsetsame, shapesame])
+
 
 class CellGrid(BasicGrid):
     """
@@ -536,12 +564,19 @@ class CellGrid(BasicGrid):
         -------
         cell : int
             Cell number of GPI.
+
+        Raises
+        ------
+        IndexError
+            if gpi is not found
         """
         if self.gpidirect:
             return self.arrcell[gpi]
         else:
             index = np.where(self.activegpis == gpi)[0][0]
-            return self.activearrcell[index]
+            if index.size == 0:
+                raise IndexError('Not a valid gpi')
+            return self.activearrcell[index[0]]
 
     def get_cells(self):
         """
@@ -679,6 +714,18 @@ class CellGrid(BasicGrid):
             cell_gpis = np.where(cell == self.subcells[n])[0]
             for gpi in cell_gpis:
                 yield self.subgpis[n][gpi], self.subarrlons[n][gpi], self.subarrlats[n][gpi], cell
+
+    def __eq__(self, other):
+        """
+        compare arcells
+
+        Returns
+        -------
+        result : boolean
+        """
+        basicsame = super(CellGrid, self).__eq__(other)
+        cellsame = np.all(self.arrcell == other.arrcell)
+        return np.all([basicsame, cellsame])
 
 
 def lonlat2cell(lon, lat, cellsize=5.):
