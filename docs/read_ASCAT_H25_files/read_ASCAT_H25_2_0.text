@@ -1,0 +1,14 @@
+<class 'pandas.core.frame.DataFrame'>
+DatetimeIndex: 2292 entries, 2007-01-01 09:39:39 to 2013-07-12 20:39:08
+Data columns (total 10 columns):
+proc_flag             2292  non-null values
+sm                    2285  non-null values
+sm_noise              2285  non-null values
+ssf                   2292  non-null values
+sm_por_gldas          2285  non-null values
+sm_noise_por_gldas    2285  non-null values
+sm_por_hwsd           2285  non-null values
+sm_noise_por_hwsd     2285  non-null values
+frozen_prob           2285  non-null values
+snow_prob             2285  non-null values
+dtypes: float64(8), int16(1), int8(1)

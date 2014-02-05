@@ -4,6 +4,8 @@ In[1]::
    import pytesmo.io.sat.ascat as ascat
    import os
    import matplotlib.pyplot as plt
+   
+--------------
     
 In[2]::
 
@@ -18,6 +20,9 @@ In[2]::
     #path to advisory flags from FTP Server
     path_to_adv_flags = os.path.join('D:\\','small_projects','cpa_2013_07_userformat_reader',
                                           'data','auxiliary_data','advisory_flags')
+                                          
+--------------                            
+                                       
 In[3]::
 
     #init the ASCAT_SSM reader with the paths

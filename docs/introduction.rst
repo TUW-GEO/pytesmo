@@ -135,7 +135,11 @@ pytesmo windows binaries are available for 32 and 64 bit systems:
 Linux
 -----
 
-If you already have a working python installation with the necessary packages just change directory to the unzipped pytesmo-0.1.1 folder and use the following command in the command line::
+If you already have a working python installation with the necessary packages download and unpack the pytesmo source package which is available from
+
+* Pypi https://pypi.python.org/pypi/pytesmo
+
+just change the active directory to the unpacked pytesmo-0.1.1 folder and use the following command in the command line::
 	
 	python setup.py install
 

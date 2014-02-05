@@ -1,0 +1,27 @@
+time_series Package
+===================
+
+:mod:`time_series` Package
+--------------------------
+
+.. automodule:: pytesmo.time_series
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`anomaly` Module
+---------------------
+
+.. automodule:: pytesmo.time_series.anomaly
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`filtering` Module
+-----------------------
+
+.. automodule:: pytesmo.time_series.filtering
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
