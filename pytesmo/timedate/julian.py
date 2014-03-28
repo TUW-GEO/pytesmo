@@ -10,10 +10,18 @@ of the year (doy), assuming it is a leap year.
 julday and caldat are adapted from "Numerical Recipes in C', 2nd edition,
 pp. 11
 
+restrictions
+- no error handling implemented
+- works only for years past 1582
+- time not yet supported
+
 """
 
 import numpy as np
+import pandas as pd
 import datetime as dt
+import pytz
+
 
 def julday(month, day, year, hour=0, minute=0, second=0):
     """
@@ -33,8 +41,8 @@ def julday(month, day, year, hour=0, minute=0, second=0):
         Minute.
     second : numpy.ndarray or int32, optional
         Second.
-    
-    
+
+
 
     Returns
     -------
@@ -47,7 +55,7 @@ def julday(month, day, year, hour=0, minute=0, second=0):
     jy = year - inJanFeb
     jm = month + 1 + inJanFeb * 12
 
-    jul = np.int32(np.floor(365.25 * jy) + 
+    jul = np.int32(np.floor(365.25 * jy) +
                    np.floor(30.6001 * jm) + (day + 1720995.0))
     ja = np.int32(0.01 * jy)
     jul += 2 - ja + np.int32(0.25 * ja)
@@ -77,7 +85,7 @@ def caldat(julian):
     year : numpy.ndarray or int32
         Year.
     """
-    jn = np.int32(np.array(julian).round())
+    jn = np.int32(((np.array(julian) + 0.000001).round()))
 
     jalpha = np.int32(((jn - 1867216) - 0.25) / 36524.25)
     ja = jn + 1 + jalpha - (np.int32(0.25 * jalpha))
@@ -155,7 +163,7 @@ def julian2date(julian):
     second.clip(min=0, max=None)
     second = second.astype(np.int32)
     microsecond = ((second - np.int32(second)) * 1e6).astype(np.int32)
-    
+
     return year, month, day, hour, minute, second, microsecond
 
 
@@ -163,18 +171,20 @@ def julian2datetime(julian, tz=None):
     """
     converts julian date to python datetime
     default is not time zone aware
-    
+
     Parameters
     ----------
     julian : float
         julian date
     """
     year, month, day, hour, minute, second, microsecond = julian2date(julian)
-    if type(julian) == np.array or type(julian) == np.memmap:
+    if type(julian) == np.array or type(julian) == np.memmap or \
+        type(julian) == np.ndarray:
         return np.array([dt.datetime(y, m, d, h, mi, s, ms, tz) \
                              for y, m, d, h, mi, s, ms in \
                              zip(year, month, day, hour, minute,
-                                 second, microsecond)])    
+                                 second, microsecond)])
+
     return dt.datetime(year, month, day, hour, minute, second, microsecond, tz)
 
 
@@ -201,6 +211,30 @@ def julian2doy(j, consider_nonleap_years=True):
         return doy(month, day, year)
     else:
         return doy(month, day)
+
+
+def julian2datetimeindex(j, tz=pytz.UTC):
+    """
+    Converting Julian days to datetimeindex.
+
+    Parameters
+    ----------
+    j : numpy.ndarray or int32
+        Julian days.
+    tz : instance of pytz, optional
+        Time zone. Default: UTC
+
+    Returns
+    -------
+    datetime : pandas.DatetimeIndex
+        Datetime index.
+    """
+    year, month, day, hour, minute, second, microsecond = julian2date(j)
+
+    return pd.DatetimeIndex([dt.datetime(y, m, d, h, mi, s, ms, tz) \
+                             for y, m, d, h, mi, s, ms in \
+                             zip(year, month, day, hour, minute,
+                                 second, microsecond)])
 
 
 def julian2num(j):
