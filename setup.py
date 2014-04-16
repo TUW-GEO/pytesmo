@@ -29,9 +29,9 @@ ext_modules = [
 if not have_setuptools:
     setuptools_kwargs = {}
 else:
-    setuptools_kwargs = {'install_requires':[ "numpy >= 1.7.1",
-                                            "pandas >= 0.11.0",
-                                            "scipy >= 0.12.0",
+    setuptools_kwargs = {'install_requires':[ "numpy >= 1.7",
+                                            "pandas >= 0.12",
+                                            "scipy >= 0.12",
                                             "statsmodels >= 0.4.3",
                                             "netcdf4 >= 1.0.1",
                                            ]
@@ -39,7 +39,7 @@ else:
 
 setup(
     name='pytesmo',
-    version='0.1.1',
+    version='0.1.2',
     author='pytesmo Team',
     author_email='Christoph.Paulik@geo.tuwien.ac.at',
     packages=['pytesmo', 'pytesmo.timedate', 'pytesmo.grid', 'pytesmo.io', 'pytesmo.io.sat', 'pytesmo.io.ismn',
