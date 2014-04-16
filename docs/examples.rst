@@ -20,6 +20,9 @@ This Example script reads and plots ASCAT H25 SSM data with different masking op
 and also converts the data to absolute values using the included porosity data.
 It can be found in the /bin folder of the pytesmo package under the name read_ASCAT_H25.py
 
+If the standard file names assumed by the script have changed this can be specified during initialization of the AscatH25_SSM object.
+Please see the documentation of :class:`pytesmo.io.sat.ascat.AscatH25_SSM`
+
 .. include::
    read_ASCAT_H25.rst
 

@@ -7,9 +7,15 @@ In[1]::
                                              'ASCAT_WARP5.5_R1.2','080_ssm','netcdf')
     ascat_grid_folder = os.path.join('R:\\','Datapool_processed','WARP','ancillary','warp5_grid')
     #init the ASCAT_SSM reader with the paths
+
+    #ascat_folder is the path in which the cell files are located e.g. TUW_METOP_ASCAT_WARP55R12_0600.nc
+    #ascat_grid_folder is the path in which the file TUW_WARP5_grid_info_2_1.nc is located
     
     #let's not include the orbit direction since it is saved as 'A'
     #or 'D' it can not be plotted
+    
+    # the AscatH25_SSM class automatically detects the version of data that you have in your
+    # ascat_folder. Please do not mix files of different versions in one folder
     ascat_SSM_reader = ascat.AscatH25_SSM(ascat_folder,ascat_grid_folder, 
                                           include_in_df=['sm', 'sm_noise', 'ssf', 'proc_flag'])
     

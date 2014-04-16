@@ -49,15 +49,16 @@ def calc_anomaly(Ser,
             year, month, day = julian2date(Ser.index.values)[0:3]
             doys = doy(month, day)
 
-        Ser = pd.DataFrame(Ser, columns=['absolute'])
-        Ser['doy'] = doys
+        df = pd.DataFrame()
+        df['absolute'] = Ser
+        df['doy'] = doys
 
         clim = pd.DataFrame(climatology, columns=['climatology'])
 
-        Ser = Ser.join(clim, on='doy', how='left')
+        df = df.join(clim, on='doy', how='left')
 
-        anomaly = Ser['absolute'] - Ser['climatology']
-        anomaly.index = Ser.index
+        anomaly = df['absolute'] - df['climatology']
+        anomaly.index = df.index
 
 
     else:

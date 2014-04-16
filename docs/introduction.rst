@@ -116,9 +116,18 @@ optional
 Windows - new python users
 --------------------------
 
-For users with little python experience, using Windows, the easiest way to install everything but matplotlib-basemap and netCDF4 is to install 
-winpython from https://code.google.com/p/winpython/ and then download basemap from http://sourceforge.net/projects/matplotlib/files/matplotlib-toolkits/ and netCDF4 
-from https://code.google.com/p/netcdf4-python/
+The Anaconda python disribution https://store.continuum.io/cshop/anaconda/ is a good choice since it includes all dependencies needed for pytesmo.
+Currently only the 32bit Anaconda python distributin is supported.
+After Anaconda is installed open the "Anaconda Command Prompt" and type in the command
+
+pip install pytesmo
+
+This should install pytesmo. If you are behind a proxy server please set the environment variables http_proxy and https_proxy.
+
+Another easy way to install everything but matplotlib-basemap and netCDF4 is to install 
+winpython from https://code.google.com/p/winpython/ and then download basemap from 
+http://sourceforge.net/projects/matplotlib/files/matplotlib-toolkits/ 
+and netCDF4 from https://code.google.com/p/netcdf4-python/
 and add it to your winpython installation using the winpython Control Panel.
 
 Just make sure that you download both for the same architecture (32/64 bit) and the same python version (2.7.x)
@@ -139,14 +148,18 @@ Windows binaries
 
 pytesmo windows binaries are available for 32 and 64 bit systems:
 
-* 32-bit http://rs.geo.tuwien.ac.at/validation_tool/pytesmo/pytesmo-0.1.1/pytesmo-0.1.1.win32-py2.7.exe
-* 64-bit http://rs.geo.tuwien.ac.at/validation_tool/pytesmo/pytesmo-0.1.1/pytesmo-0.1.1.win-amd64-py2.7.exe
+* 32-bit http://rs.geo.tuwien.ac.at/validation_tool/pytesmo/pytesmo-0.1.2/pytesmo-0.1.2.win32-py2.7.exe
+* 64-bit http://rs.geo.tuwien.ac.at/validation_tool/pytesmo/pytesmo-0.1.2/pytesmo-0.1.2.win-amd64-py2.7.exe
 
 
 Linux
 -----
 
-If you already have a working python installation with the necessary packages just change directory to the unzipped pytesmo-0.1.1 folder and use the following command in the command line::
+If you already have a working python installation with the necessary packages download and unpack the pytesmo source package which is available from
+
+* Pypi https://pypi.python.org/pypi/pytesmo
+
+just change the active directory to the unpacked pytesmo-0.1.1 folder and use the following command in the command line::
 	
 	python setup.py install
 
