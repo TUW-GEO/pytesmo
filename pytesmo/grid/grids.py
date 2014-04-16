@@ -74,6 +74,8 @@ class BasicGrid(object):
         define the grid only be the meridian coordinates(self.londim) and
         the coordinates of the circles of latitude(self.latdim).
         The shape has to be given as (latdim, londim)
+        It it is not given the shape is set to the length of the input
+        lon and lat arrays.
 
     Attributes
     ----------
@@ -142,7 +144,8 @@ class BasicGrid(object):
         self.arrlat = lat
 
         self.shape = None
-        if shape is not None:
+
+        if shape is not None and len(shape) == 2:
             if len(self.arrlat) % shape[0] != 0:
                 raise GridDefinitionError("Given shape does not have the correct first dimension."
                                           " Length of lat array is not divisible by shape[0] without rest")
@@ -154,6 +157,9 @@ class BasicGrid(object):
             self.shape = shape
             self.latdim = np.reshape(self.arrlat, self.shape)[:, 0]
             self.londim = np.reshape(self.arrlon, self.shape)[0, :]
+
+        else:
+            self.shape = (len(self.arrlon))
 
         if gpis is None:
             self.gpis = np.arange(self.n_gpi)
@@ -452,22 +458,28 @@ class BasicGrid(object):
         else:
             return self.activegpis[index]
 
-    def to_cell_grid(self, cellsize=5.0):
+    def to_cell_grid(self, cellsize=5.0, cellsize_lat=None, cellsize_lon=None):
         """
         convert grid to cellgrid with a cell partition of
         cellsize
 
         Parameters
         ----------
-        cellsize : float
+        cellsize : float, optional
             cell size in degrees
+        cellsize_lon : float, optional
+            Cell size in degrees on the longitude axis
+        cellsize_lat : float, optional
+            Cell size in degrees on the latitude axis
 
         Returns
         -------
         cell_grid : CellGrid object
             cell grid object
         """
-        cells = lonlat2cell(self.arrlon, self.arrlat, cellsize=cellsize)
+        cells = lonlat2cell(self.arrlon, self.arrlat, cellsize=cellsize,
+                            cellsize_lat=cellsize_lat,
+                            cellsize_lon=cellsize_lon)
 
         if self.gpidirect:
             gpis = None
@@ -573,7 +585,7 @@ class CellGrid(BasicGrid):
         if self.gpidirect:
             return self.arrcell[gpi]
         else:
-            index = np.where(self.activegpis == gpi)[0][0]
+            index = np.where(self.activegpis == gpi)[0]
             if index.size == 0:
                 raise IndexError('Not a valid gpi')
             return self.activearrcell[index[0]]
@@ -728,7 +740,7 @@ class CellGrid(BasicGrid):
         return np.all([basicsame, cellsame])
 
 
-def lonlat2cell(lon, lat, cellsize=5.):
+def lonlat2cell(lon, lat, cellsize=5., cellsize_lon=None, cellsize_lat=None):
     """
     Partition lon, lat points into cells.
 
@@ -740,14 +752,22 @@ def lonlat2cell(lon, lat, cellsize=5.):
         Longitude.
     cellsize: float
         Cell size in degrees
+    cellsize_lon : float, optional
+        Cell size in degrees on the longitude axis
+    cellsize_lat : float, optional
+        Cell size in degrees on the latitude axis
 
     Returns
     -------
     cell: int32, or numpy.array
         Cell.
     """
+
+    if cellsize_lon is None:
+        cellsize_lon = cellsize
+    if cellsize_lat is None:
+        cellsize_lat = cellsize
     y = np.clip(np.floor((np.double(lat) +
-                          (np.double(90.0) + 1e-9)) / cellsize), 0, 180)
-    x = np.clip(np.floor((np.double(lon) +
-                          (np.double(180.0) + 1e-9)) / cellsize), 0, 360)
-    return np.int32(x * (np.double(180.0) / cellsize) + y)
+                          (np.double(90.0) + 1e-9)) / cellsize_lat), 0, 180)
+    x = np.clip(np.floor((np.double(lon) + (np.double(180.0) + 1e-9)) / cellsize_lon), 0, 360)
+    return np.int32(x * (np.double(180.0) / cellsize_lat) + y)
