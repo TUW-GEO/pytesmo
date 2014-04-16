@@ -35,6 +35,7 @@ import zipfile
 import pandas as pd
 import warnings
 import netCDF4
+from glob import glob
 
 import pytesmo.grid.grids as grids
 from pytesmo.timedate.julian import doy
@@ -438,8 +439,19 @@ class AscatNetcdf(object):
         string template for the netCDF filename. This specifies where the cell number is
         in the netCDF filename. Standard value is 'TUW_METOP_ASCAT_WARP55R12_%04d.nc' in
         which %04d will be substituded for the cell number during reading of the data
-
-
+    loc_id : string, optional
+        name of the location id in the netCDF file
+    obs_var : string, optional
+        observation variable that provides the lookup between
+        observation number and the location id
+    topo_var : string, optional
+        name of topographic complexity variable in netCDF file
+    wetland_var : string, optional
+        name of wetland fraction variable in netCDF file
+    snow_var : string, optional
+        name of snow probability variable in netCDF file
+    frozen_var : string, optional
+        name of frozen probability variable in netCDF file
     Attributes
     ----------
     path : string
@@ -466,7 +478,9 @@ class AscatNetcdf(object):
         True if advisory flags are available
     """
     def __init__(self, path, grid_path, grid_info_filename='TUW_WARP5_grid_info_2_1.nc',
-                 topo_threshold=50, wetland_threshold=50, netcdftemplate='TUW_METOP_ASCAT_WARP55R12_%04d.nc'):
+                 topo_threshold=50, wetland_threshold=50, netcdftemplate='TUW_METOP_ASCAT_WARP55R12_%04d.nc',
+                 loc_id='gpi', obs_var='row_size', topo_var='topo', wetland_var='wetland',
+                 snow_var='snow', frozen_var='frozen'):
 
         self.path = path
         self.grid_path = grid_path
@@ -475,6 +489,12 @@ class AscatNetcdf(object):
         self.grid_info_loaded = False
         self.topo_threshold = topo_threshold
         self.wetland_threshold = wetland_threshold
+        self.loc_id = loc_id
+        self.obs_var = obs_var
+        self.topo_var = topo_var
+        self.wetland_var = wetland_var
+        self.snow_var = snow_var
+        self.frozen_var = frozen_var
 
     def _load_grid_info(self):
         """
@@ -566,9 +586,9 @@ class AscatNetcdf(object):
         cell = self.grid.gpi2cell(gpi)
         ncfile = netCDF4.Dataset(os.path.join(self.path, self.netcdftemplate % cell), 'r')
 
-        gpi_index = np.where(ncfile.variables['gpi'][:] == gpi)[0]
-        time_series_length = ncfile.variables['row_size'][gpi_index]
-        startindex = np.sum(ncfile.variables['row_size'][:gpi_index])
+        gpi_index = np.where(ncfile.variables[self.loc_id][:] == gpi)[0]
+        time_series_length = ncfile.variables[self.obs_var][gpi_index]
+        startindex = np.sum(ncfile.variables[self.obs_var][:gpi_index])
         endindex = startindex + time_series_length
         timestamps = netCDF4.num2date(ncfile.variables['time'][startindex:endindex],
                                      ncfile.variables['time'].units)
@@ -591,11 +611,20 @@ class AscatNetcdf(object):
                     for el in self.to_absolute:
                         df['%s_por_%s' % (el, por_source)] = (df[el] / 100.0) * (porosity[por_source])
 
-        topo = ncfile.variables['topo'][gpi_index][0]
-        wetland = ncfile.variables['wetland'][gpi_index][0]
+        topo = ncfile.variables[self.topo_var][gpi_index][0]
+        wetland = ncfile.variables[self.wetland_var][gpi_index][0]
 
-        snow = np.squeeze(ncfile.variables['snow'][gpi_index, :])
-        frozen = np.squeeze(ncfile.variables['frozen'][gpi_index, :])
+        snow = np.squeeze(ncfile.variables[self.snow_var][gpi_index, :])
+        # if data is not valid assume no snow
+        if type(snow) == np.ma.masked_array:
+            warnings.warn('Snow probabilities not valid, assuming no snow')
+            snow = snow.filled(0)
+
+        frozen = np.squeeze(ncfile.variables[self.frozen_var][gpi_index, :])
+        # if data is not valid assume no freezing
+        if type(frozen) == np.ma.masked_array:
+            warnings.warn('Frozen probabilities not valid, assuming no freezing')
+            frozen = frozen.filled(0)
 
         adv_flags = pd.DataFrame({'snow_prob': snow,
                                   'frozen_prob': frozen})
@@ -645,10 +674,6 @@ class AscatH25_SSM(AscatNetcdf):
     wetland_threshold : int, optional
         if wetland fraction of read grid point is above this
         threshold a warning is output during reading
-    netcdftemplate : string, optional
-        string template for the netCDF filename. This specifies where the cell number is
-        in the netCDF filename. Standard value is 'TUW_METOP_ASCAT_WARP55R12_%04d.nc' in
-        which %04d will be substituded for the cell number during reading of the data
     include_in_df : list, optional
         list of variables which should be included in the returned DataFrame.
         Default is all variables
@@ -666,13 +691,40 @@ class AscatH25_SSM(AscatNetcdf):
         read surface soil moisture
     """
     def __init__(self, path, grid_path, grid_info_filename='TUW_WARP5_grid_info_2_1.nc',
-                 topo_threshold=50, wetland_threshold=50, netcdftemplate='TUW_METOP_ASCAT_WARP55R12_%04d.nc',
+                 topo_threshold=50, wetland_threshold=50,
                  include_in_df=['sm', 'sm_noise', 'ssf', 'proc_flag', 'orbit_dir']):
+
+        self.path = path
+        self._get_product_version()
+
+        version_kwargs_dict = {'WARP 5.5 Release 1.2':
+                               {'netcdftemplate': 'TUW_METOP_ASCAT_WARP55R12_%04d.nc',
+                                'loc_id': 'gpi',
+                                'obs_var': 'row_size',
+                                'topo_var': 'topo',
+                                'wetland_var': 'wetland',
+                                'snow_var': 'snow',
+                                'frozen_var': 'frozen'},
+                               'WARP 5.5 Release 2.1':
+                               {'netcdftemplate': 'TUW_METOP_ASCAT_WARP55R21_%04d.nc',
+                                'loc_id': 'location_id',
+                                'obs_var': 'row_size',
+                                'topo_var': 'advf_topo',
+                                'wetland_var': 'advf_wetland',
+                                'snow_var': 'advf_snow_prob',
+                                'frozen_var': 'advf_frozen_prob'}
+                             }
+
         super(AscatH25_SSM, self).__init__(path, grid_path, grid_info_filename=grid_info_filename,
                                            topo_threshold=topo_threshold, wetland_threshold=wetland_threshold,
-                                           netcdftemplate=netcdftemplate)
+                                           **version_kwargs_dict[self.product_version])
         self.include_in_df = include_in_df
         self.to_absolute = ['sm', 'sm_noise']
+
+    def _get_product_version(self):
+        first_file = glob(os.path.join(self.path, '*.nc'))[0]
+        with netCDF4.Dataset(first_file) as dataset:
+            self.product_version = dataset.product_version
 
     def read_ssm(self, *args, **kwargs):
         """
