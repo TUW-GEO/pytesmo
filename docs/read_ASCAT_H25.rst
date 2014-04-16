@@ -12,6 +12,9 @@ In[1]::
     
     #let's not include the orbit direction since it is saved as 'A'
     #or 'D' it can not be plotted
+    
+    # the AscatH25_SSM class automatically detects the version of data that you have in your
+    # ascat_folder. Please do not mix files of different versions in one folder
     ascat_SSM_reader = ascat.AscatH25_SSM(ascat_folder,ascat_grid_folder, 
                                           include_in_df=['sm', 'sm_noise', 'ssf', 'proc_flag'])
     
