@@ -105,9 +105,18 @@ optional
 Windows - new python users
 --------------------------
 
-For users with little python experience, using Windows, the easiest way to install everything but matplotlib-basemap and netCDF4 is to install 
-winpython from https://code.google.com/p/winpython/ and then download basemap from http://sourceforge.net/projects/matplotlib/files/matplotlib-toolkits/ and netCDF4 
-from https://code.google.com/p/netcdf4-python/
+The Anaconda python disribution https://store.continuum.io/cshop/anaconda/ is a good choice since it includes all dependencies needed for pytesmo.
+Currently only the 32bit Anaconda python distributin is supported.
+After Anaconda is installed open the "Anaconda Command Prompt" and type in the command
+
+pip install pytesmo
+
+This should install pytesmo. If you are behind a proxy server please set the environment variables http_proxy and https_proxy.
+
+Another easy way to install everything but matplotlib-basemap and netCDF4 is to install 
+winpython from https://code.google.com/p/winpython/ and then download basemap from 
+http://sourceforge.net/projects/matplotlib/files/matplotlib-toolkits/ 
+and netCDF4 from https://code.google.com/p/netcdf4-python/
 and add it to your winpython installation using the winpython Control Panel.
 
 Just make sure that you download both for the same architecture (32/64 bit) and the same python version (2.7.x)
