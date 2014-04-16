@@ -137,8 +137,8 @@ Windows binaries
 
 pytesmo windows binaries are available for 32 and 64 bit systems:
 
-* 32-bit http://rs.geo.tuwien.ac.at/validation_tool/pytesmo/pytesmo-0.1.1/pytesmo-0.1.1.win32-py2.7.exe
-* 64-bit http://rs.geo.tuwien.ac.at/validation_tool/pytesmo/pytesmo-0.1.1/pytesmo-0.1.1.win-amd64-py2.7.exe
+* 32-bit http://rs.geo.tuwien.ac.at/validation_tool/pytesmo/pytesmo-0.1.2/pytesmo-0.1.2.win32-py2.7.exe
+* 64-bit http://rs.geo.tuwien.ac.at/validation_tool/pytesmo/pytesmo-0.1.2/pytesmo-0.1.2.win-amd64-py2.7.exe
 
 
 Linux
