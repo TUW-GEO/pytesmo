@@ -1,13 +1,14 @@
 try:
     from setuptools import setup
     have_setuptools = True
+    from setuptools.command.test import test as TestCommand
 except ImportError:
     have_setuptools = False
     from distutils.core import setup
 from distutils.extension import Extension
 import numpy as np
 from distutils.command.sdist import sdist as _sdist
-
+import sys
 
 class sdist(_sdist):
     def run(self):
@@ -29,6 +30,18 @@ ext_modules = [
 if not have_setuptools:
     setuptools_kwargs = {}
 else:
+    class PyTest(TestCommand):
+        def finalize_options(self):
+            TestCommand.finalize_options(self)
+            self.test_args = []
+            self.test_suite = True
+
+        def run_tests(self):
+            import pytest
+            errcode = pytest.main(self.test_args)
+            sys.exit(errcode)
+
+    cmdclass['test'] = PyTest
     setuptools_kwargs = {'install_requires':[ "numpy >= 1.7",
                                             "pandas >= 0.12",
                                             "scipy >= 0.12",
@@ -42,8 +55,10 @@ setup(
     version='0.1.2',
     author='pytesmo Team',
     author_email='Christoph.Paulik@geo.tuwien.ac.at',
-    packages=['pytesmo','pytesmo.timedate','pytesmo.grid','pytesmo.io','pytesmo.io.sat','pytesmo.io.ismn'],
-    scripts=['bin/plot_ASCAT_data.py','bin/plot_ISMN_data.py','bin/compare_ISMN_ASCAT.py'],
+    packages=['pytesmo', 'pytesmo.timedate', 'pytesmo.grid', 'pytesmo.io', 'pytesmo.io.sat', 'pytesmo.io.ismn',
+              'pytesmo.time_series', 'pytesmo.timedate'],
+    ext_modules=ext_modules,
+    cmdclass=cmdclass,
     url='http://rs.geo.tuwien.ac.at/validation_tool/pytesmo/',
     license='LICENSE.txt',
     description='python Toolbox for the Evaluation of Soil Moisture Observations',
