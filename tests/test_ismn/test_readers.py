@@ -151,8 +151,8 @@ class TestReaders(unittest.TestCase):
         assert sorted(dataset.data.columns) == sorted(['sm', 'sm_flag', 'ts', 'ts_flag'])
         assert dataset.data['sm'].values[8] == 0.2227
         assert dataset.data['sm_flag'].values[8] == 'U'
-        assert np.isnan(dataset.data.ix[0.2]['ts'].values[6])
-        assert dataset.data.ix[0.2]['ts_flag'].values[6] == 'M'
+        assert np.isnan(dataset.data.ix[0.3, 0.3]['ts'].values[6])
+        assert dataset.data.ix[0.3, 0.3]['ts_flag'].values[6] == 'M'
 
     def test_reader_get_format(self):
         fileformat = readers.get_format(self.filename_format_header_values)

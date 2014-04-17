@@ -57,6 +57,8 @@ class Test(unittest.TestCase):
                                        subset=self.subset)
 
         self.testfilename = os.path.join(curpath(), 'data', 'test.nc')
+        if not os.path.exists(os.path.join(curpath(), 'data')):
+            os.mkdir(os.path.join(curpath(), 'data'))
 
     def tearDown(self):
         os.remove(self.testfilename)

@@ -187,14 +187,14 @@ class TestAscatNetCDF_V5521(unittest.TestCase):
         assert result.data.ix[15]['snow_prob'] == 0
         assert result.data.ix[15]['orbit_dir'] == 'A'
         assert result.data.ix[15]['proc_flag'] == 0
-        np.testing.assert_approx_equal(result.data.ix[15]['sm_por_gldas'], 0.2982222, significant=6)
-        np.testing.assert_approx_equal(result.data.ix[15]['sm_noise_por_gldas'], 0.03795555, significant=6)
-        np.testing.assert_approx_equal(result.data.ix[15]['sm_por_hwsd'], 0.2366286, significant=6)
-        np.testing.assert_approx_equal(result.data.ix[15]['sm_noise_por_hwsd'], 0.03011637, significant=6)
+        np.testing.assert_approx_equal(result.data.ix[15]['sm_por_gldas'], 0.2969999, significant=6)
+        np.testing.assert_approx_equal(result.data.ix[15]['sm_noise_por_gldas'], 0.03779999, significant=6)
+        np.testing.assert_approx_equal(result.data.ix[15]['sm_por_hwsd'], 0.2364999, significant=6)
+        np.testing.assert_approx_equal(result.data.ix[15]['sm_noise_por_hwsd'], 0.0300999, significant=6)
         assert result.topo_complex == 14
         assert result.wetland_frac == 0
-        np.testing.assert_approx_equal(result.porosity_gldas, 0.54222, significant=5)
-        np.testing.assert_approx_equal(result.porosity_hwsd, 0.430234, significant=5)
+        np.testing.assert_approx_equal(result.porosity_gldas, 0.539999, significant=5)
+        np.testing.assert_approx_equal(result.porosity_hwsd, 0.4299994, significant=5)
 
 
 if __name__ == '__main__':
