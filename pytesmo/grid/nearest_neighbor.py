@@ -136,8 +136,10 @@ class findGeoNN(object):
         lon = np.array(lon)
         lat = np.array(lat)
         coords = np.zeros((lon.size, 3))
-        lons_rad = np.radians(lon)
-        lats_rad = np.radians(lat)
+        # calculated in float64, otherwise numerical inconsistencies happened
+        # on different systems
+        lons_rad = np.radians(lon, dtype=np.float64)
+        lats_rad = np.radians(lat, dtype=np.float64)
         coords[:, 0] = self.R * np.cos(lats_rad) * np.cos(lons_rad)
         coords[:, 1] = self.R * np.cos(lats_rad) * np.sin(lons_rad)
         coords[:, 2] = self.R * np.sin(lats_rad)
