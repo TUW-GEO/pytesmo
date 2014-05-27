@@ -35,33 +35,34 @@ from datetime import datetime
 import numpy as np
 
 
-
-variable_lookup = {'sm':'soil moisture',
-                   'ts':'soil temperature',
-                   'su':'soil suction',
-                   'p':'precipitation',
-                   'ta':'air temperature',
-                   'fc':'field capacity',
-                   'wp':'permanent wilting point',
-                   'paw':'plant available water',
-                   'ppaw':'potential plant available water',
-                   'sat':'saturation',
-                   'si_h':'silt fraction',
-                   'sd':'snow depth',
-                   'sa_h':'sand fraction',
-                   'cl_h':'clay fraction',
-                   'oc_h':'organic carbon',
-                   'sweq':'snow water equivalent',
-                   'tsf':'surface temperature',
-                   'tsfq':'surface temperature quality flag original'
+variable_lookup = {'sm': 'soil moisture',
+                   'ts': 'soil temperature',
+                   'su': 'soil suction',
+                   'p': 'precipitation',
+                   'ta': 'air temperature',
+                   'fc': 'field capacity',
+                   'wp': 'permanent wilting point',
+                   'paw': 'plant available water',
+                   'ppaw': 'potential plant available water',
+                   'sat': 'saturation',
+                   'si_h': 'silt fraction',
+                   'sd': 'snow depth',
+                   'sa_h': 'sand fraction',
+                   'cl_h': 'clay fraction',
+                   'oc_h': 'organic carbon',
+                   'sweq': 'snow water equivalent',
+                   'tsf': 'surface temperature',
+                   'tsfq': 'surface temperature quality flag original'
                   }
 
 
 class ReaderException(Exception):
     pass
 
+
 class ISMNTSError(Exception):
     pass
+
 
 class ISMNTimeSeries(object):
     """
@@ -125,7 +126,6 @@ class ISMNTimeSeries(object):
             raise ISMNTSError("data attribute is not a pandas.DataFrame")
 
 
-
 def get_info_from_file(filename):
     """
     reads first line of file and splits filename
@@ -174,24 +174,26 @@ def get_metadata_header_values(filename):
 
     if len(filename_elements) > 9:
         sensor = '_'.join(filename_elements[6:len(filename_elements) - 2])
-    else: sensor = filename_elements[6]
+    else:
+        sensor = filename_elements[6]
 
     if filename_elements[3] in variable_lookup:
         variable = [variable_lookup[filename_elements[3]]]
     else:
         variable = [filename_elements[3]]
 
-    metadata = {'network':header_elements[1],
-                'station':header_elements[2],
-                'latitude':float(header_elements[3]),
-                'longitude':float(header_elements[4]),
-                'elevation':float(header_elements[5]),
-                'depth_from':[float(header_elements[6])],
-                'depth_to':[float(header_elements[7])],
-                'variable':variable,
-                'sensor':sensor}
+    metadata = {'network': header_elements[1],
+                'station': header_elements[2],
+                'latitude': float(header_elements[3]),
+                'longitude': float(header_elements[4]),
+                'elevation': float(header_elements[5]),
+                'depth_from': [float(header_elements[6])],
+                'depth_to': [float(header_elements[7])],
+                'variable': variable,
+                'sensor': sensor}
 
     return metadata
+
 
 def read_format_header_values(filename):
     """
@@ -211,10 +213,10 @@ def read_format_header_values(filename):
 
     metadata = get_metadata_header_values(filename)
 
-    data = pd.read_csv(filename, skiprows=1, parse_dates=True,
-                       delim_whitespace=True, names=['date', 'time', metadata['variable'][0], metadata['variable'][0] + '_flag'])
+    data = pd.read_csv(filename, skiprows=1,
+                       delim_whitespace=True, names=['date', 'time', metadata['variable'][0], metadata['variable'][0] + '_flag', metadata['variable'][0] + '_orig_flag'])
 
-    date_index = data.apply(lambda x:datetime.strptime('%s%s' % (x['date'], x['time']), '%Y/%m/%d%H:%M'), axis=1)
+    date_index = data.apply(lambda x: datetime.strptime('%s%s' % (x['date'], x['time']), '%Y/%m/%d%H:%M'), axis=1)
 
     del data['date']
     del data['time']
@@ -247,26 +249,27 @@ def get_metadata_ceop_sep(filename):
 
     if len(filename_elements) > 9:
         sensor = '_'.join(filename_elements[6:len(filename_elements) - 2])
-    else: sensor = filename_elements[6]
+    else:
+        sensor = filename_elements[6]
 
     if filename_elements[3] in variable_lookup:
         variable = [variable_lookup[filename_elements[3]]]
     else:
         variable = [filename_elements[3]]
 
-
-    metadata = {'network':filename_elements[1],
-                'station':filename_elements[2],
-                'variable':variable,
-                'depth_from':[float(filename_elements[4])],
-                'depth_to':[float(filename_elements[5])],
+    metadata = {'network': filename_elements[1],
+                'station': filename_elements[2],
+                'variable': variable,
+                'depth_from': [float(filename_elements[4])],
+                'depth_to': [float(filename_elements[5])],
                 'sensor': sensor,
-                'latitude':float(header_elements[7]),
-                'longitude':float(header_elements[8]),
-                'elevation':float(header_elements[9])
+                'latitude': float(header_elements[7]),
+                'longitude': float(header_elements[8]),
+                'elevation': float(header_elements[9])
                 }
 
     return metadata
+
 
 def read_format_ceop_sep(filename):
     """
@@ -286,10 +289,10 @@ def read_format_ceop_sep(filename):
 
     metadata = get_metadata_ceop_sep(filename)
 
-    data = pd.read_csv(filename, delim_whitespace=True, usecols=[0, 1, 12, 13],
-                       names=['date', 'time', metadata['variable'][0], metadata['variable'][0] + '_flag'])
+    data = pd.read_csv(filename, delim_whitespace=True, usecols=[0, 1, 12, 13, 14],
+                       names=['date', 'time', metadata['variable'][0], metadata['variable'][0] + '_flag', metadata['variable'][0] + '_orig_flag'])
 
-    date_index = data.apply(lambda x:datetime.strptime('%s%s' % (x['date'], x['time']), '%Y/%m/%d%H:%M'), axis=1)
+    date_index = data.apply(lambda x: datetime.strptime('%s%s' % (x['date'], x['time']), '%Y/%m/%d%H:%M'), axis=1)
 
     del data['date']
     del data['time']
@@ -300,6 +303,7 @@ def read_format_ceop_sep(filename):
     metadata['data'] = data
 
     return ISMNTimeSeries(metadata)
+
 
 def get_metadata_ceop(filename):
     """
@@ -319,15 +323,15 @@ def get_metadata_ceop(filename):
 
     header_elements, filename_elements = get_info_from_file(filename)
 
-    metadata = {'network':filename_elements[1],
-                'station':header_elements[6],
-                'variable':['ts', 'sm'],
+    metadata = {'network': filename_elements[1],
+                'station': header_elements[6],
+                'variable': ['ts', 'sm'],
                 'sensor': 'n.s',
-                'depth_from':['multiple'],
-                'depth_to':['multiple'],
-                'latitude':float(header_elements[7]),
-                'longitude':float(header_elements[8]),
-                'elevation':float(header_elements[9])
+                'depth_from': ['multiple'],
+                'depth_to': ['multiple'],
+                'latitude': float(header_elements[7]),
+                'longitude': float(header_elements[8]),
+                'elevation': float(header_elements[9])
                 }
 
     return metadata
@@ -355,7 +359,7 @@ def read_format_ceop(filename):
                               metadata['variable'][1], metadata['variable'][1] + '_flag'],
                        na_values=['-999.99'])
 
-    date_index = data.apply(lambda x:datetime.strptime('%s%s' % (x['date'], x['time']), '%Y/%m/%d%H:%M'), axis=1)
+    date_index = data.apply(lambda x: datetime.strptime('%s%s' % (x['date'], x['time']), '%Y/%m/%d%H:%M'), axis=1)
     depth_index = data['depth_from']
 
     del data['date']
@@ -394,9 +398,12 @@ def get_format(filename):
         if filename or header parts do not fit one of the formats
     """
     header_elements, filename_elements = get_info_from_file(filename)
-    if len(filename_elements) == 5 and len(header_elements) == 16: return 'ceop'
-    if len(header_elements) == 14 and len(filename_elements) >= 9: return 'ceop_sep'
-    if len(header_elements) < 14 and len(filename_elements) >= 9: return 'header_values'
+    if len(filename_elements) == 5 and len(header_elements) == 16:
+        return 'ceop'
+    if len(header_elements) == 15 and len(filename_elements) >= 9:
+        return 'ceop_sep'
+    if len(header_elements) < 14 and len(filename_elements) >= 9:
+        return 'header_values'
     raise ReaderException("This does not seem to be a valid ISMN filetype %s" % filename)
 
 
@@ -416,6 +423,7 @@ def read_data(filename):
     func = dicton['read_format_' + get_format(filename)]
     return func(filename)
 
+
 def get_metadata(filename):
     """
     reads ISMN metadata from any format
@@ -431,7 +439,3 @@ def get_metadata(filename):
     dicton = globals()
     func = dicton['get_metadata_' + get_format(filename)]
     return func(filename)
-
-
-
-

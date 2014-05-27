@@ -42,9 +42,9 @@ class TestReaders(unittest.TestCase):
 
     def setUp(self):
         self.filename_format_header_values = os.path.join(os.path.dirname(__file__), 'test_data', 'format_header_values', 'SMOSMANIA',
-                                             'SMOSMANIA_SMOSMANIA_Narbonne_sm_0.050000_0.050000_ThetaProbeML2X_20070101_20120109.stm')
+                                             'SMOSMANIA_SMOSMANIA_Narbonne_sm_0.050000_0.050000_ThetaProbe-ML2X_20070101_20070131.stm')
         self.filename_format_ceop_sep = os.path.join(os.path.dirname(__file__), 'test_data', 'format_ceop_sep', 'SMOSMANIA',
-                                             'SMOSMANIA_SMOSMANIA_Narbonne_sm_0.050000_0.050000_ThetaProbeML2X_20100616_20100705.stm')
+                                             'SMOSMANIA_SMOSMANIA_Narbonne_sm_0.050000_0.050000_ThetaProbe-ML2X_20070101_20070131.stm')
         self.filename_format_ceop = os.path.join(os.path.dirname(__file__), 'test_data', 'format_ceop', 'SMOSMANIA',
                                              'SMOSMANIA_SMOSMANIA_NBN_20100304_20130801.stm')
         self.filename_malformed = os.path.join(os.path.dirname(__file__), 'test_data', 'malformed',
@@ -58,7 +58,7 @@ class TestReaders(unittest.TestCase):
                             'depth_from': [0.05],
                             'depth_to': [0.05],
                             'variable': ['soil moisture'],
-                            'sensor': 'ThetaProbeML2X'}
+                            'sensor': 'ThetaProbe-ML2X'}
 
         self.metadata_ref_ceop = dict(self.metadata_ref)
         self.metadata_ref_ceop['depth_from'] = ['multiple']
@@ -70,13 +70,13 @@ class TestReaders(unittest.TestCase):
 
         header_elements, filename_elements = readers.get_info_from_file(self.filename_format_ceop_sep)
 
-        assert sorted(header_elements) == sorted(['2010/06/16', '15:00', '2010/06/16',
-                                                   '15:00', 'SMOSMANIA', 'SMOSMANIA',
+        assert sorted(header_elements) == sorted(['2007/01/01', '01:00', '2007/01/01',
+                                                   '01:00', 'SMOSMANIA', 'SMOSMANIA',
                                                    'Narbonne', '43.15000', '2.95670',
-                                                   '112.00', '0.05', '0.05', '0.1836', 'U'])
+                                                   '112.00', '0.05', '0.05', '0.2140', 'U', 'M'])
         assert sorted(filename_elements) == sorted(['SMOSMANIA', 'SMOSMANIA', 'Narbonne', 'sm',
-                                                    '0.050000', '0.050000', 'ThetaProbeML2X',
-                                                    '20100616', '20100705.stm'])
+                                                    '0.050000', '0.050000', 'ThetaProbe-ML2X',
+                                                    '20070101', '20070131.stm'])
 
     def test_get_metadata_header_values(self):
 
@@ -95,14 +95,13 @@ class TestReaders(unittest.TestCase):
         assert dataset.variable == ['soil moisture']
         assert dataset.depth_from == [0.05]
         assert dataset.depth_to == [0.05]
-        assert dataset.sensor == 'ThetaProbeML2X'
+        assert dataset.sensor == 'ThetaProbe-ML2X'
         assert type(dataset.data) == pd.DataFrame
         assert dataset.data.index[7] == datetime(2007, 1, 1, 8, 0, 0)
-        assert sorted(dataset.data.columns) == sorted(['soil moisture', 'soil moisture_flag'])
+        assert sorted(dataset.data.columns) == sorted(['soil moisture', 'soil moisture_flag', 'soil moisture_orig_flag'])
         assert dataset.data['soil moisture'].values[8] == 0.2135
         assert dataset.data['soil moisture_flag'].values[8] == 'U'
-        assert np.isnan(dataset.data['soil moisture'].values[710])
-        assert dataset.data['soil moisture_flag'].values[710] == 'M'
+        assert dataset.data['soil moisture_orig_flag'].values[8] == 'M'
 
     def test_get_metadata_ceop_sep(self):
 
@@ -120,14 +119,13 @@ class TestReaders(unittest.TestCase):
         assert dataset.variable == ['soil moisture']
         assert dataset.depth_from == [0.05]
         assert dataset.depth_to == [0.05]
-        assert dataset.sensor == 'ThetaProbeML2X'
+        assert dataset.sensor == 'ThetaProbe-ML2X'
         assert type(dataset.data) == pd.DataFrame
-        assert dataset.data.index[7] == datetime(2010, 6, 16, 22, 0, 0)
-        assert sorted(dataset.data.columns) == sorted(['soil moisture', 'soil moisture_flag'])
-        assert dataset.data['soil moisture'].values[8] == 0.1792
+        assert dataset.data.index[7] == datetime(2007, 1, 1, 8, 0, 0)
+        assert sorted(dataset.data.columns) == sorted(['soil moisture', 'soil moisture_flag', 'soil moisture_orig_flag'])
+        assert dataset.data['soil moisture'].values[8] == 0.2135
         assert dataset.data['soil moisture_flag'].values[8] == 'U'
-        assert np.isnan(dataset.data['soil moisture'].values[347])
-        assert dataset.data['soil moisture_flag'].values[347] == 'M'
+        assert dataset.data['soil moisture_orig_flag'].values[347] == 'M'
 
     def test_get_metadata_ceop(self):
 
