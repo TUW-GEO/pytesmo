@@ -26,8 +26,6 @@ ext_modules = [
               include_dirs=[np.get_include()]),
 ]
 
-
-
 if not have_setuptools:
     setuptools_kwargs = {}
 else:
@@ -48,8 +46,13 @@ else:
                                             "scipy >= 0.12",
                                             "statsmodels >= 0.4.3",
                                             "netcdf4 >= 1.0.1",
-                                           ]
+                                           ],
+                         'test_suite': 'tests/',
+                         'tests_require': ['pytest'],
+                         'extras_require': {'testing':['pytest']
+                                            }
                        }
+
 
 setup(
     name='pytesmo',
