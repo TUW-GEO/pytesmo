@@ -10,6 +10,7 @@ import numpy as np
 from distutils.command.sdist import sdist as _sdist
 import sys
 
+
 class sdist(_sdist):
     def run(self):
         # Make sure the compiled Cython files in the distribution are up-to-date
@@ -52,7 +53,7 @@ else:
 
 setup(
     name='pytesmo',
-    version='0.1.2',
+    version='0.1.3',
     author='pytesmo Team',
     author_email='Christoph.Paulik@geo.tuwien.ac.at',
     packages=['pytesmo', 'pytesmo.timedate', 'pytesmo.grid', 'pytesmo.io', 'pytesmo.io.sat', 'pytesmo.io.ismn',
