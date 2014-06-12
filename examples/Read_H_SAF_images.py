@@ -119,26 +119,25 @@ plt.show()
 
 # H08 data has a much higher resolution and comes on a 0.00416 degree grid.
 # The sample data included in pytesmo was observed on the same time as the included H07 product.
+# Instead of read_img you can also use the daily_images iterator. You just specify a day and it will read all the images that are in your folder for this day. This also works for the other H07 and H14 reader.
 
 # <codecell>
 
 #the reader returns not only the data but also metadata and the longitudes and latitudes
-h08_data, metadata, timestamp, lons, lats, time_var = h08_reader.read_img(datetime.datetime(2010,5,1,8,33,1))
-
-# <codecell>
-
-print type(h08_data)
-# the data is a dictionary, each dictionary key contains the array of one variable
-print "The following variables are in this image", h08_data.keys()
-
-# <codecell>
-
-print h08_data['ssm'].shape
-print lons.shape
-print lats.shape
+for h08_data, metadata, timestamp, lons, lats, time_var in h08_reader.daily_images(datetime.datetime(2010,5,1)):
+    # this tells you the exact timestamp of the read image
+    print timestamp.isoformat()
+    
+    print type(h08_data)
+    # the data is a dictionary, each dictionary key contains the array of one variable
+    print "The following variables are in this image", h08_data.keys()
+    print h08_data['ssm'].shape
+    print lons.shape
+    print lats.shape
 
 # <rawcell>
 
+# In our case only one image is in the folder so the loop exits after this image is read
 # The data has higher resolution but it already comes as a 2D image.
 # Let's plot it.
 

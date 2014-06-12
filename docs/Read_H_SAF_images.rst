@@ -70,7 +70,6 @@ H07 data is not that easy to plot because it comes in orbit geometry and not on 
 
 .. code:: python
 
-    %matplotlib inline
     import matplotlib.pyplot as plt
     from mpl_toolkits.basemap import Basemap
     import pytesmo.colormaps.load_cmap as smcolormaps
@@ -121,42 +120,38 @@ Reading the H08 product
 
 H08 data has a much higher resolution and comes on a 0.00416 degree grid.
 The sample data included in pytesmo was observed on the same time as the included H07 product.
+Instead of read_img you can also use the daily_images iterator. You just specify a day and it will read all the images that are in your folder for this day. This also works for the other H07 and H14 reader.
 
 .. code:: python
 
     #the reader returns not only the data but also metadata and the longitudes and latitudes
-    h08_data, metadata, timestamp, lons, lats, time_var = h08_reader.read_img(datetime.datetime(2010,5,1,8,33,1))
-.. code:: python
-
-    print type(h08_data)
-    # the data is a dictionary, each dictionary key contains the array of one variable
-    print "The following variables are in this image", h08_data.keys()
+    for h08_data, metadata, timestamp, lons, lats, time_var in h08_reader.daily_images(datetime.datetime(2010,5,1)):
+        # this tells you the exact timestamp of the read image
+        print timestamp.isoformat()
+        
+        print type(h08_data)
+        # the data is a dictionary, each dictionary key contains the array of one variable
+        print "The following variables are in this image", h08_data.keys()
+        print h08_data['ssm'].shape
+        print lons.shape
+        print lats.shape
 
 .. parsed-literal::
 
+    2010-05-01T08:33:01
     <type 'dict'>
     The following variables are in this image ['ssm', 'proc_flag', 'ssm_noise', 'corr_flag']
-
-
-.. code:: python
-
-    print h08_data['ssm'].shape
-    print lons.shape
-    print lats.shape
-
-.. parsed-literal::
-
     (3120, 7680)
     (3120, 7680)
     (3120, 7680)
 
 
+In our case only one image is in the folder so the loop exits after this image is read
 The data has higher resolution but it already comes as a 2D image.
 Let's plot it.
 
 .. code:: python
 
-    %matplotlib inline
     fig = plt.figure(figsize=(10,10))
     ax = fig.add_axes([0.1,0.1,0.8,0.8])
     # setup of basemap for europe but zoomed in little bit
@@ -186,7 +181,7 @@ Let's plot it.
     plt.show()
 
 
-.. image:: Read_H_SAF_images_files/Read_H_SAF_images_18_0.png
+.. image:: Read_H_SAF_images_files/Read_H_SAF_images_16_0.png
 
 
 Reading only area of interest
@@ -201,7 +196,6 @@ H08 has a very high resolution, so most people will only want to read it for the
     h08_roi, metadata, timestamp, lons, lats, time_var = h08_reader.read_img(datetime.datetime(2010,5,1,8,33,1),
                                                                              lat_lon_bbox=[60,70,15,25])
     
-    %matplotlib inline
     fig = plt.figure(figsize=(10,10))
     ax = fig.add_axes([0.1,0.1,0.8,0.8])
     # setup of basemap for europe but zoomed in little bit
@@ -231,7 +225,7 @@ H08 has a very high resolution, so most people will only want to read it for the
     plt.show()
 
 
-.. image:: Read_H_SAF_images_files/Read_H_SAF_images_21_0.png
+.. image:: Read_H_SAF_images_files/Read_H_SAF_images_19_0.png
 
 
 Reading the H14 product
@@ -292,7 +286,7 @@ Let's plot all layers in the H14 image
 .. code:: python
 
     for layer in h14_data:
-        %matplotlib inline
+
         fig = plt.figure(figsize=(10,10))
         ax = fig.add_axes([0.1,0.1,0.8,0.8])
         # setup of basemap for the world
@@ -320,19 +314,19 @@ Let's plot all layers in the H14 image
         plt.show()
 
 
-.. image:: Read_H_SAF_images_files/Read_H_SAF_images_30_0.png
+.. image:: Read_H_SAF_images_files/Read_H_SAF_images_28_0.png
 
 
 
-.. image:: Read_H_SAF_images_files/Read_H_SAF_images_30_1.png
+.. image:: Read_H_SAF_images_files/Read_H_SAF_images_28_1.png
 
 
 
-.. image:: Read_H_SAF_images_files/Read_H_SAF_images_30_2.png
+.. image:: Read_H_SAF_images_files/Read_H_SAF_images_28_2.png
 
 
 
-.. image:: Read_H_SAF_images_files/Read_H_SAF_images_30_3.png
+.. image:: Read_H_SAF_images_files/Read_H_SAF_images_28_3.png
 
 
 .. code:: python
