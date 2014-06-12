@@ -51,6 +51,18 @@ ASCAT
 
   Available in binary format from http://rs.geo.tuwien.ac.at/products/
 
+H-SAF image products
+--------------------
+
+`H-SAF <http://hsaf.meteoam.it/soil-moisture.php>` provides three different image products:
+ 
+* SM OBS 1 - H07 - Large scale surace soil moisture by radar scatterometer in BUFR format over Europe
+* SM OBS 2 - H08 - Small scale surace soil moisture by radar scatterometer in BUFR format over Europe 
+* SM DAS 2 - H14 - Profile indes in the roots region by scatterometer data assimilation in GRIB format, gobal
+
+They are available after registration from http://hsaf.meteoam.it/soil-moisture.php
+
+
 
 Data from the International Soil Moisture Network (ISMN)
 --------------------------------------------------------
@@ -98,26 +110,52 @@ In order to enjoy all pytesmo features python version 2.7.5 with the following p
 
 optional
 
+* pybufr-ecmwf https://code.google.com/p/pybufr-ecmwf/
+
+	for reading the H-SAF H07 and H08 products in BUFR Format. As far as I know this will only work on Linux or 
+	in Cygwin but I have no experience using it on Windows.
+	pybufr-ewmwf downloads and installs the BUFR library from the ECMWF website. 
+	Since ECMWF has restructured their website this automatic download fails in version 0.73 and below.
+	See this issue https://code.google.com/p/pybufr-ecmwf/issues/detail?id=10
+	A workaround is to download the package and change the URL before installing it.
+	* Download the pybufr-ecmwf package and decompress it
+	* Open the file build_interface.py and change the variable URL_ECMWF_WEBSITE on line 58 from
+	  "http://www.ecmwf.int/" to "http://old.ecmwf.int/"
+	* run python setup.py install and it should work
+	
+* pygrib https://code.google.com/p/pygrib/
+
+	for reading the H-SAF H25 product
+
 * pykdtree https://github.com/storpipfugl/pykdtree
 
 	which makes Nearest Neighbor search faster
+	
+* pyresample https://code.google.com/p/pyresample/
+	
+	for resampling of irregular images onto a regular grid for e.g. plotting
+	
+	
+How to install python packages
+------------------------------
 
-Windows - new python users
---------------------------
+If you have no idea of how to install python packages then I'll try to give a short overview and provide links to resources that can explain
+the process.
 
-The Anaconda python disribution https://store.continuum.io/cshop/anaconda/ is a good choice since it includes all dependencies needed for pytesmo.
-Currently only the 32bit Anaconda python distributin is supported.
-After Anaconda is installed open the "Anaconda Command Prompt" and type in the command
+The recommended way of installing python packages is using `pip <https://pip.pypa.io/en/latest/installing.html>` which downloads the package
+you want from the `python package repository Pypi <https://pypi.python.org/>` and installs it if possible. For more complex packages that depend 
+upon a C or Fortran library like netCDF4 or pybufr-ecmwf installation instructions are provided on the package website. If you are using windows
+always check http://www.lfd.uci.edu/~gohlke/pythonlibs/ to see if there is already a precompiled .exe file for you to easily install.
 
-pip install pytesmo
+Windows
+-------
 
-This should install pytesmo. If you are behind a proxy server please set the environment variables http_proxy and https_proxy.
-
-Another easy way to install everything but matplotlib-basemap and netCDF4 is to install 
+A relatively easy way to install everything but matplotlib-basemap and netCDF4 is to install 
 winpython from https://code.google.com/p/winpython/ and then download basemap from 
 http://sourceforge.net/projects/matplotlib/files/matplotlib-toolkits/ 
-and netCDF4 from https://code.google.com/p/netcdf4-python/
-and add it to your winpython installation using the winpython Control Panel.
+and netCDF4 from https://code.google.com/p/netcdf4-python/, and, if you want to read the H25 product, the
+pygrib installer from http://www.lfd.uci.edu/~gohlke/pythonlibs/.
+Add them to your winpython installation using the winpython Control Panel.
 
 Just make sure that you download both for the same architecture (32/64 bit) and the same python version (2.7.x)
 
@@ -130,6 +168,7 @@ If you want a system installation of python download the following files and ins
 * Python 2.7.x windows installer from http://python.org/download/
 * Scipy-stack installer from http://www.lfd.uci.edu/~gohlke/pythonlibs/
 * netCDF4 installer from http://www.lfd.uci.edu/~gohlke/pythonlibs/
+* pygrib installer from http://www.lfd.uci.edu/~gohlke/pythonlibs/
 * pytesmo windows binary
 
 Windows binaries
@@ -137,8 +176,8 @@ Windows binaries
 
 pytesmo windows binaries are available for 32 and 64 bit systems:
 
-* 32-bit http://rs.geo.tuwien.ac.at/validation_tool/pytesmo/pytesmo-0.1.2/pytesmo-0.1.2.win32-py2.7.exe
-* 64-bit http://rs.geo.tuwien.ac.at/validation_tool/pytesmo/pytesmo-0.1.2/pytesmo-0.1.2.win-amd64-py2.7.exe
+* 32-bit http://rs.geo.tuwien.ac.at/validation_tool/pytesmo/pytesmo-0.2.0/pytesmo-0.2.0.win32-py2.7.exe
+* 64-bit http://rs.geo.tuwien.ac.at/validation_tool/pytesmo/pytesmo-0.2.0/pytesmo-0.2.0.win-amd64-py2.7.exe
 
 
 Linux
@@ -148,7 +187,7 @@ If you already have a working python installation with the necessary packages do
 
 * Pypi https://pypi.python.org/pypi/pytesmo
 
-just change the active directory to the unpacked pytesmo-0.1.1 folder and use the following command in the command line::
+just change the active directory to the unpacked pytesmo-0.2.0 folder and use the following command in the command line::
 	
 	python setup.py install
 
