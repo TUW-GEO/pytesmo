@@ -39,34 +39,6 @@ class Test_H08(unittest.TestCase):
         for var in data:
             assert data[var].shape == (3120, 7680)
 
-
-        import matplotlib.pyplot as plt
-        from mpl_toolkits.basemap import Basemap
-        fig = plt.figure(figsize=(10, 10))
-        ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
-        # setup of basemap for europe
-        # simple mercator projection
-        m = Basemap(llcrnrlon=-25.0, llcrnrlat=25.0, urcrnrlon=45.0, urcrnrlat=75.0, \
-                    resolution='l', area_thresh=1000., projection='merc', \
-                    lat_ts=50., ax=ax)
-
-        # make a pseudocolor plot using the ASCAT SWI colormap
-        im = m.pcolormesh(lons, np.flipud(lats), np.flipud(data['ssm']), latlon=True,
-                 vmin=0, vmax=100)
-
-        m.drawcoastlines()
-        m.drawcountries()
-        # draw parallels and meridians.
-        # label on left and bottom of map.
-        parallels = np.arange(20, 80, 10.)
-        m.drawparallels(parallels, labels=[1, 0, 0, 0])
-        meridians = np.arange(-60, 50, 10.)
-        m.drawmeridians(meridians, labels=[0, 0, 0, 1])
-        # add colorbar
-        cb = m.colorbar(im, "right", size="5%", pad='2%')
-        ax.set_title('H08 Soil Moisture in %')
-        plt.show()
-
     def test_image_reading_bbox_empty(self):
         data, meta, timestamp, lons, lats, time_var = self.reader.read_img(datetime.datetime(2010, 5, 1, 8, 33, 1),
                                                                            lat_lon_bbox=[45, 48, 15, 18])
