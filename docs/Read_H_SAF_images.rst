@@ -119,8 +119,14 @@ Reading the H08 product
 
 
 H08 data has a much higher resolution and comes on a 0.00416 degree grid.
+
 The sample data included in pytesmo was observed on the same time as the included H07 product.
-Instead of read_img you can also use the daily_images iterator. You just specify a day and it will read all the images that are in your folder for this day. This also works for the other H07 and H14 reader.
+
+Instead of read_img you can also use the daily_images iterator.
+
+You just specify a day and it will read all the images that are in your folder for this day. 
+ 
+This also works for the other H07 and H14 reader.
 
 .. code:: python
 
@@ -146,8 +152,10 @@ Instead of read_img you can also use the daily_images iterator. You just specify
     (3120, 7680)
 
 
-In our case only one image is in the folder so the loop exits after this image is read
+In our case only one image is in the folder so the loop exits after this image is read.
+
 The data has higher resolution but it already comes as a 2D image.
+
 Let's plot it.
 
 .. code:: python
@@ -263,7 +271,9 @@ The H14 product is a global product on a reduced gaussian grid with a resolution
     (800, 1600)
 
 
-The data comes as a 2D array. If the keyword expand_grid is set to False during reader initialization then only 1D arrays would be returned. This can be good for working with the data but for plotting the expanded grid is easier to handle.
+The data comes as a 2D array. If the keyword expand_grid is set to False during reader initialization then only 1D arrays would be returned. 
+
+This can be good for working with the data but for plotting the expanded grid is easier to handle.
 
 .. code:: python
 
