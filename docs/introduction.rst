@@ -54,7 +54,7 @@ ASCAT
 H-SAF image products
 --------------------
 
-`H-SAF <http://hsaf.meteoam.it/soil-moisture.php>` provides three different image products:
+`H-SAF <http://hsaf.meteoam.it/soil-moisture.php>`_ provides three different image products:
  
 * SM OBS 1 - H07 - Large scale surace soil moisture by radar scatterometer in BUFR format over Europe
 * SM OBS 2 - H08 - Small scale surace soil moisture by radar scatterometer in BUFR format over Europe 
@@ -117,10 +117,14 @@ optional
 	pybufr-ewmwf downloads and installs the BUFR library from the ECMWF website. 
 	Since ECMWF has restructured their website this automatic download fails in version 0.73 and below.
 	See this issue https://code.google.com/p/pybufr-ecmwf/issues/detail?id=10
+	
 	A workaround is to download the package and change the URL before installing it.
+	
 	* Download the pybufr-ecmwf package and decompress it
+	
 	* Open the file build_interface.py and change the variable URL_ECMWF_WEBSITE on line 58 from
 	  "http://www.ecmwf.int/" to "http://old.ecmwf.int/"
+	  
 	* run python setup.py install and it should work
 	
 * pygrib https://code.google.com/p/pygrib/
@@ -142,8 +146,8 @@ How to install python packages
 If you have no idea of how to install python packages then I'll try to give a short overview and provide links to resources that can explain
 the process.
 
-The recommended way of installing python packages is using `pip <https://pip.pypa.io/en/latest/installing.html>` which downloads the package
-you want from the `python package repository Pypi <https://pypi.python.org/>` and installs it if possible. For more complex packages that depend 
+The recommended way of installing python packages is using `pip <https://pip.pypa.io/en/latest/installing.html>`_ which downloads the package
+you want from the `python package repository Pypi <https://pypi.python.org/>`_ and installs it if possible. For more complex packages that depend 
 upon a C or Fortran library like netCDF4 or pybufr-ecmwf installation instructions are provided on the package website. If you are using windows
 always check http://www.lfd.uci.edu/~gohlke/pythonlibs/ to see if there is already a precompiled .exe file for you to easily install.
 

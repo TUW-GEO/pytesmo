@@ -17,13 +17,14 @@ Please see the documentation of :class:`pytesmo.io.sat.ascat.AscatH25_SSM`
 Reading and plotting H-SAF images
 =================================
  
-`H-SAF <http://hsaf.meteoam.it/soil-moisture.php>` provides three different image products:
+`H-SAF <http://hsaf.meteoam.it/soil-moisture.php>`_ provides three different image products:
  
 * SM OBS 1 - H07 - Large scale surace soil moisture by radar scatterometer in BUFR format over Europe
 * SM OBS 2 - H08 - Small scale surace soil moisture by radar scatterometer in BUFR format over Europe 
 * SM DAS 2 - H14 - Profile indes in the roots region by scatterometer data assimilation in GRIB format, gobal
 
 The following example will show how to read and plot each of them.
+It can be found in the /examples folder of the pytesmo package under the name Read_H_SAF_images.py
 
 .. include::
    Read_H_SAF_images.rst  
