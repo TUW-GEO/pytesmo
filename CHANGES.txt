@@ -16,3 +16,9 @@ v0.1.3, 2014-05-26
   different systems. Radians are now always calculated at 64bit accuracy
 * ISMN routines now read the new ISMN download format
 * df_metrics.bias now also returns a namedtuple
+
+v0.2.0, 2014-06-12
+* added readers, tests and examples for H-SAF image products H07, H08 and H14
+* added resample method that makes using pyresample a easier for the dictionary structure that
+  pytesmo uses for image data
+* added colormap reader for custom colormaps

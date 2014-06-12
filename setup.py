@@ -9,6 +9,7 @@ from distutils.extension import Extension
 import numpy as np
 from distutils.command.sdist import sdist as _sdist
 import sys
+import os
 
 
 class sdist(_sdist):
@@ -56,12 +57,15 @@ else:
 
 setup(
     name='pytesmo',
-    version='0.1.3',
+    version='0.2.0',
     author='pytesmo Team',
     author_email='Christoph.Paulik@geo.tuwien.ac.at',
     packages=['pytesmo', 'pytesmo.timedate', 'pytesmo.grid', 'pytesmo.io', 'pytesmo.io.sat', 'pytesmo.io.ismn',
+              'pytesmo.io.bufr', 'pytesmo.colormaps',
               'pytesmo.time_series', 'pytesmo.timedate'],
     ext_modules=ext_modules,
+    package_data={'pytesmo': [os.path.join('colormaps', '*.cmap')],
+                  },
     cmdclass=cmdclass,
     url='http://rs.geo.tuwien.ac.at/validation_tool/pytesmo/',
     license='LICENSE.txt',
