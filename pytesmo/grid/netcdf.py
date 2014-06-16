@@ -112,9 +112,9 @@ def save_lonlat(filename, arrlon, arrlat, arrcell=None,
             cell = ncfile.createVariable('cell', np.dtype('int16').char,
                                              ('gp',))
             cell[:] = arrcell
-            setattr(longitude, 'long_name', 'Cell')
-            setattr(longitude, 'units', '')
-            setattr(longitude, 'valid_range', [np.min(arrcell), np.max(arrcell)])
+            setattr(cell, 'long_name', 'Cell')
+            setattr(cell, 'units', '')
+            setattr(cell, 'valid_range', [np.min(arrcell), np.max(arrcell)])
 
         if subset_points is not None:
             land_flag = ncfile.createVariable('subset_flag', np.dtype('int8').char,
