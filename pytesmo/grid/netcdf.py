@@ -70,38 +70,64 @@ def save_lonlat(filename, arrlon, arrlat, arrcell=None,
         if given will be written as global attributs into netCDF file
     """
 
-    nc_name = filename  # os.path.join(root_path.d, "warp5_grid_ind_l.nc")
+    nc_name = filename
 
     with Dataset(nc_name, 'w', format='NETCDF4') as ncfile:
 
-        ncfile.createDimension("gp", arrlon.size)
+        if (global_attrs is not None and 'shape' in global_attrs
+            and type(global_attrs['shape']) is not int):
+                latsize = global_attrs['shape'][0]
+                lonsize = global_attrs['shape'][1]
+                ncfile.createDimension("lat", latsize)
+                ncfile.createDimension("lon", lonsize)
+                arrlat = np.unique(arrlat)[::-1]  # sorts arrlat descending
+                arrlon = np.unique(arrlon)
 
-        gpi = ncfile.createVariable('gpi', np.dtype('int32').char,
-                                         ('gp',))
+                gpisize = global_attrs['shape'][0] * global_attrs['shape'][1]
+                if gpis is None:
+                    gpivalues = np.arange(gpisize, dtype=np.int32).reshape(latsize,
+                                                                           lonsize)
+                else:
+                    gpivalues = gpis.reshape(latsize, lonsize)
+        else:
+            ncfile.createDimension("gp", arrlon.size)
+            gpisize = arrlon.size
+            if gpis is None:
+                gpivalues = np.arange(arrlon.size, dtype=np.int32)
+            else:
+                gpivalues = gpis
+
+        dim = ncfile.dimensions.keys()
+
+        gpi = ncfile.createVariable('gpi', np.dtype('int32').char, dim)
 
         if gpis is None:
-            gpi[:] = np.arange(arrlon.size, dtype=np.int32)
+            gpi[:] = gpivalues
             setattr(gpi, 'long_name', 'Grid point index')
             setattr(gpi, 'units', '')
-            setattr(gpi, 'valid_range', [0, arrlon.size - 1])
+            setattr(gpi, 'valid_range', [0, gpisize])
             gpidirect = 0x1b
         else:
-            gpi[:] = gpis
+            gpi[:] = gpivalues
             setattr(gpi, 'long_name', 'Grid point index')
             setattr(gpi, 'units', '')
-            setattr(gpi, 'valid_range', [np.min(gpis), np.max(gpis)])
+            setattr(gpi, 'valid_range', [np.min(gpivalues), np.max(gpivalues)])
             gpidirect = 0x0b
 
         latitude = ncfile.createVariable('lat', np.dtype('float32').char,
-                                         ('gp',))
+                                         dim[0])
         latitude[:] = arrlat
         setattr(latitude, 'long_name', 'Latitude')
         setattr(latitude, 'units', 'degree_north')
         setattr(latitude, 'standard_name', 'latitude')
         setattr(latitude, 'valid_range', [-90.0, 90.0])
 
+        if len(dim) == 2:
+            londim = dim[1]
+        else:
+            londim = dim[0]
         longitude = ncfile.createVariable('lon', np.dtype('float32').char,
-                                         ('gp',))
+                                          londim)
         longitude[:] = arrlon
         setattr(longitude, 'long_name', 'Longitude')
         setattr(longitude, 'units', 'degree_east')
@@ -109,19 +135,25 @@ def save_lonlat(filename, arrlon, arrlat, arrcell=None,
         setattr(longitude, 'valid_range', [-180.0, 180.0])
 
         if arrcell is not None:
-            cell = ncfile.createVariable('cell', np.dtype('int16').char,
-                                             ('gp',))
+            cell = ncfile.createVariable('cell', np.dtype('int16').char, dim)
             cell[:] = arrcell
             setattr(cell, 'long_name', 'Cell')
             setattr(cell, 'units', '')
             setattr(cell, 'valid_range', [np.min(arrcell), np.max(arrcell)])
 
         if subset_points is not None:
-            land_flag = ncfile.createVariable('subset_flag', np.dtype('int8').char,
-                                             ('gp',))
+            land_flag = ncfile.createVariable('subset_flag',
+                                              np.dtype('int8').char,
+                                              dim)
 
-            lf = np.zeros_like(arrlon)
+            # create landflag array based on shape of data
+            lf = np.zeros_like(gpivalues)
+            if len(dim) == 2:
+                lf = lf.flatten()
             lf[subset_points] = 1
+            if len(dim) == 2:
+                lf = lf.reshape(latsize, lonsize)
+
             land_flag[:] = lf
             setattr(land_flag, 'long_name', subset_name)
             setattr(land_flag, 'units', '')
@@ -211,11 +243,6 @@ def load_grid(filename):
         if 'cell' in nc_data.variables.keys():
             arrcell = nc_data.variables['cell'][:]
 
-        # determine if it has a subset
-        subset = None
-        if 'subset_flag' in nc_data.variables.keys():
-            subset = np.where(nc_data.variables['subset_flag'][:] == 1)[0]
-
         # determine if gpis are in order or custom order
         if nc_data.gpidirect == 0x1b:
             gpis = None  # gpis can be calculated through np.arange..
@@ -236,10 +263,30 @@ def load_grid(filename):
                 else:
                     raise e
 
+        subset = None
+
+        # check if grid has regular shape
+        if len(shape) == 2:
+            lons, lats = np.meshgrid(nc_data.variables['lon'][:],
+                                      nc_data.variables['lat'][::-1])
+            lons = lons.flatten('F')
+            lats = lats.flatten('F')
+
+            if 'subset_flag' in nc_data.variables.keys():
+                subset = np.where(nc_data.variables['subset_flag'][:].flatten() == 1)[0]
+
+        elif len(shape) == 1:
+            lons = nc_data.variables['lon'][:]
+            lats = nc_data.variables['lat'][:]
+
+            # determine if it has a subset
+            if 'subset_flag' in nc_data.variables.keys():
+                subset = np.where(nc_data.variables['subset_flag'][:] == 1)[0]
+
         if arrcell is None:
             # BasicGrid
-            return BasicGrid(nc_data.variables['lon'][:],
-                             nc_data.variables['lat'][:],
+            return BasicGrid(lons,
+                             lats,
                              gpis=gpis,
                              subset=subset,
                              shape=shape)
