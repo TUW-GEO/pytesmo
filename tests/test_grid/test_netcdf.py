@@ -90,7 +90,8 @@ class Test(unittest.TestCase):
             nptest.assert_array_equal(np.unique(self.lons),
                                       nc_data.variables['lon'][:])
 
-            nptest.assert_array_equal(self.subset, np.where(nc_data.variables['subset_flag'][:].flatten() == 1)[0])
+            nptest.assert_array_equal(self.subset,
+                                      np.where(nc_data.variables['subset_flag'][:].flatten() == 1)[0])
             assert nc_data.test == 'test_attribute'
             assert nc_data.shape[0] == 180
             assert nc_data.shape[1] == 360
@@ -103,7 +104,8 @@ class Test(unittest.TestCase):
         with Dataset(self.testfilename) as nc_data:
             nptest.assert_array_equal(self.lats, nc_data.variables['lat'][:])
             nptest.assert_array_equal(self.lons, nc_data.variables['lon'][:])
-            nptest.assert_array_equal(self.subset, np.where(nc_data.variables['subset_flag'][:] == 1)[0])
+            nptest.assert_array_equal(self.subset,
+                                      np.where(nc_data.variables['subset_flag'][:] == 1)[0])
             assert nc_data.test == 'test_attribute'
             assert nc_data.shape == 64800
 

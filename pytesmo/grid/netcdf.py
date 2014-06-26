@@ -85,8 +85,9 @@ def save_lonlat(filename, arrlon, arrlat, arrcell=None,
 
                 gpisize = global_attrs['shape'][0] * global_attrs['shape'][1]
                 if gpis is None:
-                    gpivalues = np.arange(gpisize, dtype=np.int32).reshape(latsize,
-                                                                           lonsize)
+                    gpivalues = np.arange(gpisize,
+                                          dtype=np.int32).reshape(latsize,
+                                                                  lonsize)
                 else:
                     gpivalues = gpis.reshape(latsize, lonsize)
         else:
