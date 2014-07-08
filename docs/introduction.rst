@@ -20,7 +20,7 @@ Features
 * easily read data from the `Supported Datasets`_
 * anomaly calculation based on climatology or using a moving window see :mod:`pytesmo.time_series.anomaly`
 * easy temporal matching of time series see :mod:`pytesmo.temporal_matching`
-* multiple methods for scaling between different observation domains (CDF matching, linear regreesion, min-max matching) see :mod:`pytesmo.scaling`
+* multiple methods for scaling between different observation domains (CDF matching, linear regression, min-max matching) see :mod:`pytesmo.scaling`
 * calculate standard metrics like correlation coefficients, RMSD, bias, 
   as well as more complex ones like triple collocation or MSE as a decomposition of the RMSD see :mod:`pytesmo.metrics`
 
@@ -56,9 +56,9 @@ H-SAF image products
 
 `H-SAF <http://hsaf.meteoam.it/soil-moisture.php>`_ provides three different image products:
  
-* SM OBS 1 - H07 - Large scale surace soil moisture by radar scatterometer in BUFR format over Europe
-* SM OBS 2 - H08 - Small scale surace soil moisture by radar scatterometer in BUFR format over Europe 
-* SM DAS 2 - H14 - Profile indes in the roots region by scatterometer data assimilation in GRIB format, gobal
+* SM OBS 1 - H07 - Large scale surface soil moisture by radar scatterometer in BUFR format over Europe
+* SM OBS 2 - H08 - Small scale surface soil moisture by radar scatterometer in BUFR format over Europe 
+* SM DAS 2 - H14 - Profile index in the roots region by scatterometer data assimilation in GRIB format, global
 
 They are available after registration from http://hsaf.meteoam.it/soil-moisture.php
 
@@ -88,7 +88,7 @@ In case of the ISMN, 3 different formats are provided:
 	
 If you downloaded ISMN data in one of the supported formats in the past it can be that station
 names are not recognized correctly because they contained the '_' character which is supposed to be
-the seperator. If you experience problems because of this please download new data from the ISMN since
+the separator. If you experience problems because of this please download new data from the ISMN since
 this issue should be fixed.		
 
 
@@ -208,7 +208,3 @@ providing examples of how you use it or by extending the functionality of pytesm
 Please browse the source code which is available at http://github.com/TUW-GEO/pytesmo
 
 Feel free to contact `Christoph Paulik <http://rs.geo.tuwien.ac.at/our-team/christoph-paulik/>`_ in case of any questions or requests.
-
-
-
-
