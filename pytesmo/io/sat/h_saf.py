@@ -192,10 +192,10 @@ class H08img(dataset_base.DatasetImgBase):
                     ssm_proc_flag.append(message[:, 7::4])
 
         if data_in_bbox:
-            ssm = np.rot90(np.vstack(ssm))
-            ssm_noise = np.rot90(np.vstack(ssm_noise))
-            ssm_corr_flag = np.rot90(np.vstack(ssm_corr_flag))
-            ssm_proc_flag = np.rot90(np.vstack(ssm_proc_flag))
+            ssm = np.rot90(np.vstack(ssm)).astype(np.float32)
+            ssm_noise = np.rot90(np.vstack(ssm_noise)).astype(np.float32)
+            ssm_corr_flag = np.rot90(np.vstack(ssm_corr_flag)).astype(np.float32)
+            ssm_proc_flag = np.rot90(np.vstack(ssm_proc_flag)).astype(np.float32)
             lats_dim = np.linspace(lat_max, lat_min, ssm.shape[0])
             lons_dim = np.concatenate(lons)
 
