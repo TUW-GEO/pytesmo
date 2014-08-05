@@ -95,7 +95,7 @@ def save_lonlat(filename, arrlon, arrlat, arrcell=None,
             ncfile.createDimension("gp", arrlon.size)
             gpisize = arrlon.size
             if gpis is None:
-                gpivalues = np.arange(arrlon.size, dtype=np.int32)[::-1]
+                gpivalues = np.arange(arrlon.size, dtype=np.int32)
             else:
                 gpivalues = gpis
 
