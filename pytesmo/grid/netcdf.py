@@ -88,13 +88,14 @@ def save_lonlat(filename, arrlon, arrlat, arrcell=None,
                     gpivalues = np.arange(gpisize,
                                           dtype=np.int32).reshape(latsize,
                                                                   lonsize)
+                    gpivalues = gpivalues[::-1]
                 else:
                     gpivalues = gpis.reshape(latsize, lonsize)
         else:
             ncfile.createDimension("gp", arrlon.size)
             gpisize = arrlon.size
             if gpis is None:
-                gpivalues = np.arange(arrlon.size, dtype=np.int32)
+                gpivalues = np.arange(arrlon.size, dtype=np.int32)[::-1]
             else:
                 gpivalues = gpis
 
