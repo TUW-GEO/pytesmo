@@ -24,11 +24,6 @@ Features
 * calculate standard metrics like correlation coefficients, RMSD, bias,
   as well as more complex ones like triple collocation or MSE as a decomposition of the RMSD see :mod:`pytesmo.metrics`
 
-Examples
-========
-
-See the :ref:`examples-page`
-
 
 Supported Datasets
 ==================
@@ -99,12 +94,6 @@ this issue should be fixed.
 
 Installation
 ============
-
-Download
---------
-The package source code can be downloaded from http://rs.geo.tuwien.ac.at/validation_tool/pytesmo/pytesmo-0.1.zip
-
-It can also be installed using pip see `Windows and Linux`_
 
 Prerequisites
 --------------
@@ -191,8 +180,8 @@ Windows binaries
 
 pytesmo windows binaries are available for 32 and 64 bit systems:
 
-* 32-bit http://rs.geo.tuwien.ac.at/validation_tool/pytesmo/pytesmo-0.2.0/pytesmo-0.2.0.win32-py2.7.exe
-* 64-bit http://rs.geo.tuwien.ac.at/validation_tool/pytesmo/pytesmo-0.2.0/pytesmo-0.2.0.win-amd64-py2.7.exe
+* 32-bit http://rs.geo.tuwien.ac.at/validation_tool/pytesmo/pytesmo-0.2.1/pytesmo-0.2.1.win32-py2.7.exe
+* 64-bit http://rs.geo.tuwien.ac.at/validation_tool/pytesmo/pytesmo-0.2.1/pytesmo-0.2.1.win-amd64-py2.7.exe
 
 
 Linux

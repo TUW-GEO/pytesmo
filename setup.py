@@ -75,5 +75,5 @@ setup(
     url='http://rs.geo.tuwien.ac.at/validation_tool/pytesmo/',
     license='LICENSE.txt',
     description='python Toolbox for the Evaluation of Soil Moisture Observations',
-    long_description=open('README.txt').read(),
+    long_description=open('README.rst').read(),
     **setuptools_kwargs)
