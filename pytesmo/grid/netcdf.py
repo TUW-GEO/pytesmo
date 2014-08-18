@@ -74,23 +74,24 @@ def save_lonlat(filename, arrlon, arrlat, arrcell=None,
 
     with Dataset(nc_name, 'w', format='NETCDF4') as ncfile:
 
-        if (global_attrs is not None and 'shape' in global_attrs
-            and type(global_attrs['shape']) is not int):
-                latsize = global_attrs['shape'][0]
-                lonsize = global_attrs['shape'][1]
-                ncfile.createDimension("lat", latsize)
-                ncfile.createDimension("lon", lonsize)
-                arrlat = np.unique(arrlat)[::-1]  # sorts arrlat descending
-                arrlon = np.unique(arrlon)
+        if (global_attrs is not None and 'shape' in global_attrs and
+            type(global_attrs['shape']) is not int):
 
-                gpisize = global_attrs['shape'][0] * global_attrs['shape'][1]
-                if gpis is None:
-                    gpivalues = np.arange(gpisize,
-                                          dtype=np.int32).reshape(latsize,
-                                                                  lonsize)
-                    gpivalues = gpivalues[::-1]
-                else:
-                    gpivalues = gpis.reshape(latsize, lonsize)
+            latsize = global_attrs['shape'][0]
+            lonsize = global_attrs['shape'][1]
+            ncfile.createDimension("lat", latsize)
+            ncfile.createDimension("lon", lonsize)
+            arrlat = np.unique(arrlat)[::-1]  # sorts arrlat descending
+            arrlon = np.unique(arrlon)
+
+            gpisize = global_attrs['shape'][0] * global_attrs['shape'][1]
+            if gpis is None:
+                gpivalues = np.arange(gpisize,
+                                      dtype=np.int32).reshape(latsize,
+                                                              lonsize)
+                gpivalues = gpivalues[::-1]
+            else:
+                gpivalues = gpis.reshape(latsize, lonsize)
         else:
             ncfile.createDimension("gp", arrlon.size)
             gpisize = arrlon.size
@@ -270,7 +271,7 @@ def load_grid(filename):
         # check if grid has regular shape
         if len(shape) == 2:
             lons, lats = np.meshgrid(nc_data.variables['lon'][:],
-                                      nc_data.variables['lat'][::-1])
+                                     nc_data.variables['lat'][::-1])
             lons = lons.flatten('F')
             lats = lats.flatten('F')
 
