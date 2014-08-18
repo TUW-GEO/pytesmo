@@ -23,7 +23,7 @@ cmdclass['sdist'] = sdist
 
 
 ext_modules = [
-    Extension("pytesmo.time_series.filters", [ "pytesmo/time_series/filters.c" ],
+    Extension("pytesmo.time_series.filters", ["pytesmo/time_series/filters.c"],
               include_dirs=[np.get_include()]),
 ]
 
@@ -42,15 +42,15 @@ else:
             sys.exit(errcode)
 
     cmdclass['test'] = PyTest
-    setuptools_kwargs = {'install_requires':[ "numpy >= 1.7",
-                                            "pandas >= 0.12",
-                                            "scipy >= 0.12",
-                                            "statsmodels >= 0.4.3",
-                                            "netcdf4 >= 1.0.1",
+    setuptools_kwargs = {'install_requires': ["numpy >= 1.7",
+                                              "pandas >= 0.12",
+                                              "scipy >= 0.12",
+                                              "statsmodels >= 0.4.3",
+                                              "netcdf4 >= 1.0.1",
                                            ],
                          'test_suite': 'tests/',
                          'tests_require': ['pytest'],
-                         'extras_require': {'testing':['pytest']
+                         'extras_require': {'testing': ['pytest']
                                             }
                        }
 
