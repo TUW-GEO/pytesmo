@@ -1,15 +1,16 @@
+=========================================================================================
 Introduction to pytesmo a python Toolbox for the Evaluation of Soil Moisture Observations
-*****************************************************************************************
+=========================================================================================
 
 pytesmo is a package which aims it is to provide a standard library that can be used for the comparison and validation
 of geospatial time series datasets with a focus on soil moisture.
 
 It contains an expanding collection of readers for different soil moisture datasets (see `Supported Datasets`_) as well as routines for comparing them.
-Special classes in the module :mod:`pytesmo.grid` provide easy nearest neighbor searching between datasets as well as 
-the calculation of lookup tables of nearest neighbours. They also provide possibilities to easily read all 
+Special classes in the module :mod:`pytesmo.grid` provide easy nearest neighbor searching between datasets as well as
+the calculation of lookup tables of nearest neighbours. They also provide possibilities to easily read all
 grid points of a dataset in the correct order.
 
-It contains the code used for the calculation of metrics by the 
+It contains the code used for the calculation of metrics by the
 `Satellite Soil Moisture Validation Tool For ASCAT <http://rs.geo.tuwien.ac.at/validation_tool/ascat.html>`_. See :mod:`pytesmo.metrics`.
 
 
@@ -21,7 +22,7 @@ Features
 * anomaly calculation based on climatology or using a moving window see :mod:`pytesmo.anomaly`
 * easy temporal matching of time series see :mod:`pytesmo.temporal_matching`
 * multiple methods for scaling between different observation domains (CDF matching, linear regreesion, min-max matching) see :mod:`pytesmo.scaling`
-* calculate standard metrics like correlation coefficients, RMSD, bias, 
+* calculate standard metrics like correlation coefficients, RMSD, bias,
   as well as more complex ones like triple collocation or MSE as a decomposition of the RMSD see :mod:`pytesmo.metrics`
 
 
@@ -59,6 +60,7 @@ Data from the International Soil Moisture Network (ISMN)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ISMN data can be downloaded for free after registration from http://ismn.geo.tuwien.ac.at/
+<<<<<<< HEAD:README.txt
 
 Complete Documentation
 ======================

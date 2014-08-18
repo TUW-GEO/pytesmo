@@ -60,6 +60,8 @@ class BasicGrid(object):
         if the gpi numbers are in a different order than the
         lon and lat arrays an array containing the gpi numbers
         can be given
+        if no array is given here the lon lat arrays are given
+        gpi numbers starting at 0
     subset : numpy.array, optional
         if the active part of the array is only a subset of
         all the points then the subset array which is a index

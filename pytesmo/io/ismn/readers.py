@@ -213,8 +213,10 @@ def read_format_header_values(filename):
 
     metadata = get_metadata_header_values(filename)
 
-    data = pd.read_csv(filename, skiprows=1,
-                       delim_whitespace=True, names=['date', 'time', metadata['variable'][0], metadata['variable'][0] + '_flag', metadata['variable'][0] + '_orig_flag'])
+    data = pd.read_csv(filename, skiprows=1, delim_whitespace=True,
+                       names=['date', 'time', metadata['variable'][0],
+                              metadata['variable'][0] + '_flag',
+                              metadata['variable'][0] + '_orig_flag'])
 
     date_index = data.apply(lambda x: datetime.strptime('%s%s' % (x['date'], x['time']), '%Y/%m/%d%H:%M'), axis=1)
 

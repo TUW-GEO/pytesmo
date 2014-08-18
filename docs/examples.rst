@@ -18,32 +18,32 @@ Please see the documentation of :class:`pytesmo.io.sat.ascat.AscatH25_SSM`
 
 Reading and plotting H-SAF images
 =================================
- 
+
 `H-SAF <http://hsaf.meteoam.it/soil-moisture.php>`_ provides three different image products:
- 
-* SM OBS 1 - H07 - Large scale surace soil moisture by radar scatterometer in BUFR format over Europe
-* SM OBS 2 - H08 - Small scale surace soil moisture by radar scatterometer in BUFR format over Europe 
-* SM DAS 2 - H14 - Profile indes in the roots region by scatterometer data assimilation in GRIB format, gobal
+
+* SM OBS 1 - H07 - Large scale surface soil moisture by radar scatterometer in BUFR format over Europe
+* SM OBS 2 - H08 - Small scale surface soil moisture by radar scatterometer in BUFR format over Europe
+* SM DAS 2 - H14 - Profile index in the roots region by scatterometer data assimilation in GRIB format, global
 
 The following example will show how to read and plot each of them.
 It can be found in the /examples folder of the pytesmo package under the name Read_H_SAF_images.py
 
 .. include::
-   Read_H_SAF_images.rst  
+   Read_H_SAF_images.rst
 
-	
+
 Reading and plotting data from the ISMN
 =======================================
 
-This example program chooses a random Network and Station and plots the first variable,depht,sensor
-combination. To see how to get data for a variable from all stations see the next example. 
- 
+This example program chooses a random Network and Station and plots the first variable,depth,sensor
+combination. To see how to get data for a variable from all stations see the next example.
+
 It can be found in the /examples folder of the pytesmo package under the name plot_ISMN_data.py.
 
 .. include::
    plot_ISMN.rst
-   
-   
+
+
 Calculating anomalies and climatologies
 =======================================
 
@@ -53,7 +53,7 @@ It can be found in the /examples folder of the pytesmo package under the name an
 
 .. include::
    anomalies.rst
-   
+
 
 Comparing ASCAT and insitu data from the ISMN
 =============================================
@@ -65,19 +65,19 @@ several metrics, like the correlation coefficients(Pearson's, Spearman's and Ken
 It also shows the usage of the :mod:`pytesmo.df_metrics` module.
 
 It is stopped after 2 stations to not take to long to run and produce a lot of plots
- 
+
 It can be found in the /examples folder of the pytesmo package under the name compare_ISMN_ASCAT.py.
 
 .. include::
-   compare_ASCAT_ISMN.rst	
-   
+   compare_ASCAT_ISMN.rst
+
 Reading and plotting ASCAT data from binary format
 ==================================================
 
-This example program reads and plots ASCAT SSM and SWI data with different masking options. 
+This example program reads and plots ASCAT SSM and SWI data with different masking options.
 It can be found in the /examples folder of the pytesmo package under the name plot_ASCAT_data.py.
 
 .. include::
    plot_ascat_data.rst
-	
-	
+
+

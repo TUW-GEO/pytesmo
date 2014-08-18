@@ -22,3 +22,7 @@ v0.2.0, 2014-06-12
 * added resample method that makes using pyresample a easier for the dictionary structure that
   pytesmo uses for image data
 * added colormap reader for custom colormaps
+
+v0.2.1, 2014-8-14
+* added functionality to save grid as 2 dimensional array in grid.netcdf if 
+  grid is regular and shape information is given
