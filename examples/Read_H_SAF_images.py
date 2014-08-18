@@ -14,11 +14,16 @@
 import pytesmo.io.sat.h_saf as h_saf
 import os
 import datetime
-
+import matplotlib.pyplot as plt
+from mpl_toolkits.basemap import Basemap
+import pytesmo.colormaps.load_cmap as smcolormaps
+import pytesmo.grid.resample as resample
+import numpy as np
+#
 #set the paths to the image files
 #I'm using the test images included in the pytesmo package
 
-test_data_path = os.path.join(os.sep+'home','pydev','pytesmo','tests','test_sat','test_data','h_saf')
+test_data_path = os.path.join(os.sep+'home','cp', 'workspace', 'pytesmo','tests','test_sat','test_data','h_saf')
 h07_path = os.path.join(test_data_path, 'h07')
 h08_path = os.path.join(test_data_path, 'h08')
 h14_path = os.path.join(test_data_path, 'h14')
@@ -70,20 +75,15 @@ print lats.shape
 
 # <codecell>
 
-%matplotlib inline
-import matplotlib.pyplot as plt
-from mpl_toolkits.basemap import Basemap
-import pytesmo.colormaps.load_cmap as smcolormaps
-import pytesmo.grid.resample as resample
-import numpy as np
-#lets resample to a 0.1 degree grid
+# %matplotlib inline
+# lets resample to a 0.1 degree grid
 #define the grid points in latitude and logitude
 lats_dim = np.arange(25,75,0.1)
 lons_dim = np.arange(-25,45,0.1)
 #make 2d grid out the 1D grid spacings
 lons_grid, lats_grid = np.meshgrid(lons_dim,lats_dim)
 
-resampled_data = resample.resample_to_grid(h07_data, lons, lats, 
+resampled_data = resample.resample_to_grid(h07_data, lons, lats,
                                            lons_grid, lats_grid)
 
 fig = plt.figure(figsize=(10,10))
@@ -110,7 +110,13 @@ m.drawmeridians(meridians,labels=[0,0,0,1])
 cb = m.colorbar(im,"right", size="5%", pad='2%')
 ax.set_title('H07 Soil Moisture in %')
 plt.show()
-
+plt.close()
+fig.clf()
+#delete data that is no longer needed to keep memory usage in check
+del resampled_data
+del h07_data
+del lats
+del lons
 # <headingcell level=1>
 
 # Reading the H08 product
@@ -127,7 +133,7 @@ plt.show()
 for h08_data, metadata, timestamp, lons, lats, time_var in h08_reader.daily_images(datetime.datetime(2010,5,1)):
     # this tells you the exact timestamp of the read image
     print timestamp.isoformat()
-    
+
     print type(h08_data)
     # the data is a dictionary, each dictionary key contains the array of one variable
     print "The following variables are in this image", h08_data.keys()
@@ -143,7 +149,7 @@ for h08_data, metadata, timestamp, lons, lats, time_var in h08_reader.daily_imag
 
 # <codecell>
 
-%matplotlib inline
+# %matplotlib inline
 fig = plt.figure(figsize=(10,10))
 ax = fig.add_axes([0.1,0.1,0.8,0.8])
 # setup of basemap for europe but zoomed in little bit
@@ -171,6 +177,13 @@ m.drawmeridians(meridians,labels=[0,0,0,1])
 cb = m.colorbar(im,"right", size="5%", pad='2%')
 ax.set_title('H08 Soil Moisture in %')
 plt.show()
+plt.close()
+fig.clf()
+
+#delete data that is no longer needed to keep memory usage in check
+del h08_data
+del lons
+del lats
 
 # <headingcell level=2>
 
@@ -186,7 +199,7 @@ plt.show()
 h08_roi, metadata, timestamp, lons, lats, time_var = h08_reader.read_img(datetime.datetime(2010,5,1,8,33,1),
                                                                          lat_lon_bbox=[60,70,15,25])
 
-%matplotlib inline
+# %matplotlib inline
 fig = plt.figure(figsize=(10,10))
 ax = fig.add_axes([0.1,0.1,0.8,0.8])
 # setup of basemap for europe but zoomed in little bit
@@ -214,6 +227,13 @@ m.drawmeridians(meridians,labels=[0,0,0,1])
 cb = m.colorbar(im,"right", size="5%", pad='2%')
 ax.set_title('H08 Soil Moisture in %')
 plt.show()
+fig.clf()
+plt.close()
+#delete data that is no longer needed to keep memory usage in check
+del h08_roi
+del lats
+del lons
+
 
 # <headingcell level=1>
 
@@ -260,20 +280,20 @@ print lats_1d.shape
 # <codecell>
 
 for layer in h14_data:
-    %matplotlib inline
+    # %matplotlib inline
     fig = plt.figure(figsize=(10,10))
     ax = fig.add_axes([0.1,0.1,0.8,0.8])
     # setup of basemap for the world
     # Robinson projection
     m = Basemap(projection='robin',lon_0=0,resolution='c',ax=ax)
-    
+
     # make a pseudocolor plot using the ASCAT SWI colormap
     # latitudes and data have to be flipped upside down because the latitudes
     # have to be in ascending order to be plotted correctly
     # mask values > 100 so that they are not plotted
     im = m.pcolormesh(lons, lats, h14_data[layer], latlon=True,
              vmin=0, vmax=1,cmap=smcolormaps.load('SWI_ASCAT'))
-    
+
     m.drawcoastlines()
     m.drawcountries()
     # draw parallels and meridians.
