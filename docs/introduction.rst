@@ -5,11 +5,11 @@ pytesmo is a package which aims it is to provide a standard library that can be 
 of geospatial time series datasets with a focus on soil moisture.
 
 It contains an expanding collection of readers for different soil moisture datasets (see `Supported Datasets`_) as well as routines for comparing them.
-Special classes in the module :mod:`pytesmo.grid.grids` provide easy nearest neighbor searching between datasets as well as 
-the calculation of lookup tables of nearest neighbours. They also provide possibilities to easily read all 
+Special classes in the module :mod:`pytesmo.grid.grids` provide easy nearest neighbor searching between datasets as well as
+the calculation of lookup tables of nearest neighbours. They also provide possibilities to easily read all
 grid points of a dataset in the correct order.
 
-It contains the code used for the calculation of metrics by the 
+It contains the code used for the calculation of metrics by the
 `Satellite Soil Moisture Validation Tool For ASCAT <http://rs.geo.tuwien.ac.at/validation_tool/ascat.html>`_. See :mod:`pytesmo.metrics`.
 
 
@@ -21,7 +21,7 @@ Features
 * anomaly calculation based on climatology or using a moving window see :mod:`pytesmo.time_series.anomaly`
 * easy temporal matching of time series see :mod:`pytesmo.temporal_matching`
 * multiple methods for scaling between different observation domains (CDF matching, linear regression, min-max matching) see :mod:`pytesmo.scaling`
-* calculate standard metrics like correlation coefficients, RMSD, bias, 
+* calculate standard metrics like correlation coefficients, RMSD, bias,
   as well as more complex ones like triple collocation or MSE as a decomposition of the RMSD see :mod:`pytesmo.metrics`
 
 
@@ -43,7 +43,7 @@ ASCAT
 * ASCAT SSM(Surface Soil Moisture) Time Series
 
   Available in binary format from http://rs.geo.tuwien.ac.at/products/
-  
+
   Available in netCDF format from http://hsaf.meteoam.it/soil-moisture.php (H25 product)
 
 
@@ -55,9 +55,9 @@ H-SAF image products
 --------------------
 
 `H-SAF <http://hsaf.meteoam.it/soil-moisture.php>`_ provides three different image products:
- 
+
 * SM OBS 1 - H07 - Large scale surface soil moisture by radar scatterometer in BUFR format over Europe
-* SM OBS 2 - H08 - Small scale surface soil moisture by radar scatterometer in BUFR format over Europe 
+* SM OBS 2 - H08 - Small scale surface soil moisture by radar scatterometer in BUFR format over Europe
 * SM DAS 2 - H14 - Profile index in the roots region by scatterometer data assimilation in GRIB format, global
 
 They are available after registration from http://hsaf.meteoam.it/soil-moisture.php
@@ -72,24 +72,24 @@ ISMN data can be downloaded for free after registration from http://ismn.geo.tuw
 In case of the ISMN, 3 different formats are provided:
 
 * Variables stored in separate files (CEOP formatted)
-	
+
 	this format is supported 100% and should work with all examples
-	
+
 * Variables stored in separate files (Header+values)
-	
-	this format is supported 100% and should work with all examples	
-	
+
+	this format is supported 100% and should work with all examples
+
 * CEOP Reference Data Format
 
 	this format can be read with the readers in pytesmo.io.ismn.readers but
 	is not supported for more complex queries since it is missing sensor information
-	, only provides soil moisture and soil temperature and contains several depths in 
+	, only provides soil moisture and soil temperature and contains several depths in
 	one file.
-	
+
 If you downloaded ISMN data in one of the supported formats in the past it can be that station
 names are not recognized correctly because they contained the '_' character which is supposed to be
 the separator. If you experience problems because of this please download new data from the ISMN since
-this issue should be fixed.		
+this issue should be fixed.
 
 
 Installation
@@ -112,21 +112,21 @@ optional
 
 * pybufr-ecmwf https://code.google.com/p/pybufr-ecmwf/
 
-	for reading the H-SAF H07 and H08 products in BUFR Format. As far as I know this will only work on Linux or 
+	for reading the H-SAF H07 and H08 products in BUFR Format. As far as I know this will only work on Linux or
 	in Cygwin but I have no experience using it on Windows.
-	pybufr-ewmwf downloads and installs the BUFR library from the ECMWF website. 
+	pybufr-ewmwf downloads and installs the BUFR library from the ECMWF website.
 	Since ECMWF has restructured their website this automatic download fails in version 0.73 and below.
 	See this issue https://code.google.com/p/pybufr-ecmwf/issues/detail?id=10
-	
+
 	A workaround is to download the package and change the URL before installing it.
-	
+
 	* Download the pybufr-ecmwf package and decompress it
-	
+
 	* Open the file build_interface.py and change the variable URL_ECMWF_WEBSITE on line 58 from
 	  "http://www.ecmwf.int/" to "http://old.ecmwf.int/"
-	  
+
 	* run python setup.py install and it should work
-	
+
 * pygrib https://code.google.com/p/pygrib/
 
 	for reading the H-SAF H25 product
@@ -134,12 +134,12 @@ optional
 * pykdtree https://github.com/storpipfugl/pykdtree
 
 	which makes Nearest Neighbor search faster
-	
+
 * pyresample https://code.google.com/p/pyresample/
-	
+
 	for resampling of irregular images onto a regular grid for e.g. plotting
-	
-	
+
+
 How to install python packages
 ------------------------------
 
@@ -147,16 +147,16 @@ If you have no idea of how to install python packages then I'll try to give a sh
 the process.
 
 The recommended way of installing python packages is using `pip <https://pip.pypa.io/en/latest/installing.html>`_ which downloads the package
-you want from the `python package repository Pypi <https://pypi.python.org/>`_ and installs it if possible. For more complex packages that depend 
+you want from the `python package repository Pypi <https://pypi.python.org/>`_ and installs it if possible. For more complex packages that depend
 upon a C or Fortran library like netCDF4 or pybufr-ecmwf installation instructions are provided on the package website. If you are using windows
 always check http://www.lfd.uci.edu/~gohlke/pythonlibs/ to see if there is already a precompiled .exe file for you to easily install.
 
 Windows
 -------
 
-A relatively easy way to install everything but matplotlib-basemap and netCDF4 is to install 
-winpython from https://code.google.com/p/winpython/ and then download basemap from 
-http://sourceforge.net/projects/matplotlib/files/matplotlib-toolkits/ 
+A relatively easy way to install everything but matplotlib-basemap and netCDF4 is to install
+winpython from https://code.google.com/p/winpython/ and then download basemap from
+http://sourceforge.net/projects/matplotlib/files/matplotlib-toolkits/
 and netCDF4 from https://code.google.com/p/netcdf4-python/, and, if you want to read the H25 product, the
 pygrib installer from http://www.lfd.uci.edu/~gohlke/pythonlibs/.
 Add them to your winpython installation using the winpython Control Panel.
@@ -180,8 +180,8 @@ Windows binaries
 
 pytesmo windows binaries are available for 32 and 64 bit systems:
 
-* 32-bit http://rs.geo.tuwien.ac.at/validation_tool/pytesmo/pytesmo-0.2.0/pytesmo-0.2.0.win32-py2.7.exe
-* 64-bit http://rs.geo.tuwien.ac.at/validation_tool/pytesmo/pytesmo-0.2.0/pytesmo-0.2.0.win-amd64-py2.7.exe
+* 32-bit http://rs.geo.tuwien.ac.at/validation_tool/pytesmo/pytesmo-0.2.1/pytesmo-0.2.1.win32-py2.7.exe
+* 64-bit http://rs.geo.tuwien.ac.at/validation_tool/pytesmo/pytesmo-0.2.1/pytesmo-0.2.1.win-amd64-py2.7.exe
 
 
 Linux
@@ -192,17 +192,17 @@ If you already have a working python installation with the necessary packages do
 * Pypi https://pypi.python.org/pypi/pytesmo
 
 just change the active directory to the unpacked pytesmo-0.2.0 folder and use the following command in the command line::
-	
+
 	python setup.py install
 
 or if you'd rather use pip then use the command::
-	
+
 	pip install pytesmo
-	
+
 Contribute
 ==========
 
-If you would like to help this project by improving the documentation, 
+If you would like to help this project by improving the documentation,
 providing examples of how you use it or by extending the functionality of pytesmo we would be very happy.
 
 Please browse the source code which is available at http://github.com/TUW-GEO/pytesmo
