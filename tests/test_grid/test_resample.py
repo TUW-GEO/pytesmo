@@ -8,7 +8,8 @@
 #    * Redistributions in binary form must reproduce the above copyright
 #      notice, this list of conditions and the following disclaimer in the
 #      documentation and/or other materials provided with the distribution.
-#    * Neither the name of the Vienna University of Technology, Department of Geodesy and Geoinformation nor the
+#    * Neither the name of the Vienna University of Technology, Department of
+#      Geodesy and Geoinformation nor the
 #      names of its contributors may be used to endorse or promote products
 #      derived from this software without specific prior written permission.
 
@@ -42,16 +43,18 @@ import unittest
 class Test_resample_H07(unittest.TestCase):
 
     def setUp(self):
-        data_path = os.path.join(os.path.dirname(__file__), '..', 'test_sat', 'test_data', 'h_saf', 'h07')
+        data_path = os.path.join(os.path.dirname(__file__), '..',
+                                 'test_sat', 'test_data', 'h_saf', 'h07')
         self.reader = H_SAF.H07img(data_path)
 
     def tearDown(self):
         self.reader = None
 
     def test_resample_to_zero_dot_one_deg(self):
-        data, meta, timestamp, lons, lats, time_var = self.reader.read_img(datetime.datetime(2010, 5, 1, 8, 33, 1))
+        data, meta, timestamp, lons, lats, time_var = self.reader.read_img(
+            datetime.datetime(2010, 5, 1, 8, 33, 1))
         # lets resample to a 0.1 degree grid
-        # define the grid points in latitude and logitude
+        # define the grid points in latitude and longitude
         lats_dim = np.arange(25, 75, 0.1)
         lons_dim = np.arange(-25, 45, 0.1)
         # make 2d grid out the 1D grid spacing
@@ -67,6 +70,3 @@ class Test_resample_H07(unittest.TestCase):
 if __name__ == "__main__":
     # import sys;sys.argv = ['', 'Test.testName']
     unittest.main()
-
-
-
