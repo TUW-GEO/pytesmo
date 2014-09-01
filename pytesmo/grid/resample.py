@@ -36,9 +36,9 @@ import numpy as np
 
 
 def resample_to_grid(input_data, src_lon, src_lat, target_lon, target_lat,
-                      methods='nn', weight_funcs=None,
-                      min_neighbours=1, search_rad=18000, neighbours=8,
-                      fill_values=None):
+                     methods='nn', weight_funcs=None,
+                     min_neighbours=1, search_rad=18000, neighbours=8,
+                     fill_values=None):
     """
     resamples data from dictionary of numpy arrays using pyresample
     to given grid.
@@ -85,6 +85,10 @@ def resample_to_grid(input_data, src_lon, src_lat, target_lon, target_lat,
     -------
     data : dict of numpy.arrays
         resampled data on given grid
+    Raises
+    ------
+    ValueError :
+        if empty dataset is resampled
     """
     output_data = {}
 
@@ -99,8 +103,10 @@ def resample_to_grid(input_data, src_lon, src_lat, target_lon, target_lat,
     (valid_input_index,
      valid_output_index,
      index_array,
-     distance_array) = pr.kd_tree.get_neighbour_info(input_swath, output_swath,
-                                                     search_rad, neighbours=neighbours)
+     distance_array) = pr.kd_tree.get_neighbour_info(input_swath,
+                                                     output_swath,
+                                                     search_rad,
+                                                     neighbours=neighbours)
 
     # throw away points with less than min_neighbours neighbours
     # find points with valid neighbours
@@ -115,11 +121,13 @@ def resample_to_grid(input_data, src_lon, src_lat, target_lon, target_lat,
         neigh_condition = nr_neighbours >= min_neighbours
         mask = np.invert(neigh_condition)
         enough_neighbours = np.nonzero(neigh_condition)[0]
-        distance_array = np.reshape(distance_array, (distance_array.shape[0], 1))
+        distance_array = np.reshape(
+            distance_array, (distance_array.shape[0], 1))
         index_array = np.reshape(index_array, (index_array.shape[0], 1))
 
     if enough_neighbours.size == 0:
-        raise ValueError("No points with at least %d neighbours found" % min_neighbours)
+        raise ValueError(
+            "No points with at least %d neighbours found" % min_neighbours)
 
     # remove neighbourhood info of input grid points that have no neighbours to not have to
     # resample to whole output grid for small input grid file
@@ -148,26 +156,28 @@ def resample_to_grid(input_data, src_lon, src_lat, target_lon, target_lat,
 
         # construct arrays in output grid form
         if fill_value is not None:
-            output_array = np.zeros(output_swath.shape, dtype=np.float64) + fill_value
+            output_array = np.zeros(
+                output_swath.shape, dtype=np.float64) + fill_value
         else:
             output_array = np.zeros(output_swath.shape, dtype=np.float64)
             output_array = np.ma.array(output_array, mask=mask)
 
         neigh_slice = slice(None, None, None)
-        # check if method is nn, if so only use first row of index_array and distance_array
+        # check if method is nn, if so only use first row of index_array and
+        # distance_array
         if method == 'nn':
-                neigh_slice = (slice(None, None, None), 0)
+            neigh_slice = (slice(None, None, None), 0)
 
         output_array[enough_neighbours] = pr.kd_tree.get_sample_from_neighbour_info(
-                                                     method,
-                                                     enough_neighbours.shape,
-                                                     data,
-                                                     valid_input_index,
-                                                     valid_output_index,
-                                                     index_array[neigh_slice],
-                                                     distance_array[neigh_slice],
-                                                     weight_funcs=weight_func,
-                                                     fill_value=fill_value)
+            method,
+            enough_neighbours.shape,
+            data,
+            valid_input_index,
+            valid_output_index,
+            index_array[neigh_slice],
+            distance_array[neigh_slice],
+            weight_funcs=weight_func,
+            fill_value=fill_value)
 
         output_data[param] = output_array.reshape(output_shape)
 
