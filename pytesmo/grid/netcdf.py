@@ -270,7 +270,7 @@ def load_grid(filename):
         # some old grid do not have a shape attribute
         # this meant that they had shape of len 1
         if shape is None:
-            shape = (len(nc_data.variables['lon'][:]))
+            shape = tuple([len(nc_data.variables['lon'][:])])
 
         # check if grid has regular shape
         if len(shape) == 2:
