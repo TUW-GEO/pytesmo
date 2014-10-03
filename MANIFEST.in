@@ -1,4 +1,4 @@
-include *.txt
+include *.txt *.rst
 recursive-include docs *.txt *.html *.css *.png *.gif *.js
 recursive-include pytesmo *.pyx *.cmap
 recursive-include tests *.py *.dat *.stm *.txt *.buf *.grib
