@@ -1,4 +1,5 @@
-# Copyright (c) 2013,Vienna University of Technology, Department of Geodesy and Geoinformation
+# Copyright (c) 2013,Vienna University of Technology,
+# Department of Geodesy and Geoinformation
 # All rights reserved.
 
 # Redistribution and use in source and binary forms, with or without
@@ -8,7 +9,8 @@
 #    * Redistributions in binary form must reproduce the above copyright
 #      notice, this list of conditions and the following disclaimer in the
 #      documentation and/or other materials provided with the distribution.
-#    * Neither the name of the Vienna University of Technology, Department of Geodesy and Geoinformation nor the
+#    * Neither the name of the Vienna University of Technology, Department of
+#      Geodesy and Geoinformation nor the
 #      names of its contributors may be used to endorse or promote products
 #      derived from this software without specific prior written permission.
 
@@ -35,29 +37,46 @@ from pytesmo.io.sat import ers
 
 from datetime import datetime
 import numpy as np
+import pytest
 
 
+@pytest.mark.xfail(reason="Test data too big to be delivered with package")
 class TestERSNetCDF(unittest.TestCase):
 
     def setUp(self):
-        self.ers_folder = os.path.join('/media', 'sf_R', 'Datapool_processed', 'WARP', 'WARP5.5',
-                                         'ERS_AMI_WS_WARP5.5_R1.1', '070_ssm', 'netcdf')
-        self.ers_grid_folder = os.path.join('/media', 'sf_R', 'Datapool_processed', 'WARP', 'ancillary', 'warp5_grid')
+        self.ers_folder = os.path.join('/media', 'sf_R',
+                                       'Datapool_processed', 'WARP',
+                                       'WARP5.5',
+                                       'ERS_AMI_WS_WARP5.5_R1.1',
+                                       '070_ssm', 'netcdf')
+
+        self.ers_grid_folder = os.path.join('/media', 'sf_R',
+                                            'Datapool_processed',
+                                            'WARP', 'ancillary',
+                                            'warp5_grid')
+
         # init the ERS_SSM reader with the paths
-        self.ers_SSM_reader = ers.ERS_SSM(self.ers_folder, self.ers_grid_folder)
+        self.ers_SSM_reader = ers.ERS_SSM(
+            self.ers_folder, self.ers_grid_folder)
 
     def test_read_ssm(self):
 
         gpi = 2329253
         result = self.ers_SSM_reader.read_ssm(gpi, absolute_values=True)
         assert result.gpi == gpi
-        np.testing.assert_approx_equal(result.longitude, 14.28413, significant=4)
-        np.testing.assert_approx_equal(result.latitude, 45.698074, significant=4)
+        np.testing.assert_approx_equal(
+            result.longitude, 14.28413, significant=4)
+        np.testing.assert_approx_equal(
+            result.latitude, 45.698074, significant=4)
+
         assert list(result.data.columns) == ['orbit_dir', 'proc_flag',
                                              'sm', 'sm_noise',
-                                             'sm_por_gldas', 'sm_noise_por_gldas',
-                                             'sm_por_hwsd', 'sm_noise_por_hwsd',
-                                             'frozen_prob', 'snow_prob']
+                                             'sm_por_gldas',
+                                             'sm_noise_por_gldas',
+                                             'sm_por_hwsd',
+                                             'sm_noise_por_hwsd',
+                                             'frozen_prob',
+                                             'snow_prob']
         assert len(result.data) == 478
         assert result.data.ix[15].name == datetime(1992, 1, 27, 21, 11, 42)
         assert result.data.ix[15]['sm'] == 57
@@ -66,14 +85,23 @@ class TestERSNetCDF(unittest.TestCase):
         assert result.data.ix[15]['snow_prob'] == 0
         assert result.data.ix[15]['orbit_dir'] == 'A'
         assert result.data.ix[15]['proc_flag'] == 0
-        np.testing.assert_approx_equal(result.data.ix[15]['sm_por_gldas'], 0.3090667, significant=6)
-        np.testing.assert_approx_equal(result.data.ix[15]['sm_noise_por_gldas'], 0.03795555, significant=6)
-        np.testing.assert_approx_equal(result.data.ix[15]['sm_por_hwsd'], 0.2452333, significant=6)
-        np.testing.assert_approx_equal(result.data.ix[15]['sm_noise_por_hwsd'], 0.03011637, significant=6)
+        np.testing.assert_approx_equal(
+            result.data.ix[15]['sm_por_gldas'], 0.3090667, significant=6)
+
+        np.testing.assert_approx_equal(
+            result.data.ix[15]['sm_noise_por_gldas'], 0.03795555,
+            significant=6)
+
+        np.testing.assert_approx_equal(
+            result.data.ix[15]['sm_por_hwsd'], 0.2452333, significant=6)
+        np.testing.assert_approx_equal(
+            result.data.ix[15]['sm_noise_por_hwsd'], 0.03011637, significant=6)
         assert result.topo_complex == 14
         assert result.wetland_frac == 0
-        np.testing.assert_approx_equal(result.porosity_gldas, 0.54222, significant=5)
-        np.testing.assert_approx_equal(result.porosity_hwsd, 0.430234, significant=5)
+        np.testing.assert_approx_equal(
+            result.porosity_gldas, 0.54222, significant=5)
+        np.testing.assert_approx_equal(
+            result.porosity_hwsd, 0.430234, significant=5)
 
     def test_neighbor_search(self):
 
