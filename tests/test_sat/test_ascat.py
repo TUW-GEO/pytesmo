@@ -77,12 +77,22 @@ class TestAscat(unittest.TestCase):
 class TestAscatNetCDF(unittest.TestCase):
 
     def setUp(self):
-        self.ascat_folder = os.path.join('/media', 'sf_R', 'Datapool_processed', 'WARP', 'WARP5.5',
-                                         'ASCAT_WARP5.5_R1.2', '080_ssm', 'netcdf')
+        self.ascat_folder = os.path.join('/media', 'sf_R',
+                                         'Datapool_processed', 'WARP',
+                                         'WARP5.5',
+                                         'IRMA0_WARP5.5_P1', 'R2',
+                                         '080_ssm', 'netcdf')
+
         # grid info file is too big to include on github
-        self.ascat_grid_folder = os.path.join('/media', 'sf_R', 'Datapool_processed', 'WARP', 'ancillary', 'warp5_grid')
+
+        self.ascat_grid_folder = os.path.join('/media', 'sf_R',
+                                              'Datapool_processed',
+                                              'WARP', 'ancillary',
+                                              'warp5_grid')
+
         # init the ASCAT_SSM reader with the paths
-        self.ascat_SSM_reader = ascat.AscatH25_SSM(self.ascat_folder, self.ascat_grid_folder)
+        self.ascat_SSM_reader = ascat.AscatH25_SSM(self.ascat_folder,
+                                                   self.ascat_grid_folder)
 
     def test_read_ssm_masked_no_snow(self):
         """
@@ -159,12 +169,21 @@ class TestAscatNetCDF(unittest.TestCase):
 class TestAscatNetCDF_V5521(unittest.TestCase):
 
     def setUp(self):
-        self.ascat_folder = os.path.join('/media', 'sf_R', 'Datapool_processed', 'WARP', 'WARP5.5',
-                                         'ASCAT_WARP5.5_R2.1', '080_ssm', 'netcdf')
+
+        self.ascat_folder = os.path.join('/media', 'sf_R',
+                                         'Datapool_processed', 'WARP',
+                                         'WARP5.5',
+                                         'IRMA0_WARP5.5_P2', 'R1',
+                                         '080_ssm', 'netcdf')
+
         # grid info file is too big to include on github
-        self.ascat_grid_folder = os.path.join('/media', 'sf_R', 'Datapool_processed', 'WARP', 'ancillary', 'warp5_grid')
+        self.ascat_grid_folder = os.path.join('/media', 'sf_R',
+                                              'Datapool_processed',
+                                              'WARP', 'ancillary',
+                                              'warp5_grid')
         # init the ASCAT_SSM reader with the paths
-        self.ascat_SSM_reader = ascat.AscatH25_SSM(self.ascat_folder, self.ascat_grid_folder)
+        self.ascat_SSM_reader = ascat.AscatH25_SSM(self.ascat_folder,
+                                                   self.ascat_grid_folder)
 
     def test_read_ssm(self):
 
