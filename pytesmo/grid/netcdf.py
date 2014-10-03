@@ -75,7 +75,7 @@ def save_lonlat(filename, arrlon, arrlat, arrcell=None,
     with Dataset(nc_name, 'w', format='NETCDF4') as ncfile:
 
         if (global_attrs is not None and 'shape' in global_attrs and
-            type(global_attrs['shape']) is not int):
+                type(global_attrs['shape']) is not int):
 
             latsize = global_attrs['shape'][0]
             lonsize = global_attrs['shape'][1]
@@ -267,6 +267,10 @@ def load_grid(filename):
                     raise e
 
         subset = None
+        # some old grid do not have a shape attribute
+        # this meant that they had shape of len 1
+        if shape is None:
+            shape = (len(nc_data.variables['lon'][:]))
 
         # check if grid has regular shape
         if len(shape) == 2:
