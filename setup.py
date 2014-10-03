@@ -70,8 +70,6 @@ setup(
     package_data={'pytesmo': [os.path.join('colormaps', '*.cmap')],
                  },
     cmdclass=cmdclass,
-    scripts=['bin/plot_ASCAT_data.py', 'bin/plot_ISMN_data.py', 'bin/compare_ISMN_ASCAT.py',
-             'bin/read_ASCAT_H25.py', 'bin/anomalies.py'],
     url='http://rs.geo.tuwien.ac.at/validation_tool/pytesmo/',
     license='LICENSE.txt',
     description='python Toolbox for the Evaluation of Soil Moisture Observations',
