@@ -209,6 +209,7 @@ class TestAscatNetCDF(unittest.TestCase):
         np.testing.assert_approx_equal(distance, 2267.42, significant=2)
 
 
+@pytest.mark.xfail(reason="Test data too big to be delivered with package")
 class TestAscatNetCDF_V5521(unittest.TestCase):
 
     def setUp(self):
