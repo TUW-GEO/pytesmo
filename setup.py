@@ -57,7 +57,7 @@ else:
 
 setup(
     name='pytesmo',
-    version='0.2.2',
+    version='0.2.3',
     author='pytesmo Team',
     author_email='Christoph.Paulik@geo.tuwien.ac.at',
     packages=['pytesmo', 'pytesmo.timedate',
