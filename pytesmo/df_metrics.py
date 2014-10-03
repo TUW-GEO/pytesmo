@@ -1,4 +1,5 @@
-# Copyright (c) 2013,Vienna University of Technology, Department of Geodesy and Geoinformation
+# Copyright (c) 2013,Vienna University of Technology,
+# Department of Geodesy and Geoinformation
 # All rights reserved.
 
 # Redistribution and use in source and binary forms, with or without
@@ -8,7 +9,8 @@
 #    * Redistributions in binary form must reproduce the above copyright
 #      notice, this list of conditions and the following disclaimer in the
 #      documentation and/or other materials provided with the distribution.
-#    * Neither the name of the Vienna University of Technology, Department of Geodesy and Geoinformation nor the
+#    * Neither the name of the Vienna University of Technology,
+#      Department of Geodesy and Geoinformation nor the
 #      names of its contributors may be used to endorse or promote products
 #      derived from this software without specific prior written permission.
 
@@ -25,8 +27,10 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 '''
-Module contains wrappers for methods in pytesmo.metrics which can be given pandas.DataFrames
-instead of single numpy.arrays . If the DataFrame has more columns than the function has input parameters
+Module contains wrappers for methods in pytesmo.metrics
+which can be given pandas.DataFrames
+instead of single numpy.arrays . If the DataFrame has more columns
+than the function has input parameters
 the function will be applied pairwise
 
 Created on Aug 14, 2013
@@ -56,13 +60,15 @@ def bias(df):
     """
     return _to_namedtuple(pairwise_apply(df, metrics.bias), 'bias')
 
+
 def rmsd(df):
     """Root-mean-square deviation
 
     Returns
     -------
     result : namedtuple
-        with column names of df for which the calculation was done as name of the
+        with column names of df for which the calculation
+        was done as name of the
         element separated by '_and_'
 
     See Also
@@ -71,20 +77,24 @@ def rmsd(df):
     """
     return _to_namedtuple(pairwise_apply(df, metrics.rmsd, comm=True), 'rmsd')
 
+
 def nrmsd(df):
     """Normalized root-mean-square deviation
 
     Returns
     -------
     result : namedtuple
-        with column names of df for which the calculation was done as name of the
+        with column names of df for which the calculation
+        was done as name of the
         element separated by '_and_'
 
     See Also
     --------
     pytesmo.metrics.nrmsd
     """
-    return _to_namedtuple(pairwise_apply(df, metrics.nrmsd, comm=True), 'nrmsd')
+    return _to_namedtuple(pairwise_apply(df, metrics.nrmsd,
+                                         comm=True), 'nrmsd')
+
 
 def ubrmsd(df):
     """Unbiased root-mean-square deviation
@@ -92,38 +102,46 @@ def ubrmsd(df):
     Returns
     -------
     result : namedtuple
-        with column names of df for which the calculation was done as name of the
+        with column names of df for which the calculation
+        was done as name of the
         element separated by '_and_'
 
     See Also
     --------
     pytesmo.metrics.ubrmsd
     """
-    return _to_namedtuple(pairwise_apply(df, metrics.ubrmsd, comm=True), 'ubrmsd')
+    return _to_namedtuple(pairwise_apply(df, metrics.ubrmsd,
+                                         comm=True), 'ubrmsd')
+
 
 def mse(df):
-    """Mean square error (MSE) as a decomposition of the RMSD into individual error components
+    """Mean square error (MSE) as a decomposition of the RMSD into
+    individual error components
 
     Returns
     -------
     result : namedtuple
-        with column names of df for which the calculation was done as name of the
+        with column names of df for which the calculation
+        was done as name of the
         element separated by '_and_'
 
     See Also
     --------
     pytesmo.metrics.mse
+
     """
     MSE, MSEcorr, MSEbias, MSEvar = pairwise_apply(df, metrics.mse, comm=True)
-    return (_to_namedtuple(MSE, 'MSE'), _to_namedtuple(MSEcorr, 'MSEcorr'),
-            _to_namedtuple(MSEbias, 'MSEbias'), _to_namedtuple(MSEvar, 'MSEvar'))
+    return (_to_namedtuple(MSE, 'MSE'),
+            _to_namedtuple(MSEcorr, 'MSEcorr'),
+            _to_namedtuple(MSEbias, 'MSEbias'),
+            _to_namedtuple(MSEvar, 'MSEvar'))
 
 
 def tcol_error(df):
     """Triple collocation error estimate
     In this case df has to have exactly 3 columns, since triple wise
-    application of a function is not yet implemented and would probably return a
-    complicated structure
+    application of a function is not yet implemented and
+    would probably return a complicated structure
 
     Returns
     -------
@@ -138,10 +156,12 @@ def tcol_error(df):
     if len(df.columns) != 3:
         raise DataFrameDimensionError("DataFrame has to have 3 columns")
 
-
     tcol_result = namedtuple('triple_collocation_error', df.columns)
 
-    return tcol_result._make(metrics.tcol_error(df.ix[:, 0].values, df.ix[:, 1].values, df.ix[:, 2].values))
+    return tcol_result._make(metrics.tcol_error(df.ix[:, 0].values,
+                                                df.ix[:, 1].values,
+                                                df.ix[:, 2].values))
+
 
 def nash_sutcliffe(df):
     """Nash Sutcliffe model efficiency coefficient
@@ -149,14 +169,17 @@ def nash_sutcliffe(df):
     Returns
     -------
     result : namedtuple
-        with column names of df for which the calculation was done as name of the
+        with column names of df for which the calculation
+        was done as name of the
         element separated by '_and_'
 
     See Also
     --------
     pytesmo.metrics.nash_sutcliffe
     """
-    return _to_namedtuple(pairwise_apply(df, metrics.nash_sutcliffe, comm=True), 'Nash_Sutcliffe')
+    return _to_namedtuple(pairwise_apply(df, metrics.nash_sutcliffe,
+                                         comm=True), 'Nash_Sutcliffe')
+
 
 def RSS(df):
     """Redidual sum of squares
@@ -164,7 +187,8 @@ def RSS(df):
     Returns
     -------
     result : namedtuple
-        with column names of df for which the calculation was done as name of the
+        with column names of df for which the calculation
+        was done as name of the
         element separated by '_and_'
 
     See Also
@@ -173,6 +197,7 @@ def RSS(df):
     """
     return _to_namedtuple(pairwise_apply(df, metrics.RSS, comm=True), 'RSS')
 
+
 def pearsonr(df):
     """
     Wrapper for scipy.stats.pearsonr
@@ -180,7 +205,8 @@ def pearsonr(df):
     Returns
     -------
     result : namedtuple
-        with column names of df for which the calculation was done as name of the
+        with column names of df for which the calculation
+        was done as name of the
         element separated by '_and_'
 
     See Also
@@ -192,7 +218,6 @@ def pearsonr(df):
     return _to_namedtuple(r, 'Pearsons_r'), _to_namedtuple(p, 'p_value')
 
 
-
 def spearmanr(df):
     """
     Wrapper for scipy.stats.spearmanr
@@ -200,7 +225,8 @@ def spearmanr(df):
     Returns
     -------
     result : namedtuple
-        with column names of df for which the calculation was done as name of the
+        with column names of df for which the calculation
+        was done as name of the
         element separated by '_and_'
 
     See Also
@@ -211,6 +237,7 @@ def spearmanr(df):
     r, p = pairwise_apply(df, metrics.spearmanr, comm=True)
     return _to_namedtuple(r, 'Spearman_r'), _to_namedtuple(p, 'p_value')
 
+
 def kendalltau(df):
     """
     Wrapper for scipy.stats.kendalltau
@@ -218,7 +245,8 @@ def kendalltau(df):
     Returns
     -------
     result : namedtuple
-        with column names of df for which the calculation was done as name of the
+        with column names of df for which the calculation
+        was done as name of the
         element separated by '_and_'
 
     See Also
@@ -228,6 +256,7 @@ def kendalltau(df):
     """
     r, p = pairwise_apply(df, metrics.kendalltau, comm=True)
     return _to_namedtuple(r, 'Kendall_tau'), _to_namedtuple(p, 'p_value')
+
 
 def pairwise_apply(df, method, comm=False):
     """
@@ -263,10 +292,13 @@ def pairwise_apply(df, method, comm=False):
     mask = np.isfinite(mat)
     for i, ac in enumerate(mat):
         for j, bc in enumerate(mat):
-            if i == j: continue
-            if comm and np.isfinite(result[0][i, j]): continue
+            if i == j:
+                continue
+            if comm and np.isfinite(result[0][i, j]):
+                continue
             valid = mask[i] & mask[j]
-            if not valid.any():continue
+            if not valid.any():
+                continue
             if not valid.all():
                 c = applyf(ac[valid], bc[valid])
             else:
@@ -274,7 +306,8 @@ def pairwise_apply(df, method, comm=False):
 
             for index, value in enumerate(np.atleast_1d(c)):
                 result[index][i, j] = value
-                if comm: result[index][j, i] = value
+                if comm:
+                    result[index][j, i] = value
     return_list = []
     for data in result:
         return_list.append(df._constructor(data, index=cols, columns=cols))
@@ -299,11 +332,5 @@ def _to_namedtuple(df, name):
             names.append('_and_'.join([df.index[i], column_names]))
         values.extend(df[column].values[i + 1:])
 
-
     result = namedtuple(name, names)
     return result._make(values)
-
-
-
-
-
