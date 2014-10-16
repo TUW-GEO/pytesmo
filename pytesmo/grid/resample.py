@@ -139,15 +139,18 @@ def resample_to_grid(input_data, src_lon, src_lat, target_lon, target_lat,
 
         data = input_data[param]
 
-        if type(weight_funcs) == dict:
-            weight_func = weight_funcs[param]
-        else:
-            weight_func = weight_funcs
-
         if type(methods) == dict:
             method = methods[param]
         else:
             method = methods
+
+        if method is not 'nn':
+            if type(weight_funcs) == dict:
+                weight_func = weight_funcs[param]
+            else:
+                weight_func = weight_funcs
+        else:
+            weight_func = None
 
         if type(fill_values) == dict:
             fill_value = fill_values[param]
