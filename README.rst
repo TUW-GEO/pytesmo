@@ -60,3 +60,9 @@ Data from the International Soil Moisture Network (ISMN)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ISMN data can be downloaded for free after registration from http://ismn.geo.tuwien.ac.at/
+<<<<<<< HEAD:README.txt
+
+Complete Documentation
+======================
+
+The Documentation can be found at http://rs.geo.tuwien.ac.at/validation_tool/pytesmo/

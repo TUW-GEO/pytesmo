@@ -1,9 +1,9 @@
 v0.1.1, 2013-11-18
-* Added readers for netCDF H25 HSAF product
-* Added readers for netCDF ERS soil moisture product
-* Added general grid classes
-* Performance improvements for anomaly and climatology calculation through usage of cython
-* Introduced df_metrics module for convienent calculation of metrics for data saved in pandas.DataFrames
+Added readers for netCDF H25 HSAF product
+Added readers for netCDF ERS soil moisture product
+Added general grid classes
+Performance improvements for anomaly and climatology calculation through usage of cython
+Introduced df_metrics module for convienent calculation of metrics for data saved in pandas.DataFrames
 
 v0.1.2, 2014-04-16
 * Reader for different versions of netCDF H25 HSAF product
