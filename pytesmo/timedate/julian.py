@@ -128,7 +128,7 @@ def julian2date(julian):
     second : numpy.ndarray or int32
         Second.
     """
-    min_julian = 2299161
+    min_julian = 2299160
     max_julian = 1827933925
 
     julian = np.array(julian, dtype=float)
@@ -179,11 +179,11 @@ def julian2datetime(julian, tz=None):
     """
     year, month, day, hour, minute, second, microsecond = julian2date(julian)
     if type(julian) == np.array or type(julian) == np.memmap or \
-        type(julian) == np.ndarray:
-        return np.array([dt.datetime(y, m, d, h, mi, s, ms, tz) \
-                             for y, m, d, h, mi, s, ms in \
-                             zip(year, month, day, hour, minute,
-                                 second, microsecond)])
+            type(julian) == np.ndarray or type(julian) == np.flatiter:
+        return np.array([dt.datetime(y, m, d, h, mi, s, ms, tz)
+                         for y, m, d, h, mi, s, ms in
+                         zip(year, month, day, hour, minute,
+                             second, microsecond)])
 
     return dt.datetime(year, month, day, hour, minute, second, microsecond, tz)
 
@@ -231,8 +231,8 @@ def julian2datetimeindex(j, tz=pytz.UTC):
     """
     year, month, day, hour, minute, second, microsecond = julian2date(j)
 
-    return pd.DatetimeIndex([dt.datetime(y, m, d, h, mi, s, ms, tz) \
-                             for y, m, d, h, mi, s, ms in \
+    return pd.DatetimeIndex([dt.datetime(y, m, d, h, mi, s, ms, tz)
+                             for y, m, d, h, mi, s, ms in
                              zip(year, month, day, hour, minute,
                                  second, microsecond)])
 
@@ -290,7 +290,7 @@ def doy(month, day, year=None):
     doy : numpy.ndarray or int32
         Day of year.
     """
-    daysPast = np.array([0, 31, 60, 91, 121, 152, 182, 213, \
+    daysPast = np.array([0, 31, 60, 91, 121, 152, 182, 213,
                          244, 274, 305, 335, 366])
 
     day_of_year = daysPast[month - 1] + day
@@ -298,7 +298,7 @@ def doy(month, day, year=None):
     if year is not None:
         nonleap_years = np.invert(is_leap_year(year))
         day_of_year = day_of_year - nonleap_years + \
-                      np.logical_and(day_of_year < 60, nonleap_years)
+            np.logical_and(day_of_year < 60, nonleap_years)
 
     return day_of_year
 
