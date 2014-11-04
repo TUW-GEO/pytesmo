@@ -812,3 +812,38 @@ def lonlat2cell(lon, lat, cellsize=5., cellsize_lon=None, cellsize_lat=None):
     x = np.clip(
         np.floor((np.double(lon) + (np.double(180.0) + 1e-9)) / cellsize_lon), 0, 360)
     return np.int32(x * (np.double(180.0) / cellsize_lat) + y)
+
+
+def genreg_grid(grd_spc_lat=1, grd_spc_lon=1,
+                minlat=-90.0, maxlat=90.0,
+                minlon=-180.0, maxlon=180.0):
+    """
+    Define a global regular lon lat grid which starts in the North Western
+    Corner of minlon, maxlat.
+    The grid points are defined to be in the middle of a grid cell.
+    e.g. the first point on a 1x1 degree grid with
+    minlon -180.0 and maxlat 90.0 will be at
+    -179.5 longitude, 89.5 latitude
+
+    Parameters
+    ----------
+    grd_spc_lat: float, optional
+        grid spacing in latitude direction
+    grd_spc_lon: float, optional
+        grid spacing in longitude direction
+    minlat : float, optional
+        minimum latitude of the grid
+    maxlat : float, optional
+        maximum latitude of the grid
+    minlon : float, optional
+        minimum longitude of the grid
+    maxlon : float, optional
+        maximum longitude of the grid
+    """
+    # lon_dim = np.arange(110+grd_spc_lon/2.0, 180.0, grd_spc_lon)
+    # lat_dim = np.arange(-50+grd_spc_lat/2.0, -10, grd_spc_lat)
+    lon_dim = np.arange(minlon + grd_spc_lon / 2.0, maxlon, grd_spc_lon)
+    lat_dim = np.arange(maxlat - grd_spc_lat / 2.0, minlat, -grd_spc_lat)
+    lons, lats = np.meshgrid(lon_dim, lat_dim)
+    return BasicGrid(lons.flatten(), lats.flatten(),
+                     shape=(len(lon_dim), len(lat_dim)))
