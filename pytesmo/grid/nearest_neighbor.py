@@ -46,6 +46,7 @@ except ImportError:
 
 
 class findGeoNN(object):
+
     """
     class that takes lat,lon coordinates, transformes them to cartesian (X,Y,Z)
     coordinates and provides a interface to scipy.spatial.kdTree
@@ -93,6 +94,7 @@ class findGeoNN(object):
         in those arrays.
 
     """
+
     def __init__(self, lon, lat, R=6370997.0, grid=False, kd_tree_name='pykdtree'):
         """
         init method, prepares lon and lat arrays for _transform_lonlats if
@@ -107,7 +109,8 @@ class findGeoNN(object):
             self.lon_size = len(lon)
         else:
             if lat.shape != lon.shape:
-                raise Exception("lat and lon np.arrays have to have equal shapes")
+                raise Exception(
+                    "lat and lon np.arrays have to have equal shapes")
             lat_init = lat
             lon_init = lon
         # Earth radius
@@ -168,6 +171,8 @@ class findGeoNN(object):
             longitude of point
         lat : float, list or numpy.array
             latitude of point
+        max_dist : float, optional
+            maximum distance to consider for search
 
         Returns
         -------
