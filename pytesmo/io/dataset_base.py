@@ -25,17 +25,21 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''
+"""
 Created on Mar 19, 2014
 
 @author: Christoph Paulik christoph.paulik@geo.tuwien.ac.at
-'''
+"""
+
 import numpy as np
-from datetime import datetime, timedelta
+from datetime import datetime
 import abc
+import os
+import glob
 
 
 class DatasetTSBase(object):
+
     """
     Dateset base class that implements basic functions and also abstract
     methods that have to be implemented by child classes.
@@ -72,6 +76,33 @@ class DatasetTSBase(object):
         gp, _ = self.grid.find_nearest_gpi(lon, lat)
         return self.read_gp(gp, **kwargs)
 
+    def get_nearest_gp_info(self, lon, lat):
+        """
+        get info for nearest grid point
+
+        Parameters
+        ----------
+        lon : float
+            Longitude coordinate.
+        lat : float
+            Latitude coordinate.
+
+        Returns
+        -------
+        gpi : int
+            Grid point index of nearest grid point.
+        gp_lon : float
+            Lontitude coordinate of nearest grid point.
+        gp_lat : float
+            Latitude coordinate of nearest grid point.
+        gp_dist : float
+            Geodetic distance to nearest grid point.
+        """
+        gpi, gp_dist = self.grid.find_nearest_gpi(lon, lat)
+        gp_lon, gp_lat = self.grid.gpi2lonlat(gpi)
+
+        return gpi, gp_lon, gp_lat, gp_dist
+
     def read_ts(self, *args, **kwargs):
         """
         Takes either 1 or 2 arguments and calls the correct function
@@ -101,7 +132,7 @@ class DatasetTSBase(object):
             pandas.DateFrame with DateTimeIndex
         """
         if ll_bbox is None:
-            for gp, _, _ in self.grid.grid_points():
+            for gp, _, _, _ in self.grid.grid_points():
                 yield self.read_gp(gp)
         else:
             latmin, latmax, lonmin, lonmax = ll_bbox
@@ -128,7 +159,98 @@ class DatasetTSBase(object):
         return
 
 
+class DatasetStaticBase(object):
+
+    """
+    Dataset base class for arrays that do have a grid associated with them but
+    are not image time series.
+
+    Parameters
+    ----------
+    filename : string
+        path and filename of file to load
+    grid : pytesmo.BasicGrid or similar grid definition class
+        defines the grid on which the dataset is stored
+    """
+    __metaclass__ = abc.ABCMeta
+
+    def __init__(self, filename, grid):
+        self.filename = filename
+        self.grid = grid
+        self.data = None
+
+    @abc.abstractmethod
+    def read_data(self):
+        """
+        Reads the data and returns it as a dictionary of numpy arrays.
+
+        Returns
+        -------
+        data : dict
+            dictionary of numpy arrays
+        """
+        return
+
+    def read_pos(self, *args, **kwargs):
+        """
+        Takes either 1 or 2 arguments and calls the correct function
+        which is either reading the gpi directly or finding
+        the nearest gpi from given lat,lon coordinates and then reading it
+        """
+        if len(args) == 1:
+            data = self.read_gp(args[0], **kwargs)
+        if len(args) == 2:
+            data = self._read_lonlat(args[0], args[1], **kwargs)
+
+        return data
+
+    def _read_lonlat(self, lon, lat, **kwargs):
+        """
+        Reading data for given longitude and latitude coordinate.
+
+        Parameters
+        ----------
+        lon : float
+            Longitude coordinate.
+        lat : float
+            Latitude coordinate.
+
+        Returns
+        -------
+        data : dict of values
+            data record.
+        """
+        gp, _ = self.grid.find_nearest_gpi(lon, lat)
+        return self.read_gp(gp, **kwargs)
+
+    def read_gp(self, gpi, **kwargs):
+        """
+        Reads data record for a given grid point index(gpi)
+
+        Parameters
+        ----------
+        gpi : int
+            grid point index
+
+        Returns
+        -------
+        data : dict of values
+            data record.
+        """
+        if self.data is None:
+            self.data = self.read_data()
+
+        gp_data = {}
+        for key in self.data:
+            # make sure the data is a 1D array when using
+            # the gpi as indices
+            gp_data[key] = np.ravel(self.data[key])[gpi]
+
+        return gp_data
+
+
 class DatasetImgBase(object):
+
     """
     Dateset base class that implements basic functions and also abstract
     methods that have to be implemented by child classes.
@@ -137,54 +259,170 @@ class DatasetImgBase(object):
     ----------
     path : string
         Path to dataset.
+    filename_templ : string
+        template of how datetimes fit into the filename.
+        e.g. "ASCAT_%Y%m%d_image.nc" will be translated into the filename
+        ASCAT_20070101_image.nc for the date 2007-01-01.
+    sub_path : string or list optional
+        if given it is used to generate a sub path from the given timestamp.
+        This is useful if files are sorted by year or month.
+        If a list is one subfolder per item is assumed. This can be used
+        if the files for May 2007 are e.g. in folders 2007/05/ then the
+        list ['%Y', '%m'] works.
     grid : pytesmo.grid.grids.BasicGrid of CellGrid instance, optional
         Grid on which all the images of the dataset are stored. This is not
         relevant for datasets that are stored e.g. in orbit geometry
-    img_offsets : numpy array of timedeltas, optional
-        Gives the time offsets in a day that the images of one day have.
-        e.g.: a model data with 6 hourly data with images at 0, 6, 12 and
-        18 o'clock would have img_offsets=np.array([timedelta(hours=0),
-                                                    timedelta(hours=6),
-                                                    timedelta(hours=12),
-                                                    timedelta(hours=18)])
-        Default is set to np.array([timedelta(hours=0)]) for daily images
-        with timestamp 0
+    exact_templ : boolean, optional
+        if True then the filename_templ matches the filename exactly.
+        If False then the filename_templ will be used in glob to find
+        the file.
     """
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, path, grid=None,
-                 img_offsets=np.array([timedelta(hours=0)])):
+    def __init__(self, path, filename_templ="",
+                 sub_path=None, grid=None,
+                 exact_templ=True):
         self.grid = grid
+        self.fname_templ = filename_templ
         self.path = path
-        self.img_offsets = img_offsets
+        if type(sub_path) == str:
+            sub_path = [sub_path]
+        self.sub_path = sub_path
+        self.exact_templ = exact_templ
 
-    def _get_possible_timestamps(self, timestamp):
+    @abc.abstractmethod
+    def _read_spec_file(self, filename, timestamp=None, **kwargs):
         """
-        Get the timestamps as datetime array that are possible for the
-        given day, if the timestamps are
+        Read specific image for given filename
 
         Parameters
         ----------
-        timestamp : datetime.datetime
-            Specific day.
+        filename : string
+            filename
+        timestamp : datetime, optional
+           can be given here if it is already
+           known since it has to be returned.
 
         Returns
         -------
-        timestamps : numpy.ndarray
-            Datetime array of possible timestamps.
+        data : dict
+            dictionary of numpy arrays that hold the image data for each
+            variable of the dataset
+        metadata : dict
+            dictionary of numpy arrays that hold the metadata
+        timestamp : datetime.datetime
+            exact timestamp of the image
+        lon : numpy.array or None
+            array of longitudes, if None self.grid will be assumed
+        lat : numpy.array or None
+            array of latitudes, if None self.grid will be assumed
+        time : numpy.array or None
+            observation times of the data as numpy array of julian dates,
+            if None all observations have the same timestamp
         """
-        day = datetime(timestamp.year, timestamp.month, timestamp.day)
-        return day + self.img_offsets
+        return
 
-    @abc.abstractmethod
-    def _read_spec_img(self, timestamp, **kwargs):
+    def _search_files(self, timestamp, custom_templ=None,
+                      str_param=None):
         """
-        Read specific image for given datetime timestamp.
+        searches for filenames for the given timestamp.
+        This function is used by _build_filename which then
+        checks if a unique filename was found
 
         Parameters
         ----------
-        timestamp : datetime.datetime
-            exact observation timestamp of the image that should be read
+        timestamp: datetime
+            datetime for given filename
+        custom_tmpl : string, optional
+            if given not the fname_templ is used but the custom templ
+            This is convienint for some datasets where no all filenames
+            follow the same convention and where the read_img function
+            can choose between templates based on some condition.
+        str_param : dict, optional
+            if given then this dict will be applied to the template using
+            the fname_template.format(**str_param) notation before the resulting
+            string is put into datetime.strftime.
+
+            example from python documentation
+            >>> coord = {'latitude': '37.24N', 'longitude': '-115.81W'}
+            >>> 'Coordinates: {latitude}, {longitude}'.format(**coord)
+            'Coordinates: 37.24N, -115.81W'
+        """
+        if custom_templ is not None:
+            fname_templ = custom_templ
+        else:
+            fname_templ = self.fname_templ
+
+        if str_param is not None:
+            fname_templ = fname_templ.format(**str_param)
+        if self.sub_path is None:
+            search_file = os.path.join(
+                self.path, timestamp.strftime(fname_templ))
+
+        else:
+            sub_path = ""
+            for s in self.sub_path:
+                sub_path = os.path.join(sub_path, timestamp.strftime(s))
+            search_file = os.path.join(self.path,
+                                       sub_path,
+                                       timestamp.strftime(fname_templ))
+        if self.exact_templ:
+            return [search_file]
+        else:
+            filename = glob.glob(search_file)
+
+        if not filename:
+            raise IOError("File not found {:}".format(search_file))
+
+        return filename
+
+    def _build_filename(self, timestamp, custom_templ=None,
+                        str_param=None):
+        """
+        This function uses _search_files to find the correct
+        filename and checks if the search was unambiguous
+
+        Parameters
+        ----------
+        timestamp: datetime
+            datetime for given filename
+        custom_tmpl : string, optional
+            if given not the fname_templ is used but the custom templ
+            This is convienint for some datasets where no all filenames
+            follow the same convention and where the read_img function
+            can choose between templates based on some condition.
+        str_param : dict, optional
+            if given then this dict will be applied to the template using
+            the fname_template.format(**str_param) notation before the resulting
+            string is put into datetime.strftime.
+
+            example from python documentation
+
+            >>> coord = {'latitude': '37.24N', 'longitude': '-115.81W'}
+            >>> 'Coordinates: {latitude}, {longitude}'.format(**coord)
+            'Coordinates: 37.24N, -115.81W'
+        """
+        filename = self._search_files(timestamp, custom_templ=custom_templ,
+                                      str_param=str_param)
+
+        if len(filename) > 1:
+            raise IOError(
+                "File search is ambiguous {:}".format(filename))
+
+        return filename[0]
+
+    def _assemble_img(self, timestamp, **kwargs):
+        """
+        Function between read_img and _build_filename that can
+        be used to read a different file for each parameter in a image
+        dataset. In the standard impementation it is assumed
+        that all necessary information of a image is stored in the
+        one file whose filename is built by the _build_filname function.
+
+        Parameters
+        ----------
+        timestamp : datatime
+            timestamp of the image to assemble
 
         Returns
         -------
@@ -203,7 +441,8 @@ class DatasetImgBase(object):
             variable name of observation times in the data dict, if None all
             observations have the same timestamp
         """
-        return
+        return self._read_spec_file(self._build_filename(timestamp),
+                                    timestamp=timestamp, **kwargs)
 
     def read_img(self, timestamp, **kwargs):
         """
@@ -231,23 +470,40 @@ class DatasetImgBase(object):
             variable name of observation times in the data dict, if None all
             observations have the same timestamp
         """
-        if type(timestamp) == datetime:
-            if timestamp in self._get_possible_timestamps(timestamp):
-                return self._read_spec_img(timestamp, **kwargs)
-            else:
-                raise ValueError("given timestamp is not a valid image "
-                                 "timestamp for this dataset")
-        else:
-            raise TypeError("given timestamp is not a datetime")
+        return self._assemble_img(timestamp, **kwargs)
 
-    def daily_images(self, day, **kwargs):
+    def tstamps_for_daterange(self, start_date, end_date):
         """
-        Yield all images for a day.
+        Return all valid timestamps in a given date range.
+        This method must be implemented if iteration over
+        images should be possible.
 
         Parameters
         ----------
-        day : datetime.date or datetime.datetime
-            Specific day.
+        start_date : datetime.date or datetime.datetime
+            start date
+        end_date : datetime.date or datetime.datetime
+            end date
+
+        Returns
+        -------
+        dates : list
+            list of datetimes
+        """
+
+        raise NotImplementedError(
+            "Please implement to enable iteration over date ranges.")
+
+    def iter_images(self, start_date, end_date, **kwargs):
+        """
+        Yield all images for a given date range.
+
+        Parameters
+        ----------
+        start_date : datetime.date or datetime.datetime
+            start date
+        end_date : datetime.date or datetime.datetime
+            end date
 
         Returns
         -------
@@ -266,6 +522,72 @@ class DatasetImgBase(object):
             variable name of observation times in the data dict, if None all
             observations have the same timestamp
         """
-        for image_datetime in self._get_possible_timestamps(day):
-            yield_img = self._read_spec_img(image_datetime, **kwargs)
-            yield yield_img
+        timestamps = self.tstamps_for_daterange(start_date, end_date)
+
+        if timestamps:
+            for timestamp in timestamps:
+                yield_img = self.read_img(
+                    timestamp, **kwargs)
+                yield yield_img
+        else:
+            raise IOError("no files found for given date range")
+
+    def daily_images(self, day, **kwargs):
+        """
+        Yield all images for a day.
+
+        Parameters
+        ----------
+        day : datetime.date
+
+        Returns
+        -------
+        data : dict
+            dictionary of numpy arrays that hold the image data for each
+            variable of the dataset
+        metadata : dict
+            dictionary of numpy arrays that hold metadata
+        timestamp : datetime.datetime
+            exact timestamp of the image
+        lon : numpy.array or None
+            array of longitudes, if None self.grid will be assumed
+        lat : numpy.array or None
+            array of latitudes, if None self.grid will be assumed
+        jd : string or None
+            name of the field in the data array representing the observation
+            dates
+        """
+        for img in self.iter_images(day, day, **kwargs):
+            yield img
+
+
+def test_dataset_img_base():
+    # init fake img Dataset
+    class TestImgDataset(DatasetImgBase):
+
+        def _read_spec_file(self, filename, timestamp, **kwargs):
+            return {'test': np.arange(50)}, {'filename': filename}, timestamp, None, None, None
+
+    dataset = TestImgDataset("", filename_templ="test_data_%Y%m%d.dat")
+    data, meta, timestamp, lon, lat, time = dataset.read_img(
+        datetime(2007, 8, 1))
+    assert timestamp == datetime(2007, 8, 1)
+    assert meta.keys() == ['filename']
+    assert meta['filename'] == "test_data_20070801.dat"
+
+
+def test_dataset_img_base_subpath():
+    # init fake img Dataset
+    class TestImgDataset(DatasetImgBase):
+
+        def _read_spec_file(self, filename, timestamp, **kwargs):
+            return {'test': np.arange(50)}, {'filename': filename}, timestamp, None, None, None
+
+    dataset = TestImgDataset(
+        "", filename_templ="test_data_%Y%m%d.dat", sub_path=["%Y", '%m'])
+    data, meta, timestamp, lon, lat, time = dataset.read_img(
+        datetime(2007, 8, 1))
+    assert timestamp == datetime(2007, 8, 1)
+    assert meta.keys() == ['filename']
+    assert meta['filename'] == os.path.join(
+        "2007", "08", "test_data_20070801.dat")
