@@ -66,6 +66,18 @@ class Test_2Dgrid(unittest.TestCase):
         assert lon == lon_should
         assert lat == lat_should
 
+
+def test_genreggrid():
+    """
+    test generation of regular grids
+    """
+    grid = grids.genreg_grid()
+    assert grid.shape == (360, 180)
+    lon, lat = grid.gpi2lonlat(3)
+    assert lon == -176.5
+    assert lat == 89.5
+
+
 if __name__ == "__main__":
     # import sys;sys.argv = ['', 'Test.testName']
     unittest.main()
