@@ -45,6 +45,7 @@ class GridIterationError(Exception):
 
 
 class BasicGrid(object):
+
     """
     Grid that just has lat,lon coordinates and can find the
     nearest neighbour. It can also yield the gpi, lat, lon
@@ -138,7 +139,8 @@ class BasicGrid(object):
 
         """
         if lat.shape != lon.shape:
-            raise GridDefinitionError("lat and lon np.arrays have to have equal shapes")
+            raise GridDefinitionError(
+                "lat and lon np.arrays have to have equal shapes")
 
         self.n_gpi = len(lon)
 
@@ -168,7 +170,8 @@ class BasicGrid(object):
             self.gpidirect = True
         else:
             if lat.shape != gpis.shape:
-                raise GridDefinitionError("lat, lon gpi np.arrays have to have equal shapes")
+                raise GridDefinitionError(
+                    "lat, lon gpi np.arrays have to have equal shapes")
             self.gpis = gpis
             self.gpidirect = False
 
@@ -370,6 +373,38 @@ class BasicGrid(object):
             index = np.where(self.activegpis == gpi)[0][0]
             return self.activearrlon[index], self.activearrlat[index]
 
+    def gpi2rowcol(self, gpi):
+        """
+        if the grid can be reshaped into a
+        sensible 2D shape then this function gives
+        the row(latitude dimension) and column(longitude dimension)
+        indices of the gpi in the 2D grid
+
+        Parameters
+        ----------
+        gpi : int32
+            Grid Point Index.
+
+        Returns
+        -------
+        row : int
+            row in 2D array
+        col : int
+            column in 2D array
+        """
+        if len(self.shape) == 2:
+            if self.gpidirect:
+                index = gpi
+            else:
+                index = np.where(self.gpis == gpi)[0][0]
+
+            index_lat = index / len(self.londim)
+            index_lon = index % len(self.londim)
+            return index_lat, index_lon
+
+        else:
+            raise(GridDefinitionError("Grid has no 2D shape"))
+
     def calc_lut(self, other, max_dist=np.Inf, into_subset=False):
         """
         takes other BasicGrid or CellGrid objects and computes
@@ -400,7 +435,8 @@ class BasicGrid(object):
             other._setup_kdTree()
 
         if self.kdTree.kdtree is not None and other.kdTree.kdtree is not None:
-            dist, index = other.kdTree.find_nearest_index(self.activearrlon, self.activearrlat, max_dist=max_dist)
+            dist, index = other.kdTree.find_nearest_index(
+                self.activearrlon, self.activearrlat, max_dist=max_dist)
 
             valid_index = np.where(dist != np.inf)[0]
             dist = dist[valid_index]
@@ -518,6 +554,7 @@ class BasicGrid(object):
 
 
 class CellGrid(BasicGrid):
+
     """
     Grid that has lat,lon coordinates as well as cell informatin.
     It can find nearest neighbour. It can also yield the gpi, lat, lon, cell
@@ -557,7 +594,8 @@ class CellGrid(BasicGrid):
                                        setup_kdTree=setup_kdTree, **kwargs)
 
         if self.arrlon.shape != cells.shape:
-            raise GridDefinitionError("lat, lon and cells np.arrays have to have equal shapes")
+            raise GridDefinitionError(
+                "lat, lon and cells np.arrays have to have equal shapes")
         self.arrcell = cells
 
         if subset is not None:
@@ -771,5 +809,6 @@ def lonlat2cell(lon, lat, cellsize=5., cellsize_lon=None, cellsize_lat=None):
         cellsize_lat = cellsize
     y = np.clip(np.floor((np.double(lat) +
                           (np.double(90.0) + 1e-9)) / cellsize_lat), 0, 180)
-    x = np.clip(np.floor((np.double(lon) + (np.double(180.0) + 1e-9)) / cellsize_lon), 0, 360)
+    x = np.clip(
+        np.floor((np.double(lon) + (np.double(180.0) + 1e-9)) / cellsize_lon), 0, 360)
     return np.int32(x * (np.double(180.0) / cellsize_lat) + y)
