@@ -49,6 +49,7 @@ import pytesmo.timedate.julian as julian
 
 
 class H08img(dataset_base.DatasetImgBase):
+
     """
     Reads HSAF H08 images. The images have to be uncompressed in the following folder structure
     path -
@@ -79,14 +80,25 @@ class H08img(dataset_base.DatasetImgBase):
 
     def __init__(self, path, month_path_str='h08_%Y%m_buf',
                  day_search_str='h08_%Y%m%d_*.buf',
-                 file_search_str='h08_%Y%m%d_%H%M%S*.buf'):
+                 file_search_str='h08_%Y%m%d_%H%M%S*.buf',
+                 filename_datetime_format=(4, 19, '%Y%m%d_%H%M%S')):
         self.path = path
         self.month_path_str = month_path_str
         self.day_search_str = day_search_str
         self.file_search_str = file_search_str
-        super(H08img, self).__init__(path, grid=None)
+        self.filename_datetime_format = filename_datetime_format
+        super(H08img, self).__init__(path, sub_path=month_path_str,
+                                     filename_templ=file_search_str,
+                                     exact_templ=False, grid=None)
 
-    def _get_possible_timestamps(self, timestamp):
+    def _get_orbit_start_date(self, filename):
+        orbit_start_str = \
+            os.path.basename(filename)[self.filename_datetime_format[0]:
+                                       self.filename_datetime_format[1]]
+        return datetime.strptime(orbit_start_str,
+                                 self.filename_datetime_format[2])
+
+    def tstamps_for_daterange(self, startdate, enddate):
         """
         Get the timestamps as datetime array that are possible for the
         given day, if the timestamps are
@@ -98,37 +110,40 @@ class H08img(dataset_base.DatasetImgBase):
 
         Parameters
         ----------
-        timestamp : datetime.datetime
-            Specific day.
+        start_date : datetime.date or datetime.datetime
+            start date
+        end_date : datetime.date or datetime.datetime
+            end date
 
         Returns
         -------
-        timestamps : numpy.ndarray
-            Datetime array of possible timestamps.
+        dates : list
+            list of datetimes
         """
-        day = datetime(timestamp.year, timestamp.month, timestamp.day)
+        file_list = []
+        delta_all = enddate - startdate
+        timestamps = []
 
-        filelist = glob.glob(os.path.join(self.path, day.strftime(self.month_path_str),
-                                          day.strftime(self.day_search_str)))
+        for i in xrange(delta_all.days + 1):
+            timestamp = startdate + timedelta(days=i)
 
-        if len(filelist) == 0:
-            raise ValueError("No data for this day")
-        img_offsets = []
-        for _file in filelist:
-            filename = os.path.split(_file)[1]
-            offset = timedelta(hours=int(filename[13:15]),
-                               minutes=int(filename[15:17]),
-                               seconds=int(filename[17:19]))
-            img_offsets.append(offset)
+            files = self._search_files(
+                timestamp, custom_templ=self.day_search_str)
 
-        return day + np.array(img_offsets)
+            file_list.extend(sorted(files))
 
-    def _read_spec_img(self, timestamp, lat_lon_bbox=None):
+        for filename in file_list:
+            timestamps.append(self._get_orbit_start_date(filename))
+        return timestamps
+
+    def _read_spec_file(self, filename, timestamp=None, lat_lon_bbox=None):
         """
         Read specific image for given datetime timestamp.
 
         Parameters
         ----------
+        filename : string
+            filename
         timestamp : datetime.datetime
             exact observation timestamp of the image that should be read
         lat_lon_bbox : list, optional
@@ -152,12 +167,8 @@ class H08img(dataset_base.DatasetImgBase):
             variable name of observation times in the data dict, if None all
             observations have the same timestamp
         """
-        filename = glob.glob(os.path.join(self.path, timestamp.strftime(self.month_path_str),
-                                          timestamp.strftime(self.file_search_str)))
-        if len(filename) != 1:
-            raise ValueError("There must be exactly one file for given timestamp %s" % timestamp.isoformat())
 
-        with bufr_reader.BUFRReader(filename[0]) as bufr:
+        with bufr_reader.BUFRReader(filename) as bufr:
             lons = []
             ssm = []
             ssm_noise = []
@@ -172,11 +183,12 @@ class H08img(dataset_base.DatasetImgBase):
                         lon_min, lon_max = message[0, 2], message[0, 3]
                         lat_min, lat_max = message[0, 4], message[0, 5]
                         if (lat_lon_bbox[0] > lat_max or lat_lon_bbox[1] < lat_min or
-                            lat_lon_bbox[2] > lon_max or lat_lon_bbox[3] < lon_min):
+                                lat_lon_bbox[2] > lon_max or lat_lon_bbox[3] < lon_min):
                             data_in_bbox = False
                             break
                     # print 'columns', math.ceil((message[:, 3] - message[:, 2]) / 0.00416667)
-                    # print 'rows', math.ceil((message[:, 5] - message[:, 4]) / 0.00416667)
+                    # print 'rows', math.ceil((message[:, 5] - message[:, 4]) /
+                    # 0.00416667)
                 elif data_in_bbox:
                     # first 5 elements are there only once, after that, 4 elements are repeated
                     # till the end of the array these 4 are ssm, ssm_noise, ssm_corr_flag and
@@ -194,8 +206,10 @@ class H08img(dataset_base.DatasetImgBase):
         if data_in_bbox:
             ssm = np.rot90(np.vstack(ssm)).astype(np.float32)
             ssm_noise = np.rot90(np.vstack(ssm_noise)).astype(np.float32)
-            ssm_corr_flag = np.rot90(np.vstack(ssm_corr_flag)).astype(np.float32)
-            ssm_proc_flag = np.rot90(np.vstack(ssm_proc_flag)).astype(np.float32)
+            ssm_corr_flag = np.rot90(
+                np.vstack(ssm_corr_flag)).astype(np.float32)
+            ssm_proc_flag = np.rot90(
+                np.vstack(ssm_proc_flag)).astype(np.float32)
             lats_dim = np.linspace(lat_max, lat_min, ssm.shape[0])
             lons_dim = np.concatenate(lons)
 
@@ -212,37 +226,45 @@ class H08img(dataset_base.DatasetImgBase):
             if lon_jump_ind.size > 1:
                 print "More than one jump in longitude"
             if lon_jump_ind.size == 1:
-                diff_lon_jump = np.abs(lons_dim[lon_jump_ind] - lons_dim[lon_jump_ind + 1])
+                diff_lon_jump = np.abs(
+                    lons_dim[lon_jump_ind] - lons_dim[lon_jump_ind + 1])
                 missing_elements = np.round(diff_lon_jump / 0.00416666)
                 missing_lons = np.linspace(lons_dim[lon_jump_ind],
-                                           lons_dim[lon_jump_ind + 1], missing_elements,
+                                           lons_dim[
+                                               lon_jump_ind + 1], missing_elements,
                                            endpoint=False)
 
                 # fill up longitude dimension to full grid
-                lons_dim = np.concatenate([lons_dim[:lon_jump_ind], missing_lons, lons_dim[lon_jump_ind + 1:]])
+                lons_dim = np.concatenate(
+                    [lons_dim[:lon_jump_ind], missing_lons, lons_dim[lon_jump_ind + 1:]])
                 # fill data with NaN values
                 empty = np.empty((lats_dim.shape[0], missing_elements))
                 empty.fill(1e38)
                 for key in data:
-                    data[key] = np.concatenate([data[key][:, :lon_jump_ind], empty, data[key][:, lon_jump_ind + 1:]], axis=1)
+                    data[key] = np.concatenate(
+                        [data[key][:, :lon_jump_ind], empty, data[key][:, lon_jump_ind + 1:]], axis=1)
 
             lat_jump_ind = np.where(np.diff(lats_dim) > 0.00418)[0]
             if lat_jump_ind.size > 1:
                 print "More than one jump in latitude"
             if lat_jump_ind.size == 1:
-                diff_lat_jump = np.abs(lats_dim[lat_jump_ind] - lats_dim[lat_jump_ind + 1])
+                diff_lat_jump = np.abs(
+                    lats_dim[lat_jump_ind] - lats_dim[lat_jump_ind + 1])
                 missing_elements = np.round(diff_lat_jump / 0.00416666)
                 missing_lats = np.linspace(lats_dim[lat_jump_ind],
-                                           lats_dim[lat_jump_ind + 1], missing_elements,
+                                           lats_dim[
+                                               lat_jump_ind + 1], missing_elements,
                                            endpoint=False)
 
                 # fill up longitude dimension to full grid
-                lats_dim = np.concatenate([lats_dim[:lat_jump_ind], missing_lats, lats_dim[lat_jump_ind + 1:]])
+                lats_dim = np.concatenate(
+                    [lats_dim[:lat_jump_ind], missing_lats, lats_dim[lat_jump_ind + 1:]])
                 # fill data with NaN values
                 empty = np.empty((missing_elements, lons_dim.shape[0]))
                 empty.fill(1e38)
                 for key in data:
-                    data[key] = np.concatenate([data[key][:lat_jump_ind, :], empty, data[key][lat_jump_ind + 1:, :]], axis=0)
+                    data[key] = np.concatenate(
+                        [data[key][:lat_jump_ind, :], empty, data[key][lat_jump_ind + 1:, :]], axis=0)
 
             lons, lats = np.meshgrid(lons_dim, lats_dim)
             # only return data in bbox
@@ -255,94 +277,24 @@ class H08img(dataset_base.DatasetImgBase):
                 # get shape of lats_dim and lons_dim to be able to reshape
                 # the 1d arrays to the correct 2d shapes
                 lats_dim_shape = np.where((lats_dim >= lat_lon_bbox[0]) &
-                                        (lats_dim <= lat_lon_bbox[1]))[0].shape[0]
+                                          (lats_dim <= lat_lon_bbox[1]))[0].shape[0]
                 lons_dim_shape = np.where((lons_dim >= lat_lon_bbox[2]) &
-                                        (lons_dim <= lat_lon_bbox[3]))[0].shape[0]
+                                          (lons_dim <= lat_lon_bbox[3]))[0].shape[0]
 
                 lons = lons[data_ind].reshape(lats_dim_shape, lons_dim_shape)
                 lats = lats[data_ind].reshape(lats_dim_shape, lons_dim_shape)
                 for key in data:
-                    data[key] = data[key][data_ind].reshape(lats_dim_shape, lons_dim_shape)
+                    data[key] = data[key][data_ind].reshape(
+                        lats_dim_shape, lons_dim_shape)
 
             return data, {}, timestamp, lons, lats, None
 
         else:
             return None, {}, timestamp, None, None, None
 
-    def read_img(self, timestamp, lat_lon_bbox=None):
-        """
-        Return an image if a specific datetime is given.
-
-        Parameters
-        ----------
-        timestamp : datetime.datetime
-            Time stamp.
-        lat_lon_bbox : list, optional
-            list of lat,lon cooridnates of bounding box
-            [lat_min, lat_max, lon_min, lon_max]
-
-        Returns
-        -------
-        data : dict or None
-            dictionary of numpy arrays that hold the image data for each
-            variable of the dataset, if no data was found None is returned
-        metadata : dict
-            dictionary of numpy arrays that hold the metadata
-        timestamp : datetime.datetime
-            exact timestamp of the image
-        lon : numpy.array or None
-            array of longitudes, if None self.grid will be assumed
-        lat : numpy.array or None
-            array of latitudes, if None self.grid will be assumed
-        time_var : string or None
-            variable name of observation times in the data dict, if None all
-            observations have the same timestamp
-        """
-        if type(timestamp) == datetime:
-            if timestamp in self._get_possible_timestamps(timestamp):
-                return self._read_spec_img(timestamp, lat_lon_bbox=lat_lon_bbox)
-            else:
-                raise ValueError("given timestamp is not a valid image "
-                                 "timestamp for this dataset")
-        else:
-            raise TypeError("given timestamp is not a datetime")
-
-    def daily_images(self, day, lat_lon_bbox=None):
-        """
-        Yield all images for a day.
-
-        Parameters
-        ----------
-        day : datetime.date or datetime.datetime
-            Specific day.
-
-        lat_lon_bbox : list, optional
-            list of lat,lon cooridnates of bounding box
-            [lat_min, lat_max, lon_min, lon_max]
-
-        Returns
-        -------
-        data : dict or None
-            dictionary of numpy arrays that hold the image data for each
-            variable of the dataset. If not data was found None is returned
-        metadata : dict
-            dictionary of numpy arrays that hold the metadata
-        timestamp : datetime.datetime
-            exact timestamp of the image
-        lon : numpy.array or None
-            array of longitudes, if None self.grid will be assumed
-        lat : numpy.array or None
-            array of latitudes, if None self.grid will be assumed
-        time_var : string or None
-            variable name of observation times in the data dict, if None all
-            observations have the same timestamp
-        """
-        for image_datetime in self._get_possible_timestamps(day):
-            yield_img = self._read_spec_img(image_datetime, lat_lon_bbox=lat_lon_bbox)
-            yield yield_img
-
 
 class H07img(dataset_base.DatasetImgBase):
+
     """
     Class for reading HSAF H07 SM OBS 1 images in bufr format.
     The images have the same structure as the ASCAT 3 minute pdu files
@@ -376,14 +328,25 @@ class H07img(dataset_base.DatasetImgBase):
 
     def __init__(self, path, month_path_str='h07_%Y%m_buf',
                  day_search_str='h07_%Y%m%d_*.buf',
-                 file_search_str='h07_%Y%m%d_%H%M%S*.buf'):
+                 file_search_str='h07_%Y%m%d_%H%M%S*.buf',
+                 filename_datetime_format=(4, 19, '%Y%m%d_%H%M%S')):
         self.path = path
         self.month_path_str = month_path_str
         self.day_search_str = day_search_str
         self.file_search_str = file_search_str
-        super(H07img, self).__init__(path, grid=None)
+        self.filename_datetime_format = filename_datetime_format
+        super(H07img, self).__init__(path, sub_path=month_path_str,
+                                     filename_templ=file_search_str,
+                                     exact_templ=False, grid=None)
 
-    def _get_possible_timestamps(self, timestamp):
+    def _get_orbit_start_date(self, filename):
+        orbit_start_str = \
+            os.path.basename(filename)[self.filename_datetime_format[0]:
+                                       self.filename_datetime_format[1]]
+        return datetime.strptime(orbit_start_str,
+                                 self.filename_datetime_format[2])
+
+    def tstamps_for_daterange(self, startdate, enddate):
         """
         Get the timestamps as datetime array that are possible for the
         given day, if the timestamps are
@@ -395,37 +358,40 @@ class H07img(dataset_base.DatasetImgBase):
 
         Parameters
         ----------
-        timestamp : datetime.datetime
-            Specific day.
+        start_date : datetime.date or datetime.datetime
+            start date
+        end_date : datetime.date or datetime.datetime
+            end date
 
         Returns
         -------
-        timestamps : numpy.ndarray
-            Datetime array of possible timestamps.
+        dates : list
+            list of datetimes
         """
-        day = datetime(timestamp.year, timestamp.month, timestamp.day)
+        file_list = []
+        delta_all = enddate - startdate
+        timestamps = []
 
-        filelist = glob.glob(os.path.join(self.path, day.strftime(self.month_path_str),
-                                          day.strftime(self.day_search_str)))
+        for i in xrange(delta_all.days + 1):
+            timestamp = startdate + timedelta(days=i)
 
-        if len(filelist) == 0:
-            raise ValueError("No data for this day")
-        img_offsets = []
-        for _file in filelist:
-            filename = os.path.split(_file)[1]
-            offset = timedelta(hours=int(filename[13:15]),
-                               minutes=int(filename[15:17]),
-                               seconds=int(filename[17:19]))
-            img_offsets.append(offset)
+            files = self._search_files(
+                timestamp, custom_templ=self.day_search_str)
 
-        return day + np.array(img_offsets)
+            file_list.extend(sorted(files))
 
-    def _read_spec_img(self, timestamp):
+        for filename in file_list:
+            timestamps.append(self._get_orbit_start_date(filename))
+        return timestamps
+
+    def _read_spec_file(self, filename, timestamp=None):
         """
         Read specific image for given datetime timestamp.
 
         Parameters
         ----------
+        filename : string
+            filename
         timestamp : datetime.datetime
             exact observation timestamp of the image that should be read
 
@@ -446,10 +412,6 @@ class H07img(dataset_base.DatasetImgBase):
             variable name of observation times in the data dict, if None all
             observations have the same timestamp
         """
-        filename = glob.glob(os.path.join(self.path, timestamp.strftime(self.month_path_str),
-                                          timestamp.strftime(self.file_search_str)))
-        if len(filename) != 1:
-            raise ValueError("There must be exactly one file for given timestamp %s" % timestamp.isoformat())
 
         latitude = []
         longitude = []
@@ -470,7 +432,7 @@ class H07img(dataset_base.DatasetImgBase):
         sigma40 = []
         sigma40_noise = []
 
-        with bufr_reader.BUFRReader(filename[0]) as bufr:
+        with bufr_reader.BUFRReader(filename) as bufr:
             for message in bufr.messages():
 
                 latitude.append(message[:, 12])
@@ -489,7 +451,7 @@ class H07img(dataset_base.DatasetImgBase):
 
                 beam_ident.append([message[:, 20],
                                    message[:, 34],
-                                    message[:, 48]])
+                                   message[:, 48]])
                 incidence.append([message[:, 21],
                                   message[:, 35],
                                   message[:, 49]])
@@ -508,7 +470,7 @@ class H07img(dataset_base.DatasetImgBase):
                 seconds = message[:, 11].astype(int)
 
                 dates.append(julian.julday(months, days, years,
-                                            hours, minutes, seconds))
+                                           hours, minutes, seconds))
 
         ssm = np.concatenate(ssm)
         latitude = np.concatenate(latitude)
@@ -537,6 +499,7 @@ class H07img(dataset_base.DatasetImgBase):
 
 
 class H14img(dataset_base.DatasetImgBase):
+
     """
     Class for reading HSAF H14 SM DAS 2 products in grib format
     The images have to be uncompressed in the following folder structure
@@ -571,10 +534,11 @@ class H14img(dataset_base.DatasetImgBase):
         self.path = path
         self.month_path_str = month_path_str
         self.file_search_str = file_str
-        super(H14img, self).__init__(path, grid=None)
+        super(H14img, self).__init__(path, sub_path=month_path_str,
+                                     filename_templ=file_str, grid=None)
         self.expand_grid = expand_grid
 
-    def _read_spec_img(self, timestamp):
+    def _read_spec_file(self, filename, timestamp=None):
         """
         Read specific image for given datetime timestamp.
 
@@ -600,8 +564,6 @@ class H14img(dataset_base.DatasetImgBase):
             variable name of observation times in the data dict, if None all
             observations have the same timestamp
         """
-        filename = os.path.join(self.path, timestamp.strftime(self.month_path_str),
-                                timestamp.strftime(self.file_search_str))
 
         param_names = {'40': 'SM_layer1_0-7cm',
                        '41': 'SM_layer2_7-28cm',
