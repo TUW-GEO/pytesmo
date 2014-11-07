@@ -159,8 +159,10 @@ class BasicGrid(object):
                                           " Length of lon array is not divisible by shape[1] without rest")
 
             self.shape = shape
-            self.latdim = np.reshape(self.arrlat, self.shape)[:, 0]
-            self.londim = np.reshape(self.arrlon, self.shape)[0, :]
+            self.latdim = np.reshape(
+                self.arrlat, (self.shape[1], self.shape[0]))[:, 0]
+            self.londim = np.reshape(
+                self.arrlon, (self.shape[1], self.shape[0]))[0, :]
 
         else:
             self.shape = (len(self.arrlon))
