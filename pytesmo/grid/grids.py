@@ -816,6 +816,25 @@ def lonlat2cell(lon, lat, cellsize=5., cellsize_lon=None, cellsize_lat=None):
     return np.int32(x * (np.double(180.0) / cellsize_lat) + y)
 
 
+def gridfromdims(londim, latdim):
+    """
+    Defines new grid object from latitude and longitude dimensions.
+    latitude and longitude dimensions are 1D arrays that give the
+    latitude and longitude values of a 2D latitude-longitude array
+
+    Parameters
+    ----------
+    londim: numpy.array
+        longitude dimension
+    latdim: numpy.array
+        latitude dimension
+
+    """
+    lons, lats = np.meshgrid(londim, latdim)
+    return BasicGrid(lons.flatten(), lats.flatten(),
+                     shape=(len(londim), len(latdim)))
+
+
 def genreg_grid(grd_spc_lat=1, grd_spc_lon=1,
                 minlat=-90.0, maxlat=90.0,
                 minlon=-180.0, maxlon=180.0):
@@ -842,10 +861,7 @@ def genreg_grid(grd_spc_lat=1, grd_spc_lon=1,
     maxlon : float, optional
         maximum longitude of the grid
     """
-    # lon_dim = np.arange(110+grd_spc_lon/2.0, 180.0, grd_spc_lon)
-    # lat_dim = np.arange(-50+grd_spc_lat/2.0, -10, grd_spc_lat)
     lon_dim = np.arange(minlon + grd_spc_lon / 2.0, maxlon, grd_spc_lon)
     lat_dim = np.arange(maxlat - grd_spc_lat / 2.0, minlat, -grd_spc_lat)
-    lons, lats = np.meshgrid(lon_dim, lat_dim)
-    return BasicGrid(lons.flatten(), lats.flatten(),
-                     shape=(len(lon_dim), len(lat_dim)))
+
+    return gridfromdims(lon_dim, lat_dim)
