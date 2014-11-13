@@ -42,7 +42,7 @@ class Test_2Dgrid(unittest.TestCase):
         lon = np.arange(-180, 180, 2.5)
         self.lon, self.lat = np.meshgrid(lon, lat)
         self.grid = grids.BasicGrid(
-            self.lon.flatten(), self.lat.flatten(), shape=(len(lat), len(lon)))
+            self.lon.flatten(), self.lat.flatten(), shape=(len(lon), len(lat)))
 
     def test_gpi2rowcol(self):
         """
