@@ -14,6 +14,7 @@ import datetime
 import pandas as pd
 
 import pytesmo.io.dataset_base as dsbase
+import pytesmo.grid.grids as grids
 
 
 class DatasetError(Exception):
@@ -159,7 +160,7 @@ class Dataset(object):
             var[:] = data
 
         for attr_name, attr_value in attr.iteritems():
-            setattr(var, attr_name, attr_value)
+            self.dataset.variables[name].setncattr(attr_name, attr_value)
 
     def append_var(self, name, data):
         """
@@ -1403,3 +1404,149 @@ class NetCDFGriddedTS(dsbase.DatasetTSBase):
             self.netcdf_obj.close()
             self.netcdf_obj = None
         return ts
+
+
+class netCDF2DImageStack(Dataset):
+
+    """
+    Class for writing stacks of 2D images into netCDF.
+    """
+
+    def __init__(self, filename, grid=None, times=None,
+                 mode='r', name=''):
+        self.grid = grid
+        if len(grid.shape) != 2:
+            raise ValueError("grid must be 2D grid for a imagestack")
+        self.filename = filename
+        self.times = times
+        self.variables = []
+        self.time_var = 'time'
+        self.time_units = "days since 1900-01-01"
+        self.time_chunksize = 1
+        self.lon_chunksize = 1
+        self.lat_chunksize = len(self.grid.latdim)
+        super(netCDF2DImageStack, self).__init__(filename, name=name,
+                                                 mode=mode)
+
+        if self.mode == 'w':
+            self._init_dimensions()
+            self._init_time()
+            self._init_location_variables()
+        elif self.mode in ['a', 'r']:
+            self._load_grid()
+            self._load_variables()
+
+    def _init_dimensions(self):
+        self.create_dim('lon', len(self.grid.londim))
+        self.create_dim('lat', len(self.grid.latdim))
+        self.create_dim('time', len(self.times))
+
+    def _load_grid(self):
+        lons = self.dataset.variables['lon'][:]
+        lats = self.dataset.variables['lat'][:]
+        self.grid = grids.gridfromdims(lons, lats)
+
+    def _load_variables(self):
+        for var in self.dataset.variables:
+            if self.dataset.variables[var].dimensions == ('time', 'lat', 'lon'):
+                self.variables.append(var)
+
+    def _init_time(self):
+        """
+        initialize the dimensions and variables that are the basis of
+        the format
+        """
+        # initialize time variable
+        time_data = netCDF4.date2num(self.times, self.time_units)
+        self.write_var(self.time_var, data=time_data, dim='time',
+                       attr={'standard_name': 'time',
+                             'long_name': 'time of measurement',
+                             'units': self.time_units},
+                       dtype=np.double,
+                       chunksizes=[self.time_chunksize])
+
+    def _init_location_variables(self):
+        # write station information, longitude, latitude and altitude
+        self.write_var('lon', data=self.grid.londim, dim='lon',
+                       attr={'standard_name': 'longitude',
+                             'long_name': 'location longitude',
+                             'units': 'degrees_east',
+                             'valid_range': (-180.0, 180.0)},
+                       dtype=np.float)
+        self.write_var('lat', data=self.grid.latdim, dim='lat',
+                       attr={'standard_name': 'latitude',
+                             'long_name': 'location latitude',
+                             'units': 'degrees_north',
+                             'valid_range': (-90.0, 90.0)},
+                       dtype=np.float)
+
+    def init_variable(self, var):
+        self.write_var(var, data=None, dim=('time', 'lat', 'lon'),
+                       dtype=np.float,
+                       attr={'_FillValue': -9999.})
+
+    def write_ts(self, gpi, data):
+        """
+        write a time series into the imagestack
+        at the given gpi
+
+        Parameters
+        ----------
+        self: type
+            description
+        gpi: int or numpy.array
+            grid point indices to write to
+        data: dictionary
+            dictionary of int or numpy.array for each variable
+            that should be written
+            shape must be (len(gpi), len(times))
+        """
+        gpi = np.atleast_1d(gpi)
+
+        for i, gp in enumerate(gpi):
+            row, column = self.grid.gpi2rowcol(gp)
+            for var in data:
+                if var not in self.variables:
+                    self.variables.append(var)
+                    self.init_variable(var)
+                self.dataset.variables[var][
+                    :, row, column] = np.atleast_2d(data[var])[i, :]
+
+    def __setitem__(self, gpi, data):
+        """
+        write a time series into the imagestack
+        at the given gpi
+
+        Parameters
+        ----------
+        self: type
+            description
+        gpi: int or numpy.array
+            grid point indices to write to
+        data: dictionary
+            dictionary of int or numpy.array for each variable
+            that should be written
+            shape must be (len(gpi), len(times))
+        """
+        gpi = np.atleast_1d(gpi)
+
+        for i, gp in enumerate(gpi):
+            row, column = self.grid.gpi2rowcol(gp)
+            for var in data:
+                if var not in self.variables:
+                    self.variables.append(var)
+                    self.init_variable(var)
+                self.dataset.variables[var][
+                    :, row, column] = np.atleast_2d(data[var])[i, :]
+
+    def __getitem__(self, key):
+
+        gpi = np.atleast_1d(key)
+        data = {}
+        for i, gp in enumerate(gpi):
+            row, column = self.grid.gpi2rowcol(gp)
+            for var in self.variables:
+                data[var] = self.dataset.variables[var][
+                    :, row, column]
+
+        return pd.DataFrame(data, index=self.times)
