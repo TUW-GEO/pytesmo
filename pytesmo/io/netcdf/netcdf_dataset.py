@@ -1406,17 +1406,109 @@ class NetCDFGriddedTS(dsbase.DatasetTSBase):
         return ts
 
 
-class netCDF2DImageStack(Dataset):
+class netCDFImageStack(OrthoMultiTs):
 
     """
-    Class for writing stacks of 2D images into netCDF.
+    Class for writing stacks of 1D images into netCDF.
+    1D image stacks are basically orthogonal multidimensional
+    array representation netCDF files.
     """
 
     def __init__(self, filename, grid=None, times=None,
                  mode='r', name=''):
         self.grid = grid
-        if len(grid.shape) != 2:
-            raise ValueError("grid must be 2D grid for a imagestack")
+        self.filename = filename
+        self.times = times
+        self.variables = []
+        self.time_var = 'time'
+        self.time_units = "days since 1900-01-01"
+        self.time_chunksize = 1
+        self.lon_chunksize = 1
+        self.lat_chunksize = len(self.grid.activegpis)
+        super(netCDFImageStack, self).__init__(filename,
+                                               n_loc=len(self.grid.activegpis),
+                                               name=name, mode=mode,
+                                               read_dates=False)
+
+        if self.mode in ['a', 'r']:
+            self._load_grid()
+            self._load_times()
+        if self.mode == 'w':
+            self.dataset.variables[self.lon_var][:] = self.grid.activearrlon
+            self.dataset.variables[self.lat_var][:] = self.grid.activearrlat
+            self.dataset.variables[self.loc_ids_name][:] = self.grid.activegpis
+
+    def _load_grid(self):
+        lons = self.dataset.variables[self.lon_var][:]
+        lats = self.dataset.variables[self.lat_var][:]
+        self.grid = grids.BasicGrid(lons, lats)
+
+    def _load_times(self):
+        self.times = netCDF4.num2date(self.dataset.variables['time'][:],
+                                      self.time_units)
+
+    def write_ts(self, gpi, data):
+        """
+        write a time series into the imagestack
+        at the given gpi
+
+        Parameters
+        ----------
+        self: type
+            description
+        gpi: int or numpy.array
+            grid point indices to write to
+        data: dictionary
+            dictionary of int or numpy.array for each variable
+            that should be written
+            shape must be (len(gpi), len(times))
+        """
+        gpi = np.atleast_1d(gpi)
+
+        for i, gp in enumerate(gpi):
+            for var in data:
+                super(netCDFImageStack, self).write_ts(
+                    gp, {var: np.atleast_1d(np.atleast_2d(data[var])[i, :])},
+                    np.array(self.times))
+
+    def __setitem__(self, gpi, data):
+        """
+        write a time series into the imagestack
+        at the given gpi
+
+        Parameters
+        ----------
+        self: type
+            description
+        gpi: int or numpy.array
+            grid point indices to write to
+        data: dictionary
+            dictionary of int or numpy.array for each variable
+            that should be written
+            shape must be (len(gpi), len(times))
+        """
+        self.write_ts(gpi, data)
+
+    def __getitem__(self, key):
+
+        gpi = np.atleast_1d(key)
+        for i, gp in enumerate(gpi):
+            data = super(netCDFImageStack, self).read_all_ts(gp)
+
+        return pd.DataFrame(data, index=self.times)
+
+
+class netCDF2DImageStack(Dataset):
+
+    """
+    Class for writing stacks of 1D or 2D images into netCDF.
+    1D image stacks are basically orthogonal multidimensional
+    array representation netCDF files.
+    """
+
+    def __init__(self, filename, grid=None, times=None,
+                 mode='r', name=''):
+        self.grid = grid
         self.filename = filename
         self.times = times
         self.variables = []
@@ -1450,6 +1542,10 @@ class netCDF2DImageStack(Dataset):
         for var in self.dataset.variables:
             if self.dataset.variables[var].dimensions == ('time', 'lat', 'lon'):
                 self.variables.append(var)
+
+    def _load_times(self):
+        self.times = netCDF4.num2date(self.dataset.variables['time'][:],
+                                      self.time_units)
 
     def _init_time(self):
         """
@@ -1528,16 +1624,7 @@ class netCDF2DImageStack(Dataset):
             that should be written
             shape must be (len(gpi), len(times))
         """
-        gpi = np.atleast_1d(gpi)
-
-        for i, gp in enumerate(gpi):
-            row, column = self.grid.gpi2rowcol(gp)
-            for var in data:
-                if var not in self.variables:
-                    self.variables.append(var)
-                    self.init_variable(var)
-                self.dataset.variables[var][
-                    :, row, column] = np.atleast_2d(data[var])[i, :]
+        self.write_ts(gpi, data)
 
     def __getitem__(self, key):
 
