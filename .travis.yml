@@ -1,4 +1,6 @@
 language: python
+notifications:
+  email: false
 python:
   # We don't actually use the Travis Python, but this keeps it organized.
   - "2.7"
