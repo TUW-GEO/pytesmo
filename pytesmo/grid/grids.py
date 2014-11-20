@@ -165,7 +165,7 @@ class BasicGrid(object):
                 self.arrlon, (self.shape[1], self.shape[0]))[0, :]
 
         else:
-            self.shape = (len(self.arrlon))
+            self.shape = tuple([len(self.arrlon)])
 
         if gpis is None:
             self.gpis = np.arange(self.n_gpi)
