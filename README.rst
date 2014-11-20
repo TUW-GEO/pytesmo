@@ -33,5 +33,6 @@ Build status
 ============
 
 Development branch
+
 .. image:: https://travis-ci.org/TUW-GEO/pytesmo.svg?branch=develop
     :target: https://travis-ci.org/TUW-GEO/pytesmo
