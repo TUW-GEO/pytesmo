@@ -26,7 +26,8 @@ install:
   - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy scipy pandas statsmodels netCDF4  cython pytest
   - source activate test-environment
   - sudo apt-get install -y gfortran gcc
-  - pip install pybufr-ecmwf
+  - pip install -q pybufr-ecmwf
+  - sudo apt-get install -y libgrib-api-dev
   - pip install pygrib
   - pip install pykdtree
   - pip install pyresample
