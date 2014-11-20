@@ -12,7 +12,7 @@ install:
   # the same.
   - sudo apt-get install -y gfortran gcc
   - sudo apt-get install -y libhdf5-serial-dev netcdf-bin libnetcdf-dev
-  - suod apt-get build-dep python-scipy
+  - sudo apt-get build-dep python-scipy
   - pip install numpy scipy pandas cython statsmodels netCDF4 pytest
   - pip install -q pybufr-ecmwf
   - sudo apt-get install -y libgrib-api-dev
