@@ -32,6 +32,7 @@ install:
   - pip install pykdtree
   - pip install pyresample
   - python setup.py install
+  - pip list
 
 script:
-  - py.test
+  - python setup.py test
