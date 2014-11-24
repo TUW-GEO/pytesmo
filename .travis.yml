@@ -7,14 +7,14 @@ python:
 install:
   - sudo apt-get update
   # You may want to periodically update this, although the conda update
-  # conda line below will keep everything up-to-date. We do this
+  # conda line below will keep everything up-to-date.  We do this
   # conditionally because it saves us some downloading if the version is
   # the same.
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
-    wget http://repo.continuum.io/miniconda/Miniconda-3.4.2-Linux-x86_64.sh -O miniconda.sh;
-  else
-    wget http://repo.continuum.io/miniconda/Miniconda3-3.4.2-Linux-x86_64.sh -O miniconda.sh;
-  fi
+      wget http://repo.continuum.io/miniconda/Miniconda-3.4.2-Linux-x86_64.sh -O miniconda.sh;
+    else
+      wget http://repo.continuum.io/miniconda/Miniconda3-3.4.2-Linux-x86_64.sh -O miniconda.sh;
+    fi
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
   - hash -r
@@ -22,7 +22,8 @@ install:
   - conda update -q conda
   # Useful for debugging any issues with conda
   - conda info -a
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy scipy pandas statsmodels netCDF4 cython pytest
+
+  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy scipy pandas statsmodels netCDF4  cython pytest
   - source activate test-environment
   - sudo apt-get install -y gfortran gcc
   - pip install -q pybufr-ecmwf
@@ -31,7 +32,6 @@ install:
   - pip install pykdtree
   - pip install pyresample
   - python setup.py install
-  - pip list
+
 script:
-  - echo "test starts"
-  - python setup.py test
+  - py.test
