@@ -23,7 +23,7 @@ install:
   # Useful for debugging any issues with conda
   - conda info -a
 
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy scipy pandas statsmodels netCDF4  cython pytest
+  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy scipy pandas statsmodels netCDF4  cython pytest pip
   - source activate test-environment
   - sudo apt-get install -y gfortran gcc
   - pip install -q pybufr-ecmwf
@@ -33,6 +33,8 @@ install:
   - pip install pyresample
   - python setup.py install
   - pip list
+  - which pip
+  - which python
 
 script:
   - python setup.py test
