@@ -38,3 +38,7 @@ install:
 
 script:
   - python setup.py test
+after_success:
+  # report coverage results to coveralls.io
+  - pip install coveralls
+  - coveralls
