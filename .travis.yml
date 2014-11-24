@@ -33,4 +33,5 @@ install:
   - python setup.py install
   - pip list
 script:
+  - echo "test starts"
   - python setup.py test
