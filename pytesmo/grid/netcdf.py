@@ -75,7 +75,8 @@ def save_lonlat(filename, arrlon, arrlat, arrcell=None,
     with Dataset(nc_name, 'w', format='NETCDF4') as ncfile:
 
         if (global_attrs is not None and 'shape' in global_attrs and
-                type(global_attrs['shape']) is not int):
+                type(global_attrs['shape']) is not int and
+                len(global_attrs['shape']) == 2):
 
             latsize = global_attrs['shape'][0]
             lonsize = global_attrs['shape'][1]
@@ -280,7 +281,8 @@ def load_grid(filename):
             lats = lats.flatten('F')
 
             if 'subset_flag' in nc_data.variables.keys():
-                subset = np.where(nc_data.variables['subset_flag'][:].flatten() == 1)[0]
+                subset = np.where(
+                    nc_data.variables['subset_flag'][:].flatten() == 1)[0]
 
         elif len(shape) == 1:
             lons = nc_data.variables['lon'][:]
