@@ -4,6 +4,10 @@ Introduction to pytesmo a python Toolbox for the Evaluation of Soil Moisture Obs
 .. image:: https://badge.fury.io/py/pytesmo.svg
     :target: http://badge.fury.io/py/pytesmo
 
+.. image:: https://coveralls.io/repos/TUW-GEO/pytesmo/badge.png?branch=master
+  :target: https://coveralls.io/r/TUW-GEO/pytesmo?branch=master
+
+
 pytesmo is a package which aims it is to provide a library that can be used for the comparison and validation
 of geospatial time series datasets with a (initial) focus on soil moisture.
 
