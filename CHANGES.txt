@@ -30,3 +30,11 @@ v0.2.2, 2014-10-03
 * fixed bug that lead to old grids without shape information not loading
 v0.2.3, 2014-10-03
 * added grouping module
+v0.2.4, 2014-12-09
+* moved to pyscaffold structure
+* added tests for modules
+* added grid generation routines
+* fix for issue #15
+* updated classes to work with new base classes, does not change API
+* added travis CI support
+* changed theme of documentation, and enabled read the docs
