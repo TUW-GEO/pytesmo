@@ -17,19 +17,25 @@ import versioneer
 import setuptools
 from setuptools.command.test import test as TestCommand
 from setuptools import setup
-from distutils.command.sdist import sdist as _sdist
 from distutils.extension import Extension
 import numpy as np
 
 
-class sdist(_sdist):
+class Cythonize(Command):
+
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
 
     def run(self):
         # Make sure the compiled Cython files in the distribution are
         # up-to-date
         from Cython.Build import cythonize
         cythonize(['pytesmo/time_series/filters.pyx'])
-        _sdist.run(self)
 
 
 ext_modules = [
@@ -175,7 +181,7 @@ def setup_package():
     cmdclass['docs'] = sphinx_builder()
     cmdclass['doctest'] = sphinx_builder()
     cmdclass['test'] = PyTest
-    cmdclass['sdist'] = sdist
+    cmdclass['cythonize'] = Cythonize
 
     # Some helper variables
     version = versioneer.get_version()
