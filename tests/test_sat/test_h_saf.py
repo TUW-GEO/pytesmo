@@ -15,7 +15,8 @@ import pytesmo.io.sat.h_saf as H_SAF
 class Test_H08(unittest.TestCase):
 
     def setUp(self):
-        data_path = os.path.join(os.path.dirname(__file__), 'test_data', 'h_saf', 'h08')
+        data_path = os.path.join(
+            os.path.dirname(__file__), 'test_data', 'h_saf', 'h08')
         self.reader = H_SAF.H08img(data_path)
 
     def tearDown(self):
@@ -26,14 +27,17 @@ class Test_H08(unittest.TestCase):
         test getting the image offsets for a known day
         2010-05-01
         """
-        timestamps = self.reader._get_possible_timestamps(datetime.datetime(2010, 5, 1))
+        timestamps = self.reader.tstamps_for_daterange(
+            datetime.datetime(2010, 5, 1), datetime.datetime(2010, 5, 1))
         timestamps_should = [datetime.datetime(2010, 5, 1, 8, 33, 1)]
         assert sorted(timestamps) == sorted(timestamps_should)
 
     def test_image_reading(self):
-        data, meta, timestamp, lons, lats, time_var = self.reader.read_img(datetime.datetime(2010, 5, 1, 8, 33, 1))
+        data, meta, timestamp, lons, lats, time_var = self.reader.read_img(
+            datetime.datetime(2010, 5, 1, 8, 33, 1))
         # do not check data content at the moment just shapes and structure
-        assert sorted(data.keys()) == sorted(['ssm', 'corr_flag', 'ssm_noise', 'proc_flag'])
+        assert sorted(data.keys()) == sorted(
+            ['ssm', 'corr_flag', 'ssm_noise', 'proc_flag'])
         assert lons.shape == (3120, 7680)
         assert lats.shape == (3120, 7680)
         for var in data:
@@ -51,7 +55,8 @@ class Test_H08(unittest.TestCase):
         data, meta, timestamp, lons, lats, time_var = self.reader.read_img(datetime.datetime(2010, 5, 1, 8, 33, 1),
                                                                            lat_lon_bbox=[60, 70, 15, 25])
         # do not check data content at the moment just shapes and structure
-        assert sorted(data.keys()) == sorted(['ssm', 'corr_flag', 'ssm_noise', 'proc_flag'])
+        assert sorted(data.keys()) == sorted(
+            ['ssm', 'corr_flag', 'ssm_noise', 'proc_flag'])
         assert lons.shape == (2400, 2400)
         assert lats.shape == (2400, 2400)
         for var in data:
@@ -61,7 +66,8 @@ class Test_H08(unittest.TestCase):
 class Test_H07(unittest.TestCase):
 
     def setUp(self):
-        data_path = os.path.join(os.path.dirname(__file__), 'test_data', 'h_saf', 'h07')
+        data_path = os.path.join(
+            os.path.dirname(__file__), 'test_data', 'h_saf', 'h07')
         self.reader = H_SAF.H07img(data_path)
 
     def tearDown(self):
@@ -72,12 +78,14 @@ class Test_H07(unittest.TestCase):
         test getting the image offsets for a known day
         2010-05-01
         """
-        timestamps = self.reader._get_possible_timestamps(datetime.datetime(2010, 5, 1))
+        timestamps = self.reader.tstamps_for_daterange(
+            datetime.datetime(2010, 5, 1), datetime.datetime(2010, 5, 1))
         timestamps_should = [datetime.datetime(2010, 5, 1, 8, 33, 1)]
         assert sorted(timestamps) == sorted(timestamps_should)
 
     def test_image_reading(self):
-        data, meta, timestamp, lons, lats, time_var = self.reader.read_img(datetime.datetime(2010, 5, 1, 8, 33, 1))
+        data, meta, timestamp, lons, lats, time_var = self.reader.read_img(
+            datetime.datetime(2010, 5, 1, 8, 33, 1))
         ssm_should = np.array([51.2, 65.6, 46.2, 56.9, 61.4, 61.5, 58.1, 47.1, 72.7, 13.8, 60.9, 52.1,
                                78.5, 57.8, 56.2, 79.8, 67.7, 53.8, 86.5, 29.4, 50.6, 88.8, 56.9, 68.9,
                                52.4, 64.4, 81.5, 50.5, 84., 79.6, 47.4, 79.5, 46.9, 60.7, 81.3, 52.9,
@@ -96,7 +104,8 @@ class Test_H07(unittest.TestCase):
 class Test_H14(unittest.TestCase):
 
     def setUp(self):
-        data_path = os.path.join(os.path.dirname(__file__), 'test_data', 'h_saf', 'h14')
+        data_path = os.path.join(
+            os.path.dirname(__file__), 'test_data', 'h_saf', 'h14')
         self.reader = H_SAF.H14img(data_path, expand_grid=False)
         self.expand_reader = H_SAF.H14img(data_path, expand_grid=True)
 
@@ -105,7 +114,8 @@ class Test_H14(unittest.TestCase):
         self.expand_reader = None
 
     def test_image_reading(self):
-        data, meta, timestamp, lons, lats, time_var = self.reader.read_img(datetime.datetime(2014, 05, 15))
+        data, meta, timestamp, lons, lats, time_var = self.reader.read_img(
+            datetime.datetime(2014, 05, 15))
         assert sorted(data.keys()) == sorted(['SM_layer1_0-7cm', 'SM_layer2_7-28cm',
                                               'SM_layer3_28-100cm', 'SM_layer4_100-289cm'])
         assert lons.shape == (843490,)
@@ -114,7 +124,8 @@ class Test_H14(unittest.TestCase):
             assert data[var].shape == (843490,)
 
     def test_expanded_image_reading(self):
-        data, meta, timestamp, lons, lats, time_var = self.expand_reader.read_img(datetime.datetime(2014, 05, 15))
+        data, meta, timestamp, lons, lats, time_var = self.expand_reader.read_img(
+            datetime.datetime(2014, 05, 15))
         assert sorted(data.keys()) == sorted(['SM_layer1_0-7cm', 'SM_layer2_7-28cm',
                                               'SM_layer3_28-100cm', 'SM_layer4_100-289cm'])
         assert lons.shape == (800, 1600)

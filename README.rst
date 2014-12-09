@@ -1,68 +1,47 @@
 =========================================================================================
 Introduction to pytesmo a python Toolbox for the Evaluation of Soil Moisture Observations
 =========================================================================================
+.. image:: https://badge.fury.io/py/pytesmo.svg
+    :target: http://badge.fury.io/py/pytesmo
 
-pytesmo is a package which aims it is to provide a standard library that can be used for the comparison and validation
-of geospatial time series datasets with a focus on soil moisture.
-
-It contains an expanding collection of readers for different soil moisture datasets (see `Supported Datasets`_) as well as routines for comparing them.
-Special classes in the module :mod:`pytesmo.grid` provide easy nearest neighbor searching between datasets as well as
-the calculation of lookup tables of nearest neighbours. They also provide possibilities to easily read all
-grid points of a dataset in the correct order.
-
-It contains the code used for the calculation of metrics by the
-`Satellite Soil Moisture Validation Tool For ASCAT <http://rs.geo.tuwien.ac.at/validation_tool/ascat.html>`_. See :mod:`pytesmo.metrics`.
+.. image:: https://coveralls.io/repos/TUW-GEO/pytesmo/badge.png?branch=master
+  :target: https://coveralls.io/r/TUW-GEO/pytesmo?branch=master
 
 
+pytesmo is a package which aims it is to provide a library that can be used for the comparison and validation
+of geospatial time series datasets with a (initial) focus on soil moisture.
 
-Features
-========
+Documentation
+=============
 
-* easily read data from the `Supported Datasets`_
-* anomaly calculation based on climatology or using a moving window see :mod:`pytesmo.anomaly`
-* easy temporal matching of time series see :mod:`pytesmo.temporal_matching`
-* multiple methods for scaling between different observation domains (CDF matching, linear regreesion, min-max matching) see :mod:`pytesmo.scaling`
-* calculate standard metrics like correlation coefficients, RMSD, bias,
-  as well as more complex ones like triple collocation or MSE as a decomposition of the RMSD see :mod:`pytesmo.metrics`
+Please see the latest documentation including examples of how to install and use pytesmo
+at http://rs.geo.tuwien.ac.at/validation_tool/pytesmo/
 
+Contribute
+==========
 
-Supported Datasets
-==================
+We are happy if you want to contribute. Please raise an issue explaining what is missing
+or if you find a bug. We will also gladly accept pull requests against our develop branch
+for new features or bug fixes.
 
-Soil moisture is observed using different methods and instruments, in this version the following datasets are supported.
+If you want to contribute please follow these steps:
 
-Remotely sensed products
-------------------------
+- Fork the pytesmo repository to your account
+- make a new feature branch from the pytesmo develop branch
+- hack away
+- please include tests for your contributions in one of the test directories
+  We use py.test so a simple function called test_my_feature is enough
+- submit a pull request to our develop branch
 
-In this version soil moisture observations made with the following instruments are supported:
+Build status
+============
 
-ERS
-~~~
+Development branch
 
-* ERS-1/2 AMI 25km SSM (Surface Soil Moisture)
-available from http://rs.geo.tuwien.ac.at/products
+.. image:: https://travis-ci.org/TUW-GEO/pytesmo.svg?branch=develop
+    :target: https://travis-ci.org/TUW-GEO/pytesmo
 
-ASCAT
-~~~~~
+Master branch
 
-* ASCAT SSM(Surface Soil Moisture) Time Series
-Available in custom format from http://rs.geo.tuwien.ac.at/products/
-Available in netCDF format from http://hsaf.meteoam.it/soil-moisture.php
-
-
-* ASCAT SWI(Soil Water Index) Time Series
-Available in custom format from http://rs.geo.tuwien.ac.at/products/
-
-insitu obervations
-------------------
-
-Data from the International Soil Moisture Network (ISMN)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-ISMN data can be downloaded for free after registration from http://ismn.geo.tuwien.ac.at/
-<<<<<<< HEAD:README.txt
-
-Complete Documentation
-======================
-
-The Documentation can be found at http://rs.geo.tuwien.ac.at/validation_tool/pytesmo/
+.. image:: https://travis-ci.org/TUW-GEO/pytesmo.svg?branch=master
+    :target: https://travis-ci.org/TUW-GEO/pytesmo

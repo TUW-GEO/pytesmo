@@ -16,7 +16,7 @@ Contents:
    introduction.rst
    examples.rst
    
-   pytesmo
+   _rst/pytesmo
 
 
 Indices and tables

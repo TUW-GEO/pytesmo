@@ -45,6 +45,7 @@ class GridIterationError(Exception):
 
 
 class BasicGrid(object):
+
     """
     Grid that just has lat,lon coordinates and can find the
     nearest neighbour. It can also yield the gpi, lat, lon
@@ -138,7 +139,8 @@ class BasicGrid(object):
 
         """
         if lat.shape != lon.shape:
-            raise GridDefinitionError("lat and lon np.arrays have to have equal shapes")
+            raise GridDefinitionError(
+                "lat and lon np.arrays have to have equal shapes")
 
         self.n_gpi = len(lon)
 
@@ -157,18 +159,21 @@ class BasicGrid(object):
                                           " Length of lon array is not divisible by shape[1] without rest")
 
             self.shape = shape
-            self.latdim = np.reshape(self.arrlat, self.shape)[:, 0]
-            self.londim = np.reshape(self.arrlon, self.shape)[0, :]
+            self.latdim = np.reshape(
+                self.arrlat, (self.shape[1], self.shape[0]))[:, 0]
+            self.londim = np.reshape(
+                self.arrlon, (self.shape[1], self.shape[0]))[0, :]
 
         else:
-            self.shape = (len(self.arrlon))
+            self.shape = tuple([len(self.arrlon)])
 
         if gpis is None:
             self.gpis = np.arange(self.n_gpi)
             self.gpidirect = True
         else:
             if lat.shape != gpis.shape:
-                raise GridDefinitionError("lat, lon gpi np.arrays have to have equal shapes")
+                raise GridDefinitionError(
+                    "lat, lon gpi np.arrays have to have equal shapes")
             self.gpis = gpis
             self.gpidirect = False
 
@@ -370,6 +375,38 @@ class BasicGrid(object):
             index = np.where(self.activegpis == gpi)[0][0]
             return self.activearrlon[index], self.activearrlat[index]
 
+    def gpi2rowcol(self, gpi):
+        """
+        if the grid can be reshaped into a
+        sensible 2D shape then this function gives
+        the row(latitude dimension) and column(longitude dimension)
+        indices of the gpi in the 2D grid
+
+        Parameters
+        ----------
+        gpi : int32
+            Grid Point Index.
+
+        Returns
+        -------
+        row : int
+            row in 2D array
+        col : int
+            column in 2D array
+        """
+        if len(self.shape) == 2:
+            if self.gpidirect:
+                index = gpi
+            else:
+                index = np.where(self.gpis == gpi)[0][0]
+
+            index_lat = index / len(self.londim)
+            index_lon = index % len(self.londim)
+            return index_lat, index_lon
+
+        else:
+            raise(GridDefinitionError("Grid has no 2D shape"))
+
     def calc_lut(self, other, max_dist=np.Inf, into_subset=False):
         """
         takes other BasicGrid or CellGrid objects and computes
@@ -400,7 +437,8 @@ class BasicGrid(object):
             other._setup_kdTree()
 
         if self.kdTree.kdtree is not None and other.kdTree.kdtree is not None:
-            dist, index = other.kdTree.find_nearest_index(self.activearrlon, self.activearrlat, max_dist=max_dist)
+            dist, index = other.kdTree.find_nearest_index(
+                self.activearrlon, self.activearrlat, max_dist=max_dist)
 
             valid_index = np.where(dist != np.inf)[0]
             dist = dist[valid_index]
@@ -518,6 +556,7 @@ class BasicGrid(object):
 
 
 class CellGrid(BasicGrid):
+
     """
     Grid that has lat,lon coordinates as well as cell informatin.
     It can find nearest neighbour. It can also yield the gpi, lat, lon, cell
@@ -557,7 +596,8 @@ class CellGrid(BasicGrid):
                                        setup_kdTree=setup_kdTree, **kwargs)
 
         if self.arrlon.shape != cells.shape:
-            raise GridDefinitionError("lat, lon and cells np.arrays have to have equal shapes")
+            raise GridDefinitionError(
+                "lat, lon and cells np.arrays have to have equal shapes")
         self.arrcell = cells
 
         if subset is not None:
@@ -771,5 +811,57 @@ def lonlat2cell(lon, lat, cellsize=5., cellsize_lon=None, cellsize_lat=None):
         cellsize_lat = cellsize
     y = np.clip(np.floor((np.double(lat) +
                           (np.double(90.0) + 1e-9)) / cellsize_lat), 0, 180)
-    x = np.clip(np.floor((np.double(lon) + (np.double(180.0) + 1e-9)) / cellsize_lon), 0, 360)
+    x = np.clip(
+        np.floor((np.double(lon) + (np.double(180.0) + 1e-9)) / cellsize_lon), 0, 360)
     return np.int32(x * (np.double(180.0) / cellsize_lat) + y)
+
+
+def gridfromdims(londim, latdim):
+    """
+    Defines new grid object from latitude and longitude dimensions.
+    latitude and longitude dimensions are 1D arrays that give the
+    latitude and longitude values of a 2D latitude-longitude array
+
+    Parameters
+    ----------
+    londim: numpy.array
+        longitude dimension
+    latdim: numpy.array
+        latitude dimension
+
+    """
+    lons, lats = np.meshgrid(londim, latdim)
+    return BasicGrid(lons.flatten(), lats.flatten(),
+                     shape=(len(londim), len(latdim)))
+
+
+def genreg_grid(grd_spc_lat=1, grd_spc_lon=1,
+                minlat=-90.0, maxlat=90.0,
+                minlon=-180.0, maxlon=180.0):
+    """
+    Define a global regular lon lat grid which starts in the North Western
+    Corner of minlon, maxlat.
+    The grid points are defined to be in the middle of a grid cell.
+    e.g. the first point on a 1x1 degree grid with
+    minlon -180.0 and maxlat 90.0 will be at
+    -179.5 longitude, 89.5 latitude
+
+    Parameters
+    ----------
+    grd_spc_lat: float, optional
+        grid spacing in latitude direction
+    grd_spc_lon: float, optional
+        grid spacing in longitude direction
+    minlat : float, optional
+        minimum latitude of the grid
+    maxlat : float, optional
+        maximum latitude of the grid
+    minlon : float, optional
+        minimum longitude of the grid
+    maxlon : float, optional
+        maximum longitude of the grid
+    """
+    lon_dim = np.arange(minlon + grd_spc_lon / 2.0, maxlon, grd_spc_lon)
+    lat_dim = np.arange(maxlat - grd_spc_lat / 2.0, minlat, -grd_spc_lat)
+
+    return gridfromdims(lon_dim, lat_dim)

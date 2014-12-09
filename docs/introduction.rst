@@ -115,17 +115,6 @@ optional
 	for reading the H-SAF H07 and H08 products in BUFR Format. As far as I know this will only work on Linux or
 	in Cygwin but I have no experience using it on Windows.
 	pybufr-ewmwf downloads and installs the BUFR library from the ECMWF website.
-	Since ECMWF has restructured their website this automatic download fails in version 0.73 and below.
-	See this issue https://code.google.com/p/pybufr-ecmwf/issues/detail?id=10
-
-	A workaround is to download the package and change the URL before installing it.
-
-	* Download the pybufr-ecmwf package and decompress it
-
-	* Open the file build_interface.py and change the variable URL_ECMWF_WEBSITE on line 58 from
-	  "http://www.ecmwf.int/" to "http://old.ecmwf.int/"
-
-	* run python setup.py install and it should work
 
 * pygrib https://code.google.com/p/pygrib/
 
@@ -157,7 +146,7 @@ Windows
 A relatively easy way to install everything but matplotlib-basemap and netCDF4 is to install
 winpython from https://code.google.com/p/winpython/ and then download basemap from
 http://sourceforge.net/projects/matplotlib/files/matplotlib-toolkits/
-and netCDF4 from https://code.google.com/p/netcdf4-python/, and, if you want to read the H25 product, the
+and netCDF4 from https://code.google.com/p/netcdf4-python/, and, if you want to read the H14 product, the
 pygrib installer from http://www.lfd.uci.edu/~gohlke/pythonlibs/.
 Add them to your winpython installation using the winpython Control Panel.
 
@@ -180,8 +169,8 @@ Windows binaries
 
 pytesmo windows binaries are available for 32 and 64 bit systems:
 
-* 32-bit http://rs.geo.tuwien.ac.at/validation_tool/pytesmo/pytesmo-0.2.1/pytesmo-0.2.1.win32-py2.7.exe
-* 64-bit http://rs.geo.tuwien.ac.at/validation_tool/pytesmo/pytesmo-0.2.1/pytesmo-0.2.1.win-amd64-py2.7.exe
+* 32-bit http://rs.geo.tuwien.ac.at/validation_tool/pytesmo/pytesmo-0.2.4/pytesmo-0.2.4.win32-py2.7.exe
+* 64-bit http://rs.geo.tuwien.ac.at/validation_tool/pytesmo/pytesmo-0.2.4/pytesmo-0.2.4.win-amd64-py2.7.exe
 
 
 Linux

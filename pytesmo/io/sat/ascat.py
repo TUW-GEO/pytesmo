@@ -48,6 +48,7 @@ class ASCATReaderException(Exception):
 
 
 class ASCATTimeSeries(object):
+
     """
     Container class for ASCAT time series
 
@@ -93,6 +94,7 @@ class ASCATTimeSeries(object):
     porosity_hwsd : float
         porosity calculated from Harmonised World Soil Database
     """
+
     def __init__(self, gpi, lon, lat, cell, data,
                  topo_complex=None, wetland_frac=None,
                  porosity_gldas=None, porosity_hwsd=None):
@@ -134,10 +136,12 @@ class ASCATTimeSeries(object):
                 pass
             return ax
         else:
-            raise ASCATReaderException("data attribute is not a pandas.DataFrame")
+            raise ASCATReaderException(
+                "data attribute is not a pandas.DataFrame")
 
 
 class Ascat_data(object):
+
     """
     Class that provides access to ASCAT data stored in userformat which is downloadable from
     the TU Wien FTP Server after registration at http://rs.geo.tuwien.ac.at .
@@ -194,7 +198,8 @@ class Ascat_data(object):
     read_advisory_flags(gpi)
         reads the advisory flags for a given grid point index
     """
-    def __init__(self, path, grid_path, grid_info_filename='TUW_W54_01_lonlat-ld-land.txt', \
+
+    def __init__(self, path, grid_path, grid_info_filename='TUW_W54_01_lonlat-ld-land.txt',
                  advisory_flags_path=None, topo_threshold=50, wetland_threshold=50):
         """
         sets the paths and thresholds
@@ -213,10 +218,10 @@ class Ascat_data(object):
         else:
             self.include_advflags = True
             self.adv_flags_struct = np.dtype([('gpi', np.int32),
-                                       ('snow', np.uint8, 366),
-                                       ('frozen', np.uint8, 366),
-                                       ('water', np.uint8),
-                                       ('topo', np.uint8)])
+                                              ('snow', np.uint8, 366),
+                                              ('frozen', np.uint8, 366),
+                                              ('water', np.uint8),
+                                              ('topo', np.uint8)])
 
     def _load_grid_info(self):
         """
@@ -225,13 +230,17 @@ class Ascat_data(object):
         speed up future data access.
         """
 
-        grid_info_np_filepath = os.path.join(self.grid_path, self.grid_info_np_filename)
+        grid_info_np_filepath = os.path.join(
+            self.grid_path, self.grid_info_np_filename)
         if os.path.exists(grid_info_np_filepath):
             grid_info = np.load(grid_info_np_filepath)
         else:
-            grid_info_filepath = os.path.join(self.grid_path, self.grid_info_filename)
-            grid_info = np.loadtxt(grid_info_filepath, delimiter=',', skiprows=1)
-            np.save(os.path.join(self.grid_path, self.grid_info_np_filename), grid_info)
+            grid_info_filepath = os.path.join(
+                self.grid_path, self.grid_info_filename)
+            grid_info = np.loadtxt(
+                grid_info_filepath, delimiter=',', skiprows=1)
+            np.save(
+                os.path.join(self.grid_path, self.grid_info_np_filename), grid_info)
 
         self.grid = grids.CellGrid(grid_info[:, 2], grid_info[:, 1],
                                    grid_info[:, 3].astype(np.int16), gpis=grid_info[:, 0])
@@ -320,7 +329,8 @@ class Ascat_data(object):
         """
         cell = self.grid.gpi2cell(gpi)
 
-        gp_file = os.path.join(self.path, '%4d' % cell, self.gp_filename_template % gpi)
+        gp_file = os.path.join(
+            self.path, '%4d' % cell, self.gp_filename_template % gpi)
 
         if not os.path.exists(gp_file):
             print 'first time reading from cell %4d unzipping ...' % cell
@@ -348,9 +358,11 @@ class Ascat_data(object):
             adv_flags, topo, wetland = self.read_advisory_flags(gpi)
 
             if topo >= self.topo_threshold:
-                warnings.warn("Warning gpi shows topographic complexity of %d %%. Data might not be usable." % topo)
+                warnings.warn(
+                    "Warning gpi shows topographic complexity of %d %%. Data might not be usable." % topo)
             if wetland >= self.wetland_threshold:
-                warnings.warn("Warning gpi shows wetland fraction of %d %%. Data might not be usable." % wetland)
+                warnings.warn(
+                    "Warning gpi shows wetland fraction of %d %%. Data might not be usable." % wetland)
 
             df['doy'] = doy(df.index.month, df.index.day)
             df = df.join(adv_flags, on='doy', how='left')
@@ -399,7 +411,8 @@ class Ascat_data(object):
             self._load_grid_info()
 
         cell = self.grid.gpi2cell(gpi)
-        adv_file = os.path.join(self.advisory_flags_path, '%d_advisory-flags.dat' % cell)
+        adv_file = os.path.join(
+            self.advisory_flags_path, '%d_advisory-flags.dat' % cell)
         data = np.fromfile(adv_file, dtype=self.adv_flags_struct)
         index = np.where(data['gpi'] == gpi)[0]
 
@@ -409,12 +422,14 @@ class Ascat_data(object):
         snow[snow == 0] += 101
         snow -= 101
 
-        df = pd.DataFrame({'snow_prob': snow, 'frozen_prob': data['frozen'][0]})
+        df = pd.DataFrame(
+            {'snow_prob': snow, 'frozen_prob': data['frozen'][0]})
 
         return df, data['topo'][0], data['water'][0]
 
 
 class AscatNetcdf(object):
+
     """
     Class that provides access to ASCAT data stored in netCDF format which is downloadable from
     the HSAF website.
@@ -477,10 +492,15 @@ class AscatNetcdf(object):
     include_advflags : boolean
         True if advisory flags are available
     """
-    def __init__(self, path, grid_path, grid_info_filename='TUW_WARP5_grid_info_2_1.nc',
-                 topo_threshold=50, wetland_threshold=50, netcdftemplate='TUW_METOP_ASCAT_WARP55R12_%04d.nc',
-                 loc_id='gpi', obs_var='row_size', topo_var='topo', wetland_var='wetland',
-                 snow_var='snow', frozen_var='frozen'):
+
+    def __init__(self, path, grid_path,
+                 grid_info_filename='TUW_WARP5_grid_info_2_1.nc',
+                 topo_threshold=50, wetland_threshold=50,
+                 netcdftemplate='TUW_METOP_ASCAT_WARP55R12_%04d.nc',
+                 loc_id='gpi', obs_var='row_size', topo_var='topo',
+                 wetland_var='wetland', snow_var='snow',
+                 frozen_var='frozen',
+                 read_bulk=False):
 
         self.path = path
         self.grid_path = grid_path
@@ -495,6 +515,8 @@ class AscatNetcdf(object):
         self.wetland_var = wetland_var
         self.snow_var = snow_var
         self.frozen_var = frozen_var
+        self.read_bulk = read_bulk
+        self.prev_cell = -1
 
     def _load_grid_info(self):
         """
@@ -502,7 +524,8 @@ class AscatNetcdf(object):
         by TU Wien
         """
 
-        grid_info_filepath = os.path.join(self.grid_path, self.grid_info_filename)
+        grid_info_filepath = os.path.join(
+            self.grid_path, self.grid_info_filename)
         grid_info = netCDF4.Dataset(grid_info_filepath, 'r')
 
         land = grid_info.variables['land_flag'][:]
@@ -515,7 +538,8 @@ class AscatNetcdf(object):
         gpis = grid_info.variables['gpi'][:]
         cells = grid_info.variables['cell'][:]
 
-        self.grid = grids.CellGrid(lon[valid_points], lat[valid_points], cells[valid_points], gpis=gpis[valid_points])
+        self.grid = grids.CellGrid(lon[valid_points], lat[valid_points], cells[
+                                   valid_points], gpis=gpis[valid_points])
         self.grid_info_loaded = True
 
         grid_info.close()
@@ -584,14 +608,26 @@ class AscatNetcdf(object):
         if not self.grid_info_loaded:
             self._load_grid_info()
         cell = self.grid.gpi2cell(gpi)
-        ncfile = netCDF4.Dataset(os.path.join(self.path, self.netcdftemplate % cell), 'r')
+        if self.prev_cell != cell:
+            # new cell - means new file object and new read bulk if
+            # set
+            ncfile = netCDF4.Dataset(
+                os.path.join(self.path, self.netcdftemplate % cell), 'r')
+            self.units = ncfile.variables['time'].units
+            if self.read_bulk:
+                self.variables = {}
+                for var in ncfile.variables:
+                    self.variables[var] = ncfile.variables[var][:]
+
+                ncfile.close()
+                ncfile = self
 
         gpi_index = np.where(ncfile.variables[self.loc_id][:] == gpi)[0]
         time_series_length = ncfile.variables[self.obs_var][gpi_index]
         startindex = np.sum(ncfile.variables[self.obs_var][:gpi_index])
         endindex = startindex + time_series_length
         timestamps = netCDF4.num2date(ncfile.variables['time'][startindex:endindex],
-                                     ncfile.variables['time'].units)
+                                      self.units)
         dict_df = {}
         for into_df in self.include_in_df:
             d = ncfile.variables[into_df][startindex:endindex]
@@ -602,14 +638,16 @@ class AscatNetcdf(object):
         # read porosity values
         porosity = {}
         for por_source in ['gldas', 'hwsd']:
-            porosity[por_source] = ncfile.variables['por_%s' % por_source][gpi_index][0]
+            porosity[por_source] = ncfile.variables[
+                'por_%s' % por_source][gpi_index][0]
 
         if 'absolute_values' in kwargs:
 
             if kwargs['absolute_values']:
                 for por_source in ['gldas', 'hwsd']:
                     for el in self.to_absolute:
-                        df['%s_por_%s' % (el, por_source)] = (df[el] / 100.0) * (porosity[por_source])
+                        df['%s_por_%s' % (el, por_source)] = (
+                            df[el] / 100.0) * (porosity[por_source])
 
         topo = ncfile.variables[self.topo_var][gpi_index][0]
         wetland = ncfile.variables[self.wetland_var][gpi_index][0]
@@ -623,16 +661,19 @@ class AscatNetcdf(object):
         frozen = np.squeeze(ncfile.variables[self.frozen_var][gpi_index, :])
         # if data is not valid assume no freezing
         if type(frozen) == np.ma.masked_array:
-            warnings.warn('Frozen probabilities not valid, assuming no freezing')
+            warnings.warn(
+                'Frozen probabilities not valid, assuming no freezing')
             frozen = frozen.filled(0)
 
         adv_flags = pd.DataFrame({'snow_prob': snow,
                                   'frozen_prob': frozen})
 
         if topo >= self.topo_threshold:
-            warnings.warn("Warning gpi shows topographic complexity of %d %%. Data might not be usable." % topo)
+            warnings.warn(
+                "Warning gpi shows topographic complexity of %d %%. Data might not be usable." % topo)
         if wetland >= self.wetland_threshold:
-            warnings.warn("Warning gpi shows wetland fraction of %d %%. Data might not be usable." % wetland)
+            warnings.warn(
+                "Warning gpi shows wetland fraction of %d %%. Data might not be usable." % wetland)
 
         df['doy'] = doy(df.index.month, df.index.day)
         df = df.join(adv_flags, on='doy', how='left')
@@ -652,6 +693,7 @@ class AscatNetcdf(object):
 
 
 class AscatH25_SSM(AscatNetcdf):
+
     """
     class for reading ASCAT SSM data. It extends AscatNetcdf and provides the
     information necessary for reading SSM data
@@ -690,6 +732,7 @@ class AscatH25_SSM(AscatNetcdf):
     read_ssm(*args,**kwargs)
         read surface soil moisture
     """
+
     def __init__(self, path, grid_path, grid_info_filename='TUW_WARP5_grid_info_2_1.nc',
                  topo_threshold=50, wetland_threshold=50,
                  include_in_df=['sm', 'sm_noise', 'ssf', 'proc_flag', 'orbit_dir']):
@@ -713,7 +756,7 @@ class AscatH25_SSM(AscatNetcdf):
                                 'wetland_var': 'advf_wetland',
                                 'snow_var': 'advf_snow_prob',
                                 'frozen_var': 'advf_frozen_prob'}
-                             }
+                               }
 
         super(AscatH25_SSM, self).__init__(path, grid_path, grid_info_filename=grid_info_filename,
                                            topo_threshold=topo_threshold, wetland_threshold=wetland_threshold,
@@ -759,7 +802,8 @@ class AscatH25_SSM(AscatNetcdf):
         ASCATTimeSeries : object
             :class:`pytesmo.io.sat.ascat.ASCATTimeSeries` instance
         """
-        df, gpi, lon, lat, cell, topo, wetland, porosity = super(AscatH25_SSM, self)._read_ts(*args, **kwargs)
+        df, gpi, lon, lat, cell, topo, wetland, porosity = super(
+            AscatH25_SSM, self)._read_ts(*args, **kwargs)
         if 'mask_ssf' in kwargs:
             mask_ssf = kwargs['mask_ssf']
             if mask_ssf:
@@ -772,6 +816,7 @@ class AscatH25_SSM(AscatNetcdf):
 
 
 class Ascat_SSM(Ascat_data):
+
     """
     class for reading ASCAT SSM data. It extends Ascat_data and provides the
     information necessary for reading SSM data
@@ -817,6 +862,7 @@ class Ascat_SSM(Ascat_data):
     read_ssm(*args,**kwargs)
         read surface soil moisture
     """
+
     def __init__(self, *args, **kwargs):
         super(Ascat_SSM, self).__init__(*args, **kwargs)
         self.gp_filename_template = 'TUW_ASCAT_SSM_W55_gp%d.dat'
@@ -857,7 +903,8 @@ class Ascat_SSM(Ascat_data):
         ASCATTimeSeries : object
             :class:`pytesmo.io.sat.ascat.ASCATTimeSeries` instance
         """
-        df, gpi, lon, lat, cell = super(Ascat_SSM, self)._read_ts(*args, **kwargs)
+        df, gpi, lon, lat, cell = super(
+            Ascat_SSM, self)._read_ts(*args, **kwargs)
         if 'mask_ssf' in kwargs:
             mask_ssf = kwargs['mask_ssf']
             if mask_ssf:
@@ -867,6 +914,7 @@ class Ascat_SSM(Ascat_data):
 
 
 class Ascat_SWI(Ascat_data):
+
     """
     class for reading ASCAT SWI data. It extends Ascat_data and provides the
     information necessary for reading SWI data
@@ -922,32 +970,35 @@ class Ascat_SWI(Ascat_data):
         super(Ascat_SWI, self).__init__(*args, **kwargs)
         self.gp_filename_template = 'TUW_ASCAT_SWI_W55_gp%d.dat'
         self.gp_filestruct = np.dtype([('DAT', np.int32),
-                                       ('SWI_T=1', np.uint8), ('SWI_T=5', np.uint8), ('SWI_T=10', np.uint8), ('SWI_T=15', np.uint8),
-                                       ('SWI_T=20', np.uint8), ('SWI_T=40', np.uint8), ('SWI_T=60', np.uint8), ('SWI_T=100', np.uint8),
-                                       ('QFLAG_T=1', np.uint8), ('QFLAG_T=5', np.uint8), ('QFLAG_T=10', np.uint8), ('QFLAG_T=15', np.uint8),
+                                       ('SWI_T=1', np.uint8), ('SWI_T=5', np.uint8), ('SWI_T=10',
+                                                                                      np.uint8), ('SWI_T=15', np.uint8),
+                                       ('SWI_T=20', np.uint8), ('SWI_T=40', np.uint8), (
+                                           'SWI_T=60', np.uint8), ('SWI_T=100', np.uint8),
+                                       ('QFLAG_T=1', np.uint8), ('QFLAG_T=5', np.uint8), (
+                                           'QFLAG_T=10', np.uint8), ('QFLAG_T=15', np.uint8),
                                        ('QFLAG_T=20', np.uint8), ('QFLAG_T=40', np.uint8), ('QFLAG_T=60', np.uint8), ('QFLAG_T=100', np.uint8)])
 
         self.scale_factor = {'SWI_T=1': 0.5, 'SWI_T=5': 0.5, 'SWI_T=10': 0.5, 'SWI_T=15': 0.5,
-                           'SWI_T=20': 0.5, 'SWI_T=40': 0.5, 'SWI_T=60': 0.5, 'SWI_T=100': 0.5,
-                           'QFLAG_T=1': 0.5, 'QFLAG_T=5': 0.5, 'QFLAG_T=10': 0.5, 'QFLAG_T=15': 0.5,
-                           'QFLAG_T=20': 0.5, 'QFLAG_T=40': 0.5, 'QFLAG_T=60': 0.5, 'QFLAG_T=100': 0.5
-                           }
+                             'SWI_T=20': 0.5, 'SWI_T=40': 0.5, 'SWI_T=60': 0.5, 'SWI_T=100': 0.5,
+                             'QFLAG_T=1': 0.5, 'QFLAG_T=5': 0.5, 'QFLAG_T=10': 0.5, 'QFLAG_T=15': 0.5,
+                             'QFLAG_T=20': 0.5, 'QFLAG_T=40': 0.5, 'QFLAG_T=60': 0.5, 'QFLAG_T=100': 0.5
+                             }
         self.include_in_df = ['SWI_T=1', 'SWI_T=5', 'SWI_T=10', 'SWI_T=15', 'SWI_T=20', 'SWI_T=40', 'SWI_T=60', 'SWI_T=100',
-                            'QFLAG_T=1', 'QFLAG_T=5', 'QFLAG_T=10', 'QFLAG_T=15', 'QFLAG_T=20', 'QFLAG_T=40', 'QFLAG_T=60', 'QFLAG_T=100']
+                              'QFLAG_T=1', 'QFLAG_T=5', 'QFLAG_T=10', 'QFLAG_T=15', 'QFLAG_T=20', 'QFLAG_T=40', 'QFLAG_T=60', 'QFLAG_T=100']
         self.nan_values = {'SWI_T=1': 255, 'SWI_T=5': 255, 'SWI_T=10': 255, 'SWI_T=15': 255,
-                         'SWI_T=20': 255, 'SWI_T=40': 255, 'SWI_T=60': 255, 'SWI_T=100': 255,
-                         'QFLAG_T=1': 255, 'QFLAG_T=5': 255, 'QFLAG_T=10': 255, 'QFLAG_T=15': 255,
-                         'QFLAG_T=20': 255, 'QFLAG_T=40': 255, 'QFLAG_T=60': 255, 'QFLAG_T=100': 255
-                        }
+                           'SWI_T=20': 255, 'SWI_T=40': 255, 'SWI_T=60': 255, 'SWI_T=100': 255,
+                           'QFLAG_T=1': 255, 'QFLAG_T=5': 255, 'QFLAG_T=10': 255, 'QFLAG_T=15': 255,
+                           'QFLAG_T=20': 255, 'QFLAG_T=40': 255, 'QFLAG_T=60': 255, 'QFLAG_T=100': 255
+                           }
         self.datatype = {'SWI_T=1': np.float, 'SWI_T=5': np.float, 'SWI_T=10': np.float, 'SWI_T=15': np.float,
                          'SWI_T=20': np.float, 'SWI_T=40': np.float, 'SWI_T=60': np.float, 'SWI_T=100': np.float,
                          'QFLAG_T=1': np.float, 'QFLAG_T=5': np.float, 'QFLAG_T=10': np.float, 'QFLAG_T=15': np.float,
                          'QFLAG_T=20': np.float, 'QFLAG_T=40': np.float, 'QFLAG_T=60': np.float, 'QFLAG_T=100': np.float
                          }
         self.T_SWI = {1: 'SWI_T=1', 5: 'SWI_T=5', 10: 'SWI_T=10', 15: 'SWI_T=15',
-                    20: 'SWI_T=20', 40: 'SWI_T=40', 60: 'SWI_T=60', 100: 'SWI_T=100'}
+                      20: 'SWI_T=20', 40: 'SWI_T=40', 60: 'SWI_T=60', 100: 'SWI_T=100'}
         self.T_QFLAG = {1: 'QFLAG_T=1', 5: 'QFLAG_T=5', 10: 'QFLAG_T=10', 15: 'QFLAG_T=15',
-                    20: 'QFLAG_T=20', 40: 'QFLAG_T=40', 60: 'QFLAG_T=60', 100: 'QFLAG_T=100'}
+                        20: 'QFLAG_T=20', 40: 'QFLAG_T=40', 60: 'QFLAG_T=60', 100: 'QFLAG_T=100'}
 
     def read_swi(self, *args, **kwargs):
         """
@@ -981,16 +1032,19 @@ class Ascat_SWI(Ascat_data):
             advisory_flags_path was set. If T was set then only SWI and QFLAG values for the
             selected T value are included plut frozen_prob and snow_prob if applicable
         """
-        df, gpi, lon, lat, cell = super(Ascat_SWI, self)._read_ts(*args, **kwargs)
+        df, gpi, lon, lat, cell = super(
+            Ascat_SWI, self)._read_ts(*args, **kwargs)
         if 'T' in kwargs:
             T = kwargs['T']
             if T in self.T_SWI.keys():
                 if self.include_advflags:
-                    df = df[[self.T_SWI[T], self.T_QFLAG[T], 'frozen_prob', 'snow_prob']]
+                    df = df[
+                        [self.T_SWI[T], self.T_QFLAG[T], 'frozen_prob', 'snow_prob']]
                 else:
                     df = df[[self.T_SWI[T], self.T_QFLAG[T]]]
             else:
-                raise ASCATReaderException("Invalid T value. Choose one of " + str(sorted(self.T_SWI.keys())))
+                raise ASCATReaderException(
+                    "Invalid T value. Choose one of " + str(sorted(self.T_SWI.keys())))
 
             # remove rows that have to small QFLAG
             if 'mask_qf' in kwargs:

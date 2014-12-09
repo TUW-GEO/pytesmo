@@ -1,4 +1,5 @@
-# Copyright (c) 2014,Vienna University of Technology, Department of Geodesy and Geoinformation
+# Copyright (c) 2014,Vienna University of Technology,
+# Department of Geodesy and Geoinformation
 # All rights reserved.
 
 # Redistribution and use in source and binary forms, with or without
@@ -8,7 +9,8 @@
 #    * Redistributions in binary form must reproduce the above copyright
 #      notice, this list of conditions and the following disclaimer in the
 #      documentation and/or other materials provided with the distribution.
-#    * Neither the name of the Vienna University of Technology, Department of Geodesy and Geoinformation nor the
+#    * Neither the name of the Vienna University of Technology,
+#      Department of Geodesy and Geoinformation nor the
 #      names of its contributors may be used to endorse or promote products
 #      derived from this software without specific prior written permission.
 
@@ -36,14 +38,14 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import pandas as pd
 
-import general.time_series.anomaly as anom
+import pytesmo.time_series.anomaly as anom
 
 
-def plot_clim_anom(df, clim=None, axes=None, markersize=0.75, mfc='0.3', mec='0.3',
-                   clim_color='0.0', clim_linewidth=0.5, clim_linestyle='-',
-                   pos_anom_color='#799ADA',
-                   neg_anom_color='#FD8086', anom_linewidth=0.2,
-                   add_titles=True):
+def plot_clim_anom(df, clim=None, axes=None, markersize=0.75,
+                   mfc='0.3', mec='0.3', clim_color='0.0',
+                   clim_linewidth=0.5, clim_linestyle='-',
+                   pos_anom_color='#799ADA', neg_anom_color='#FD8086',
+                   anom_linewidth=0.2, add_titles=True):
     """
     Takes a pandas DataFrame and calculates the climatology and anomaly
     and plots them in a nice way for each column
@@ -100,7 +102,9 @@ def plot_clim_anom(df, clim=None, axes=None, markersize=0.75, mfc='0.3', mec='0.
         own_axis = True
         gs = gridspec.GridSpec(nr_columns, 1, right=0.8)
 
-        fig = plt.figure(num=None, figsize=(6, 2 * nr_columns), dpi=150, facecolor='w', edgecolor='k')
+        fig = plt.figure(num=None, figsize=(6, 2 * nr_columns),
+                         dpi=150, facecolor='w', edgecolor='k')
+
         last_axis = fig.add_subplot(gs[nr_columns - 1])
         axes = []
         for i, grid in enumerate(gs):
