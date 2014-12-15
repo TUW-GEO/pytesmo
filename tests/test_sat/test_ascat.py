@@ -275,5 +275,69 @@ class TestAscatNetCDF_V5521(unittest.TestCase):
             result.porosity_hwsd, 0.4299994, significant=5)
 
 
+@pytest.mark.xfail(reason="Test data too big to be delivered with package")
+class TestAscatNetCDF_V5522(unittest.TestCase):
+
+    def setUp(self):
+
+        self.ascat_folder = os.path.join('/media', 'sf_R',
+                                         'Datapool_processed', 'WARP',
+                                         'WARP5.5',
+                                         'IRMA0_WARP5.5_P2', 'R2',
+                                         '080_ssm', 'netcdf')
+
+        # grid info file is too big to include on github
+        self.ascat_grid_folder = os.path.join('/media', 'sf_R',
+                                              'Datapool_processed',
+                                              'WARP', 'ancillary',
+                                              'warp5_grid')
+        # init the ASCAT_SSM reader with the paths
+        self.ascat_SSM_reader = ascat.AscatH25_SSM(self.ascat_folder,
+                                                   self.ascat_grid_folder)
+
+    def test_read_ssm(self):
+
+        gpi = 2329253
+        result = self.ascat_SSM_reader.read_ssm(gpi, absolute_values=True)
+        assert result.gpi == gpi
+        np.testing.assert_approx_equal(
+            result.longitude, 14.28413, significant=4)
+        np.testing.assert_approx_equal(
+            result.latitude, 45.698074, significant=4)
+
+        assert list(result.data.columns) == ['orbit_dir', 'proc_flag',
+                                             'sm', 'sm_noise', 'ssf',
+                                             'sm_por_gldas',
+                                             'sm_noise_por_gldas',
+                                             'sm_por_hwsd',
+                                             'sm_noise_por_hwsd',
+                                             'frozen_prob',
+                                             'snow_prob']
+        assert len(result.data) == 2642
+        assert result.data.ix[15].name == datetime(2007, 1, 15, 19, 34, 41)
+        assert result.data.ix[15]['sm'] == 55
+        assert result.data.ix[15]['ssf'] == 1
+        assert result.data.ix[15]['sm_noise'] == 7
+        assert result.data.ix[15]['frozen_prob'] == 29
+        assert result.data.ix[15]['snow_prob'] == 0
+        assert result.data.ix[15]['orbit_dir'] == 'A'
+        assert result.data.ix[15]['proc_flag'] == 0
+        np.testing.assert_approx_equal(
+            result.data.ix[15]['sm_por_gldas'], 0.2969999, significant=6)
+
+        np.testing.assert_approx_equal(
+            result.data.ix[15]['sm_noise_por_gldas'], 0.03779999,
+            significant=6)
+
+        np.testing.assert_approx_equal(
+            result.data.ix[15]['sm_por_hwsd'], 0.2364999, significant=6)
+        np.testing.assert_approx_equal(
+            result.data.ix[15]['sm_noise_por_hwsd'], 0.0300999, significant=6)
+        assert result.topo_complex == 14
+        assert result.wetland_frac == 0
+        np.testing.assert_approx_equal(
+            result.porosity_gldas, 0.539999, significant=5)
+        np.testing.assert_approx_equal(
+            result.porosity_hwsd, 0.4299994, significant=5)
 if __name__ == '__main__':
     unittest.main()

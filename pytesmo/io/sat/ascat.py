@@ -497,9 +497,9 @@ class AscatNetcdf(object):
                  grid_info_filename='TUW_WARP5_grid_info_2_1.nc',
                  topo_threshold=50, wetland_threshold=50,
                  netcdftemplate='TUW_METOP_ASCAT_WARP55R12_%04d.nc',
-                 loc_id='gpi', obs_var='row_size', topo_var='topo',
-                 wetland_var='wetland', snow_var='snow',
-                 frozen_var='frozen',
+                 loc_id='location_id', obs_var='row_size', topo_var='advf_topo',
+                 wetland_var='advf_wetland', snow_var='advf_snow_prob',
+                 frozen_var='advf_frozen_prob',
                  read_bulk=False):
 
         self.path = path
@@ -747,20 +747,20 @@ class AscatH25_SSM(AscatNetcdf):
                                 'topo_var': 'topo',
                                 'wetland_var': 'wetland',
                                 'snow_var': 'snow',
-                                'frozen_var': 'frozen'},
-                               'WARP 5.5 Release 2.1':
-                               {'netcdftemplate': 'TUW_METOP_ASCAT_WARP55R21_%04d.nc',
-                                'loc_id': 'location_id',
-                                'obs_var': 'row_size',
-                                'topo_var': 'advf_topo',
-                                'wetland_var': 'advf_wetland',
-                                'snow_var': 'advf_snow_prob',
-                                'frozen_var': 'advf_frozen_prob'}
+                                'frozen_var': 'frozen'}
                                }
 
-        super(AscatH25_SSM, self).__init__(path, grid_path, grid_info_filename=grid_info_filename,
-                                           topo_threshold=topo_threshold, wetland_threshold=wetland_threshold,
-                                           **version_kwargs_dict[self.product_version])
+        if self.product_version not in version_kwargs_dict:
+            # if not listed then the standard format should apply
+            version_kwargs = {'netcdftemplate': self.netcdftemplate}
+        else:
+            version_kwargs = version_kwargs_dict[self.product_version]
+
+        super(AscatH25_SSM, self).__init__(path, grid_path,
+                                           grid_info_filename=grid_info_filename,
+                                           topo_threshold=topo_threshold,
+                                           wetland_threshold=wetland_threshold,
+                                           **version_kwargs)
         self.include_in_df = include_in_df
         self.to_absolute = ['sm', 'sm_noise']
 
@@ -768,6 +768,12 @@ class AscatH25_SSM(AscatNetcdf):
         first_file = glob(os.path.join(self.path, '*.nc'))[0]
         with netCDF4.Dataset(first_file) as dataset:
             self.product_version = dataset.product_version
+
+        # try to guess the naming scheme from the filename
+        # this is the fallback if the version is not listed
+        # in the version kwargs_dict above and should work
+        # if the cell numbering is not changed.
+        self.netcdftemplate = os.path.split(first_file)[1][:-7] + '%04d.nc'
 
     def read_ssm(self, *args, **kwargs):
         """
