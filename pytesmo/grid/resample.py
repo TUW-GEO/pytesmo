@@ -31,7 +31,7 @@ Created on Mar 25, 2014
 '''
 
 
-import pyresample as pr
+from pyresample import geometry, kd_tree
 import numpy as np
 
 
@@ -97,16 +97,16 @@ def resample_to_grid(input_data, src_lon, src_lat, target_lon, target_lat,
         target_lat = target_lat.ravel()
         target_lon = target_lon.ravel()
 
-    input_swath = pr.geometry.SwathDefinition(src_lon, src_lat)
-    output_swath = pr.geometry.SwathDefinition(target_lon, target_lat)
+    input_swath = geometry.SwathDefinition(src_lon, src_lat)
+    output_swath = geometry.SwathDefinition(target_lon, target_lat)
 
     (valid_input_index,
      valid_output_index,
      index_array,
-     distance_array) = pr.kd_tree.get_neighbour_info(input_swath,
-                                                     output_swath,
-                                                     search_rad,
-                                                     neighbours=neighbours)
+     distance_array) = kd_tree.get_neighbour_info(input_swath,
+                                                  output_swath,
+                                                  search_rad,
+                                                  neighbours=neighbours)
 
     # throw away points with less than min_neighbours neighbours
     # find points with valid neighbours
@@ -171,7 +171,7 @@ def resample_to_grid(input_data, src_lon, src_lat, target_lon, target_lat,
         if method == 'nn':
             neigh_slice = (slice(None, None, None), 0)
 
-        output_array[enough_neighbours] = pr.kd_tree.get_sample_from_neighbour_info(
+        output_array[enough_neighbours] = kd_tree.get_sample_from_neighbour_info(
             method,
             enough_neighbours.shape,
             data,
