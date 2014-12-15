@@ -54,6 +54,14 @@ It can be found in the /examples folder of the pytesmo package under the name an
 .. include::
    anomalies.rst
 
+Calculation of the Soil Water Index
+===================================
+
+The Soil Water Index(SWI) which is a method to estimate root zone soil moisture can be calculated from Surface Soil Moisture(SSM) using an exponential Filter. For more details see this publication of `C.Abergel et.al <http://www.hydrol-earth-syst-sci.net/12/1323/2008/>`_. The following example shows how to calculate the SWI for two T values from ASCAT H25 SSM.
+
+.. include::
+   swi_calculation/swi_calc.rst
+
 
 Comparing ASCAT and insitu data from the ISMN
 =============================================
@@ -79,5 +87,3 @@ It can be found in the /examples folder of the pytesmo package under the name pl
 
 .. include::
    plot_ascat_data.rst
-
-
