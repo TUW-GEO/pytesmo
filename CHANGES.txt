@@ -38,3 +38,6 @@ v0.2.4, 2014-12-09
 * updated classes to work with new base classes, does not change API
 * added travis CI support
 * changed theme of documentation, and enabled read the docs
+v0.2.5, 2014-12-15
+* fixed ASCAT verion detection for latest H25 dataset WARP55R22
+* added example for Soil Water Index calculation
