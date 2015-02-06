@@ -159,6 +159,45 @@ def pearsonr(x, y):
     return sc_stats.pearsonr(x, y)
 
 
+def pearson_conf(r, n, c=95):
+    """
+    Calcalates the confidence interval of a given pearson
+    correlation coefficient using a fisher z-transform,
+    only valid for correlation coefficients calculated from
+    a bivariate normal distribution
+
+    Parameters
+    ----------
+    r: float
+        correlation coefficient
+    n: int
+        number of observations used in determining the correlation coefficient
+    c: float
+        level of confidence in percent, from 0-100
+
+    Returns
+    -------
+    r_lower: float
+        lower confidence boundary
+    r_upper: float
+        upper confidence boundary
+
+    """
+    # fisher z transform using the arctanh
+    z = np.arctanh(r)
+    # calculate the standard error
+    std_err = 1 / np.sqrt(n - 3)
+    # calculate the quantile of the normal distribution
+    # for the given confidence level
+    n_quant = 1 - (1 - c / 100.0) / 2.0
+    norm_z_value = sc_stats.norm.ppf(n_quant)
+    # calculate upper and lower limit for normally distributed z
+    z_upper = z + std_err * norm_z_value
+    z_lower = z - std_err * norm_z_value
+    # inverse fisher transform using the tanh
+    return np.tanh(z_lower), np.tanh(z_upper)
+
+
 def spearmanr(x, y):
     """
     Wrapper for scipy.stats.spearmanr
