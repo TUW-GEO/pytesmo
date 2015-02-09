@@ -168,18 +168,18 @@ def pearson_conf(r, n, c=95):
 
     Parameters
     ----------
-    r: float
+    r: float or numpy array
         correlation coefficient
-    n: int
+    n: int or numpy array
         number of observations used in determining the correlation coefficient
     c: float
         level of confidence in percent, from 0-100
 
     Returns
     -------
-    r_lower: float
+    r_lower: float or numpy array
         lower confidence boundary
-    r_upper: float
+    r_upper: float or numpy array
         upper confidence boundary
 
     """

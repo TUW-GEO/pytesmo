@@ -34,6 +34,7 @@ Created on Fri Feb  6 11:25:40 2015
 '''
 
 import pytesmo.metrics as met
+import numpy as np
 
 import numpy.testing as nptest
 
@@ -64,3 +65,11 @@ def test_pearson_conf():
     rl, ru = met.pearson_conf(r, n, c=99)
     nptest.assert_almost_equal(rl, 0.7697, decimal=3)
     nptest.assert_almost_equal(ru, 0.866, decimal=3)
+
+    # test numpy arrays as input
+
+    r = np.array([0.654, 0.824])
+    n = np.array([34, 300])
+    rl, ru = met.pearson_conf(r, n, c=95)
+    nptest.assert_almost_equal(rl, np.array([0.406, 0.784]), decimal=3)
+    nptest.assert_almost_equal(ru, np.array([0.812, 0.857]), decimal=3)
