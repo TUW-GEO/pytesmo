@@ -1,0 +1,85 @@
+# Copyright (c) 2015,Vienna University of Technology,
+# Department of Geodesy and Geoinformation
+# All rights reserved.
+
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#   * Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#    * Redistributions in binary form must reproduce the above copyright
+#      notice, this list of conditions and the following disclaimer in the
+#      documentation and/or other materials provided with the distribution.
+#    * Neither the name of the Vienna University of Technology,
+#      Department of Geodesy and Geoinformation nor the
+#      names of its contributors may be used to endorse or promote products
+#      derived from this software without specific prior written permission.
+
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL VIENNA UNIVERSITY OF TECHNOLOGY,
+# DEPARTMENT OF GEODESY AND GEOINFORMATION BE LIABLE FOR ANY
+# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+'''
+tests for the ismn interface
+Created on Thu Feb 26 12:36:30 2015
+
+@author: christoph.paulik@geo.tuwien.ac.at
+'''
+
+from pytesmo.io.ismn import interface
+import os
+import datetime
+
+
+def test_min_max_obstime_getting():
+    """
+    test of the getting minimum and maxiumum observation time
+    of a station
+    """
+
+    path_header_values = os.path.join(os.path.dirname(__file__),
+                                      'test_data', 'format_header_values', 'SMOSMANIA')
+    hv_interface = interface.ISMN_Interface(path_header_values)
+
+    station = hv_interface.get_station('Narbonne')
+    startd, endd = station.get_min_max_obs_timestamp()
+    assert startd == datetime.datetime(2007, 1, 1, 1)
+    assert endd == datetime.datetime(2007, 1, 31, 23)
+
+    path_ceop_sep = os.path.join(os.path.dirname(__file__),
+                                 'test_data', 'format_ceop_sep', 'SMOSMANIA')
+    ceop_sep_interface = interface.ISMN_Interface(path_ceop_sep)
+
+    station = ceop_sep_interface.get_station('Narbonne')
+    startd, endd = station.get_min_max_obs_timestamp()
+    assert startd == datetime.datetime(2007, 1, 1, 1)
+    assert endd == datetime.datetime(2007, 1, 31, 23)
+
+
+def test_min_max_obstime_networks():
+    """
+    test of the getting minimum and maxiumum observation time
+    of several networks
+    """
+
+    path_header_values = os.path.join(os.path.dirname(__file__),
+                                      'test_data', 'multinetwork', 'header_values')
+    hv_interface = interface.ISMN_Interface(path_header_values)
+    data = hv_interface.get_min_max_obs_timestamps(min_depth=0, max_depth=0.1)
+    assert data.loc['MAQU']['end date'][
+        0] == datetime.datetime(2010, 7, 31, 23)
+    assert data.loc['MAQU']['end date'][
+        1] == datetime.datetime(2010, 7, 31, 23)
+    assert data.loc['MAQU']['start date'][
+        1] == datetime.datetime(2008, 7, 1, 0)
+    assert data.loc['SCAN']['start date'][
+        1] == datetime.datetime(2007, 1, 1, 0)
+    assert data.loc['SOILSCAPE']['start date'][
+        1] == datetime.datetime(2012, 12, 14, 19)
