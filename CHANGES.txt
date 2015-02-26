@@ -41,3 +41,7 @@ v0.2.4, 2014-12-09
 v0.2.5, 2014-12-15
 * fixed ASCAT verion detection for latest H25 dataset WARP55R22
 * added example for Soil Water Index calculation
+v0.2.x, unreleased
+* added calculation of pearson R confidence intervals based on fisher z transform
+* ISMN reader can now get the data coverage for stations and networks
+* ISMN interface can now be restricted to a list of networks
