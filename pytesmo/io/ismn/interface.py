@@ -36,6 +36,7 @@ import pytesmo.grid.nearest_neighbor as NN
 
 import os
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 
 
@@ -418,6 +419,70 @@ class ISMN_station(object):
 
                 yield readers.read_data(filename)
 
+    def get_min_max_obs_timestamp(self, variable="soil moisture", min_depth=None, max_depth=None):
+        """
+        goes throug the filenames associated with a station
+        and reads the date of the first and last observation to get
+        and approximate time coverage of the station.
+        This is just an overview. If holes have to be detected the
+        complete file must be read.
+
+        Parameters
+        ----------
+        self: type
+            description
+        variable: string, optional
+            one of
+                * 'soil moisture',
+                * 'soil temperature',
+                * 'soil suction',
+                * 'precipitation',
+                * 'air temperature',
+                * 'field capacity',
+                * 'permanent wilting point',
+                * 'plant available water',
+                * 'potential plant available water',
+                * 'saturation',
+                * 'silt fraction',
+                * 'snow depth',
+                * 'sand fraction',
+                * 'clay fraction',
+                * 'organic carbon',
+                * 'snow water equivalent',
+                * 'surface temperature',
+                * 'surface temperature quality flag original'
+        min_depth : float, optional
+            depth_from of variable has to be >= min_depth in order to be
+            included.
+        max_depth : float, optional
+            depth_to of variable has to be <= max_depth in order to be
+            included.
+        Returns
+        -------
+        start_date: datetime
+        end_date: datetime
+        """
+        start_date = None
+        end_date = None
+
+        if min_depth is None:
+            min_depth = np.min(self.depth_from)
+        if max_depth is None:
+            max_depth = np.max(self.depth_to)
+
+        for var, d1, d2, filename in zip(self.variables, self.depth_from, self.depth_to, self.filenames):
+
+            if var == variable and ((d1 >= min_depth) & (d2 <= max_depth)):
+                data = readers.read_data(filename).data.index.to_pydatetime()
+                sdate = data[0]
+                edate = data[-1]
+                if start_date is None or start_date > sdate:
+                    start_date = sdate
+                if end_date is None or end_date < edate:
+                    end_date = edate
+
+        return start_date, end_date
+
 
 class ISMN_Interface(object):
 
@@ -708,3 +773,66 @@ class ISMN_Interface(object):
             plt.show()
         else:
             raise ISMNError('Basemap is not installed.')
+
+    def get_min_max_obs_timestamps(self, variable="soil moisture", min_depth=None, max_depth=None):
+        """
+        get minimum and maximum timestamps per station
+
+        Parameters
+        ----------
+        self: type
+            description
+        variable: string, optional
+            one of
+                * 'soil moisture',
+                * 'soil temperature',
+                * 'soil suction',
+                * 'precipitation',
+                * 'air temperature',
+                * 'field capacity',
+                * 'permanent wilting point',
+                * 'plant available water',
+                * 'potential plant available water',
+                * 'saturation',
+                * 'silt fraction',
+                * 'snow depth',
+                * 'sand fraction',
+                * 'clay fraction',
+                * 'organic carbon',
+                * 'snow water equivalent',
+                * 'surface temperature',
+                * 'surface temperature quality flag original'
+        min_depth : float, optional
+            depth_from of variable has to be >= min_depth in order to be
+            included.
+        max_depth : float, optional
+            depth_to of variable has to be <= max_depth in order to be
+            included.
+
+        Returns
+        -------
+        data : pd.DataFrame
+            dataframe with multiindex Network Station and
+            columns start_date and end_date
+        """
+        networks = []
+        stations = []
+        start_dates = []
+        end_dates = []
+        for network in self.list_networks():
+
+            for stationname in self.list_stations(network=network):
+                # append station and network names to lists for
+                # construction of pandas mulitindex
+                networks.append(network)
+                stations.append(stationname)
+
+                station = self.get_station(stationname, network=network)
+                startd, endd = station.get_min_max_obs_timestamp(variable=variable, min_depth=min_depth,
+                                                                 max_depth=max_depth)
+                start_dates.append(startd)
+                end_dates.append(endd)
+
+        data = pd.DataFrame({"start date": start_dates,
+                             "end date": end_dates}, index=[np.array(networks), np.array(stations)])
+        return data
