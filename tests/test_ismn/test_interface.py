@@ -83,3 +83,19 @@ def test_min_max_obstime_networks():
         1] == datetime.datetime(2007, 1, 1, 0)
     assert data.loc['SOILSCAPE']['start date'][
         1] == datetime.datetime(2012, 12, 14, 19)
+
+
+def test_interface_network_init():
+    """
+    test limitation of interface to certain networks
+    """
+
+    path_header_values = os.path.join(os.path.dirname(__file__),
+                                      'test_data', 'multinetwork', 'header_values')
+    hv_interface = interface.ISMN_Interface(
+        path_header_values, network=['SCAN'])
+    assert hv_interface.list_networks().size == 1
+    assert hv_interface.list_networks()[0] == 'SCAN'
+    hv_interface = interface.ISMN_Interface(
+        path_header_values, network=['SCAN', 'MAQU'])
+    assert hv_interface.list_networks().size == 2

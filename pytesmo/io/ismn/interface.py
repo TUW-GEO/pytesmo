@@ -499,7 +499,7 @@ class ISMN_Interface(object):
     ----------
     path_to_data : string
         filepath to unzipped ISMN data containing the Network folders
-    network : string, optional
+    network : string or list, optional
         provide name of network to only load the given network
 
     Raises
@@ -540,11 +540,16 @@ class ISMN_Interface(object):
                 os.path.join(path_to_data, 'python_metadata', 'metadata.npy'))
 
         if network is not None:
-            if network in self.metadata['network']:
-                self.metadata = self.metadata[
-                    self.metadata['network'] == network]
-            else:
-                raise ISMNError("Network not found")
+            if type(network) is not list:
+                network = [network]
+            # initialize binary mask the size of metadata
+            mask = np.zeros(self.metadata.shape[0], dtype=np.bool)
+            for net in network:
+                if net in self.metadata['network']:
+                    mask = mask | (self.metadata['network'] == net)
+                else:
+                    raise ISMNError("Network {} not found".format(net))
+            self.metadata = self.metadata[mask]
 
         self.kdTree = None
 
