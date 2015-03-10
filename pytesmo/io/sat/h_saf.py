@@ -48,8 +48,8 @@ except ImportError:
 import pytesmo.timedate.julian as julian
 
 import sys
-if sys.version_info >= (3, 0):
-    xrange = range
+if sys.version_info < (3, 0):
+    range = xrange
 
 
 class H08img(dataset_base.DatasetImgBase):
@@ -128,7 +128,7 @@ class H08img(dataset_base.DatasetImgBase):
         delta_all = enddate - startdate
         timestamps = []
 
-        for i in xrange(delta_all.days + 1):
+        for i in range(delta_all.days + 1):
             timestamp = startdate + timedelta(days=i)
 
             files = self._search_files(
@@ -376,7 +376,7 @@ class H07img(dataset_base.DatasetImgBase):
         delta_all = enddate - startdate
         timestamps = []
 
-        for i in xrange(delta_all.days + 1):
+        for i in range(delta_all.days + 1):
             timestamp = startdate + timedelta(days=i)
 
             files = self._search_files(
