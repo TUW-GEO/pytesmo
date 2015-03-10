@@ -47,6 +47,10 @@ except ImportError:
 
 import pytesmo.timedate.julian as julian
 
+import sys
+if sys.version_info >= (3, 0):
+    xrange = range
+
 
 class H08img(dataset_base.DatasetImgBase):
 
@@ -224,7 +228,7 @@ class H08img(dataset_base.DatasetImgBase):
             # detect a jump in lon or lat spacing
             lon_jump_ind = np.where(np.diff(lons_dim) > 0.00418)[0]
             if lon_jump_ind.size > 1:
-                print "More than one jump in longitude"
+                print("More than one jump in longitude")
             if lon_jump_ind.size == 1:
                 diff_lon_jump = np.abs(
                     lons_dim[lon_jump_ind] - lons_dim[lon_jump_ind + 1])
@@ -246,7 +250,7 @@ class H08img(dataset_base.DatasetImgBase):
 
             lat_jump_ind = np.where(np.diff(lats_dim) > 0.00418)[0]
             if lat_jump_ind.size > 1:
-                print "More than one jump in latitude"
+                print("More than one jump in latitude")
             if lat_jump_ind.size == 1:
                 diff_lat_jump = np.abs(
                     lats_dim[lat_jump_ind] - lats_dim[lat_jump_ind + 1])

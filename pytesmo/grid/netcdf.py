@@ -101,7 +101,7 @@ def save_lonlat(filename, arrlon, arrlat, arrcell=None,
             else:
                 gpivalues = gpis
 
-        dim = ncfile.dimensions.keys()
+        dim = list(ncfile.dimensions.keys())
 
         gpi = ncfile.createVariable('gpi', np.dtype('int32').char, dim)
 
