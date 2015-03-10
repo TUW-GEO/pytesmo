@@ -29,9 +29,9 @@ install:
   - source activate test-environment
   - sudo apt-get install -y gfortran gcc
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
-      pip install -q pybufr-ecmwf
+      pip install -q pybufr-ecmwf;
     else
-      pip install -q pybufr-ecmwf3
+      pip install -q pybufr-ecmwf3;
     fi
   - sudo apt-get install -y libgrib-api-dev
   - pip install pygrib==1.9.9
