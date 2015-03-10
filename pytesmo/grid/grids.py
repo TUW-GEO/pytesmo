@@ -33,7 +33,10 @@ Created on Aug 26, 2013
 import pytesmo.grid.nearest_neighbor as NN
 
 import numpy as np
-from itertools import izip
+try:
+    from itertools import izip as zip
+except ImportError:
+    pass  # python3
 
 
 class GridDefinitionError(Exception):
@@ -299,7 +302,7 @@ class BasicGrid(object):
             longitude of gpi
         """
 
-        for i, (lon, lat) in enumerate(izip(self.activearrlon, self.activearrlat)):
+        for i, (lon, lat) in enumerate(zip(self.activearrlon, self.activearrlat)):
             yield self.activegpis[i], lon, lat
 
     def _split_grid_points(self, n):
@@ -321,7 +324,7 @@ class BasicGrid(object):
             longitude of gpi
         """
 
-        for i, (lon, lat) in enumerate(izip(self.subarrlons[n], self.subarrlats[n])):
+        for i, (lon, lat) in enumerate(zip(self.subarrlons[n], self.subarrlats[n])):
             yield self.subgpis[n][i], lon, lat
 
     def find_nearest_gpi(self, lon, lat, max_dist=np.Inf):
@@ -400,7 +403,7 @@ class BasicGrid(object):
             else:
                 index = np.where(self.gpis == gpi)[0][0]
 
-            index_lat = index / len(self.londim)
+            index_lat = int(index / len(self.londim))
             index_lon = index % len(self.londim)
             return index_lat, index_lon
 

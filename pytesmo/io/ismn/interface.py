@@ -30,8 +30,8 @@ Created on Aug 5, 2013
 @author: Christoph Paulik Christoph.Paulik@geo.tuwien.ac.at
 '''
 
-import metadata_collector
-import readers
+import pytesmo.io.ismn.metadata_collector as metadata_collector
+import pytesmo.io.ismn.readers as readers
 import pytesmo.grid.nearest_neighbor as NN
 
 import os

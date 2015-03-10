@@ -15,7 +15,8 @@ def test_dataset_img_base():
     data, meta, timestamp, lon, lat, time = dataset.read_img(
         datetime(2007, 8, 1))
     assert timestamp == datetime(2007, 8, 1)
-    assert meta.keys() == ['filename']
+    for current, target in zip(meta.keys(), ['filename']):
+        assert current == target
     assert meta['filename'] == "test_data_20070801.dat"
 
 
@@ -31,6 +32,7 @@ def test_dataset_img_base_subpath():
     data, meta, timestamp, lon, lat, time = dataset.read_img(
         datetime(2007, 8, 1))
     assert timestamp == datetime(2007, 8, 1)
-    assert meta.keys() == ['filename']
+    for current, target in zip(meta.keys(), ['filename']):
+        assert current == target
     assert meta['filename'] == os.path.join(
         "2007", "08", "test_data_20070801.dat")

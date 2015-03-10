@@ -4,6 +4,8 @@ notifications:
 python:
   # We don't actually use the Travis Python, but this keeps it organized.
   - "2.7"
+  - "3.3"
+  - "3.4"
 install:
   - sudo apt-get update
   # You may want to periodically update this, although the conda update
@@ -26,7 +28,11 @@ install:
   - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy scipy pandas==0.15.1 statsmodels netCDF4  cython pytest pip matplotlib
   - source activate test-environment
   - sudo apt-get install -y gfortran gcc
-  - pip install -q pybufr-ecmwf
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
+      pip install -q pybufr-ecmwf;
+    else
+      pip install -q pybufr-ecmwf3;
+    fi
   - sudo apt-get install -y libgrib-api-dev
   - pip install pygrib==1.9.9
   - pip install pykdtree
