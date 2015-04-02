@@ -1,17 +1,14 @@
-'''
-Created on Apr 12, 2013
-
+"""
 Provides a temporal matching function
+"""
 
-@author: Sebastian Hahn Sebastian.Hahn@geo.tuwien.ac.at
-'''
 import numpy as np
 import scipy.interpolate as sc_int
 import pandas as pd
 
 
 def df_match(reference, *args, **kwds):
-    '''
+    """
     Finds temporal match between the reference pandas.DataFrame (index has to
     be datetime) and n other pandas.DataFrame (index has to be datetime).
 
@@ -34,7 +31,7 @@ def df_match(reference, *args, **kwds):
     -------
     temporal_matched_args : pandas.DataFrame or tuple of pandas.DataFrame
         Dataframe with index from matched reference index
-    '''
+    """
     if "window" in kwds:
         window = kwds['window']
     else:
@@ -47,8 +44,9 @@ def df_match(reference, *args, **kwds):
 
         if type(arg) == pd.TimeSeries: arg = pd.DataFrame(arg)
         comp_step = arg.index.values - reference.index.values[0]
-        matched = sc_int.griddata(comp_step, np.arange(comp_step.size),
-                                  ref_step, "nearest")
+        matched = sc_int.griddata(comp_step.astype(np.int64),
+                                  np.arange(comp_step.size),
+                                  ref_step.astype(np.int64), "nearest")
 
         distance = np.zeros_like(matched)
         distance.fill(np.nan)
@@ -84,12 +82,14 @@ def df_match(reference, *args, **kwds):
         temporal_matched_args.append(\
                 arg_matched.drop(['merge_key', 'ref_index'], axis=1))
 
-    if len(temporal_matched_args) == 1: return temporal_matched_args[0]
-    else: return tuple(temporal_matched_args)
+    if len(temporal_matched_args) == 1:
+        return temporal_matched_args[0]
+    else:
+        return tuple(temporal_matched_args)
 
 
 def matching(reference, *args, **kwargs):
-    '''
+    """
     Finds temporal match between the reference pandas.TimeSeries (index has to
     be datetime) and n other pandas.TimeSeries (index has to be datetime).
 
@@ -109,10 +109,12 @@ def matching(reference, *args, **kwargs):
     temporal_match : pandas.DataFrame
         containing the index of the reference Series and a column for each of the
         other input Series
-    '''
-    matched_datasets = df_match(reference, *args, dropna=True, dropduplicates=True, **kwargs)
+    """
+    matched_datasets = df_match(reference, *args, dropna=True,
+                                dropduplicates=True, **kwargs)
 
-    if type(matched_datasets) != tuple: matched_datasets = [matched_datasets]
+    if type(matched_datasets) != tuple:
+        matched_datasets = [matched_datasets]
 
     matched_data = pd.DataFrame(reference)
 
