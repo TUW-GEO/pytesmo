@@ -48,6 +48,24 @@ def bias(o, p):
     """
     return np.mean(o) - np.mean(p)
 
+def mae(o, p):
+    """
+    Mean absolute error (MAE).
+
+    Parameters
+    ----------
+    o : numpy.ndarray
+        Observations.
+    p : numpy.ndarray
+        Predicitions.
+
+    Returns
+    -------
+    e : float
+        Mean absolute error.
+    """
+    return np.sum(np.abs(o - p))
+
 
 def rmsd(o, p):
     """
