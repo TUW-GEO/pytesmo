@@ -8,6 +8,7 @@ import datetime
 import numpy as np
 import numpy.testing as nptest
 import os
+import pytest
 
 import pytesmo.io.sat.h_saf as H_SAF
 
@@ -32,6 +33,8 @@ class Test_H08(unittest.TestCase):
         timestamps_should = [datetime.datetime(2010, 5, 1, 8, 33, 1)]
         assert sorted(timestamps) == sorted(timestamps_should)
 
+    @pytest.mark.skipif("TRAVIS_PYTHON_VERSION" in os.environ,
+                        reason="Needs to much memory on CI server")
     def test_image_reading(self):
         data, meta, timestamp, lons, lats, time_var = self.reader.read_img(
             datetime.datetime(2010, 5, 1, 8, 33, 1))
@@ -43,6 +46,8 @@ class Test_H08(unittest.TestCase):
         for var in data:
             assert data[var].shape == (3120, 7680)
 
+    @pytest.mark.skipif("TRAVIS_PYTHON_VERSION" in os.environ,
+                        reason="Needs to much memory on CI server")
     def test_image_reading_bbox_empty(self):
         data, meta, timestamp, lons, lats, time_var = self.reader.read_img(datetime.datetime(2010, 5, 1, 8, 33, 1),
                                                                            lat_lon_bbox=[45, 48, 15, 18])
@@ -51,6 +56,8 @@ class Test_H08(unittest.TestCase):
         assert lons is None
         assert lats is None
 
+    @pytest.mark.skipif("TRAVIS_PYTHON_VERSION" in os.environ,
+                        reason="Needs to much memory on CI server")
     def test_image_reading_bbox(self):
         data, meta, timestamp, lons, lats, time_var = self.reader.read_img(datetime.datetime(2010, 5, 1, 8, 33, 1),
                                                                            lat_lon_bbox=[60, 70, 15, 25])
@@ -115,7 +122,7 @@ class Test_H14(unittest.TestCase):
 
     def test_image_reading(self):
         data, meta, timestamp, lons, lats, time_var = self.reader.read_img(
-            datetime.datetime(2014, 05, 15))
+            datetime.datetime(2014, 5, 15))
         assert sorted(data.keys()) == sorted(['SM_layer1_0-7cm', 'SM_layer2_7-28cm',
                                               'SM_layer3_28-100cm', 'SM_layer4_100-289cm'])
         assert lons.shape == (843490,)
@@ -125,7 +132,7 @@ class Test_H14(unittest.TestCase):
 
     def test_expanded_image_reading(self):
         data, meta, timestamp, lons, lats, time_var = self.expand_reader.read_img(
-            datetime.datetime(2014, 05, 15))
+            datetime.datetime(2014, 5, 15))
         assert sorted(data.keys()) == sorted(['SM_layer1_0-7cm', 'SM_layer2_7-28cm',
                                               'SM_layer3_28-100cm', 'SM_layer4_100-289cm'])
         assert lons.shape == (800, 1600)

@@ -333,7 +333,7 @@ class Ascat_data(object):
             self.path, '%4d' % cell, self.gp_filename_template % gpi)
 
         if not os.path.exists(gp_file):
-            print 'first time reading from cell %4d unzipping ...' % cell
+            print('first time reading from cell %4d unzipping ...' % cell)
             self.unzip_cell(cell)
 
         data = np.fromfile(gp_file, dtype=self.gp_filestruct)
