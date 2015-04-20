@@ -48,9 +48,10 @@ def bias(o, p):
     """
     return np.mean(o) - np.mean(p)
 
-def mae(o, p):
+
+def aad(o, p):
     """
-    Mean absolute error (MAE).
+    Average (=mean) absolute deviation (AAD).
 
     Parameters
     ----------
@@ -61,10 +62,29 @@ def mae(o, p):
 
     Returns
     -------
-    e : float
-        Mean absolute error.
+    d : float
+        Mean absolute deviation.
     """
-    return np.sum(np.abs(o - p))
+    return np.mean(np.abs(o - p))
+
+
+def mad(o, p):
+    """
+    Median absolute deviation (MAD).
+
+    Parameters
+    ----------
+    o : numpy.ndarray
+        Observations.
+    p : numpy.ndarray
+        Predicitions.
+
+    Returns
+    -------
+    d : float
+        Median absolute deviation.
+    """
+    return np.median(np.abs(o - p))
 
 
 def rmsd(o, p):
@@ -214,7 +234,7 @@ def RSS(o, p):
     o : numpy.ndarray
         Observations.
     p : numpy.ndarray
-        Predictions.   
+        Predictions.
 
     Returns
     -------

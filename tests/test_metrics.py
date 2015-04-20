@@ -1,4 +1,4 @@
-# Copyright (c) 2015,Vienna University of Technology,
+# Copyright (c) 2015, Vienna University of Technology,
 # Department of Geodesy and Geoinformation
 # All rights reserved.
 
@@ -11,8 +11,8 @@
 #      documentation and/or other materials provided with the distribution.
 #    * Neither the name of the Vienna University of Technology,
 #      Department of Geodesy and Geoinformation nor the
-#      names of its contributors may be used to endorse or promote products
-#      derived from this software without specific prior written permission.
+# names of its contributors may be used to endorse or promote products #
+# derived from this software without specific prior written permission.
 
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -73,3 +73,103 @@ def test_pearson_conf():
     rl, ru = met.pearson_conf(r, n, c=95)
     nptest.assert_almost_equal(rl, np.array([0.406, 0.784]), decimal=3)
     nptest.assert_almost_equal(ru, np.array([0.812, 0.857]), decimal=3)
+
+
+def test_bias():
+    """
+    Test for bias
+    """
+    # example 1
+    x = np.arange(10)
+    y = np.arange(10) + 2
+    b_pred = -2
+    b_obs = met.bias(x, y)
+
+    nptest.assert_equal(b_obs, b_pred)
+
+    # example 2
+    x = np.arange(10)
+    y = np.arange(20, 30)
+    b_pred = 20
+    b_obs = met.bias(y, x)
+
+    nptest.assert_equal(b_obs, b_pred)
+
+
+def test_aad():
+    """
+    Test for average absolute deviation
+    """
+    # example 1
+    x = np.arange(10)
+    y = np.arange(10) + 2
+    dev_pred = 2
+    dev_obs = met.aad(x, y)
+
+    nptest.assert_equal(dev_obs, dev_pred)
+
+    # example 2, with outlier
+    x = np.arange(10)
+    y = np.arange(10) + 2
+    y[-1] = 201
+    dev_pred = 21
+    dev_obs = met.aad(x, y)
+
+    nptest.assert_equal(dev_obs, dev_pred)
+
+
+def test_mad():
+    """
+    Test for median absolute deviation
+    """
+    # example 1
+    x = np.arange(10)
+    y = np.arange(10) + 2
+    dev_pred = 2
+    dev_obs = met.mad(x, y)
+
+    nptest.assert_equal(dev_obs, dev_pred)
+
+    # example 2, with outlier
+    x = np.arange(10)
+    y = np.arange(10) + 2
+    y[-1] = 201
+    dev_pred = 2
+    dev_obs = met.mad(x, y)
+
+    nptest.assert_equal(dev_obs, dev_pred)
+
+
+def test_rmsd():
+    """
+    Test for rmsd
+    """
+    # example 1
+    x = np.arange(10)
+    y = np.arange(10) + 2
+    rmsd_pred = 2
+    rmsd_obs = met.rmsd(x, y)
+
+    nptest.assert_equal(rmsd_obs, rmsd_pred)
+
+    # example 2, with outlier
+    x = np.arange(10)
+    y = np.arange(10) + 2
+    y[-1] = 100
+    rmsd_pred = np.sqrt(831)
+    rmsd_obs = met.rmsd(x, y)
+
+    nptest.assert_almost_equal(rmsd_obs, rmsd_pred, 6)
+
+
+def test_rmsd_mse():
+    """
+    Test for rmsd and mse
+    """
+    # example 1
+    x = np.random.randn(100)
+    y = np.random.randn(100)
+    rmsd_pred = met.rmsd(x, y)
+    mse_pred, _, _, _ = met.mse(x, y)
+
+    nptest.assert_equal(rmsd_pred**2, mse_pred)
