@@ -26,6 +26,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import division
+
 import pytesmo.metrics as met
 import numpy as np
 
@@ -153,7 +155,7 @@ def test_rmsd():
     y = np.arange(10) + 2
     y[-1] = 100.
 
-    rmsd_pred = np.sqrt(831.)
+    rmsd_pred = np.sqrt(831.7)
     rmsd_obs = met.rmsd(x, y)
 
     nptest.assert_almost_equal(rmsd_obs, rmsd_pred, 6)
