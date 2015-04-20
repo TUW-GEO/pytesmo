@@ -85,7 +85,7 @@ def test_bias():
     x = np.arange(10)
     y = np.arange(20, 30)
 
-    b_pred = 20
+    b_pred = 20.
     b_obs = met.bias(y, x)
 
     nptest.assert_equal(b_obs, b_pred)
@@ -98,7 +98,7 @@ def test_aad():
     # example 1
     x = np.arange(10)
     y = np.arange(10) + 2
-    dev_pred = 2
+    dev_pred = 2.
     dev_obs = met.aad(x, y)
 
     nptest.assert_equal(dev_obs, dev_pred)
@@ -106,8 +106,8 @@ def test_aad():
     # example 2, with outlier
     x = np.arange(10)
     y = np.arange(10) + 2
-    y[-1] = 201
-    dev_pred = 21
+    y[-1] = 201.
+    dev_pred = 21.
     dev_obs = met.aad(x, y)
 
     nptest.assert_equal(dev_obs, dev_pred)
@@ -120,7 +120,7 @@ def test_mad():
     # example 1
     x = np.arange(10)
     y = np.arange(10) + 2
-    dev_pred = 2
+    dev_pred = 2.
     dev_obs = met.mad(x, y)
 
     nptest.assert_equal(dev_obs, dev_pred)
@@ -128,8 +128,8 @@ def test_mad():
     # example 2, with outlier
     x = np.arange(10)
     y = np.arange(10) + 2
-    y[-1] = 201
-    dev_pred = 2
+    y[-1] = 201.
+    dev_pred = 2.
     dev_obs = met.mad(x, y)
 
     nptest.assert_equal(dev_obs, dev_pred)
@@ -143,7 +143,7 @@ def test_rmsd():
     x = np.arange(10)
     y = np.arange(10) + 2
 
-    rmsd_pred = 2
+    rmsd_pred = 2.
     rmsd_obs = met.rmsd(x, y)
 
     nptest.assert_equal(rmsd_obs, rmsd_pred)
@@ -151,9 +151,9 @@ def test_rmsd():
     # example 2, with outlier
     x = np.arange(10)
     y = np.arange(10) + 2
-    y[-1] = 100
+    y[-1] = 100.
 
-    rmsd_pred = np.sqrt(831)
+    rmsd_pred = np.sqrt(831.)
     rmsd_obs = met.rmsd(x, y)
 
     nptest.assert_almost_equal(rmsd_obs, rmsd_pred, 6)
@@ -167,8 +167,8 @@ def test_mse():
     x = np.arange(10)
     y = np.arange(10) + 2
 
-    mse_pred = 4
-    mse_bias_pred = 2**2
+    mse_pred = 4.
+    mse_bias_pred = 2.**2
     mse_obs, _, mse_bias, _ = met.mse(x, y)
 
     nptest.assert_equal(mse_obs, mse_pred)
@@ -177,10 +177,10 @@ def test_mse():
     # example 2, with outlier
     x = np.arange(10)
     y = np.arange(10) + 2
-    y[-1] = 51
+    y[-1] = 51.
 
-    mse_pred = 180
-    mse_bias_pred = 36
+    mse_pred = 180.
+    mse_bias_pred = 36.
     mse_obs, _, mse_bias, _ = met.mse(x, y)
 
     nptest.assert_almost_equal(mse_obs, mse_pred, 6)
