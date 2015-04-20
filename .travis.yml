@@ -37,6 +37,7 @@ install:
   - pip install pygrib==1.9.9
   - pip install pykdtree
   - pip install pyresample
+  - pip install pygeogrids
   - python setup.py install
   - pip list
   - which pip

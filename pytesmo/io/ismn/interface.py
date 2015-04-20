@@ -32,7 +32,7 @@ Created on Aug 5, 2013
 
 import pytesmo.io.ismn.metadata_collector as metadata_collector
 import pytesmo.io.ismn.readers as readers
-import pytesmo.grid.nearest_neighbor as NN
+import pygeogrids.nearest_neighbor as NN
 
 import os
 import numpy as np
