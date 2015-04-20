@@ -6,13 +6,13 @@
 # modification, are permitted provided that the following conditions are met:
 #   * Redistributions of source code must retain the above copyright
 #     notice, this list of conditions and the following disclaimer.
-#    * Redistributions in binary form must reproduce the above copyright
-#      notice, this list of conditions and the following disclaimer in the
-#      documentation and/or other materials provided with the distribution.
-#    * Neither the name of the Vienna University of Technology,
-#      Department of Geodesy and Geoinformation nor the
-#      names of its contributors may be used to endorse or promote products
-#      derived from this software without specific prior written permission.
+#   * Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#   * Neither the name of the Vienna University of Technology,
+#     Department of Geodesy and Geoinformation nor the
+#     names of its contributors may be used to endorse or promote products
+#     derived from this software without specific prior written permission.
 
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
@@ -87,9 +87,15 @@ def mad(o, p):
     return np.median(np.abs(o - p))
 
 
-def rmsd(o, p):
+def rmsd(o, p, ddof=0):
     """
-    Root-mean-square deviation (RMSD).
+    Root-mean-square deviation (RMSD). It is implemented for an unbiased
+    estimator, which means the RMSD is the square root of the variance, also
+    known as the standard error. The delta degree of freedom keyword (ddof) can
+    be used to correct for the case the true variance is unknown and estimated
+    from the population. Concretely, the naive sample variance estimator sums
+    the squared deviations and divides by n, which is biased. Dividing instead
+    by n − 1 yields an unbiased estimator
 
     Parameters
     ----------
@@ -97,16 +103,19 @@ def rmsd(o, p):
         Observations.
     p : numpy.ndarray
         Predictions.
+    ddof : int, optional
+        Delta degree of freedom.The divisor used in calculations is N - ddof,
+        where N represents the number of elements. By default ddof is zero.
 
     Returns
     -------
     rmsd : float
         Root-mean-square deviation.
     """
-    return np.sqrt(RSS(o, p) / len(o))
+    return np.sqrt(RSS(o, p) / (len(o) - ddof))
 
 
-def nrmsd(o, p):
+def nrmsd(o, p, ddof=0):
     """
     Normalized root-mean-square deviation (nRMSD).
 
@@ -116,16 +125,19 @@ def nrmsd(o, p):
         Observations.
     p : numpy.ndarray
         Predictions.
+    ddof : int, optional
+        Delta degree of freedom.The divisor used in calculations is N - ddof,
+        where N represents the number of elements. By default ddof is zero.
 
     Returns
     -------
     nrmsd : float
         Normalized root-mean-square deviation (nRMSD).
     """
-    return rmsd(o, p) / (np.max([o, p]) - np.min([o, p]))
+    return rmsd(o, p, ddof) / (np.max([o, p]) - np.min([o, p]))
 
 
-def ubrmsd(o, p):
+def ubrmsd(o, p, ddof=0):
     """
     Unbiased root-mean-square deviation (uRMSD).
 
@@ -135,19 +147,32 @@ def ubrmsd(o, p):
         Observations.
     p : numpy.ndarray
         Predictions.
+    ddof : int, optional
+        Delta degree of freedom.The divisor used in calculations is N - ddof,
+        where N represents the number of elements. By default ddof is zero.
 
     Returns
     -------
     urmsd : float
         Unbiased root-mean-square deviation (uRMSD).
     """
-    return np.sqrt(np.sum(((o - np.mean(o)) - (p - np.mean(p))) ** 2) / len(o))
+    return np.sqrt(np.sum(((o - np.mean(o)) -
+                           (p - np.mean(p))) ** 2) / (len(o) - ddof))
 
 
-def mse(o, p):
+def mse(o, p, ddof=0):
     """
     Mean square error (MSE) as a decomposition of the RMSD into individual
-    error components.
+    error components. The MSE is the second moment (about the origin) of the
+    error, and thus incorporates both the variance of the estimator and
+    its bias. For an unbiased estimator, the MSE is the variance of the
+    estimator. Like the variance, MSE has the same units of measurement as
+    the square of the quantity being estimated.
+    The delta degree of freedom keyword (ddof) can be used to correct for
+    the case the true variance is unknown and estimated from the population.
+    Concretely, the naive sample variance estimator sums the squared deviations
+    and divides by n, which is biased. Dividing instead by n − 1 yields an
+    unbiased estimator.
 
     Parameters
     ----------
@@ -155,6 +180,9 @@ def mse(o, p):
         Observations.
     p : numpy.ndarray
         Predictions.
+    ddof : int, optional
+        Delta degree of freedom.The divisor used in calculations is N - ddof,
+        where N represents the number of elements. By default ddof is zero.
 
     Returns
     -------
@@ -167,10 +195,10 @@ def mse(o, p):
     mse_var : float
         Variance component of the MSE.
     """
-    mse_corr = 2 * np.std(o, ddof=1) * \
-        np.std(p, ddof=1) * (1 - pearsonr(o, p)[0])
+    mse_corr = 2 * np.std(o, ddof=ddof) * \
+        np.std(p, ddof=ddof) * (1 - pearsonr(o, p)[0])
     mse_bias = bias(o, p) ** 2
-    mse_var = (np.std(o, ddof=1) - np.std(p, ddof=1)) ** 2
+    mse_var = (np.std(o, ddof=ddof) - np.std(p, ddof=ddof)) ** 2
     mse = mse_corr + mse_bias + mse_var
 
     return mse, mse_corr, mse_bias, mse_var
@@ -182,11 +210,11 @@ def tcol_error(x, y, z):
 
     Parameters
     ----------
-    x: numpy.ndarray
+    x : numpy.ndarray
         1D numpy array to calculate the errors
-    y: numpy.ndarray
+    y : numpy.ndarray
         1D numpy array to calculate the errors
-    z: numpy.ndarray
+    z : numpy.ndarray
         1D numpy array to calculate the errors
 
     Returns
