@@ -95,7 +95,7 @@ def rmsd(o, p, ddof=0):
     be used to correct for the case the true variance is unknown and estimated
     from the population. Concretely, the naive sample variance estimator sums
     the squared deviations and divides by n, which is biased. Dividing instead
-    by n − 1 yields an unbiased estimator
+    by n -1 yields an unbiased estimator
 
     Parameters
     ----------
@@ -171,7 +171,7 @@ def mse(o, p, ddof=0):
     The delta degree of freedom keyword (ddof) can be used to correct for
     the case the true variance is unknown and estimated from the population.
     Concretely, the naive sample variance estimator sums the squared deviations
-    and divides by n, which is biased. Dividing instead by n − 1 yields an
+    and divides by n, which is biased. Dividing instead by n - 1 yields an
     unbiased estimator.
 
     Parameters
