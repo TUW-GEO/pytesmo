@@ -235,6 +235,52 @@ def tcol_error(x, y, z):
     return e_x, e_y, e_z
 
 
+def tcol_snr(x, y, z, ref_ind=0):
+    """
+    triple collocation based estimation of signal-to-noise ratio, absolute errors,
+    and rescaling coefficients
+
+    Parameters
+    ----------
+    x: 1D numpy.ndarray
+        first input dataset
+    y: 1D numpy.ndarray
+        second input dataset
+    z: 1D numpy.ndarray
+        third input dataset
+    ref_ind: int
+        index of reference data set for estimating scaling coeffitients. default: 0 (x)
+
+    Returns
+    -------
+    snr: ???
+        signal-to-noise (variance) ratio [dB]
+    err_std: ???
+        **SCALED** error standard deviation
+    beta: ???
+         scaling coefficients (i_scaled = i * beta_i)
+    """
+
+    cov = np.cov(np.vstack((x, y, z)))
+
+    ind = (0, 1, 2, 0, 1, 2)
+    no_ref_ind = np.where(np.arange(3) != ref_ind)[0]
+
+    snr = 10 * np.log10([((cov[i, i] * cov[ind[i + 1], ind[i + 2]]) /
+                          (cov[i, ind[i + 1]] * cov[i, ind[i + 2]]) - 1) ** (-1)
+                         for i in np.arange(3)])
+    err_var = np.array([
+        cov[i, i] -
+        (cov[i, ind[i + 1]] * cov[i, ind[i + 2]]) / cov[ind[i + 1], ind[i + 2]]
+        for i in np.arange(3)])
+
+    beta = np.array([cov[ref_ind, no_ref_ind[no_ref_ind != i][0]] /
+                     cov[i, no_ref_ind[no_ref_ind != i][0]] if i != ref_ind
+                     else 1 for i in np.arange(3)])
+
+    return snr, np.sqrt(err_var) * beta, beta
+
+
 def nash_sutcliffe(o, p):
     """
     Nash Sutcliffe model efficiency coefficient E. The range of E lies between
