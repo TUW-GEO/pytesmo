@@ -170,7 +170,7 @@ def test_mse():
     y = np.arange(10) + 2
 
     mse_pred = 4.
-    mse_bias_pred = 2.**2
+    mse_bias_pred = 2. ** 2
     mse_obs, _, mse_bias, _ = met.mse(x, y)
 
     nptest.assert_equal(mse_obs, mse_pred)
@@ -200,4 +200,85 @@ def test_rmsd_mse():
     rmsd_pred = met.rmsd(x, y)
     mse_pred, _, _, _ = met.mse(x, y)
 
-    nptest.assert_almost_equal(rmsd_pred**2, mse_pred, 6)
+    nptest.assert_almost_equal(rmsd_pred ** 2, mse_pred, 6)
+
+
+def test_tcol_error():
+    """
+    Test the triple collocation error estimation based on
+    a random signal and error.
+    Also compare the results to the other method
+    """
+
+    n = 1000000
+
+    mean_signal = 0.3
+    sig_signal = 0.2
+    signal = np.random.normal(mean_signal, sig_signal, n)
+
+    sig_err_x = 0.02
+    sig_err_y = 0.07
+    sig_err_z = 0.04
+    err_pred = np.array((sig_err_x, sig_err_y, sig_err_z))
+    err_x = np.random.normal(0, sig_err_x, n)
+    err_y = np.random.normal(0, sig_err_y, n)
+    err_z = np.random.normal(0, sig_err_z, n)
+
+    alpha_y = 0.2
+    alpha_z = 0.5
+
+    beta_y = 0.9
+    beta_z = 1.6
+
+    x = signal + err_x
+    y = alpha_y + beta_y * (signal + err_y)
+    z = alpha_z + beta_z * (signal + err_z)
+
+    snr, err, beta = met.tcol_snr(x, y, z, ref_ind=0)
+    # classical triple collocation errors use scaled (removed alpha and beta)
+    # input arrays
+    ex, ey, ez = met.tcol_error(signal + err_x, signal + err_y, signal + err_z)
+
+    nptest.assert_almost_equal(err, np.array([ex, ey, ez]), decimal=2)
+    nptest.assert_almost_equal(err_pred, np.array([ex, ey, ez]), decimal=2)
+
+
+def test_tcol_snr():
+    """
+    Test the triple collocation based estimation of
+    signal to noise ratio, absolute errors and rescaling coefficients
+    """
+
+    n = 1000000
+
+    mean_signal = 0.3
+    sig_signal = 0.2
+    signal = np.random.normal(mean_signal, sig_signal, n)
+
+    sig_err_x = 0.02
+    sig_err_y = 0.07
+    sig_err_z = 0.04
+    err_x = np.random.normal(0, sig_err_x, n)
+    err_y = np.random.normal(0, sig_err_y, n)
+    err_z = np.random.normal(0, sig_err_z, n)
+
+    alpha_y = 0.2
+    alpha_z = 0.5
+
+    beta_y = 0.9
+    beta_z = 1.6
+
+    x = signal + err_x
+    y = alpha_y + beta_y * (signal + err_y)
+    z = alpha_z + beta_z * (signal + err_z)
+
+    beta_pred = 1. / np.array((1, beta_y, beta_z))
+    err_pred = np.array((sig_err_x, sig_err_y, sig_err_z))
+    snr_pred = np.array(
+        ((sig_signal / sig_err_x), (sig_signal / sig_err_y), (sig_signal / sig_err_z)))
+
+    snr, err, beta = met.tcol_snr(x, y, z, ref_ind=0)
+
+    nptest.assert_almost_equal(beta, beta_pred, decimal=2)
+    nptest.assert_almost_equal(err, err_pred, decimal=2)
+    nptest.assert_almost_equal(np.sqrt(10 ** (snr / 10.)), snr_pred, decimal=1)
