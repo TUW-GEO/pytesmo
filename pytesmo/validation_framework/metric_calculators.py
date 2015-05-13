@@ -1,0 +1,172 @@
+# Copyright (c) 2013,Vienna University of Technology, Department of Geodesy and Geoinformation
+# All rights reserved.
+
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#   * Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#    * Redistributions in binary form must reproduce the above copyright
+#      notice, this list of conditions and the following disclaimer in the
+#      documentation and/or other materials provided with the distribution.
+#    * Neither the name of the Vienna University of Technology, Department of Geodesy and Geoinformation nor the
+#      names of its contributors may be used to endorse or promote products
+#      derived from this software without specific prior written permission.
+
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL VIENNA UNIVERSITY OF TECHNOLOGY, 
+# DEPARTMENT OF GEODESY AND GEOINFORMATION BE LIABLE FOR ANY
+# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+'''
+Created on Sep 24, 2013
+
+Metric calculators useable in together with core
+
+@author: Christoph.Paulik@geo.tuwien.ac.at
+'''
+
+from general.io.templates import template_BASIC002 as Basic002
+from general.io.templates import template_FTVAL_001 as FTVAL_001
+import pytesmo.metrics as metrics
+
+import numpy as np
+
+
+class BasicMetrics(object):
+    """
+    This class just computes the basic metrics,
+    Pearson's R
+    Spearman's rho
+    RMSD
+    BIAS
+
+    it also stores information about gpi, lat, lon
+    and number of observations
+    """
+
+    def __init__(self):
+
+        self.result_template = Basic002()
+
+    def calc_metrics(self, data, gpi_info):
+        """
+        calculates the desired statistics
+
+        Parameters
+        ----------
+        data : pandas.DataFrame
+            with 2 columns, the first column is the reference dataset
+            named 'ref'
+            the second column the dataset to compare against named 'other'
+        gpi_info : tuple
+            of (gpi, lon, lat)
+
+        Notes
+        -----
+        Kendall tau is not calculated at the moment
+        because the scipy implementation is very slow which is problematic for
+        global comparisons
+        """
+        dataset = self.result_template.copy()
+
+        dataset['n_obs'][0] = len(data)
+        dataset['gpi'][0] = gpi_info[0]
+        dataset['lon'][0] = gpi_info[1]
+        dataset['lat'][0] = gpi_info[2]
+
+        if len(data) < 10:
+            return dataset
+
+        x, y = data['ref'].values, data['other'].values
+        R, p_r = metrics.pearsonr(x, y)
+        rho, p_rho = metrics.spearmanr(x, y)
+        # tau, p_tau = metrics.kendalltau(x, y)
+        RMSD = metrics.rmsd(x, y)
+        BIAS = metrics.bias(x, y)
+
+        dataset['R'][0] = [R, p_r]
+        dataset['rho'][0] = [rho, p_rho]
+        # dataset['tau'][0] = [tau, p_tau]
+        dataset['RMSD'][0] = RMSD
+        dataset['BIAS'][0] = BIAS
+
+        return dataset
+
+
+class FTMetrics(object):
+    """
+    This class computes Freeze/Thaw Metrics
+    Calculated metrics are:
+        SSF frozen/temp unfrozen
+        SSF unfrozen/temp frozen
+        SSF unfrozen/temp unfrozen
+        SSF frozen/temp frozen
+    it also stores information about gpi, lat, lon
+    and number of total observations
+    """
+
+    def __init__(self, frozen_flag=2):
+
+        self.frozen_flag_value = frozen_flag
+        self.result_template = FTVAL_001()
+
+    def calc_metrics(self, data, gpi_info):
+        """
+        calculates the desired statistics
+
+        Parameters
+        ----------
+        data : pandas.DataFrame
+            with 2 columns, the first column is the reference dataset
+            named 'ref'
+            the second column the dataset to compare against named 'other'
+        gpi_info : tuple
+            of (gpi, lon, lat)
+
+        Notes
+        -----
+        Kendall tau is not calculated at the moment
+        because the scipy implementation is very slow which is problematic for
+        global comparisons
+        """
+        dataset = self.result_template.copy()
+
+        dataset['n_obs'][0] = len(data)
+        dataset['gpi'][0] = gpi_info[0]
+        dataset['lon'][0] = gpi_info[1]
+        dataset['lat'][0] = gpi_info[2]
+
+        # if len(data) < 10: return dataset
+
+        ssf, temp = data['ref'].values, data['other'].values
+        # SSF <= 1 unfrozen
+        # SSF >= 2 frozen
+
+        ssf_frozen = np.where(ssf == self.frozen_flag_value)[0]
+        ssf_unfrozen = np.where(ssf != self.frozen_flag_value)[0]
+
+        temp_ssf_frozen = temp[ssf_frozen]
+        temp_ssf_unfrozen = temp[ssf_unfrozen]
+
+        # correct classifications
+        ssf_temp_frozen = np.where(temp_ssf_frozen < 0)[0]
+        ssf_temp_unfrozen = np.where(temp_ssf_unfrozen >= 0)[0]
+
+        # incorrect classifications
+        ssf_fr_temp_unfrozen = np.where(temp_ssf_frozen >= 0)[0]
+        ssf_un_temp_frozen = np.where(temp_ssf_unfrozen < 0)[0]
+
+        dataset['ssf_fr_temp_un'][0] = len(ssf_fr_temp_unfrozen)
+        dataset['ssf_fr_temp_fr'][0] = len(ssf_temp_frozen)
+
+        dataset['ssf_un_temp_fr'][0] = len(ssf_un_temp_frozen)
+        dataset['ssf_un_temp_un'][0] = len(ssf_temp_unfrozen)
+
+        return dataset
