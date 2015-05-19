@@ -132,7 +132,8 @@ class TestAscatNetCDF(unittest.TestCase):
                                              'frozen_prob',
                                              'snow_prob']
         assert len(result.data) == 2425
-        assert result.data.ix[15].name == datetime(2007, 1, 16, 20, 53, 30)
+        assert result.data.ix[15].name == datetime(
+            2007, 1, 16, 20, 53, 30, 439047)
         assert result.data.ix[15]['sm'] == 10
         assert result.data.ix[15]['ssf'] == 1
         assert result.data.ix[15]['sm_noise'] == 8
@@ -174,7 +175,8 @@ class TestAscatNetCDF(unittest.TestCase):
                                              'frozen_prob',
                                              'snow_prob']
         assert len(result.data) == 2292
-        assert result.data.ix[15].name == datetime(2007, 1, 15, 19, 34, 42)
+        assert result.data.ix[15].name == datetime(
+            2007, 1, 15, 19, 34, 41, 771032)
         assert result.data.ix[15]['sm'] == 52
         assert result.data.ix[15]['ssf'] == 1
         assert result.data.ix[15]['sm_noise'] == 7
@@ -248,7 +250,7 @@ class TestAscatNetCDF_V5521(unittest.TestCase):
                                              'frozen_prob',
                                              'snow_prob']
         assert len(result.data) == 2457
-        assert result.data.ix[15].name == datetime(2007, 1, 15, 19, 34, 41)
+        assert result.data.ix[15].name == datetime(2007, 1, 15, 19, 34, 41, 5)
         assert result.data.ix[15]['sm'] == 55
         assert result.data.ix[15]['ssf'] == 1
         assert result.data.ix[15]['sm_noise'] == 7
@@ -314,7 +316,7 @@ class TestAscatNetCDF_V5522(unittest.TestCase):
                                              'frozen_prob',
                                              'snow_prob']
         assert len(result.data) == 2642
-        assert result.data.ix[15].name == datetime(2007, 1, 15, 19, 34, 41)
+        assert result.data.ix[15].name == datetime(2007, 1, 15, 19, 34, 41, 5)
         assert result.data.ix[15]['sm'] == 55
         assert result.data.ix[15]['ssf'] == 1
         assert result.data.ix[15]['sm_noise'] == 7
