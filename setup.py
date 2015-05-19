@@ -18,7 +18,8 @@ import setuptools
 from setuptools.command.test import test as TestCommand
 from setuptools import setup
 from distutils.extension import Extension
-import numpy as np
+from distutils.command.build_ext import build_ext as _build_ext
+import pkg_resources
 
 
 class Cythonize(Command):
@@ -38,10 +39,18 @@ class Cythonize(Command):
         cythonize(['pytesmo/time_series/filters.pyx'])
 
 
-ext_modules = [
-    Extension("pytesmo.time_series.filters", ["pytesmo/time_series/filters.c"],
-              include_dirs=[np.get_include()]),
-]
+class NumpyBuildExt(_build_ext):
+
+    def build_extensions(self):
+        numpy_incl = pkg_resources.resource_filename('numpy', 'core/include')
+
+        for ext in self.extensions:
+            if hasattr(ext, 'include_dirs') and not numpy_incl in ext.include_dirs:
+                ext.include_dirs.append(numpy_incl)
+        _build_ext.build_extensions(self)
+
+ext_modules = [Extension("pytesmo.time_series.filters",
+                         ["pytesmo/time_series/filters.c"], include_dirs=[]), ]
 
 __location__ = os.path.join(os.getcwd(), os.path.dirname(
     inspect.getfile(inspect.currentframe())))
@@ -185,6 +194,7 @@ def setup_package():
     cmdclass['doctest'] = sphinx_builder()
     cmdclass['test'] = PyTest
     cmdclass['cythonize'] = Cythonize
+    cmdclass['build_ext'] = NumpyBuildExt
 
     # Some helper variables
     version = versioneer.get_version()
