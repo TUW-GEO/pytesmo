@@ -15,7 +15,7 @@
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 # ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 # WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-# DISCLAIMED. IN NO EVENT SHALL VIENNA UNIVERSITY OF TECHNOLOGY, 
+# DISCLAIMED. IN NO EVENT SHALL VIENNA UNIVERSITY OF TECHNOLOGY,
 # DEPARTMENT OF GEODESY AND GEOINFORMATION BE LIABLE FOR ANY
 # DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
 # (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
@@ -32,10 +32,9 @@ Metric calculators useable in together with core
 @author: Christoph.Paulik@geo.tuwien.ac.at
 '''
 
-from general.io.templates import template_BASIC002 as Basic002
-from general.io.templates import template_FTVAL_001 as FTVAL_001
 import pytesmo.metrics as metrics
 
+import copy
 import numpy as np
 
 
@@ -53,7 +52,15 @@ class BasicMetrics(object):
 
     def __init__(self):
 
-        self.result_template = Basic002()
+        self.result_template = {'R': np.float32([np.nan, np.nan]),
+                                'rho': np.float32([np.nan, np.nan]),
+                                'tau': np.float32([np.nan, np.nan]),
+                                'RMSD': np.float32([np.nan]),
+                                'BIAS': np.float32([np.nan]),
+                                'n_obs': np.int32([0]),
+                                'gpi': np.int32([-1]),
+                                'lon': np.float64([np.nan]),
+                                'lat': np.float64([np.nan])}
 
     def calc_metrics(self, data, gpi_info):
         """
@@ -74,7 +81,7 @@ class BasicMetrics(object):
         because the scipy implementation is very slow which is problematic for
         global comparisons
         """
-        dataset = self.result_template.copy()
+        dataset = copy.deepcopy(self.result_template)
 
         dataset['n_obs'][0] = len(data)
         dataset['gpi'][0] = gpi_info[0]
@@ -91,9 +98,9 @@ class BasicMetrics(object):
         RMSD = metrics.rmsd(x, y)
         BIAS = metrics.bias(x, y)
 
-        dataset['R'][0] = [R, p_r]
-        dataset['rho'][0] = [rho, p_rho]
-        # dataset['tau'][0] = [tau, p_tau]
+        dataset['R'][0], dataset['R'][1] = [R, p_r]
+        dataset['rho'][0], dataset['rho'][1] = [rho, p_rho]
+        # dataset['tau'][0], dataset['tau'][1] = [tau, p_tau]
         dataset['RMSD'][0] = RMSD
         dataset['BIAS'][0] = BIAS
 
@@ -115,7 +122,14 @@ class FTMetrics(object):
     def __init__(self, frozen_flag=2):
 
         self.frozen_flag_value = frozen_flag
-        self.result_template = FTVAL_001()
+        self.result_template = {'ssf_fr_temp_un': np.float32([np.nan]),
+                                'ssf_fr_temp_fr': np.float32([np.nan]),
+                                'ssf_un_temp_fr': np.float32([np.nan]),
+                                'ssf_un_temp_un': np.float32([np.nan]),
+                                'n_obs': np.int32([0]),
+                                'gpi': np.int32([-1]),
+                                'lon': np.float64([np.nan]),
+                                'lat': np.float64([np.nan])}
 
     def calc_metrics(self, data, gpi_info):
         """
@@ -136,7 +150,7 @@ class FTMetrics(object):
         because the scipy implementation is very slow which is problematic for
         global comparisons
         """
-        dataset = self.result_template.copy()
+        dataset = copy.deepcopy(self.result_template)
 
         dataset['n_obs'][0] = len(data)
         dataset['gpi'][0] = gpi_info[0]
