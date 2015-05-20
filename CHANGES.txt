@@ -47,3 +47,4 @@ v0.2.x, unreleased
 * ISMN interface can now be restricted to a list of networks
 * added python3 support
 * moved grid functionality to pygeogrids package
+* include triple collocation example and improve documentation see issue #24
