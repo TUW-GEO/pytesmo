@@ -212,9 +212,7 @@ def test_tcol_error():
 
     n = 1000000
 
-    mean_signal = 0.3
-    sig_signal = 0.2
-    signal = np.random.normal(mean_signal, sig_signal, n)
+    signal = np.sin(np.linspace(0, 2 * np.pi, n))
 
     sig_err_x = 0.02
     sig_err_y = 0.07

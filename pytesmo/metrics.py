@@ -208,7 +208,8 @@ def mse(o, p, ddof=0):
 
 def tcol_error(x, y, z):
     """
-    Triple collocation error estimate
+    Triple collocation error estimate of three calibrated/scaled
+    datasets.
 
     Parameters
     ----------
@@ -227,6 +228,26 @@ def tcol_error(x, y, z):
         Triple collocation error for y.
     e_z : float
         Triple collocation error for z.
+
+    Notes
+    -----
+    This function estimates the triple collocation error based
+    on already scaled/calibrated input data. It follows formula 4
+    given in [Scipal2008]_.
+
+    .. math:: \\sigma_{\\varepsilon_x}^2 = \\langle (x-y)(x-z) \\rangle
+
+    .. math:: \\sigma_{\\varepsilon_y}^2 = \\langle (y-x)(y-z) \\rangle
+
+    .. math:: \\sigma_{\\varepsilon_z}^2 = \\langle (z-x)(z-y) \\rangle
+
+    where the :math:`\\langle\\rangle` brackets mean the temporal mean.
+
+    References
+    ----------
+    .. [Scipal2008] Scipal, K., Holmes, T., De Jeu, R., Naeimi, V., & Wagner, W. (2008). A
+       possible solution for the problem of estimating the error structure of global
+       soil moisture data sets. Geophysical Research Letters, 35(24), .
     """
     e_x = np.sqrt(np.abs(np.mean((x - y) * (x - z))))
     e_y = np.sqrt(np.abs(np.mean((y - x) * (y - z))))
@@ -249,16 +270,56 @@ def tcol_snr(x, y, z, ref_ind=0):
     z: 1D numpy.ndarray
         third input dataset
     ref_ind: int
-        index of reference data set for estimating scaling coeffitients. default: 0 (x)
+        index of reference data set for estimating scaling coefficients. default: 0 (x)
 
     Returns
     -------
-    snr: ???
+    snr: numpy.ndarray
         signal-to-noise (variance) ratio [dB]
-    err_std: ???
+    err_std: numpy.ndarray
         **SCALED** error standard deviation
-    beta: ???
+    beta: numpy.ndarray
          scaling coefficients (i_scaled = i * beta_i)
+
+    Notes
+    -----
+
+    This function estimates the triple collocation errors, the scaling
+    parameter :math:`\\beta` and the signal to noise ratio directly from the
+    covariances of the dataset. For a general overview and how this function and
+    :py:func:`pytesmo.metrics.tcol_error` are related please see [Gruber2015]_.
+
+    Estimation of the error variances from the covariances of the datasets
+    (e.g. :math:`\\sigma_{XY}` for the covariance between :math:`x` and
+    :math:`y`) is done using the following formula:
+
+    .. math:: \\sigma_{\\varepsilon_x}^2 = \\sigma_{X}^2 - \\frac{\\sigma_{XY}\\sigma_{XZ}}{\\sigma_{YZ}}
+    .. math:: \\sigma_{\\varepsilon_y}^2 = \\sigma_{Y}^2 - \\frac{\\sigma_{YX}\\sigma_{YZ}}{\\sigma_{XZ}}
+    .. math:: \\sigma_{\\varepsilon_z}^2 = \\sigma_{Z}^2 - \\frac{\\sigma_{ZY}\\sigma_{ZX}}{\\sigma_{YX}}
+
+    :math:`\\beta` can also be estimated from the covariances:
+
+    .. math:: \\beta_x = 1
+    .. math:: \\beta_y = \\frac{\\sigma_{XZ}}{\\sigma_{YZ}}
+    .. math:: \\beta_z=\\frac{\\sigma_{XY}}{\\sigma_{ZY}}
+
+    The signal to noise ratio (SNR) is also calculated from the variances
+    and covariances:
+
+    .. math:: \\text{SNR}_X[dB] = -10\\log\\left(\\frac{\\sigma_{X}^2\\sigma_{YZ}}{\\sigma_{XY}\\sigma_{XZ}}-1\\right)
+    .. math:: \\text{SNR}_Y[dB] = -10\\log\\left(\\frac{\\sigma_{Y}^2\\sigma_{XZ}}{\\sigma_{YX}\\sigma_{YZ}}-1\\right)
+    .. math:: \\text{SNR}_Z[dB] = -10\\log\\left(\\frac{\\sigma_{Z}^2\\sigma_{XY}}{\\sigma_{ZX}\\sigma_{ZY}}-1\\right)
+
+    It is given in dB to make it symmetric around zero. If the value is zero
+    it means that the signal variance and the noise variance are equal. +3dB
+    means that the signal variance is twice as high as the noise variance.
+
+    References
+    ----------
+    .. [Gruber2015] Gruber, A., Su, C., Zwieback, S., Crow, W., Dorigo, W., Wagner, W.
+       (2015). Recent advances in (soil moisture) triple collocation analysis.
+       International Journal of Applied Earth Observation and Geoinformation,
+       in review
     """
 
     cov = np.cov(np.vstack((x, y, z)))
