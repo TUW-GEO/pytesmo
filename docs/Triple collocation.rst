@@ -1,3 +1,4 @@
+.. _triple-collocation-example:
 
 Triple collocation
 ==================
