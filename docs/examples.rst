@@ -79,6 +79,16 @@ It can be found in the /examples folder of the pytesmo package under the name co
 .. include::
    compare_ASCAT_ISMN.rst
 
+Triple collocation and triple collocation based scaling
+=======================================================
+
+This example shows how to use the triple collocation routines in the :mod:`pytesmo.metrics` module.
+It also is a crash course to the theory behind triple collocation and links to relevant publications.
+
+
+.. include::
+   Triple collocation.rst
+
 Reading and plotting ASCAT data from binary format
 ==================================================
 
