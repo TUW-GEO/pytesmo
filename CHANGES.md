@@ -1,4 +1,4 @@
-# v0.2.x, unreleased
+# v0.3.0, 2015-05-22
 * added calculation of pearson R confidence intervals based on fisher z transform
 * ISMN reader can now get the data coverage for stations and networks
 * ISMN interface can now be restricted to a list of networks
