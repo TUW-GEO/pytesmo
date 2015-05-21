@@ -23,3 +23,40 @@
 # ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+import pygeogrids.grids as grids
+
+
+def BasicGrid(*args, **kwargs):
+    from warnings import warn
+    warn("pytesmo grids are deprecated and will be removed in the future."
+         " Use pygeogrids instead!", DeprecationWarning)
+    return grids.BasicGrid(*args, **kwargs)
+
+
+def CellGrid(*args, **kwargs):
+    from warnings import warn
+    warn("pytesmo grids are deprecated and will be removed in the future."
+         " Use pygeogrids instead!", DeprecationWarning)
+    return grids.CellGrid(*args, **kwargs)
+
+
+def lonlat2cell(*args, **kwargs):
+    from warnings import warn
+    warn("pytesmo grids are deprecated and will be removed in the future."
+         " Use pygeogrids instead!", DeprecationWarning)
+    return grids.lonlat2cell(*args, **kwargs)
+
+
+def gridfromdims(*args, **kwargs):
+    from warnings import warn
+    warn("pytesmo grids are deprecated and will be removed in the future."
+         " Use pygeogrids instead!", DeprecationWarning)
+    return grids.gridfromdims(*args, **kwargs)
+
+
+def genreg_grid(*args, **kwargs):
+    from warnings import warn
+    warn("pytesmo grids are deprecated and will be removed in the future."
+         " Use pygeogrids instead!", DeprecationWarning)
+    return grids.genreg_grid(*args, **kwargs)
