@@ -78,7 +78,7 @@ class TestERSNetCDF(unittest.TestCase):
                                              'frozen_prob',
                                              'snow_prob']
         assert len(result.data) == 478
-        assert result.data.ix[15].name == datetime(1992, 1, 27, 21, 11, 42)
+        assert result.data.ix[15].name == datetime(1992, 1, 27, 21, 11, 42, 55)
         assert result.data.ix[15]['sm'] == 57
         assert result.data.ix[15]['sm_noise'] == 7
         assert result.data.ix[15]['frozen_prob'] == 18
