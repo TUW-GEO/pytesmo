@@ -126,7 +126,7 @@ optional
 
 * pygrib https://code.google.com/p/pygrib/
 
-	for reading the H-SAF H25 product
+	for reading the H-SAF H14 product
 
 * pykdtree https://github.com/storpipfugl/pykdtree
 
