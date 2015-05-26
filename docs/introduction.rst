@@ -164,8 +164,7 @@ Windows
 
 A relatively easy way to install everything but matplotlib-basemap and netCDF4
 is to install `WinPython <https://winpython.github.io/>`_ and then
-download basemap, netCDF4 and, if you want to read the H14 product, the pygrib
-installer from http://www.lfd.uci.edu/~gohlke/pythonlibs/. Add them to your
+download basemap and netCDF4 from http://www.lfd.uci.edu/~gohlke/pythonlibs/. Add them to your
 winpython installation using the winpython Control Panel.
 
 Just make sure that you download both for the same architecture (32/64 bit) and
