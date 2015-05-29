@@ -52,9 +52,12 @@ class BasicMetrics(object):
 
     def __init__(self):
 
-        self.result_template = {'R': np.float32([np.nan, np.nan]),
-                                'rho': np.float32([np.nan, np.nan]),
-                                'tau': np.float32([np.nan, np.nan]),
+        self.result_template = {'R': np.float32([np.nan]),
+                                'p_R': np.float32([np.nan]),
+                                'rho': np.float32([np.nan]),
+                                'p_rho': np.float32([np.nan]),
+                                'tau': np.float32([np.nan]),
+                                'p_tau': np.float32([np.nan]),
                                 'RMSD': np.float32([np.nan]),
                                 'BIAS': np.float32([np.nan]),
                                 'n_obs': np.int32([0]),
@@ -92,15 +95,15 @@ class BasicMetrics(object):
             return dataset
 
         x, y = data['ref'].values, data['other'].values
-        R, p_r = metrics.pearsonr(x, y)
+        R, p_R = metrics.pearsonr(x, y)
         rho, p_rho = metrics.spearmanr(x, y)
         # tau, p_tau = metrics.kendalltau(x, y)
         RMSD = metrics.rmsd(x, y)
         BIAS = metrics.bias(x, y)
 
-        dataset['R'][0], dataset['R'][1] = [R, p_r]
-        dataset['rho'][0], dataset['rho'][1] = [rho, p_rho]
-        # dataset['tau'][0], dataset['tau'][1] = [tau, p_tau]
+        dataset['R'][0], dataset['p_R'][0] = R, p_R
+        dataset['rho'][0], dataset['p_rho'][0] = rho, p_rho
+        # dataset['tau'][0], dataset['p_tau'][0] = tau, p_tau
         dataset['RMSD'][0] = RMSD
         dataset['BIAS'][0] = BIAS
 
