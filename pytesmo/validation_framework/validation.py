@@ -37,6 +37,8 @@ import numpy as np
 import pytesmo.scaling as scaling
 import general.io.compr_pickle as pickle
 
+from pytesmo.validation_framework.data_manager import DataManager
+
 
 class Validation(object):
 
@@ -50,132 +52,72 @@ class Validation(object):
 
     Parameters
     ----------
-    datasets : dict
-        dictonary of dataset class instances
-    reference_name : string
-        name of the key in datasets of the initalized reader object of reference dataset whose grid will
-        be used and compared against the nearest grid point of other
-    other_name : string
-        name of key in datasets of the initalized reader object of other
-    reference_column : string, or list of strings
-        column name of the pandas.Dataframe returned by the reader of
-        the reference object to be used in the comparison.
-        if multiple_ref is True this has to be a list of columns
-        that are compared to other_column
-    other_column : string
-        column name of the pandas.Dataframe returned by the reader of
-        the other object to be used in the comparison.
-    metrics_calculator : object
-        class that has the attribute result_template and a calc_metrics method
-        that takes a pandas.DataFrame with 2 columns named 'ref' and 'other'
-        and returns a filled result_template
-    grids_compatible : boolean, optional
-        if set to True the grid point index is used directly
-        when reading other, if False then lon, lat is used and a
-        nearest neighbour search is necessary
-    data_prep: object
-        object that provides the methods prep_reference and prep_other
-        which take the pandas.Dataframe provided by the read_ts methods
-        and do some data preparation on it before temporal matching etc.
-        can be used e.g. for special masking or anomaly calculations
+    datasets : dict of dicts
+        dictonary containing the following fields for each dataset
+            'class': object
+                class based reader
+            'columns': list
+                list of columns which will be used in the validation process
+            'type': string
+                'reference' or 'other'
+            'args': list, optional
+                args for reading the data
+            'kwargs': dict, optional
+                kwargs for reading the data
+            'grids_compatible': boolean, optional
+                if set to True the grid point index is used directly
+                when reading other, if False then lon, lat is used and a
+                nearest neighbour search is necessary
+            'use_lut': boolean, optional
+                if set to True the grid point index (obtained from a
+                calculated lut between reference and other) is used when
+                reading other, if False then lon, lat is used and a
+                nearest neighbour search is necessary
+            'lut_max_dist': float, optional
+                maximum allowed distance in meters for the lut calculation
     temporal_matcher: object
         class instance that has a match method that takes a
         reference and a other DataFrame. It's match method
         should return a DataFrame with the index of the reference DataFrame
         and all columns of both DataFrames
+    metrics_calculator : object
+        class that has the attribute result_template and a calc_metrics method
+        that takes a pandas.DataFrame with 2 columns named 'ref' and 'other'
+        and returns a filled result_template
+    data_prep: object
+        object that provides the methods prep_reference and prep_other
+        which take the pandas.Dataframe provided by the read_ts methods
+        and do some data preparation on it before temporal matching etc.
+        can be used e.g. for special masking or anomaly calculations
+    period : list, optional
+        of type [datetime start,datetime end] if given then the two input
+        datasets will be truncated to start <= dates <= end
     scaling : string
         if set then the data will be scaled into the reference space using the
         method specified by the string
     scale_to_other : boolean, optional
         if True the reference dataset is scaled to the other dataset instead
         of the default behavior
-    result_names : list, optional
-        if given the result dictionary will have the keys in this list, if not given
-        the result dictionary will have keys built out of reference_column and other_column
-    lut : numpy.array
-        if given this look up table will be used instead of nearest neighbour search
-    period : list, optional
-        of type [datetime start,datetime end] if given then the two input datasets will be truncated to
-        start <= dates <= end
     cell_based_jobs : boolean, optional
-        if True then the jobs will be cell based, if false jobs will be tuples of
-        (gpi, lon, lat)
+        if True then the jobs will be cell based, if false jobs will be tuples
+        of (gpi, lon, lat)
     """
 
-    def __init__(self, datasets, reference_name, other_name,
-                 reference_column=None, other_column=None,
-                 reference_args=[], other_args=[],
-                 reference_kwargs={}, other_kwargs={},
-                 grids_compatible=False, data_prep=None,
-                 temporal_matcher=None, scaling=None,
-                 scale_to_other=False, metrics_calculator=None,
-                 result_names=None, use_lut=True, lut_max_dist=30000,
-                 period=None, cell_based_jobs=True, save_path=None,
-                 result_man=None):
+    def __init__(self, datasets, temporal_matcher, metrics_calculator,
+                 data_prep=None, period=None, scaling='lin_cdf_match',
+                 scale_to_other=False, cell_based_jobs=True):
 
-        self.reference = datasets[reference_name]
-        self.other = datasets[other_name]
-        self.reference_column = reference_column
-        if type(self.reference_column) is not list:
-            self.reference_column = [self.reference_column]
-        self.other_column = other_column
-        if type(self.other_column) is not list:
-            self.other_column = [self.other_column]
-        self.reference_args = reference_args
-        self.other_args = other_args
-        self.reference_kwargs = reference_kwargs
-        self.other_kwargs = other_kwargs
+        self.data_manager = DataManager(datasets, data_prep, period)
 
-        self.cell_based_jobs = cell_based_jobs
-
-        self.grids_compatible = grids_compatible
         self.temp_matching = temporal_matcher.match
-
-        self.use_data_prep = False
-        if data_prep is not None:
-            self.data_prep = data_prep
-            self.use_data_prep = True
+        self.calc_metrics = metrics_calculator.calc_metrics
 
         self.scaling = scaling
-        self.use_scaling = False
-        if self.scaling is not None:
-            self.use_scaling = True
-
         self.scale_to_index = 0
         if scale_to_other:
             self.scale_to_index = 1
 
-        self.metrics_calculator = metrics_calculator
-        self.calc_metrics = self.metrics_calculator.calc_metrics
-        self.result_names = result_names
-        self.results = {}
-        self.period = period
-        self.use_period = False
-        if self.period is not None:
-            self.use_period = True
-        self.use_lut = use_lut
-        if self.use_lut:
-            self.lut = self.reference.grid.calc_lut(
-                self.other.grid, max_dist=lut_max_dist)
-        else:
-            self.lut = None
-
-        self.save_path = save_path
-
-        if result_man is not None:
-            self.result_man = result_man(metrics_calculator=self.metrics_calculator,
-                                         grid=self.reference.grid)
-        else:
-            self.result_man = result_man
-
-        if self.result_names is None:
-            self.result_names = []
-            for columns in itertools.product(reference_column, other_column):
-                self.result_names.append('_'.join(columns))
-
-        if len(self.result_names) != len(self.reference_column) * len(self.other_column):
-            raise ValueError("Wrong number of result names. There should be a result_name for every"
-                             " combination of reference_column and other_column")
+        self.cell_based_jobs = cell_based_jobs
 
     def calc(self, job):
         """
@@ -197,13 +139,12 @@ class Validation(object):
             each dict element is a list of elements returned by
             self.calc_metrics
         """
+        result_names = self.data_manager.get_result_names()
         results = {}
-        for result_name in self.result_names:
-            results[result_name] = []
 
         if self.cell_based_jobs:
-            process_gpis, process_lons, process_lats = self.reference.grid.grid_points_for_cell(
-                job)
+            process_gpis, process_lons, process_lats = self.data_manager.\
+                reference_grid.grid_points_for_cell(job)
         else:
             process_gpis, process_lons, process_lats = [
                 job[0]], [job[1]], [job[2]]
@@ -217,98 +158,91 @@ class Validation(object):
             else:
                 gpi_meta = job
 
-            # print self.name, gpi_info[0]
-            # if i==50: return results
-            try:
-                ref_dataframe = self.read_reference(gpi_info[0])
-            except IOError:
+            ref_dataframe = self.data_manager.read_reference(gpi_info[0])
+            # if no reference data available continue with the next gpi
+            if ref_dataframe is None:
                 continue
 
-            if self.use_period:
-                ref_dataframe = ref_dataframe[self.period[0]:self.period[1]]
-
-            if len(ref_dataframe) == 0:
-                continue
-
-            if self.use_data_prep:
-                ref_dataframe = self.data_prep.prep_reference(ref_dataframe)
-
-            try:
-                if self.grids_compatible:
-                    other_data = self.read_other(gpi_info[0])
-                elif self.use_lut:
-                    other_gpi = self.lut[gpi_info[0]]
+            other_dataframes = {}
+            for other_name in self.data_manager.other_name:
+                grids_compatible = self.data_manager.datasets[other_name]['grids_compatible']
+                use_lut = self.data_manager.use_lut(other_name)
+                if grids_compatible:
+                    other_dataframe = self.data_manager.read_other(
+                        other_name, gpi_info[0])
+                elif use_lut is not None:
+                    other_gpi = use_lut[gpi_info[0]]
                     if other_gpi == -1:
                         continue
-                    other_data = self.read_other(other_gpi)
+                    other_dataframe = self.data_manager.read_other(
+                        other_name, other_gpi)
                 else:
-                    other_data = self.read_other(gpi_info[1], gpi_info[2])
-            except IOError:
+                    other_dataframe = self.data_manager.read_other(
+                        other_name, gpi_info[1], gpi_info[2])
+
+                if other_dataframe is not None:
+                    other_dataframes[other_name] = other_dataframe
+
+            # if no other data available continue with the next gpi
+            if len(other_dataframes) == 0:
                 continue
 
-            # if no data available continue with the next gpi
-            if len(other_data) == 0:
-                continue
+            joined_data = {}
+            for other in other_dataframes.keys():
+                joined = self.temp_matching(ref_dataframe,
+                                            other_dataframes[other])
 
-            if self.use_period:
-                other_data = other_data[self.period[0]:self.period[1]]
-
-            # if no data available continue with the next gpi
-            if len(other_data) == 0:
-                continue
-
-            if self.use_data_prep:
-                other_data = self.data_prep.prep_other(other_data)
-
-            joined_data = self.temp_matching(ref_dataframe, other_data)
+                if len(joined) != 0:
+                    joined_data[other] = joined
 
             if len(joined_data) == 0:
                 continue
 
             i += 1
-            if i == 20:
-                return results
 
-            # compute results for each requested column in DataFrame
-            for j, columns in enumerate(itertools.product(self.reference_column, self.other_column)):
+            # compute results for each requested columns
+            for result in result_names:
+                ref_col = result[0].split('.')[1]
+                other_col = result[1].split('.')[1]
+                other_name = result[1].split('.')[0]
 
-                data = joined_data[list(columns)].dropna()
+                try:
+                    data = joined_data[other_name][[ref_col, other_col]].dropna()
+                except KeyError:
+                    continue
 
                 data.rename(
-                    columns={columns[0]: 'ref', columns[1]: 'other'}, inplace=True)
+                    columns={ref_col: 'ref', other_col: 'other'}, inplace=True)
 
                 if len(data) == 0:
                     continue
 
-                if self.use_scaling:
+                if self.scaling is not None:
                     try:
                         data = scaling.scale(
                             data, method=self.scaling, reference_index=self.scale_to_index)
                     except ValueError:
                         continue
 
-                results[self.result_names[j]].append(
-                    self.calc_metrics(data, gpi_meta))
+                if result not in results.keys():
+                    results[result] = []
 
-        return results
+                results[result].append(self.calc_metrics(data, gpi_meta))
 
-    def read_reference(self, *args):
-        """
-        function to read the reference dataset
-        can be overridden if another function than read_ts is used
-        """
-        args = list(args)
-        args.extend(self.reference_args)
-        return self.reference.read_ts(*args, **self.reference_kwargs)
+            if i == 3:
+                break
 
-    def read_other(self, *args):
-        """
-        function to read the other dataset
-        can be overridden if another function than read_ts is used
-        """
-        args = list(args)
-        args.extend(self.other_args)
-        return self.other.read_ts(*args, **self.other_kwargs)
+        compact_results = {}
+        for key in results.keys():
+            compact_results[key] = {}
+            for field_name in results[key][0].keys():
+                entries = []
+                for result in results[key]:
+                    entries.append(result[field_name][0])
+                compact_results[key][field_name] = \
+                    np.array(entries, dtype=results[key][0][field_name].dtype)
+
+        return compact_results
 
     def get_processing_jobs(self):
         """
@@ -320,37 +254,6 @@ class Validation(object):
             list of cells or gpis to process
         """
         if self.cell_based_jobs:
-            return self.reference.grid.get_cells()
+            return self.data_manager.reference_grid.get_cells()
         else:
-            return zip(self.reference.grid.get_grid_points())
-
-    def manage_results(self, results):
-        """
-        manages the results after processing, this could mean saving or returning them
-        or just removing success or error messages from the result queue
-
-        Parameters
-        ----------
-        results : list
-            results in list as returned by self.calc
-        """
-        result_dict = {}
-        for result_name in self.result_names:
-            result_dict[result_name] = []
-
-        for result in results:
-            for key in result:
-                result_dict[key].extend(result[key])
-
-        for key in result_dict:
-            result_dict[key] = np.squeeze(np.dstack(result_dict[key]))
-
-        if self.save_path is not None:
-
-            if self.result_man is None:
-                pickle.pickle(self.save_path, result_dict)
-            else:
-                self.result_man.manage_results(result_dict, self.save_path)
-
-        else:
-            return result_dict
+            return zip(self.data_manager.reference_grid.get_grid_points())
