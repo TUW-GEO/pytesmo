@@ -31,12 +31,9 @@ Created on Aug 30, 2013
 '''
 
 from itertools import izip
-import itertools
 import numpy as np
 
 import pytesmo.scaling as scaling
-import general.io.compr_pickle as pickle
-
 from pytesmo.validation_framework.data_manager import DataManager
 
 
@@ -149,7 +146,6 @@ class Validation(object):
             process_gpis, process_lons, process_lats = [
                 job[0]], [job[1]], [job[2]]
 
-        i = 0
         for gpi_info in izip(process_gpis, process_lons, process_lats):
             # if processing is cell based gpi_metainfo is limited to gpi, lon,
             # lat at the moment
@@ -198,9 +194,7 @@ class Validation(object):
             if len(joined_data) == 0:
                 continue
 
-            i += 1
-
-            # compute results for each requested columns
+            # compute results for each combination of (ref, other) columns
             for result in result_names:
                 ref_col = result[0].split('.')[1]
                 other_col = result[1].split('.')[1]
@@ -228,9 +222,6 @@ class Validation(object):
                     results[result] = []
 
                 results[result].append(self.calc_metrics(data, gpi_meta))
-
-            if i == 3:
-                break
 
         compact_results = {}
         for key in results.keys():
