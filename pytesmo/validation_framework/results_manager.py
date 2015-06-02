@@ -1,75 +1,38 @@
-# Copyright (c) 2013,Vienna University of Technology, Department of Geodesy and Geoinformation
-# All rights reserved.
-
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
-#   * Redistributions of source code must retain the above copyright
-#     notice, this list of conditions and the following disclaimer.
-#    * Redistributions in binary form must reproduce the above copyright
-#      notice, this list of conditions and the following disclaimer in the
-#      documentation and/or other materials provided with the distribution.
-#    * Neither the name of the Vienna University of Technology, Department of Geodesy and Geoinformation nor the
-#      names of its contributors may be used to endorse or promote products
-#      derived from this software without specific prior written permission.
-
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-# DISCLAIMED. IN NO EVENT SHALL VIENNA UNIVERSITY OF TECHNOLOGY,
-# DEPARTMENT OF GEODESY AND GEOINFORMATION BE LIABLE FOR ANY
-# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 '''
-Created on Nov 11, 2013
-
-These classes take the result lists produced by a metrics calculator
-and save them on the given grid
-
-@author: Christoph Paulik christoph.paulik@geo.tuwien.ac.at
+Created on 01.06.2015
+@author: Andreea Plocon andreea.plocon@geo.tuwien.ac.at
 '''
 
-from netCDF4 import Dataset
-import numpy as np
+import os
+import netCDF4
+
+from datetime import datetime
 
 
-class NetCDFManager(object):
+def netcdf_results_manager(results, save_path):
 
-    def __init__(self, metrics_calculator, grid,
-                 gpi_field='gpi'):
+    for key in results.keys():
+        filename = os.path.join(save_path, key[0] + '_with_' + key[1] + '.nc')
+        if not os.path.exists(filename):
+            ncfile = netCDF4.Dataset(filename, 'w')
 
-        self.metrics_calc = metrics_calculator
-        self.grid = grid
-        self.gpi_field = gpi_field
-        self.gpi_nan_value = self.metrics_calc.result_template[self.gpi_field]
-        self.save_fields = self.metrics_calc.result_template.dtype.fields
+            global_attr = {}
+            s = "%Y-%m-%d %H:%M:%S"
+            global_attr['date_created'] = datetime.now().strftime(s)
+            ncfile.setncatts(global_attr)
 
-    def manage_results(self, result_dict, save_file):
+            ncfile.createDimension('dim', None)
+        else:
+            ncfile = netCDF4.Dataset(filename, 'a')
 
-        ncfile = Dataset(save_file, 'w')
-        dim = ncfile.createDimension(
-            self.gpi_field, size=len(self.grid.activegpis))
+        index = len(ncfile.dimensions['dim'])
+        for field in results[key]:
 
-        for key in result_dict:
-            data = result_dict[key]
-
-            index = np.where((data[self.gpi_field] != self.gpi_nan_value))
-            valid_gpis = data[self.gpi_field][index]
-            data_template = self.metrics_calc.result_template.copy()
-            result_template = data_template.repeat(self.grid.n_gpi)
-            result_template[valid_gpis] = data[index]
-            if self.grid.subset is None:
-                save_data = result_template
+            if field in ncfile.variables.keys():
+                var = ncfile.variables[field]
             else:
-                save_data = result_template[self.grid.subset]
-
-            for field in self.save_fields:
-                var = ncfile.createVariable("%s_%s" % (key, field),
-                                            save_data[field].dtype, self.gpi_field)
-                var[:] = save_data[field]
+                var = ncfile.createVariable(field, results[key][field].dtype,
+                                            'dim', fill_value=-99999)
+            var[index:] = results[key][field]
 
         ncfile.close()
