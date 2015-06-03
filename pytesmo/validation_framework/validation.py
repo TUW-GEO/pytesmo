@@ -1,35 +1,3 @@
-# Copyright (c) 2013,Vienna University of Technology, Department of Geodesy and Geoinformation
-# All rights reserved.
-
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
-#   * Redistributions of source code must retain the above copyright
-#     notice, this list of conditions and the following disclaimer.
-#    * Redistributions in binary form must reproduce the above copyright
-#      notice, this list of conditions and the following disclaimer in the
-#      documentation and/or other materials provided with the distribution.
-#    * Neither the name of the Vienna University of Technology, Department of Geodesy and Geoinformation nor the
-#      names of its contributors may be used to endorse or promote products
-#      derived from this software without specific prior written permission.
-
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-# DISCLAIMED. IN NO EVENT SHALL VIENNA UNIVERSITY OF TECHNOLOGY,
-# DEPARTMENT OF GEODESY AND GEOINFORMATION BE LIABLE FOR ANY
-# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-'''
-Created on Aug 30, 2013
-
-@author: Christoph Paulik Christoph.Paulik@geo.tuwien.ac.at
-'''
-
 from itertools import izip
 import numpy as np
 
@@ -38,72 +6,76 @@ from pytesmo.validation_framework.data_manager import DataManager
 
 
 class Validation(object):
-
     """
-    this class is the basis for comparing datasets that both have
-    have a class based reader that follow some guidelines.
-    *  implement an read_ts function that takes either gpi
-       or lon,lat and returns a pandas.DataFrame with datetimeindex
-    *  The readers of the datasets should also be initialized with the read_bulk keyword
-       to make reading of cell based datasets or netCDF files faster
+    Class for the validation process.
 
     Parameters
     ----------
     datasets : dict of dicts
-        dictonary containing the following fields for each dataset
+        Keys: string, datasets names
+        Values: dict, containing the following fields
             'class': object
-                class based reader
+                Class containing the method read_ts for reading the data.
             'columns': list
-                list of columns which will be used in the validation process
+                List of columns which will be used in the validation process.
             'type': string
-                'reference' or 'other'
+                'reference' or 'other'.
             'args': list, optional
-                args for reading the data
+                Args for reading the data.
             'kwargs': dict, optional
-                kwargs for reading the data
+                Kwargs for reading the data
             'grids_compatible': boolean, optional
-                if set to True the grid point index is used directly
-                when reading other, if False then lon, lat is used and a
-                nearest neighbour search is necessary
+                If set to True the grid point index is used directly when
+                reading other, if False then lon, lat is used and a nearest
+                neighbour search is necessary.
             'use_lut': boolean, optional
-                if set to True the grid point index (obtained from a
+                If set to True the grid point index (obtained from a
                 calculated lut between reference and other) is used when
                 reading other, if False then lon, lat is used and a
-                nearest neighbour search is necessary
+                nearest neighbour search is necessary.
             'lut_max_dist': float, optional
-                maximum allowed distance in meters for the lut calculation
+                Maximum allowed distance in meters for the lut calculation.
     temporal_matcher: object
-        class instance that has a match method that takes a
-        reference and a other DataFrame. It's match method
-        should return a DataFrame with the index of the reference DataFrame
-        and all columns of both DataFrames
+        Class instance that has a match method that takes a reference and a
+        other DataFrame. It's match method should return a DataFrame with the
+        index of the reference DataFrame and all columns of both DataFrames.
     metrics_calculator : object
-        class that has the attribute result_template and a calc_metrics method
-        that takes a pandas.DataFrame with 2 columns named 'ref' and 'other'
-        and returns a filled result_template
+        Class that has a calc_metrics method that takes a pandas.DataFrame
+        with 2 columns named 'ref' and 'other' and returns a dictionary with
+        the calculated metrics.
     data_prep: object
-        object that provides the methods prep_reference and prep_other
-        which take the pandas.Dataframe provided by the read_ts methods
-        and do some data preparation on it before temporal matching etc.
-        can be used e.g. for special masking or anomaly calculations
+        Object that provides the methods prep_reference and prep_other
+        which take the pandas.Dataframe provided by the read_ts methods (plus
+        other_name for prep_other) and do some data preparation on it before
+        temporal matching etc. can be used e.g. for special masking or anomaly
+        calculations.
     period : list, optional
-        of type [datetime start,datetime end] if given then the two input
-        datasets will be truncated to start <= dates <= end
+        Of type [datetime start, datetime end]. If given then the two input
+        datasets will be truncated to start <= dates <= end.
     scaling : string
-        if set then the data will be scaled into the reference space using the
-        method specified by the string
+        If set then the data will be scaled into the reference space using the
+        method specified by the string.
     scale_to_other : boolean, optional
-        if True the reference dataset is scaled to the other dataset instead
-        of the default behavior
+        If True the reference dataset is scaled to the other dataset instead
+        of the default behavior.
     cell_based_jobs : boolean, optional
-        if True then the jobs will be cell based, if false jobs will be tuples
-        of (gpi, lon, lat)
+        If True then the jobs will be cell based, if false jobs will be tuples
+        of (gpi, lon, lat).
+
+    Methods
+    -------
+    calc(job)
+        Takes either a cell or a gpi_info tuple and performs the validation.
+    get_processing_jobs()
+        Returns processing jobs that this process can understand.
     """
 
     def __init__(self, datasets, temporal_matcher, metrics_calculator,
                  data_prep=None, period=None, scaling='lin_cdf_match',
                  scale_to_other=False, cell_based_jobs=True):
-
+        """
+        Initialize parameters.
+        """
         self.data_manager = DataManager(datasets, data_prep, period)
 
         self.temp_matching = temporal_matcher.match
@@ -118,25 +90,21 @@ class Validation(object):
 
     def calc(self, job):
         """
-        takes either a cell or a gpi_info tuple and
-        matches and compares the 2 datasets according to
-        the objects given to self.metrics_calculator and
-        self.temporal_matcher
+        Takes either a cell or a gpi_info tuple and performs the validation.
 
         Parameters
         ----------
         job : object
-            job as understood by the process, is of type that self.get_processing_jobs()
-            returns
+            Job of type that self.get_processing_jobs() returns.
 
         Returns
         -------
-        results : dict
-            dictionary with keys self.result_names
-            each dict element is a list of elements returned by
-            self.calc_metrics
+        compact_results : dict of dicts
+            Keys: result names, combinations of
+                  (referenceDataset.column, otherDataset.column)
+            Values: dict containing the elements returned by metrics_calculator
         """
-        result_names = self.data_manager.get_result_names()
+        result_names = self.data_manager.get_results_names()
         results = {}
 
         if self.cell_based_jobs:
@@ -146,6 +114,7 @@ class Validation(object):
             process_gpis, process_lons, process_lats = [
                 job[0]], [job[1]], [job[2]]
 
+        i = 0
         for gpi_info in izip(process_gpis, process_lons, process_lats):
             # if processing is cell based gpi_metainfo is limited to gpi, lon,
             # lat at the moment
@@ -194,6 +163,7 @@ class Validation(object):
             if len(joined_data) == 0:
                 continue
 
+            i += 1
             # compute results for each combination of (ref, other) columns
             for result in result_names:
                 ref_col = result[0].split('.')[1]
@@ -223,6 +193,9 @@ class Validation(object):
 
                 results[result].append(self.calc_metrics(data, gpi_meta))
 
+            if i == 3:
+                break
+
         compact_results = {}
         for key in results.keys():
             compact_results[key] = {}
@@ -237,12 +210,12 @@ class Validation(object):
 
     def get_processing_jobs(self):
         """
-        returns processing jobs that this process can understand
+        Returns processing jobs that this process can understand.
 
         Returns
         -------
         jobs : list
-            list of cells or gpis to process
+            List of cells or gpis to process.
         """
         if self.cell_based_jobs:
             return self.data_manager.reference_grid.get_cells()
