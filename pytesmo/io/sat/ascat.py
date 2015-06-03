@@ -775,7 +775,7 @@ class AscatH25_SSM(AscatNetcdf):
         # if the cell numbering is not changed.
         self.netcdftemplate = os.path.split(first_file)[1][:-7] + '%04d.nc'
 
-    def read_ssm(self, *args, **kwargs):
+    def read_ts(self, *args, **kwargs):
         """
         function to read SSM takes either 1 or 2 arguments.
         It can be called as read_ssm(gpi,**kwargs) or read_ssm(lon,lat,**kwargs)
@@ -818,7 +818,7 @@ class AscatH25_SSM(AscatNetcdf):
         return ASCATTimeSeries(gpi, lon, lat, cell, df,
                                topo_complex=topo, wetland_frac=wetland,
                                porosity_gldas=porosity['gldas'],
-                               porosity_hwsd=porosity['hwsd'])
+                               porosity_hwsd=porosity['hwsd']).data
 
 
 class Ascat_SSM(Ascat_data):
