@@ -6,16 +6,26 @@ from pytesmo.validation_framework.results_manager import netcdf_results_manager
 
 
 def func(job):
+    """
+    Function which calls the start_processing method implemented in setup_code.
+    """
     return start_processing(job)
 
 
-def start_validation():
+def start_validation(setup_code):
+    """
+    Perform the validation with IPython parallel processing.
 
+    Parameters
+    ----------
+    setup_code : string
+        Path to .py file containing the setup for the validation.
+    """
     c = parallel.Client()
     dv = c[:]
     lview = c.load_balanced_view()
 
-    dv.run("/media/sf_H/swdvlp/aplocon/code/Validation/ASCAT_soil_moisture/setup_validation.py", block=True)
+    dv.run(setup_code, block=True)
 
     jobs = None
     try:
@@ -44,5 +54,8 @@ if __name__ == '__main__':
 
     start = datetime.now()
     print 'Start Validation'
-    start_validation()
+
+    setup_code = "/media/sf_H/swdvlp/aplocon/code/Validation/ASCAT_soil_moisture/setup_validation.py"
+    start_validation(setup_code)
+
     print 'Elapsed time:', datetime.now() - start
