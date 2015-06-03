@@ -1,3 +1,7 @@
+"""
+Created on 27.05.2015
+@author: Andreea Plocon, andreea.plocon@geo.tuwien.ac.at
+"""
 import itertools
 
 
