@@ -1,7 +1,7 @@
-'''
+"""
 Created on 01.06.2015
 @author: Andreea Plocon andreea.plocon@geo.tuwien.ac.at
-'''
+"""
 
 import os
 import netCDF4
@@ -10,7 +10,17 @@ from datetime import datetime
 
 
 def netcdf_results_manager(results, save_path):
+    """
+    Function for writing the results of the validation process as NetCDF file.
 
+    Parameters
+    ----------
+    results : dict of dicts
+        Keys: Combinations of (referenceDataset.column, otherDataset.column)
+        Values: dict containing the results from metric_calculator
+    save_path : string
+        Path where the file/files will be saved.
+    """
     for key in results.keys():
         filename = os.path.join(save_path, key[0] + '_with_' + key[1] + '.nc')
         if not os.path.exists(filename):
