@@ -2,9 +2,61 @@ import itertools
 
 
 class DataManager(object):
+    """
+    Class to handle the data management.
+
+    Parameters
+    ----------
+    datasets : dict of dicts
+        Keys: string, datasets names
+        Values: dict, containing the following fields
+            'class': object
+                Class containing the method read_ts for reading the data.
+            'columns': list
+                List of columns which will be used in the validation process.
+            'type': string
+                'reference' or 'other'.
+            'args': list, optional
+                Args for reading the data.
+            'kwargs': dict, optional
+                Kwargs for reading the data
+            'grids_compatible': boolean, optional
+                If set to True the grid point index is used directly when
+                reading other, if False then lon, lat is used and a nearest
+                neighbour search is necessary.
+            'use_lut': boolean, optional
+                If set to True the grid point index (obtained from a
+                calculated lut between reference and other) is used when
+                reading other, if False then lon, lat is used and a
+                nearest neighbour search is necessary.
+            'lut_max_dist': float, optional
+                Maximum allowed distance in meters for the lut calculation.
+    data_prep : object, optional
+        Class instance to prepare the datasets before validation.
+        Must contain the methods:
+            prep_reference(reference_dataframe)
+            prep_other(other_dataframe, other_name)
+    period : list, optional
+        Of type [datetime start, datetime end]. If given then the two input
+        datasets will be truncated to start <= dates <= end.
+
+    Methods
+    -------
+    use_lut(other_name)
+        Returns lut between reference and other if use_lut for other dataset
+        was set to True.
+    get_result_names()
+        Return results names based on reference and others names.
+    read_reference(*args)
+        Function to read and prepare the reference dataset.
+    read_other(other_name, *args)
+        Function to read and prepare the other datasets.
+    """
 
     def __init__(self, datasets, data_prep=None, period=None):
-
+        """
+        Initialize parameters.
+        """
         self.datasets = datasets
 
         self.other_name = []
@@ -20,7 +72,19 @@ class DataManager(object):
         self.period = period
 
     def use_lut(self, other_name):
+        """
+        Returns lut between reference and other if use_lut for other dataset
+        was set to True.
 
+        Parameters
+        ----------
+        other_name : string
+            Name of the other dataset
+
+        Returns
+        -------
+            Lut or None
+        """
         if self.datasets[other_name]['use_lut']:
             return self.reference_grid.calc_lut(
                 self.datasets[other_name]['class'].grid,
@@ -28,9 +92,17 @@ class DataManager(object):
         else:
             return None
 
-    def get_result_names(self):
+    def get_results_names(self):
+        """
+        Return results names based on reference and others names.
 
-        result_names = []
+        Returns
+        -------
+        results_names : list
+            Containing all combinations of
+            (referenceDataset.column, otherDataset.column)
+        """
+        results_names = []
 
         ref_columns = []
         for column in self.datasets[self.reference_name]['columns']:
@@ -42,13 +114,28 @@ class DataManager(object):
                 other_columns.append(other + '.' + column)
 
         for comb in itertools.product(ref_columns, other_columns):
-            result_names.append(comb)
+            results_names.append(comb)
 
-        return result_names
+        return results_names
 
     def read_reference(self, *args):
         """
-        Function to read the reference dataset
+        Function to read and prepare the reference dataset.
+        Takes either 1 (gpi) or 2 (lon, lat) arguments.
+
+        Parameters
+        ----------
+        gpi : int
+            Grid point index
+        lon : float
+            Longitude of point
+        lat : float
+            Latitude of point
+
+        Returns
+        -------
+        ref_df : pandas.DataFrame or None
+            Reference dataframe.
         """
         reference = self.datasets[self.reference_name]
         args = list(args)
@@ -75,7 +162,24 @@ class DataManager(object):
 
     def read_other(self, other_name, *args):
         """
-        Function to read other dataset
+        Function to read and prepare the other datasets.
+        Takes either 1 (gpi) or 2 (lon, lat) arguments.
+
+        Parameters
+        ----------
+        other_name : string
+            Name of the other dataset.
+        gpi : int
+            Grid point index
+        lon : float
+            Longitude of point
+        lat : float
+            Latitude of point
+
+        Returns
+        -------
+        other_df : pandas.DataFrame or None
+            Other dataframe.
         """
         other = self.datasets[other_name]
         args = list(args)
