@@ -39,13 +39,15 @@ def start_validation(setup_code):
     except parallel.CompositeError:
         print "Variable 'save_path' is not defined!"
 
+    to_write = len(jobs)
     if (jobs is not None) and (save_path is not None):
         with lview.temp_flags(retries=2):
             amr = lview.map_async(func, jobs)
             results = izip(amr, jobs)
             for result, job in results:
                 netcdf_results_manager(result, save_path)
-                print job
+                print 'cell = ' + str(job), 'remaining = ' + str(to_write)
+                to_write -= 1
 
     c[:].clear()
 
