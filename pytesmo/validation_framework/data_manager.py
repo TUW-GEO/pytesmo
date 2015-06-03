@@ -36,10 +36,11 @@ class DataManager(object):
             'lut_max_dist': float, optional
                 Maximum allowed distance in meters for the lut calculation.
     data_prep : object, optional
-        Class instance to prepare the datasets before validation.
-        Must contain the methods:
-            prep_reference(reference_dataframe)
-            prep_other(other_dataframe, other_name)
+        Object that provides the methods prep_reference and prep_other
+        which take the pandas.Dataframe provided by the read_ts methods (plus
+        other_name for prep_other) and do some data preparation on it before
+        temporal matching etc. can be used e.g. for special masking or anomaly
+        calculations.
     period : list, optional
         Of type [datetime start, datetime end]. If given then the two input
         datasets will be truncated to start <= dates <= end.
