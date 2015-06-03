@@ -114,7 +114,6 @@ class Validation(object):
             process_gpis, process_lons, process_lats = [
                 job[0]], [job[1]], [job[2]]
 
-        i = 0
         for gpi_info in izip(process_gpis, process_lons, process_lats):
             # if processing is cell based gpi_metainfo is limited to gpi, lon,
             # lat at the moment
@@ -163,7 +162,6 @@ class Validation(object):
             if len(joined_data) == 0:
                 continue
 
-            i += 1
             # compute results for each combination of (ref, other) columns
             for result in result_names:
                 ref_col = result[0].split('.')[1]
@@ -192,9 +190,6 @@ class Validation(object):
                     results[result] = []
 
                 results[result].append(self.calc_metrics(data, gpi_meta))
-
-            if i == 3:
-                break
 
         compact_results = {}
         for key in results.keys():
