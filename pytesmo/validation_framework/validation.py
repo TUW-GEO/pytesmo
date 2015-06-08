@@ -88,6 +88,8 @@ class Validation(object):
 
         self.cell_based_jobs = cell_based_jobs
 
+        self.luts = self.data_manager.get_luts()
+
     def calc(self, job):
         """
         Takes either a cell or a gpi_info tuple and performs the validation.
@@ -130,12 +132,12 @@ class Validation(object):
             other_dataframes = {}
             for other_name in self.data_manager.other_name:
                 grids_compatible = self.data_manager.datasets[other_name]['grids_compatible']
-                use_lut = self.data_manager.use_lut(other_name)
                 if grids_compatible:
                     other_dataframe = self.data_manager.read_other(
                         other_name, gpi_info[0])
-                elif use_lut is not None:
-                    other_gpi = use_lut[gpi_info[0]]
+                elif self.luts[other_name] is not None:
+                    gpi_id = np.where(self.data_manager.reference_grid.activegpis == gpi_info[0])[0][0]
+                    other_gpi = self.luts[other_name][gpi_id]
                     if other_gpi == -1:
                         continue
                     other_dataframe = self.data_manager.read_other(
