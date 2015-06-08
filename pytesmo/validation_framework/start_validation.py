@@ -46,8 +46,8 @@ def start_validation(setup_code):
             results = izip(amr, jobs)
             for result, job in results:
                 netcdf_results_manager(result, save_path)
-                print 'cell = ' + str(job), 'remaining = ' + str(to_write)
                 to_write -= 1
+                print 'cell = ' + str(job), 'remaining = ' + str(to_write)
 
     c[:].clear()
 
