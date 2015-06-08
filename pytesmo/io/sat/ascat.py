@@ -37,7 +37,7 @@ import warnings
 import netCDF4
 from glob import glob
 
-import pytesmo.grid.grids as grids
+import pygeogrids.grids as grids
 from pytesmo.timedate.julian import doy
 
 from datetime import datetime
