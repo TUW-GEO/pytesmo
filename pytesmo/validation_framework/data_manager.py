@@ -76,26 +76,27 @@ class DataManager(object):
         self.data_prep = data_prep
         self.period = period
 
-    def use_lut(self, other_name):
+    def get_luts(self):
         """
-        Returns lut between reference and other if use_lut for other dataset
+        Returns luts between reference and others if use_lut for other datasets
         was set to True.
-
-        Parameters
-        ----------
-        other_name : string
-            Name of the other dataset
 
         Returns
         -------
-            Lut or None
+        luts : dict
+            Keys: other datasets names
+            Values: lut between reference and other, or None
         """
-        if self.datasets[other_name]['use_lut']:
-            return self.reference_grid.calc_lut(
-                self.datasets[other_name]['class'].grid,
-                max_dist=self.datasets[other_name]['lut_max_dist'])
-        else:
-            return None
+        luts = {}
+        for other_name in self.other_name:
+            if self.datasets[other_name]['use_lut']:
+                luts[other_name] = self.reference_grid.calc_lut(
+                    self.datasets[other_name]['class'].grid,
+                    max_dist=self.datasets[other_name]['lut_max_dist'])
+            else:
+                luts[other_name] = None
+
+        return luts
 
     def get_results_names(self):
         """
