@@ -47,7 +47,7 @@ def start_validation(setup_code):
             for result, job in results:
                 netcdf_results_manager(result, save_path)
                 to_write -= 1
-                print 'cell = ' + str(job), 'remaining = ' + str(to_write)
+                print 'job = ' + str(job), 'remaining jobs = ' + str(to_write)
 
     c[:].clear()
 
@@ -57,7 +57,7 @@ if __name__ == '__main__':
     start = datetime.now()
     print 'Start Validation'
 
-    setup_code = "/media/sf_H/swdvlp/aplocon/code/Validation/ASCAT_soil_moisture/setup_validation.py"
+    setup_code = "/media/sf_H/swdvlp/github/pytesmo/examples/setup_validation_ASCAT_ISMN.py"
     start_validation(setup_code)
 
     print 'Elapsed time:', datetime.now() - start
