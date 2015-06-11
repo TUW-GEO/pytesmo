@@ -214,7 +214,10 @@ class Validation(object):
         jobs : list
             List of cells or gpis to process.
         """
-        if self.cell_based_jobs:
-            return self.data_manager.reference_grid.get_cells()
+        if self.data_manager.reference_grid is not None:
+            if self.cell_based_jobs:
+                return self.data_manager.reference_grid.get_cells()
+            else:
+                return zip(self.data_manager.reference_grid.get_grid_points())
         else:
-            return zip(self.data_manager.reference_grid.get_grid_points())
+            return []
