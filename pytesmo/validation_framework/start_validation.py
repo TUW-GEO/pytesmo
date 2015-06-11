@@ -57,6 +57,10 @@ if __name__ == '__main__':
     start = datetime.now()
     print 'Start Validation'
 
+    # Note that before starting the validation you must start a controller
+    # and engines, for example by using: ipcluster start -n 4
+    # This command will launch a controller and 4 engines on the local machine.
+    # Also, do not forget to change the setup_code path to your current setup.
     setup_code = "/media/sf_H/swdvlp/github/pytesmo/examples/setup_validation_ASCAT_ISMN.py"
     start_validation(setup_code)
 
