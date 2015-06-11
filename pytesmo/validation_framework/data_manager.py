@@ -71,7 +71,10 @@ class DataManager(object):
             else:
                 self.other_name.append(dataset)
 
-        self.reference_grid = self.datasets[self.reference_name]['class'].grid
+        try:
+            self.reference_grid = self.datasets[self.reference_name]['class'].grid
+        except AttributeError:
+            self.reference_grid = None
 
         self.data_prep = data_prep
         self.period = period
@@ -152,6 +155,12 @@ class DataManager(object):
         except IOError:
             return None
 
+        # drop nan values
+        ref_df = ref_df.dropna()
+
+        if len(ref_df) == 0:
+            return None
+
         if self.period is not None:
             ref_df = ref_df[self.period[0]:self.period[1]]
 
@@ -194,6 +203,12 @@ class DataManager(object):
         try:
             other_df = other['class'].read_ts(*args, **other['kwargs'])
         except IOError:
+            return None
+
+        # drop nan values
+        other_df = other_df.dropna()
+
+        if len(other_df) == 0:
             return None
 
         if self.period is not None:
