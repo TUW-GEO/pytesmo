@@ -775,7 +775,7 @@ class AscatH25_SSM(AscatNetcdf):
         # if the cell numbering is not changed.
         self.netcdftemplate = os.path.split(first_file)[1][:-7] + '%04d.nc'
 
-    def read_ts(self, *args, **kwargs):
+    def read_ssm(self, *args, **kwargs):
         """
         function to read SSM takes either 1 or 2 arguments.
         It can be called as read_ssm(gpi,**kwargs) or read_ssm(lon,lat,**kwargs)
@@ -818,7 +818,42 @@ class AscatH25_SSM(AscatNetcdf):
         return ASCATTimeSeries(gpi, lon, lat, cell, df,
                                topo_complex=topo, wetland_frac=wetland,
                                porosity_gldas=porosity['gldas'],
-                               porosity_hwsd=porosity['hwsd']).data
+                               porosity_hwsd=porosity['hwsd'])
+
+    def read_ts(self, *args, **kwargs):
+        """
+        function to read SSM takes either 1 or 2 arguments.
+        It can be called as read_ssm(gpi,**kwargs) or read_ssm(lon,lat,**kwargs)
+
+        Parameters
+        ----------
+        gpi : int
+            grid point index
+        lon : float
+            longitude of point
+        lat : float
+            latitude of point
+        mask_ssf : boolean, optional
+            default False, if True only SSF values of 1 will be allowed, all others are removed
+        mask_frozen_prob : int,optional
+            if included in kwargs then all observations taken when
+            frozen probability > mask_frozen_prob are removed from the result
+        mask_snow_prob : int,optional
+            if included in kwargs then all observations taken when
+            snow probability > mask_snow_prob are removed from the result
+        absolute_values : boolean, optional
+            if True soil porosities from HWSD and GLDAS will be used to
+            derive absolute values which will be available in the
+            pandas.DataFrame in the columns
+            'sm_por_gldas','sm_noise_por_gldas',
+            'sm_por_hwsd','sm_noise_por_hwsd'
+
+        Returns
+        -------
+        data : pandas.DataFrame
+        """
+        ts = self.read_ssm(*args, **kwargs)
+        return ts.data
 
 
 class Ascat_SSM(Ascat_data):
