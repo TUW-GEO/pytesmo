@@ -131,7 +131,7 @@ class TestAscatNetCDF(unittest.TestCase):
         assert result.data.ix[15]['sm_noise'] == 8
         assert result.data.ix[15]['frozen_prob'] == 0
         assert result.data.ix[15]['snow_prob'] == 0
-        assert result.data.ix[15]['orbit_dir'] == 'A'
+        assert result.data.ix[15]['orbit_dir'].decode('utf-8') == 'A'
         assert result.data.ix[15]['proc_flag'] == 0
         np.testing.assert_approx_equal(
             result.data.ix[15]['sm_por_gldas'], 0.061, significant=6)
@@ -174,7 +174,7 @@ class TestAscatNetCDF(unittest.TestCase):
         assert result.data.ix[15]['sm_noise'] == 7
         assert result.data.ix[15]['frozen_prob'] == 29
         assert result.data.ix[15]['snow_prob'] == 0
-        assert result.data.ix[15]['orbit_dir'] == 'A'
+        assert result.data.ix[15]['orbit_dir'].decode('utf-8') == 'A'
         assert result.data.ix[15]['proc_flag'] == 0
         np.testing.assert_approx_equal(
             result.data.ix[15]['sm_por_gldas'], 0.2819555, significant=6)
@@ -243,7 +243,7 @@ class TestAscatNetCDF_V5521(unittest.TestCase):
         assert result.data.ix[15]['sm_noise'] == 7
         assert result.data.ix[15]['frozen_prob'] == 29
         assert result.data.ix[15]['snow_prob'] == 0
-        assert result.data.ix[15]['orbit_dir'] == 'A'
+        assert result.data.ix[15]['orbit_dir'].decode('utf-8') == 'A'
         assert result.data.ix[15]['proc_flag'] == 0
         np.testing.assert_approx_equal(
             result.data.ix[15]['sm_por_gldas'], 0.2969999, significant=6)
@@ -304,7 +304,7 @@ class TestAscatNetCDF_V5522(unittest.TestCase):
         assert result.data.ix[15]['sm_noise'] == 7
         assert result.data.ix[15]['frozen_prob'] == 29
         assert result.data.ix[15]['snow_prob'] == 0
-        assert result.data.ix[15]['orbit_dir'] == 'A'
+        assert result.data.ix[15]['orbit_dir'].decode('utf-8') == 'A'
         assert result.data.ix[15]['proc_flag'] == 0
         np.testing.assert_approx_equal(
             result.data.ix[15]['sm_por_gldas'], 0.2969999, significant=6)

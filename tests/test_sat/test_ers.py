@@ -78,7 +78,7 @@ class TestERSNetCDF(unittest.TestCase):
         assert result.data.ix[15]['sm_noise'] == 7
         assert result.data.ix[15]['frozen_prob'] == 18
         assert result.data.ix[15]['snow_prob'] == 0
-        assert result.data.ix[15]['orbit_dir'] == 'A'
+        assert result.data.ix[15]['orbit_dir'].decode('utf-8') == 'A'
         assert result.data.ix[15]['proc_flag'] == 0
         np.testing.assert_approx_equal(
             result.data.ix[15]['sm_por_gldas'], 0.3090667, significant=6)
