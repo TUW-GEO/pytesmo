@@ -17,7 +17,7 @@ class Test_H08(unittest.TestCase):
 
     def setUp(self):
         data_path = os.path.join(
-            os.path.dirname(__file__), 'test_data', 'h_saf', 'h08')
+            os.path.dirname(__file__), '..', 'test-data', 'sat', 'h_saf', 'h08')
         self.reader = H_SAF.H08img(data_path)
 
     def tearDown(self):
@@ -74,7 +74,7 @@ class Test_H07(unittest.TestCase):
 
     def setUp(self):
         data_path = os.path.join(
-            os.path.dirname(__file__), 'test_data', 'h_saf', 'h07')
+            os.path.dirname(__file__), '..', 'test-data', 'sat', 'h_saf', 'h07')
         self.reader = H_SAF.H07img(data_path)
 
     def tearDown(self):
@@ -112,7 +112,7 @@ class Test_H14(unittest.TestCase):
 
     def setUp(self):
         data_path = os.path.join(
-            os.path.dirname(__file__), 'test_data', 'h_saf', 'h14')
+            os.path.dirname(__file__), '..', 'test-data', 'sat', 'h_saf', 'h14')
         self.reader = H_SAF.H14img(data_path, expand_grid=False)
         self.expand_reader = H_SAF.H14img(data_path, expand_grid=True)
 

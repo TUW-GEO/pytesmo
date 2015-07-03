@@ -45,7 +45,7 @@ def test_min_max_obstime_getting():
     """
 
     path_header_values = os.path.join(os.path.dirname(__file__),
-                                      'test_data', 'format_header_values', 'SMOSMANIA')
+                                      '..', 'test-data', 'ismn', 'format_header_values', 'SMOSMANIA')
     hv_interface = interface.ISMN_Interface(path_header_values)
 
     station = hv_interface.get_station('Narbonne')
@@ -54,7 +54,7 @@ def test_min_max_obstime_getting():
     assert endd == datetime.datetime(2007, 1, 31, 23)
 
     path_ceop_sep = os.path.join(os.path.dirname(__file__),
-                                 'test_data', 'format_ceop_sep', 'SMOSMANIA')
+                                 '..', 'test-data', 'ismn', 'format_ceop_sep', 'SMOSMANIA')
     ceop_sep_interface = interface.ISMN_Interface(path_ceop_sep)
 
     station = ceop_sep_interface.get_station('Narbonne')
@@ -70,7 +70,7 @@ def test_min_max_obstime_networks():
     """
 
     path_header_values = os.path.join(os.path.dirname(__file__),
-                                      'test_data', 'multinetwork', 'header_values')
+                                      '..', 'test-data', 'ismn', 'multinetwork', 'header_values')
     hv_interface = interface.ISMN_Interface(path_header_values)
     data = hv_interface.get_min_max_obs_timestamps(min_depth=0, max_depth=0.1)
     assert data.loc['MAQU']['end date'][
@@ -91,7 +91,7 @@ def test_interface_network_init():
     """
 
     path_header_values = os.path.join(os.path.dirname(__file__),
-                                      'test_data', 'multinetwork', 'header_values')
+                                      '..', 'test-data', 'ismn', 'multinetwork', 'header_values')
     hv_interface = interface.ISMN_Interface(
         path_header_values, network=['SCAN'])
     assert hv_interface.list_networks().size == 1

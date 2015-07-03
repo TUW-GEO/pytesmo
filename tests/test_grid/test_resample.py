@@ -44,7 +44,7 @@ class Test_resample_H07(unittest.TestCase):
 
     def setUp(self):
         data_path = os.path.join(os.path.dirname(__file__), '..',
-                                 'test_sat', 'test_data', 'h_saf', 'h07')
+                                 'test-data', 'sat', 'h_saf', 'h07')
         self.reader = H_SAF.H07img(data_path)
 
     def tearDown(self):

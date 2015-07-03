@@ -39,23 +39,21 @@ from pytesmo.io.sat import ascat
 
 from datetime import datetime
 import numpy as np
-import pytest
 
 
-@pytest.mark.xfail(reason="Test data too big to be delivered with package")
 class TestAscat(unittest.TestCase):
 
     def setUp(self):
         self.ascat_folder = os.path.join(os.path.dirname(__file__),
-                                         'test_data', 'ascat', 'SSM')
+                                         '..', 'test-data', 'sat', 'ascat', 'SSM')
 
         self.ascat_adv_folder = os.path.join(os.path.dirname(__file__),
-                                             'test_data', 'ascat',
+                                             '..', 'test-data', 'sat', 'ascat',
                                              'advisory_flags')
 
         # grid info file is too big to include on github
-        self.ascat_grid_folder = os.path.join('/media', 'sf_D',
-                                              'pytesmo', 'test_data',
+        self.ascat_grid_folder = os.path.join(os.path.dirname(__file__),
+                                              '..', 'test-data', 'sat',
                                               'ascat', 'grid')
 
         # init the ASCAT_SSM reader with the paths
@@ -90,22 +88,16 @@ class TestAscat(unittest.TestCase):
         np.testing.assert_approx_equal(distance, 2267.42, significant=2)
 
 
-@pytest.mark.xfail(reason="Test data too big to be delivered with package")
 class TestAscatNetCDF(unittest.TestCase):
 
     def setUp(self):
-        self.ascat_folder = os.path.join('/media', 'sf_R',
-                                         'Datapool_processed', 'WARP',
-                                         'WARP5.5',
-                                         'IRMA0_WARP5.5_P1', 'R2',
-                                         '080_ssm', 'netcdf')
+        self.ascat_folder = os.path.join(os.path.dirname(__file__),
+                                         '..', 'test-data', 'sat',
+                                         'ascat', 'netcdf', '55R12')
 
-        # grid info file is too big to include on github
-
-        self.ascat_grid_folder = os.path.join('/media', 'sf_R',
-                                              'Datapool_processed',
-                                              'WARP', 'ancillary',
-                                              'warp5_grid')
+        self.ascat_grid_folder = os.path.join(os.path.dirname(__file__),
+                                              '..', 'test-data', 'sat',
+                                              'ascat', 'netcdf', 'grid')
 
         # init the ASCAT_SSM reader with the paths
         self.ascat_SSM_reader = ascat.AscatH25_SSM(self.ascat_folder,
@@ -211,22 +203,17 @@ class TestAscatNetCDF(unittest.TestCase):
         np.testing.assert_approx_equal(distance, 2267.42, significant=2)
 
 
-@pytest.mark.xfail(reason="Test data too big to be delivered with package")
 class TestAscatNetCDF_V5521(unittest.TestCase):
 
     def setUp(self):
 
-        self.ascat_folder = os.path.join('/media', 'sf_R',
-                                         'Datapool_processed', 'WARP',
-                                         'WARP5.5',
-                                         'IRMA0_WARP5.5_P2', 'R1',
-                                         '080_ssm', 'netcdf')
+        self.ascat_folder = os.path.join(os.path.dirname(__file__),
+                                         '..', 'test-data', 'sat',
+                                         'ascat', 'netcdf', '55R21')
 
-        # grid info file is too big to include on github
-        self.ascat_grid_folder = os.path.join('/media', 'sf_R',
-                                              'Datapool_processed',
-                                              'WARP', 'ancillary',
-                                              'warp5_grid')
+        self.ascat_grid_folder = os.path.join(os.path.dirname(__file__),
+                                              '..', 'test-data', 'sat',
+                                              'ascat', 'netcdf', 'grid')
         # init the ASCAT_SSM reader with the paths
         self.ascat_SSM_reader = ascat.AscatH25_SSM(self.ascat_folder,
                                                    self.ascat_grid_folder)
@@ -277,22 +264,17 @@ class TestAscatNetCDF_V5521(unittest.TestCase):
             result.porosity_hwsd, 0.4299994, significant=5)
 
 
-@pytest.mark.xfail(reason="Test data too big to be delivered with package")
 class TestAscatNetCDF_V5522(unittest.TestCase):
 
     def setUp(self):
 
-        self.ascat_folder = os.path.join('/media', 'sf_R',
-                                         'Datapool_processed', 'WARP',
-                                         'WARP5.5',
-                                         'IRMA0_WARP5.5_P2', 'R2',
-                                         '080_ssm', 'netcdf')
+        self.ascat_folder = os.path.join(os.path.dirname(__file__),
+                                         '..', 'test-data', 'sat',
+                                         'ascat', 'netcdf', '55R22')
 
-        # grid info file is too big to include on github
-        self.ascat_grid_folder = os.path.join('/media', 'sf_R',
-                                              'Datapool_processed',
-                                              'WARP', 'ancillary',
-                                              'warp5_grid')
+        self.ascat_grid_folder = os.path.join(os.path.dirname(__file__),
+                                              '..', 'test-data', 'sat',
+                                              'ascat', 'netcdf', 'grid')
         # init the ASCAT_SSM reader with the paths
         self.ascat_SSM_reader = ascat.AscatH25_SSM(self.ascat_folder,
                                                    self.ascat_grid_folder)

@@ -37,23 +37,18 @@ from pytesmo.io.sat import ers
 
 from datetime import datetime
 import numpy as np
-import pytest
 
 
-@pytest.mark.xfail(reason="Test data too big to be delivered with package")
 class TestERSNetCDF(unittest.TestCase):
 
     def setUp(self):
-        self.ers_folder = os.path.join('/media', 'sf_R',
-                                       'Datapool_processed', 'WARP',
-                                       'WARP5.5',
-                                       'ERS_AMI_WS_WARP5.5_R1.1',
-                                       '070_ssm', 'netcdf')
+        self.ers_folder = os.path.join(os.path.dirname(__file__),
+                                       '..', 'test-data', 'sat',
+                                       'ers', '55R11')
 
-        self.ers_grid_folder = os.path.join('/media', 'sf_R',
-                                            'Datapool_processed',
-                                            'WARP', 'ancillary',
-                                            'warp5_grid')
+        self.ers_grid_folder = os.path.join(os.path.dirname(__file__),
+                                            '..', 'test-data', 'sat',
+                                            'ascat', 'netcdf', 'grid')
 
         # init the ERS_SSM reader with the paths
         self.ers_SSM_reader = ers.ERS_SSM(

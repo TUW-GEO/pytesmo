@@ -41,13 +41,13 @@ import numpy as np
 class TestReaders(unittest.TestCase):
 
     def setUp(self):
-        self.filename_format_header_values = os.path.join(os.path.dirname(__file__), 'test_data', 'format_header_values', 'SMOSMANIA',
+        self.filename_format_header_values = os.path.join(os.path.dirname(__file__), '..', 'test-data', 'ismn', 'format_header_values', 'SMOSMANIA',
                                                           'SMOSMANIA_SMOSMANIA_Narbonne_sm_0.050000_0.050000_ThetaProbe-ML2X_20070101_20070131.stm')
-        self.filename_format_ceop_sep = os.path.join(os.path.dirname(__file__), 'test_data', 'format_ceop_sep', 'SMOSMANIA',
+        self.filename_format_ceop_sep = os.path.join(os.path.dirname(__file__), '..', 'test-data', 'ismn', 'format_ceop_sep', 'SMOSMANIA',
                                                      'SMOSMANIA_SMOSMANIA_Narbonne_sm_0.050000_0.050000_ThetaProbe-ML2X_20070101_20070131.stm')
-        self.filename_format_ceop = os.path.join(os.path.dirname(__file__), 'test_data', 'format_ceop', 'SMOSMANIA',
+        self.filename_format_ceop = os.path.join(os.path.dirname(__file__), '..', 'test-data', 'ismn', 'format_ceop', 'SMOSMANIA',
                                                  'SMOSMANIA_SMOSMANIA_NBN_20100304_20130801.stm')
-        self.filename_malformed = os.path.join(os.path.dirname(__file__), 'test_data', 'malformed',
+        self.filename_malformed = os.path.join(os.path.dirname(__file__), '..', 'test-data', 'ismn', 'malformed',
                                                'mal_formed_file.txt')
 
         self.metadata_ref = {'network': 'SMOSMANIA',
