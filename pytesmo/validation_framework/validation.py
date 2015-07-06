@@ -1,4 +1,9 @@
-from itertools import izip
+try:
+    from itertools import izip as zip
+except ImportError:
+    # python 3
+    pass
+
 import numpy as np
 
 import pytesmo.scaling as scaling
@@ -6,6 +11,7 @@ from pytesmo.validation_framework.data_manager import DataManager
 
 
 class Validation(object):
+
     """
     Class for the validation process.
 
@@ -116,7 +122,7 @@ class Validation(object):
             process_gpis, process_lons, process_lats = [
                 job[0]], [job[1]], [job[2]]
 
-        for gpi_info in izip(process_gpis, process_lons, process_lats):
+        for gpi_info in zip(process_gpis, process_lons, process_lats):
             # if processing is cell based gpi_metainfo is limited to gpi, lon,
             # lat at the moment
             if self.cell_based_jobs:
@@ -131,12 +137,14 @@ class Validation(object):
 
             other_dataframes = {}
             for other_name in self.data_manager.other_name:
-                grids_compatible = self.data_manager.datasets[other_name]['grids_compatible']
+                grids_compatible = self.data_manager.datasets[
+                    other_name]['grids_compatible']
                 if grids_compatible:
                     other_dataframe = self.data_manager.read_other(
                         other_name, gpi_info[0])
                 elif self.luts[other_name] is not None:
-                    gpi_id = np.where(self.data_manager.reference_grid.activegpis == gpi_info[0])[0][0]
+                    gpi_id = np.where(
+                        self.data_manager.reference_grid.activegpis == gpi_info[0])[0][0]
                     other_gpi = self.luts[other_name][gpi_id]
                     if other_gpi == -1:
                         continue
@@ -171,7 +179,8 @@ class Validation(object):
                 other_name = result[1].split('.')[0]
 
                 try:
-                    data = joined_data[other_name][[ref_col, other_col]].dropna()
+                    data = joined_data[other_name][
+                        [ref_col, other_col]].dropna()
                 except KeyError:
                     continue
 

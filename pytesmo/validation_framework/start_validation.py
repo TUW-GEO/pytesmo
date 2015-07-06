@@ -1,5 +1,9 @@
 from IPython import parallel
-from itertools import izip
+try:
+    from itertools import izip as zip
+except ImportError:
+    # python 3
+    pass
 from datetime import datetime
 
 from pytesmo.validation_framework.results_manager import netcdf_results_manager
@@ -43,7 +47,7 @@ def start_validation(setup_code):
     if (jobs is not None) and (save_path is not None):
         with lview.temp_flags(retries=2):
             amr = lview.map_async(func, jobs)
-            results = izip(amr, jobs)
+            results = zip(amr, jobs)
             for result, job in results:
                 netcdf_results_manager(result, save_path)
                 to_write -= 1
