@@ -186,6 +186,9 @@ def test_ascat_ismn_validation():
                             14.24668026,  14.27493,  13.1489048,  12.59192371], dtype=np.float32)
     with nc.Dataset(results_fname) as results:
         assert sorted(results.variables.keys()) == sorted(vars_should)
-        assert results.variables['n_obs'][:].tolist() == n_obs_should
-        nptest.assert_allclose(rho_should, results.variables['rho'][:])
-        nptest.assert_allclose(rmsd_should, results.variables['RMSD'][:])
+        assert sorted(results.variables['n_obs'][:].tolist()) == sorted(
+            n_obs_should)
+        nptest.assert_allclose(sorted(rho_should),
+                               sorted(results.variables['rho'][:]))
+        nptest.assert_allclose(sorted(rmsd_should),
+                               sorted(results.variables['RMSD'][:]))
