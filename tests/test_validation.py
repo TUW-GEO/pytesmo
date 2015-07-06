@@ -173,7 +173,6 @@ def test_ascat_ismn_validation():
         results = process.calc(job)
         netcdf_results_manager(results, save_path)
 
-    print save_path
     results_fname = os.path.join(
         save_path, 'ISMN.soil moisture_with_ASCAT.sm.nc')
 
