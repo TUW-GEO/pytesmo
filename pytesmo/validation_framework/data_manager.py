@@ -6,6 +6,7 @@ import itertools
 
 
 class DataManager(object):
+
     """
     Class to handle the data management.
 
@@ -155,9 +156,6 @@ class DataManager(object):
         except IOError:
             return None
 
-        # drop nan values
-        ref_df = ref_df.dropna()
-
         if len(ref_df) == 0:
             return None
 
@@ -204,9 +202,6 @@ class DataManager(object):
             other_df = other['class'].read_ts(*args, **other['kwargs'])
         except IOError:
             return None
-
-        # drop nan values
-        other_df = other_df.dropna()
 
         if len(other_df) == 0:
             return None
