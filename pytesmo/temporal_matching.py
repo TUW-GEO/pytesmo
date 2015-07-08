@@ -42,13 +42,14 @@ def df_match(reference, *args, **kwds):
 
     for arg in args:
 
-        if type(arg) == pd.TimeSeries: arg = pd.DataFrame(arg)
+        if type(arg) == pd.TimeSeries:
+            arg = pd.DataFrame(arg)
         comp_step = arg.index.values - reference.index.values[0]
-        matched = sc_int.griddata(comp_step.astype(np.int64),
-                                  np.arange(comp_step.size),
-                                  ref_step.astype(np.int64), "nearest")
+        matched = sc_int.NearestNDInterpolator(np.atleast_2d(comp_step.astype(np.int64)),
+                                               np.atleast_2d(np.arange(comp_step.size)))(ref_step.astype(np.int64))
 
-        distance = np.zeros_like(matched)
+        matched = np.squeeze(matched)
+        distance = np.zeros_like(matched, dtype=np.float)
         distance.fill(np.nan)
         valid_match = np.invert(np.isnan(matched))
 
@@ -79,8 +80,8 @@ def df_match(reference, *args, **kwds):
             min_dists = g.distance.apply(lambda x: x.abs().idxmin())
             arg_matched = arg_matched.ix[min_dists]
 
-        temporal_matched_args.append(\
-                arg_matched.drop(['merge_key', 'ref_index'], axis=1))
+        temporal_matched_args.append(
+            arg_matched.drop(['merge_key', 'ref_index'], axis=1))
 
     if len(temporal_matched_args) == 1:
         return temporal_matched_args[0]
