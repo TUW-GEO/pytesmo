@@ -1,3 +1,8 @@
+# v0.3.1, 2015-07-09
+* added validation framework and example on how to use it
+* fix bug (issue #51) in temporal matching
+* added test data as git submodule
+
 # v0.3.0, 2015-05-26
 * added calculation of pearson R confidence intervals based on fisher z transform
 * ISMN reader can now get the data coverage for stations and networks
