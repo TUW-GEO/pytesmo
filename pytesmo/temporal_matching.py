@@ -4,6 +4,7 @@ Provides a temporal matching function
 
 import numpy as np
 import scipy.interpolate as sc_int
+from scipy.spatial import cKDTree
 import pandas as pd
 
 
@@ -45,10 +46,12 @@ def df_match(reference, *args, **kwds):
         if type(arg) == pd.TimeSeries:
             arg = pd.DataFrame(arg)
         comp_step = arg.index.values - reference.index.values[0]
-        matched = sc_int.NearestNDInterpolator(np.atleast_2d(comp_step.astype(np.int64)),
-                                               np.atleast_2d(np.arange(comp_step.size)))(ref_step.astype(np.int64))
+        values = np.arange(comp_step.size)
+        # setup kdtree which must get 2D input
+        tree = cKDTree(np.atleast_2d(comp_step).T)
+        dist, i = tree.query(np.atleast_2d(ref_step).T)
+        matched = values[i]
 
-        matched = np.squeeze(matched)
         distance = np.zeros_like(matched, dtype=np.float)
         distance.fill(np.nan)
         valid_match = np.invert(np.isnan(matched))
