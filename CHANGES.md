@@ -1,3 +1,6 @@
+# v0.3.2, 2015-07-09
+* hotfix for temporal resampling problem when time series where of unequal lenghts
+
 # v0.3.1, 2015-07-09
 * added validation framework and example on how to use it
 * fix bug (issue #51) in temporal matching
