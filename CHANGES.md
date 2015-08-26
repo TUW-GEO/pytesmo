@@ -1,10 +1,11 @@
-# v0.3.3, unreleased
+# v0.3.3, 2015-08-26
 
 * add option to temporal resampling to exclude window boundaries
 * fix #48 by reintroducting netcdf imports
 * fix #60 by importing correctly from pygeogrids
 * fix #56 by allowing read_bulk keyword for ASCAT_SSM
 * fix #58 by using cKDTree keyword if available
+* lookup table indexing fixed, see #59
 
 # v0.3.2, 2015-07-09
 * hotfix for temporal resampling problem when time series where of unequal lenghts
