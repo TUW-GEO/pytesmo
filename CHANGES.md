@@ -4,6 +4,7 @@
 * fix #48 by reintroducting netcdf imports
 * fix #60 by importing correctly from pygeogrids
 * fix #56 by allowing read_bulk keyword for ASCAT_SSM
+* fix #58 by using cKDTree keyword if available
 
 # v0.3.2, 2015-07-09
 * hotfix for temporal resampling problem when time series where of unequal lenghts

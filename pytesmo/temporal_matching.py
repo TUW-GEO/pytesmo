@@ -3,8 +3,8 @@ Provides a temporal matching function
 """
 
 import numpy as np
-import scipy.interpolate as sc_int
 from scipy.spatial import cKDTree
+
 import pandas as pd
 
 
@@ -57,7 +57,13 @@ def df_match(reference, *args, **kwds):
         comp_step = arg.index.values - reference.index.values[0]
         values = np.arange(comp_step.size)
         # setup kdtree which must get 2D input
-        tree = cKDTree(np.atleast_2d(comp_step).T)
+        try:
+            tree = cKDTree(np.atleast_2d(comp_step).T, balanced_tree=False)
+        except TypeError:
+            # scipy before version 0.16 does not have the balanced_tree kw
+            # but is fast in this case also without it
+            tree = cKDTree(np.atleast_2d(comp_step).T)
+
         dist, i = tree.query(np.atleast_2d(ref_step).T)
         matched = values[i]
 
