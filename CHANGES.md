@@ -2,6 +2,7 @@
 
 * add option to temporal resampling to exclude window boundaries
 * fix #48 by reintroducting netcdf imports
+* fix #60 by importing correctly from pygeogrids
 * fix #56 by allowing read_bulk keyword for ASCAT_SSM
 
 # v0.3.2, 2015-07-09
