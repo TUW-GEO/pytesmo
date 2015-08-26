@@ -467,6 +467,9 @@ class AscatNetcdf(object):
         name of snow probability variable in netCDF file
     frozen_var : string, optional
         name of frozen probability variable in netCDF file
+    read_bulk : boolean, optional
+        if True then a whole cell will be read at once making
+        access to multiple time series from one cell faster
     Attributes
     ----------
     path : string
@@ -720,6 +723,9 @@ class AscatH25_SSM(AscatNetcdf):
         list of variables which should be included in the returned DataFrame.
         Default is all variables
         ['sm', 'sm_noise', 'ssf', 'proc_flag', 'orbit_dir']
+    read_bulk : boolean, optional
+        if True then a whole cell will be read at once making
+        access to multiple time series from one cell faster
 
     Attributes
     ----------
@@ -733,9 +739,15 @@ class AscatH25_SSM(AscatNetcdf):
         read surface soil moisture
     """
 
-    def __init__(self, path, grid_path, grid_info_filename='TUW_WARP5_grid_info_2_1.nc',
+    def __init__(self, path, grid_path,
+                 grid_info_filename='TUW_WARP5_grid_info_2_1.nc',
                  topo_threshold=50, wetland_threshold=50,
-                 include_in_df=['sm', 'sm_noise', 'ssf', 'proc_flag', 'orbit_dir']):
+                 include_in_df=['sm',
+                                'sm_noise',
+                                'ssf',
+                                'proc_flag',
+                                'orbit_dir'],
+                 read_bulk=False):
 
         self.path = path
         self._get_product_version()
@@ -760,6 +772,7 @@ class AscatH25_SSM(AscatNetcdf):
                                            grid_info_filename=grid_info_filename,
                                            topo_threshold=topo_threshold,
                                            wetland_threshold=wetland_threshold,
+                                           read_bulk=read_bulk,
                                            **version_kwargs)
         self.include_in_df = include_in_df
         self.to_absolute = ['sm', 'sm_noise']
