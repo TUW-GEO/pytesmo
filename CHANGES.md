@@ -1,3 +1,9 @@
+# v0.3.3, unreleased
+
+* add option to temporal resampling to exclude window boundaries
+* fix #48 by reintroducting netcdf imports
+* fix #56 by allowing read_bulk keyword for ASCAT_SSM
+
 # v0.3.2, 2015-07-09
 * hotfix for temporal resampling problem when time series where of unequal lenghts
 
