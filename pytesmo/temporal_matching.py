@@ -3,8 +3,8 @@ Provides a temporal matching function
 """
 
 import numpy as np
-import scipy.interpolate as sc_int
 from scipy.spatial import cKDTree
+
 import pandas as pd
 
 
@@ -27,6 +27,10 @@ def df_match(reference, *args, **kwds):
         Drop rows containing only NaNs (default: False)
     dropduplicates : boolean
         Drop duplicated temporal matched (default: False)
+    asym_window: string, optional
+        ``<=`` stands for using a smaller and equal only for the left/smaller side of the window comparison
+        ``>=`` stands for using a larger and equal only for the right/larger side of the window comparison
+        The default is to use <= and >= for both sides of the search window
 
     Returns
     -------
@@ -38,6 +42,11 @@ def df_match(reference, *args, **kwds):
     else:
         window = None
 
+    if "asym_window" in kwds:
+        asym_window = kwds['asym_window']
+    else:
+        asym_window = None
+
     temporal_matched_args = []
     ref_step = reference.index.values - reference.index.values[0]
 
@@ -48,7 +57,13 @@ def df_match(reference, *args, **kwds):
         comp_step = arg.index.values - reference.index.values[0]
         values = np.arange(comp_step.size)
         # setup kdtree which must get 2D input
-        tree = cKDTree(np.atleast_2d(comp_step).T)
+        try:
+            tree = cKDTree(np.atleast_2d(comp_step).T, balanced_tree=False)
+        except TypeError:
+            # scipy before version 0.16 does not have the balanced_tree kw
+            # but is fast in this case also without it
+            tree = cKDTree(np.atleast_2d(comp_step).T)
+
         dist, i = tree.query(np.atleast_2d(ref_step).T)
         matched = values[i]
 
@@ -71,7 +86,20 @@ def df_match(reference, *args, **kwds):
         arg_matched = arg_matched.sort_index()
 
         if window is not None:
-            invalid_dist = arg_matched['distance'].abs() > window
+            if asym_window is None:
+                invalid_dist = arg_matched['distance'].abs() > window
+            if asym_window == "<=":
+                # this means that only distance in the interval [distance[ are
+                # taken
+                valid_dist = ((arg_matched['distance'] >= 0.0) & (arg_matched['distance'] <= window)) | (
+                    (arg_matched['distance'] <= 0.0) & (arg_matched['distance'] > -window))
+                invalid_dist = ~valid_dist
+            if asym_window == ">=":
+                # this means that only distance in the interval ]distance] are
+                # taken
+                valid_dist = ((arg_matched['distance'] >= 0.0) & (arg_matched['distance'] < window)) | (
+                    (arg_matched['distance'] <= 0.0) & (arg_matched['distance'] >= -window))
+                invalid_dist = ~valid_dist
             arg_matched.loc[invalid_dist] = np.nan
 
         if "dropna" in kwds and kwds['dropna']:

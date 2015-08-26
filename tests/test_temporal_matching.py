@@ -60,6 +60,41 @@ def test_df_match_borders():
         np.array([0.375, 0.375, 0.375, 0.375, 0.375]), matched.distance.values)
     nptest.assert_allclose(np.arange(5), matched.matched_data)
 
+
+def test_df_match_match_on_window_border():
+    """
+    test matching if a value lies exactly on the window border.
+    """
+
+    ref_df = pd.DataFrame({"data": np.arange(5)}, index=pd.date_range(datetime(2007, 1, 1, 0),
+                                                                      "2007-01-05", freq="D"))
+    match_df = pd.DataFrame({"matched_data": np.arange(4)},
+                            index=[datetime(2007, 1, 1, 9),
+                                   datetime(2007, 1, 2, 9),
+                                   datetime(2007, 1, 3, 12),
+                                   datetime(2007, 1, 5, 9)])
+    matched = tmatching.df_match(ref_df, match_df, window=0.5)
+
+    nptest.assert_allclose(
+        np.array([0.375, 0.375, 0.5, -0.5, 0.375]), matched.distance.values)
+    nptest.assert_allclose([0, 1, 2, 2, 3], matched.matched_data)
+
+    # test asym_window keyword
+    matched = tmatching.df_match(
+        ref_df, match_df, window=0.5, asym_window="<=")
+
+    nptest.assert_allclose(
+        np.array([0.375, 0.375, 0.5, np.nan, 0.375]), matched.distance.values)
+    nptest.assert_allclose([0, 1, 2, np.nan, 3], matched.matched_data)
+
+    matched = tmatching.df_match(
+        ref_df, match_df, window=0.5, asym_window=">=")
+
+    nptest.assert_allclose(
+        np.array([0.375, 0.375, np.nan, -0.5, 0.375]), matched.distance.values)
+    nptest.assert_allclose([0, 1, np.nan, 2, 3], matched.matched_data)
+
+
 def test_df_match_borders_unequal_query_points():
     """
     Border values can be problematic for temporal matching.
@@ -79,6 +114,7 @@ def test_df_match_borders_unequal_query_points():
     nptest.assert_allclose(
         np.array([0.375, 0.375, -0.625, 0.375, 0.375]), matched.distance.values)
     nptest.assert_allclose(np.array([0, 1, 1, 2, 3]), matched.matched_data)
+
 
 def test_matching():
     """

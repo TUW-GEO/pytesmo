@@ -143,9 +143,7 @@ class Validation(object):
                     other_dataframe = self.data_manager.read_other(
                         other_name, gpi_info[0])
                 elif self.luts[other_name] is not None:
-                    gpi_id = np.where(
-                        self.data_manager.reference_grid.activegpis == gpi_info[0])[0][0]
-                    other_gpi = self.luts[other_name][gpi_id]
+                    other_gpi = self.luts[other_name][gpi_info[0]]
                     if other_gpi == -1:
                         continue
                     other_dataframe = self.data_manager.read_other(
