@@ -1,3 +1,7 @@
+# v0.3.x, 2015-09-15
+
+* fix #63 by moving data preparation before period checks
+
 # v0.3.3, 2015-08-26
 
 * add option to temporal resampling to exclude window boundaries
