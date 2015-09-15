@@ -3,6 +3,7 @@ Created on 27.05.2015
 @author: Andreea Plocon, andreea.plocon@geo.tuwien.ac.at
 """
 import itertools
+import pandas as pd
 
 
 class DataManager(object):
@@ -73,7 +74,8 @@ class DataManager(object):
                 self.other_name.append(dataset)
 
         try:
-            self.reference_grid = self.datasets[self.reference_name]['class'].grid
+            self.reference_grid = self.datasets[
+                self.reference_name]['class'].grid
         except AttributeError:
             self.reference_grid = None
 
@@ -159,17 +161,21 @@ class DataManager(object):
         if len(ref_df) == 0:
             return None
 
+        if self.data_prep is not None:
+            ref_df = self.data_prep.prep_reference(ref_df)
+
+        if len(ref_df) == 0:
+            return None
+
+        if isinstance(ref_df, pd.DataFrame) == False:
+            return None
+
         if self.period is not None:
             ref_df = ref_df[self.period[0]:self.period[1]]
 
         if len(ref_df) == 0:
             return None
 
-        if self.data_prep is not None:
-            ref_df = self.data_prep.prep_reference(ref_df)
-
-        if len(ref_df) == 0:
-            return None
         else:
             return ref_df
 
@@ -206,16 +212,20 @@ class DataManager(object):
         if len(other_df) == 0:
             return None
 
+        if self.data_prep is not None:
+            other_df = self.data_prep.prep_other(other_df, other_name)
+
+        if len(other_df) == 0:
+            return None
+
+        if isinstance(other_df, pd.DataFrame) == False:
+            return None
+
         if self.period is not None:
             other_df = other_df[self.period[0]:self.period[1]]
 
         if len(other_df) == 0:
             return None
 
-        if self.data_prep is not None:
-            other_df = self.data_prep.prep_other(other_df, other_name)
-
-        if len(other_df) == 0:
-            return None
         else:
             return other_df
