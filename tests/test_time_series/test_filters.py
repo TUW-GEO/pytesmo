@@ -29,8 +29,6 @@
 '''
 Tests for the time series filters
 '''
-import pyximport
-pyximport.install()
 import pytesmo.time_series.filters as filters
 import numpy as np
 
@@ -49,3 +47,17 @@ def test_exp_filter():
                                           2.4798615, np.nan, 3.51391292,
                                           4.43441963, 5.30393553, 6.15217733,
                                           np.nan])
+
+
+def test_boxcar_filter():
+    """
+    Test boxcar filter
+    """
+    test_jd = np.arange(10, dtype=np.double)
+    test_data = np.array(
+        [1, 2, 3, 4, -999999.0, 6, 7, 8, 9, np.nan], dtype=np.double)
+
+    filtered = filters.boxcar_filter(test_data, test_jd, window=5)
+
+    np.testing.assert_allclose(filtered, [2., 2.5, 2.5, 3.75, np.nan, 6.25,
+                                          7.5, 7.5, 8., np.nan])
