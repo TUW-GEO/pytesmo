@@ -17,7 +17,7 @@
 #THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 #ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 #WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-#DISCLAIMED. IN NO EVENT SHALL VIENNA UNIVERSITY OF TECHNOLOGY, 
+#DISCLAIMED. IN NO EVENT SHALL VIENNA UNIVERSITY OF TECHNOLOGY,
 #DEPARTMENT OF GEODESY AND GEOINFORMATION BE LIABLE FOR ANY
 #DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
 #(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
@@ -79,21 +79,21 @@ def exp_filter(np.ndarray[DTYPE_d, ndim=1] in_data, np.ndarray[DTYPE_d, ndim=1] 
     cdef float denom = 1
     cdef double last_jd_var
     cdef unsigned int i
-    
+
     filtered.fill(np.nan)
-    
+
     last_jd_var = in_jd[0]
 
     for i in range(in_jd.shape[0]):
         if in_data[i] != nan or not npy_isnan(in_data[i]):
             tdiff =   in_jd[i] - last_jd_var
-            ef = exp(-tdiff/ctime)    
+            ef = exp(-tdiff/ctime)
             nom =  ef * nom + in_data[i]
-            denom = ef * denom + 1 
+            denom = ef * denom + 1
             last_jd_var = in_jd[i]
             filtered[i] = nom/denom
-        
-    return filtered 
+
+    return filtered
 
 
 @cython.boundscheck(False)
@@ -122,8 +122,8 @@ def boxcar_filter(np.ndarray[DTYPE_d, ndim=1] in_data, np.ndarray[DTYPE_d, ndim=
     cdef unsigned int j
     cdef double sum=0
     cdef int nobs=0
-    
-    
+
+
     filtered.fill(np.nan)
 
     for i in range(in_jd.shape[0]):
@@ -136,7 +136,7 @@ def boxcar_filter(np.ndarray[DTYPE_d, ndim=1] in_data, np.ndarray[DTYPE_d, ndim=
                     if fabs(tdiff) <= window/2:
                         sum = sum + in_data[j]
                         nobs = nobs + 1
-                    
+
             filtered[i] = sum/nobs
-        
-    return filtered        
+
+    return filtered
