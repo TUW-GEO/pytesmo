@@ -46,7 +46,7 @@ def test_exp_filter():
     np.testing.assert_allclose(filtered, [1., 1.37915242, 1.89218092,
                                           2.4798615, np.nan, 3.51391292,
                                           4.43441963, 5.30393553, 6.15217733,
-                                          np.nan])
+                                          np.nan], rtol=1e-5)
 
 
 def test_boxcar_filter():

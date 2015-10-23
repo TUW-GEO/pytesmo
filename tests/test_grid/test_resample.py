@@ -36,10 +36,13 @@ import pytesmo.grid.resample as resample
 import numpy as np
 import pytesmo.io.sat.h_saf as H_SAF
 import os
+import sys
+import pytest
 import datetime
 import unittest
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Does not work on Windows")
 class Test_resample_H07(unittest.TestCase):
 
     def setUp(self):

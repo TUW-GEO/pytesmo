@@ -6,39 +6,55 @@ environment:
     CMD_IN_ENV: "cmd /E:ON /V:ON /C .\\appveyor\\run_with_compiler.cmd"
 
   matrix:
-    - PYTHON: "C:\\Python27"
+    - PYTHON: "C:\\Python27_32"
       PYTHON_VERSION: "2.7.8"
       PYTHON_ARCH: "32"
+      MINICONDA_VERSION: ""
 
-    - PYTHON: "C:\\Python27-x64"
+    - PYTHON: "C:\\Python27_64"
       PYTHON_VERSION: "2.7.8"
       PYTHON_ARCH: "64"
+      MINICONDA_VERSION: ""
 
-    - PYTHON: "C:\\Python33"
-      PYTHON_VERSION: "3.3.5"
+    - PYTHON: "C:\\Python33_32"
+      PYTHON_VERSION: "3.3"
       PYTHON_ARCH: "32"
+      MINICONDA_VERSION: "3"
 
-    - PYTHON: "C:\\Python33-x64"
-      PYTHON_VERSION: "3.3.5"
+    - PYTHON: "C:\\Python33_64"
+      PYTHON_VERSION: "3.3"
       PYTHON_ARCH: "64"
+      MINICONDA_VERSION: "3"
 
-    - PYTHON: "C:\\Python34"
+    - PYTHON: "C:\\Python34_32"
       PYTHON_VERSION: "3.4.1"
       PYTHON_ARCH: "32"
+      MINICONDA_VERSION: "3"
 
-    - PYTHON: "C:\\Python34-x64"
+    - PYTHON: "C:\\Python34_64"
       PYTHON_VERSION: "3.4.1"
       PYTHON_ARCH: "64"
+      MINICONDA_VERSION: "3"
+
+    - PYTHON: "C:\\Python35_32"
+      PYTHON_VERSION: "3.5"
+      PYTHON_ARCH: "32"
+      MINICONDA_VERSION: "3"
+
+    - PYTHON: "C:\\Python35_64"
+      PYTHON_VERSION: "3.5"
+      PYTHON_ARCH: "64"
+      MINICONDA_VERSION: "3"
 
 install:
+  - "git submodule update --init --recursive"
   - ECHO "Filesystem root:"
   - ps: "ls \"C:/\""
 
   - ECHO "Installed SDKs:"
   - ps: "ls \"C:/Program Files/Microsoft SDKs/Windows\""
 
-  # Install Python (from the official .msi of http://python.org) and pip when
-  # not already installed.
+  # install miniconda with the powershell script install.ps1
   - "powershell ./appveyor/install.ps1"
 
   # Prepend newly installed Python to the PATH of this build (this cannot be
@@ -54,14 +70,19 @@ install:
   # compiled extensions and are not provided as pre-built wheel packages,
   # pip will build them from source using the MSVC compiler matching the
   # target Python version and architecture
-  - "%CMD_IN_ENV% pip install cython"
-  - "%CMD_IN_ENV% pip install -i https://pypi.binstar.org/carlkl/simple numpy"
+  - "conda update --yes conda"
+  - "conda create -q --yes -n test python=%PYTHON_VERSION% numpy scipy pandas statsmodels netCDF4  cython pytest pip matplotlib pyproj"
+  - "activate test"
+  - "pip install pygeogrids"
+  - "pip install pyresample"
+  - "python --version"
+  - "where python"
 
 build: false  # Not a C# project, build stuff at the test step instead.
 
 test_script:
   # Build the compiled extension and run the project tests
-  - "echo Skipped"
+  - "%CMD_IN_ENV% python setup.py test"
 
 after_test:
   # If tests are successful, create a whl package for the project.
