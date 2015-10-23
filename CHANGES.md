@@ -1,4 +1,4 @@
-# v0.3.x, 2015-09-15
+# v0.3.4, 2015-10-23
 
 * fix #63 by moving data preparation before period checks
 * fix bug in exponential and boxcar filter. Problem was that nan values were not
