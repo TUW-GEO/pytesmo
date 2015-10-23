@@ -8,11 +8,13 @@ import datetime
 import numpy as np
 import numpy.testing as nptest
 import os
+import sys
 import pytest
 
 import pytesmo.io.sat.h_saf as H_SAF
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Does not work on Windows")
 class Test_H08(unittest.TestCase):
 
     def setUp(self):
@@ -70,6 +72,7 @@ class Test_H08(unittest.TestCase):
             assert data[var].shape == (2400, 2400)
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Does not work on Windows")
 class Test_H07(unittest.TestCase):
 
     def setUp(self):
@@ -108,6 +111,7 @@ class Test_H07(unittest.TestCase):
         pass
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Does not work on Windows")
 class Test_H14(unittest.TestCase):
 
     def setUp(self):
