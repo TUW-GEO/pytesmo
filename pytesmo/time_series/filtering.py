@@ -15,7 +15,7 @@
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 # ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 # WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-# DISCLAIMED. IN NO EVENT SHALL VIENNA UNIVERSITY OF TECHNOLOGY, 
+# DISCLAIMED. IN NO EVENT SHALL VIENNA UNIVERSITY OF TECHNOLOGY,
 # DEPARTMENT OF GEODESY AND GEOINFORMATION BE LIABLE FOR ANY
 # DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
 # (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
@@ -36,17 +36,18 @@ import numpy as np
 from pytesmo.timedate.julian import julday
 from pytesmo.time_series.filters import boxcar_filter
 
+
 def moving_average(Ser,
                    window_size=1):
     '''
     Applies a moving average (box) filter on an input time series
-    
+
     Parameters
     ----------
     Ser : pandas.Series (index must be a DateTimeIndex or julian date)
-    
+
     window_size : float, optional
-        The size of the moving_average window [days] that will be applied on the 
+        The size of the moving_average window [days] that will be applied on the
         input Series
         Default: 1
 
@@ -57,15 +58,16 @@ def moving_average(Ser,
     '''
     # if index is datetimeindex then convert it to julian date
     if type(Ser.index) == pd.DatetimeIndex:
-        
+
         jd_index = julday(Ser.index.month, Ser.index.day, Ser.index.year,
-                      Ser.index.hour, Ser.index.minute, Ser.index.second)
-        
+                          Ser.index.hour, Ser.index.minute, Ser.index.second)
+
     else:
         jd_index = Ser.index.values
-    
-    filtered = boxcar_filter(np.squeeze(Ser.values.astype(np.double)), jd_index.astype(np.double), window=window_size)
 
-    result = pd.Series(filtered, index=Ser.index)   
-        
+    filtered = boxcar_filter(np.squeeze(
+        Ser.values.astype(np.double)), jd_index.astype(np.double), window=window_size)
+
+    result = pd.Series(filtered, index=Ser.index)
+
     return result
