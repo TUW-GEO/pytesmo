@@ -325,4 +325,4 @@ References
 .. [Gruber_2015] Gruber, A., Su, C., Zwieback, S., Crow, W., Dorigo, W., Wagner, W.
        (2015). Recent advances in (soil moisture) triple collocation analysis.
        International Journal of Applied Earth Observation and Geoinformation,
-       in review
+       in press. 10.1016/j.jag.2015.09.002

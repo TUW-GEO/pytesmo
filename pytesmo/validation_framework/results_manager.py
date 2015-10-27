@@ -41,8 +41,15 @@ def netcdf_results_manager(results, save_path):
             if field in ncfile.variables.keys():
                 var = ncfile.variables[field]
             else:
-                var = ncfile.createVariable(field, results[key][field].dtype,
-                                            'dim', fill_value=-99999)
+                var_type = results[key][field].dtype
+                kwargs = {'fill_value': -99999}
+                # if dtype is a object the assumption is that the data is a
+                # string
+                if var_type == object:
+                    var_type = str
+                    kwargs = {}
+                var = ncfile.createVariable(field, var_type,
+                                            'dim', **kwargs)
             var[index:] = results[key][field]
 
         ncfile.close()

@@ -1,3 +1,9 @@
+# v0.3.4, 2015-10-23
+
+* fix #63 by moving data preparation before period checks
+* fix bug in exponential and boxcar filter. Problem was that nan values were not
+  ignored correctly
+
 # v0.3.3, 2015-08-26
 
 * add option to temporal resampling to exclude window boundaries

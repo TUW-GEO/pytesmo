@@ -1,10 +1,10 @@
 #!python
-#cython: embedsignature=True
-#Copyright (c) 2013,Vienna University of Technology, Department of Geodesy and Geoinformation
-#All rights reserved.
+# cython: embedsignature=True
+# Copyright (c) 2013,Vienna University of Technology, Department of Geodesy and Geoinformation
+# All rights reserved.
 
-#Redistribution and use in source and binary forms, with or without
-#modification, are permitted provided that the following conditions are met:
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
 #   * Redistributions of source code must retain the above copyright
 #     notice, this list of conditions and the following disclaimer.
 #    * Redistributions in binary form must reproduce the above copyright
@@ -14,17 +14,17 @@
 #      names of its contributors may be used to endorse or promote products
 #      derived from this software without specific prior written permission.
 
-#THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-#ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-#WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-#DISCLAIMED. IN NO EVENT SHALL VIENNA UNIVERSITY OF TECHNOLOGY, 
-#DEPARTMENT OF GEODESY AND GEOINFORMATION BE LIABLE FOR ANY
-#DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL VIENNA UNIVERSITY OF TECHNOLOGY,
+# DEPARTMENT OF GEODESY AND GEOINFORMATION BE LIABLE FOR ANY
+# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
 #(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-#LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-#ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 #(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-#SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 '''
 Created on Oct 16, 2013
@@ -72,28 +72,30 @@ def exp_filter(np.ndarray[DTYPE_d, ndim=1] in_data, np.ndarray[DTYPE_d, ndim=1] 
     nan : double
         nan values to exclude from calculation
     """
-    cdef np.ndarray[DTYPE_f, ndim=1] filtered = np.empty(len(in_data))
+    cdef np.ndarray[DTYPE_f, ndim = 1] filtered = np.empty(len(in_data))
     cdef double tdiff
     cdef float ef
     cdef float nom = 1
     cdef float denom = 1
+    cdef bint isnan
     cdef double last_jd_var
     cdef unsigned int i
-    
+
     filtered.fill(np.nan)
-    
+
     last_jd_var = in_jd[0]
 
     for i in range(in_jd.shape[0]):
-        if in_data[i] != nan or not npy_isnan(in_data[i]):
-            tdiff =   in_jd[i] - last_jd_var
-            ef = exp(-tdiff/ctime)    
-            nom =  ef * nom + in_data[i]
-            denom = ef * denom + 1 
+        isnan = (in_data[i] == nan) or npy_isnan(in_data[i])
+        if not isnan:
+            tdiff = in_jd[i] - last_jd_var
+            ef = exp(-tdiff / ctime)
+            nom = ef * nom + in_data[i]
+            denom = ef * denom + 1
             last_jd_var = in_jd[i]
-            filtered[i] = nom/denom
-        
-    return filtered 
+            filtered[i] = nom / denom
+
+    return filtered
 
 
 @cython.boundscheck(False)
@@ -116,27 +118,29 @@ def boxcar_filter(np.ndarray[DTYPE_d, ndim=1] in_data, np.ndarray[DTYPE_d, ndim=
     nan : double
         nan values to exclude from calculation
     """
-    cdef np.ndarray[DTYPE_f, ndim=1] filtered = np.empty(len(in_data))
+    cdef np.ndarray[DTYPE_f, ndim = 1] filtered = np.empty(len(in_data))
     cdef double tdiff
     cdef unsigned int i
     cdef unsigned int j
-    cdef double sum=0
-    cdef int nobs=0
-    
-    
+    cdef bint isnan
+    cdef double sum = 0
+    cdef int nobs = 0
+
     filtered.fill(np.nan)
 
     for i in range(in_jd.shape[0]):
-        if in_data[i] != nan or not npy_isnan(in_data[i]):
+        isnan = (in_data[i] == nan) or npy_isnan(in_data[i])
+        if not isnan:
             sum = 0
             nobs = 0
             for j in range(in_jd.shape[0]):
-                if not npy_isnan(in_data[j]):
+                isnan = (in_data[j] == nan) or npy_isnan(in_data[j])
+                if not isnan:
                     tdiff = in_jd[j] - in_jd[i]
-                    if fabs(tdiff) <= window/2:
+                    if fabs(tdiff) <= window / 2:
                         sum = sum + in_data[j]
                         nobs = nobs + 1
-                    
-            filtered[i] = sum/nobs
-        
-    return filtered        
+
+            filtered[i] = sum / nobs
+
+    return filtered
