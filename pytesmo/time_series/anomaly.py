@@ -1,14 +1,11 @@
 '''
 Created on June 20, 2013
-
-@author: Alexander Gruber Alexander.Gruber@geo.tuwien.ac.at
 '''
 
-import numpy as np
 import pandas as pd
-import datetime
 from pytesmo.timedate.julian import doy, julian2date
 from pytesmo.time_series.filtering import moving_average
+
 
 def calc_anomaly(Ser,
                  window_size=35,
@@ -30,7 +27,7 @@ def calc_anomaly(Ser,
     climatology : pandas.Series (index: 1-366), optional
         if provided, anomalies will be based on the climatology
 
-    timespann : [timespan_from, timespan_to], datetime.datetime(y,m,d), optional
+    timespan : [timespan_from, timespan_to], datetime.datetime(y,m,d), optional
         If set, only a subset
 
     Returns
@@ -53,13 +50,12 @@ def calc_anomaly(Ser,
         df['absolute'] = Ser
         df['doy'] = doys
 
-        clim = pd.DataFrame(climatology, columns=['climatology'])
+        clim = pd.DataFrame({'climatology': climatology})
 
         df = df.join(clim, on='doy', how='left')
 
         anomaly = df['absolute'] - df['climatology']
         anomaly.index = df.index
-
 
     else:
         reference = moving_average(Ser, window_size=window_size)
@@ -118,13 +114,13 @@ def calc_climatology(Ser,
         year, month, day = julian2date(Ser.index.values)[0:3]
         doys = doy(month, day)
 
-
     Ser['doy'] = doys
-
 
     if median:
         clim = Ser.groupby('doy').median()
     else:
         clim = Ser.groupby('doy').mean()
 
-    return moving_average(pd.Series(clim.values.flatten(), index=clim.index.values), window_size=moving_avg_clim)
+    return moving_average(pd.Series(clim.values.flatten(),
+                                    index=clim.index.values),
+                          window_size=moving_avg_clim)

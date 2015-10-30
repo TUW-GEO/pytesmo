@@ -1,3 +1,8 @@
+# v0.3.5, unreleased
+
+* fix bug in anomaly calculation that occurred when the climatology series had
+a name already
+
 # v0.3.4, 2015-10-23
 
 * fix #63 by moving data preparation before period checks
