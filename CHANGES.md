@@ -2,6 +2,7 @@
 
 * fix bug in anomaly calculation that occurred when the climatology series had
 a name already
+* add option in anomaly calculation to respect leap years during matching
 
 # v0.3.4, 2015-10-23
 

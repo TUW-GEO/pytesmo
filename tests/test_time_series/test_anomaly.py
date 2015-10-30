@@ -44,6 +44,18 @@ def test_anomaly_calc_given_climatology():
         np.arange(366), index=pd.date_range('2000-01-01', periods=366))
     anom_should = pd.Series(
         np.zeros(366), index=pd.date_range('2000-01-01', periods=366))
-    anom = anomaly.calc_anomaly(data, climatology=clim)
+    anom = anomaly.calc_anomaly(data, climatology=clim, respect_leap_years=False)
+
+    pdt.assert_series_equal(anom_should, anom, check_dtype=False)
+
+
+def test_anomaly_calc_given_climatology_no_leap_year():
+
+    clim = pd.Series(np.arange(366), name='clim', index=np.arange(366) + 1)
+    data = pd.Series(
+        np.arange(365), index=pd.date_range('2007-01-01', periods=365))
+    anom_should = pd.Series(
+        np.zeros(365), index=pd.date_range('2007-01-01', periods=365))
+    anom = anomaly.calc_anomaly(data, climatology=clim, respect_leap_years=True)
 
     pdt.assert_series_equal(anom_should, anom, check_dtype=False)

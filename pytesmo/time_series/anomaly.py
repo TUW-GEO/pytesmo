@@ -9,7 +9,8 @@ from pytesmo.time_series.filtering import moving_average
 
 def calc_anomaly(Ser,
                  window_size=35,
-                 climatology=None):
+                 climatology=None,
+                 respect_leap_years=True):
     '''
     Calculates the anomaly of a time series (Pandas series).
     Both, climatology based, or moving-average based anomalies can be
@@ -29,6 +30,9 @@ def calc_anomaly(Ser,
 
     timespan : [timespan_from, timespan_to], datetime.datetime(y,m,d), optional
         If set, only a subset
+    respect_leap_years : boolean, optional
+        If set then leap years will be respected during matching of the climatology
+        to the time series
 
     Returns
     -------
@@ -40,10 +44,14 @@ def calc_anomaly(Ser,
 
         if type(Ser.index) == pd.DatetimeIndex:
 
-            doys = doy(Ser.index.month, Ser.index.day)
+            year, month, day = Ser.index.year, Ser.index.month, Ser.index.day
 
         else:
             year, month, day = julian2date(Ser.index.values)[0:3]
+
+        if respect_leap_years:
+            doys = doy(month, day, year)
+        else:
             doys = doy(month, day)
 
         df = pd.DataFrame()
@@ -70,7 +78,7 @@ def calc_climatology(Ser,
                      median=False,
                      timespan=None):
     '''
-    Calculates the climatology of a data set
+    Calculates the climatology of a data set.
 
     Parameters
     ----------
@@ -97,6 +105,7 @@ def calc_climatology(Ser,
     -------
     climatology : pandas.Series
         Series containing the calculated climatology
+        Always has 366 values behaving like a leap year
     '''
 
     if timespan is not None:
