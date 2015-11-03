@@ -159,7 +159,7 @@ def mean_std(in_data, scale_to):
         dataset in_data with same mean and standard deviation as scale_to
     """
     return ((in_data - np.mean(in_data)) /
-             np.std(in_data)) * np.std(scale_to) + np.mean(scale_to)
+            np.std(in_data)) * np.std(scale_to) + np.mean(scale_to)
 
 
 def lin_cdf_match(in_data, scale_to):
@@ -202,6 +202,40 @@ def lin_cdf_match(in_data, scale_to):
 
     return f(in_data)
 
+
+def lin_cdf_match_stored_params(in_data, perc_src, perc_ref,
+                                min_val=None, max_val=None):
+    """
+    Parameters
+    ----------
+    in_data: numpy.array
+        input data to scale
+    perc_src: numpy.array
+        percentiles of in_data estimated through method of choice
+    perc_ref: numpy.array
+        percentiles of reference data
+        estimated through method of choice, must be same size as
+        perc_src
+    min_val: float, optional
+        Minimum allowed value, output data is capped at this value
+    max_val: float, optional
+        Maximum allowed value, output data is capped at this value
+    """
+    # InterpolatedUnivariateSpline uses linear interpolation
+    # outside of boundaries so all values can be rescaled
+    # This is important if the stored percentiles were generated
+    # using a subset of the data and the new data has values outside
+    # of this original range
+    inter = sc_int.InterpolatedUnivariateSpline(perc_src,
+                                                perc_ref,
+                                                k=1)
+    scaled = inter(in_data)
+    if max_val is not None:
+        scaled[scaled > max_val] = max_val
+    if min_val is not None:
+        scaled[scaled < min_val] = min_val
+
+    return scaled
 
 
 def cdf_match(in_data, scale_to):

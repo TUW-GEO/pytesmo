@@ -43,6 +43,7 @@ scaling_methods = ['linreg', 'mean_std',
                    'min_max', 'lin_cdf_match',
                    'cdf_match']
 
+
 def test_mean_std_scaling():
 
     # use a random sample from a standard distribution
@@ -54,6 +55,7 @@ def test_mean_std_scaling():
     nptest.assert_almost_equal(np.std(x), np.std(o))
     nptest.assert_almost_equal(np.mean(x), np.mean(o))
 
+
 def test_min_max_scaling():
 
     # use a random sample from a standard distribution
@@ -64,6 +66,7 @@ def test_min_max_scaling():
     o = scaling.min_max(y, x)
     nptest.assert_almost_equal(np.min(x), np.min(o))
     nptest.assert_almost_equal(np.max(x), np.max(o))
+
 
 @pytest.mark.parametrize('method', scaling_methods)
 def test_scaling_method(method):
@@ -79,6 +82,7 @@ def test_scaling_method(method):
 
     o = getattr(scaling, method)(y, x)
     nptest.assert_almost_equal(x, o)
+
 
 @pytest.mark.parametrize('method', scaling_methods)
 def test_scale(method):
@@ -105,10 +109,11 @@ def test_scale_error(method):
     df = pd.DataFrame({'x': x, 'y': y}, columns=['x', 'y'])
     with pytest.raises(KeyError):
         df_scaled = scaling.scale(df,
-                                    method=method,
-                                    reference_index=0)
+                                  method=method,
+                                  reference_index=0)
         nptest.assert_almost_equal(df_scaled['x'].values,
-                                    df_scaled['y'].values)
+                                   df_scaled['y'].values)
+
 
 @pytest.mark.parametrize('method', ['non_existing_method'])
 def test_add_scale_error(method):
@@ -121,7 +126,8 @@ def test_add_scale_error(method):
     with pytest.raises(KeyError):
         df_scaled = scaling.add_scaled(df, method=method)
         nptest.assert_almost_equal(df_scaled['y'].values,
-                                    df_scaled['x_scaled_'+method].values)
+                                   df_scaled['x_scaled_' + method].values)
+
 
 @pytest.mark.parametrize('method', scaling_methods)
 def test_add_scale(method):
@@ -133,11 +139,52 @@ def test_add_scale(method):
     df = pd.DataFrame({'x': x, 'y': y}, columns=['x', 'y'])
     df_scaled = scaling.add_scaled(df, method=method)
     nptest.assert_almost_equal(df_scaled['y'].values,
-                               df_scaled['x_scaled_'+method].values)
+                               df_scaled['x_scaled_' + method].values)
 
     # test the scaling the other way round
     df_scaled = scaling.add_scaled(df, method=method,
                                    label_in='y',
                                    label_scale='x')
     nptest.assert_almost_equal(df_scaled['x'].values,
-                               df_scaled['y_scaled_'+method].values)
+                               df_scaled['y_scaled_' + method].values)
+
+
+def test_lin_cdf_match_stored_params():
+    """
+    Test scaling based on given percentiles.
+    """
+
+    perc_src = [10, 15, 22]
+    perc_ref = [100, 150, 220]
+
+    # this also tests scaling of data outside of the original range
+    src = np.arange(25)
+
+    o = scaling.lin_cdf_match_stored_params(src, perc_src, perc_ref)
+    nptest.assert_almost_equal(o, src * 10)
+
+
+def test_lin_cdf_match_stored_params_min_max():
+    """
+    Test scaling based on given percentiles.
+    Include minimum maximum capping.
+    """
+
+    perc_src = [10, 15, 22]
+    perc_ref = [100, 150, 220]
+
+    # this also tests scaling of data outside of the original range
+    src = np.arange(25)
+
+    o = scaling.lin_cdf_match_stored_params(src,
+                                            perc_src,
+                                            perc_ref,
+                                            max_val=230,
+                                            min_val=85)
+
+    o_should = np.array([85, 85, 85, 85, 85, 85,
+                         85, 85, 85, 90, 100,
+                         110, 120, 130, 140, 150,
+                         160, 170, 180, 190, 200,
+                         210, 220, 230, 230])
+    nptest.assert_almost_equal(o, o_should)
