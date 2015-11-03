@@ -40,19 +40,14 @@ def add_scaled(df, method='linreg', label_in=None, label_scale=None):
     if label_scale == None:
         label_scale = df.columns.values[1]
 
-    if method == 'linreg':
-        scaled = linreg(df[label_in].values, df[label_scale].values)
-    elif method == 'mean_std':
-        scaled = mean_std(df[label_in].values, df[label_scale].values)
-    elif method == 'min_max':
-        scaled = min_max(df[label_in].values, df[label_scale].values)
-    elif method == 'lin_cdf_match':
-        scaled = lin_cdf_match(df[label_in].values, df[label_scale].values)
-    elif method == 'cdf_match':
-        scaled = cdf_match(df[label_in].values, df[label_scale].values)
+    dicton = globals()
+    try:
+        scaling_func = dicton[method]
+    except KeyError:
+        print('scaling method not found')
+        return None
 
-    else:
-        raise ValueError("method not found")
+    scaled = scaling_func(df[label_in].values, df[label_scale].values)
 
     new_label = label_in + '_scaled_' + method
 
@@ -94,7 +89,8 @@ def scale(df, method='linreg', reference_index=0):
     #new_df = pd.DataFrame
     for series in df:
         df[series] = pd.Series(
-            scaling_func(df[series].values, reference.values), index=df.index)
+            scaling_func(df[series].values, reference.values),
+            index=df.index)
 
     df.insert(reference_index, reference.name, reference)
 
@@ -118,7 +114,8 @@ def min_max(in_data, scale_to):
     scaled dataset : numpy.array
         dataset in_data with same maximum and minimum as scale_to
     """
-    return ((in_data - np.min(in_data)) / (np.max(in_data) - np.min(in_data)) * (np.max(scale_to) - np.min(scale_to)) + np.min(scale_to))
+    return ((in_data - np.min(in_data)) / (np.max(in_data) - np.min(in_data)) *
+            (np.max(scale_to) - np.min(scale_to)) + np.min(scale_to))
 
 
 def linreg(in_data, scale_to):
@@ -161,13 +158,14 @@ def mean_std(in_data, scale_to):
     scaled dataset : numpy.array
         dataset in_data with same mean and standard deviation as scale_to
     """
-    return ((in_data - np.mean(in_data)) / np.std(in_data)) * np.std(scale_to) + np.mean(scale_to)
+    return ((in_data - np.mean(in_data)) /
+             np.std(in_data)) * np.std(scale_to) + np.mean(scale_to)
 
 
 def lin_cdf_match(in_data, scale_to):
     '''
-    computes cumulative density functions of in_data and scale_to at their respective bin-edges 
-    by linear interpolation; then matches CDF of in_data to CDF of scale_to  
+    computes cumulative density functions of in_data and scale_to at their respective bin-edges
+    by linear interpolation; then matches CDF of in_data to CDF of scale_to
 
     Parameters
     ----------
@@ -200,11 +198,13 @@ def lin_cdf_match(in_data, scale_to):
     return f(in_data)
 
 
+
 def cdf_match(in_data, scale_to):
     '''
-    1. computes discrete cumulative density functions of in_data- and scale_to at their respective bin_edges; 
-    2. computes continuous CDFs by 6th order polynomial fitting; 
-    3. CDF of in_data is matched to CDF of scale_to 
+    1. computes discrete cumulative density functions of
+       in_data- and scale_to at their respective bin_edges
+    2. computes continuous CDFs by 6th order polynomial fitting
+    3. CDF of in_data is matched to CDF of scale_to
 
     Parameters
     ----------
@@ -216,8 +216,9 @@ def cdf_match(in_data, scale_to):
     Returns
     -------
     CDF matched values: numpy.array
-        dataset in_data with CDF as scale_to 
+        dataset in_data with CDF as scale_to
     '''
+
     n_bins = 100
 
     in_data_bin_edges = np.linspace(min(in_data), max(in_data), n_bins)
