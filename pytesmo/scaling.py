@@ -185,6 +185,11 @@ def lin_cdf_match(in_data, scale_to):
     in_data_pctl = np.array(np.percentile(in_data, percentiles))
     scale_to_pctl = np.array(np.percentile(scale_to, percentiles))
 
+    # Make sure that we only use unique percentiles for the matching
+    # This is necessary since for some data source we could get
+    # non unique percentiles which would then result in a data range that
+    # would be matched onto one point. This mitigates it somewhat
+    # but still breaks down if there are too few unique percentiles.
     uniq_ind = np.unique(in_data_pctl, return_index=True)[1]
     in_data_pctl = in_data_pctl[uniq_ind]
     scale_to_pctl = scale_to_pctl[uniq_ind]
