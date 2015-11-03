@@ -57,9 +57,11 @@ def test_interp_unique():
     test iterative filling of array
     """
 
+    arr1 = np.array([1, 1, 1, 2, 2, 2, 5, 5, 6, 10, 10, 10, 10])
+    percentiles = [0, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 100]
     p = ml_percentile(arr1, percentiles)
     src_perc = interp_uniq(p)
-    assert len(percentiles) == len(src_perc)
+    assert len(p) == len(src_perc)
 
     nptest.assert_almost_equal(src_perc, [1., 1.025, 1.05, 1.1, 1.55, 3.275,
                                           5., 5.3, 8.4, 9.2, 9.6, 9.8, 10.])
