@@ -94,6 +94,35 @@ def test_scale(method):
     nptest.assert_almost_equal(df_scaled['x'].values,
                                df_scaled['y'].values)
 
+
+@pytest.mark.parametrize('method', ['non_existing_method'])
+def test_scale_error(method):
+
+    n = 1000
+    x = np.arange(n)
+    y = np.arange(n) * 0.5
+
+    df = pd.DataFrame({'x': x, 'y': y}, columns=['x', 'y'])
+    with pytest.raises(KeyError):
+        df_scaled = scaling.scale(df,
+                                    method=method,
+                                    reference_index=0)
+        nptest.assert_almost_equal(df_scaled['x'].values,
+                                    df_scaled['y'].values)
+
+@pytest.mark.parametrize('method', ['non_existing_method'])
+def test_add_scale_error(method):
+
+    n = 1000
+    x = np.arange(n, dtype=np.float)
+    y = np.arange(n) * 0.5
+
+    df = pd.DataFrame({'x': x, 'y': y}, columns=['x', 'y'])
+    with pytest.raises(KeyError):
+        df_scaled = scaling.add_scaled(df, method=method)
+        nptest.assert_almost_equal(df_scaled['y'].values,
+                                    df_scaled['x_scaled_'+method].values)
+
 @pytest.mark.parametrize('method', scaling_methods)
 def test_add_scale(method):
 

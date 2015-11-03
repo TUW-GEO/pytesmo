@@ -43,9 +43,9 @@ def add_scaled(df, method='linreg', label_in=None, label_scale=None):
     dicton = globals()
     try:
         scaling_func = dicton[method]
-    except KeyError:
+    except KeyError as e:
         print('scaling method not found')
-        return None
+        raise e
 
     scaled = scaling_func(df[label_in].values, df[label_scale].values)
 
@@ -80,9 +80,9 @@ def scale(df, method='linreg', reference_index=0):
     dicton = globals()
     try:
         scaling_func = dicton[method]
-    except KeyError:
+    except KeyError as e:
         print('scaling method not found')
-        return None
+        raise e
 
     reference = df[df.columns.values[reference_index]]
     df = df.drop([df.columns.values[reference_index]], axis=1)
