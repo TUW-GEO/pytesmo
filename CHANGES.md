@@ -1,3 +1,14 @@
+# v0.3.5, 2015-11-04
+
+* fix bug in anomaly calculation that occurred when the climatology series had
+a name already
+* add option in anomaly calculation to respect leap years during matching
+* improve testing of scaling functions
+* add linear CDF scaling based on stored percentiles
+* add utility function for MATLAB like percentile calculation
+* add utility function for making sure elements in an array are unique by
+  using iterative interpolation
+
 # v0.3.4, 2015-10-23
 
 * fix #63 by moving data preparation before period checks

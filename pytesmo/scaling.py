@@ -40,19 +40,14 @@ def add_scaled(df, method='linreg', label_in=None, label_scale=None):
     if label_scale == None:
         label_scale = df.columns.values[1]
 
-    if method == 'linreg':
-        scaled = linreg(df[label_in].values, df[label_scale].values)
-    elif method == 'mean_std':
-        scaled = mean_std(df[label_in].values, df[label_scale].values)
-    elif method == 'min_max':
-        scaled = min_max(df[label_in].values, df[label_scale].values)
-    elif method == 'lin_cdf_match':
-        scaled = lin_cdf_match(df[label_in].values, df[label_scale].values)
-    elif method == 'cdf_match':
-        scaled = cdf_match(df[label_in].values, df[label_scale].values)
+    dicton = globals()
+    try:
+        scaling_func = dicton[method]
+    except KeyError as e:
+        print('scaling method not found')
+        raise e
 
-    else:
-        raise ValueError("method not found")
+    scaled = scaling_func(df[label_in].values, df[label_scale].values)
 
     new_label = label_in + '_scaled_' + method
 
@@ -85,16 +80,17 @@ def scale(df, method='linreg', reference_index=0):
     dicton = globals()
     try:
         scaling_func = dicton[method]
-    except KeyError:
+    except KeyError as e:
         print('scaling method not found')
-        return None
+        raise e
 
     reference = df[df.columns.values[reference_index]]
     df = df.drop([df.columns.values[reference_index]], axis=1)
     #new_df = pd.DataFrame
     for series in df:
         df[series] = pd.Series(
-            scaling_func(df[series].values, reference.values), index=df.index)
+            scaling_func(df[series].values, reference.values),
+            index=df.index)
 
     df.insert(reference_index, reference.name, reference)
 
@@ -118,7 +114,8 @@ def min_max(in_data, scale_to):
     scaled dataset : numpy.array
         dataset in_data with same maximum and minimum as scale_to
     """
-    return ((in_data - np.min(in_data)) / (np.max(in_data) - np.min(in_data)) * (np.max(scale_to) - np.min(scale_to)) + np.min(scale_to))
+    return ((in_data - np.min(in_data)) / (np.max(in_data) - np.min(in_data)) *
+            (np.max(scale_to) - np.min(scale_to)) + np.min(scale_to))
 
 
 def linreg(in_data, scale_to):
@@ -161,13 +158,14 @@ def mean_std(in_data, scale_to):
     scaled dataset : numpy.array
         dataset in_data with same mean and standard deviation as scale_to
     """
-    return ((in_data - np.mean(in_data)) / np.std(in_data)) * np.std(scale_to) + np.mean(scale_to)
+    return ((in_data - np.mean(in_data)) /
+            np.std(in_data)) * np.std(scale_to) + np.mean(scale_to)
 
 
 def lin_cdf_match(in_data, scale_to):
     '''
-    computes cumulative density functions of in_data and scale_to at their respective bin-edges 
-    by linear interpolation; then matches CDF of in_data to CDF of scale_to  
+    computes cumulative density functions of in_data and scale_to at their respective bin-edges
+    by linear interpolation; then matches CDF of in_data to CDF of scale_to
 
     Parameters
     ----------
@@ -187,6 +185,11 @@ def lin_cdf_match(in_data, scale_to):
     in_data_pctl = np.array(np.percentile(in_data, percentiles))
     scale_to_pctl = np.array(np.percentile(scale_to, percentiles))
 
+    # Make sure that we only use unique percentiles for the matching
+    # This is necessary since for some data source we could get
+    # non unique percentiles which would then result in a data range that
+    # would be matched onto one point. This mitigates it somewhat
+    # but still breaks down if there are too few unique percentiles.
     uniq_ind = np.unique(in_data_pctl, return_index=True)[1]
     in_data_pctl = in_data_pctl[uniq_ind]
     scale_to_pctl = scale_to_pctl[uniq_ind]
@@ -200,11 +203,47 @@ def lin_cdf_match(in_data, scale_to):
     return f(in_data)
 
 
+def lin_cdf_match_stored_params(in_data, perc_src, perc_ref,
+                                min_val=None, max_val=None):
+    """
+    Parameters
+    ----------
+    in_data: numpy.array
+        input data to scale
+    perc_src: numpy.array
+        percentiles of in_data estimated through method of choice
+    perc_ref: numpy.array
+        percentiles of reference data
+        estimated through method of choice, must be same size as
+        perc_src
+    min_val: float, optional
+        Minimum allowed value, output data is capped at this value
+    max_val: float, optional
+        Maximum allowed value, output data is capped at this value
+    """
+    # InterpolatedUnivariateSpline uses linear interpolation
+    # outside of boundaries so all values can be rescaled
+    # This is important if the stored percentiles were generated
+    # using a subset of the data and the new data has values outside
+    # of this original range
+    inter = sc_int.InterpolatedUnivariateSpline(perc_src,
+                                                perc_ref,
+                                                k=1)
+    scaled = inter(in_data)
+    if max_val is not None:
+        scaled[scaled > max_val] = max_val
+    if min_val is not None:
+        scaled[scaled < min_val] = min_val
+
+    return scaled
+
+
 def cdf_match(in_data, scale_to):
     '''
-    1. computes discrete cumulative density functions of in_data- and scale_to at their respective bin_edges; 
-    2. computes continuous CDFs by 6th order polynomial fitting; 
-    3. CDF of in_data is matched to CDF of scale_to 
+    1. computes discrete cumulative density functions of
+       in_data- and scale_to at their respective bin_edges
+    2. computes continuous CDFs by 6th order polynomial fitting
+    3. CDF of in_data is matched to CDF of scale_to
 
     Parameters
     ----------
@@ -216,8 +255,9 @@ def cdf_match(in_data, scale_to):
     Returns
     -------
     CDF matched values: numpy.array
-        dataset in_data with CDF as scale_to 
+        dataset in_data with CDF as scale_to
     '''
+
     n_bins = 100
 
     in_data_bin_edges = np.linspace(min(in_data), max(in_data), n_bins)

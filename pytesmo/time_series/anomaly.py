@@ -1,18 +1,16 @@
 '''
 Created on June 20, 2013
-
-@author: Alexander Gruber Alexander.Gruber@geo.tuwien.ac.at
 '''
 
-import numpy as np
 import pandas as pd
-import datetime
 from pytesmo.timedate.julian import doy, julian2date
 from pytesmo.time_series.filtering import moving_average
 
+
 def calc_anomaly(Ser,
                  window_size=35,
-                 climatology=None):
+                 climatology=None,
+                 respect_leap_years=True):
     '''
     Calculates the anomaly of a time series (Pandas series).
     Both, climatology based, or moving-average based anomalies can be
@@ -30,8 +28,11 @@ def calc_anomaly(Ser,
     climatology : pandas.Series (index: 1-366), optional
         if provided, anomalies will be based on the climatology
 
-    timespann : [timespan_from, timespan_to], datetime.datetime(y,m,d), optional
+    timespan : [timespan_from, timespan_to], datetime.datetime(y,m,d), optional
         If set, only a subset
+    respect_leap_years : boolean, optional
+        If set then leap years will be respected during matching of the climatology
+        to the time series
 
     Returns
     -------
@@ -43,23 +44,26 @@ def calc_anomaly(Ser,
 
         if type(Ser.index) == pd.DatetimeIndex:
 
-            doys = doy(Ser.index.month, Ser.index.day)
+            year, month, day = Ser.index.year, Ser.index.month, Ser.index.day
 
         else:
             year, month, day = julian2date(Ser.index.values)[0:3]
+
+        if respect_leap_years:
+            doys = doy(month, day, year)
+        else:
             doys = doy(month, day)
 
         df = pd.DataFrame()
         df['absolute'] = Ser
         df['doy'] = doys
 
-        clim = pd.DataFrame(climatology, columns=['climatology'])
+        clim = pd.DataFrame({'climatology': climatology})
 
         df = df.join(clim, on='doy', how='left')
 
         anomaly = df['absolute'] - df['climatology']
         anomaly.index = df.index
-
 
     else:
         reference = moving_average(Ser, window_size=window_size)
@@ -74,7 +78,7 @@ def calc_climatology(Ser,
                      median=False,
                      timespan=None):
     '''
-    Calculates the climatology of a data set
+    Calculates the climatology of a data set.
 
     Parameters
     ----------
@@ -101,6 +105,7 @@ def calc_climatology(Ser,
     -------
     climatology : pandas.Series
         Series containing the calculated climatology
+        Always has 366 values behaving like a leap year
     '''
 
     if timespan is not None:
@@ -118,13 +123,13 @@ def calc_climatology(Ser,
         year, month, day = julian2date(Ser.index.values)[0:3]
         doys = doy(month, day)
 
-
     Ser['doy'] = doys
-
 
     if median:
         clim = Ser.groupby('doy').median()
     else:
         clim = Ser.groupby('doy').mean()
 
-    return moving_average(pd.Series(clim.values.flatten(), index=clim.index.values), window_size=moving_avg_clim)
+    return moving_average(pd.Series(clim.values.flatten(),
+                                    index=clim.index.values),
+                          window_size=moving_avg_clim)
