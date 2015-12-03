@@ -13,14 +13,13 @@ import os
 import inspect
 from sphinx import apidoc
 
+
 __location__ = os.path.join(os.getcwd(), os.path.dirname(
     inspect.getfile(inspect.currentframe())))
 
-output_dir = os.path.join(__location__, "../docs/_rst")
-module_dir = os.path.join(__location__, "../pytesmo")
-cmd_line_template = "sphinx-apidoc -f -o {outputdir} {moduledir}"
-cmd_line = cmd_line_template.format(outputdir=output_dir, moduledir=module_dir)
-apidoc.main(cmd_line.split(" "))
+package = "pytesmo"
+namespace = []
+namespace_pkg = ".".join([namespace[-1], package]) if namespace else package
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -36,7 +35,7 @@ apidoc.main(cmd_line.split(" "))
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.intersphinx', 'sphinx.ext.todo',
               'sphinx.ext.autosummary', 'sphinx.ext.viewcode', 'sphinx.ext.coverage',
-              'sphinx.ext.doctest', 'sphinx.ext.ifconfig', 'sphinx.ext.mathjax', 'numpydoc']
+              'sphinx.ext.doctest', 'sphinx.ext.ifconfig', 'sphinx.ext.pngmath', 'numpydoc']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -52,7 +51,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'pytesmo'
-copyright = u'2014, TU Wien'
+copyright = u'2015, TU Wien'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -102,6 +101,8 @@ pygments_style = 'sphinx'
 
 
 # -- Options for HTML output ---------------------------------------------
+
+# -- Options for HTML output ---------------------------------------------
 # on_rtd is whether we are on readthedocs.org, this line of code grabbed
 # from docs.readthedocs.org
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
@@ -111,10 +112,18 @@ if not on_rtd:  # only import and set the theme if we're building docs locally
     html_theme = 'sphinx_rtd_theme'
     html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
+# Theme options are theme-specific and customize the look and feel of a theme
+# further.  For a list of options available for each theme, see the
+# documentation.
+# html_theme_options = {}
+
+# Add any paths that contain custom themes here, relative to this directory.
+# html_theme_path = []
+
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
 try:
-    from pytesmo import __version__ as version
+    from namespace_pkg import __version__ as version
 except ImportError:
     pass
 else:
@@ -199,7 +208,7 @@ latex_elements = {
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
     ('index', 'user_guide.tex', u'pytesmo Documentation',
-     u'Christoph Paulik', 'manual'),
+     u'TU Wien', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
