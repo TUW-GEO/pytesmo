@@ -58,6 +58,7 @@ def setup_package():
     setup(setup_requires=['six', 'pyscaffold>=2.4rc1,<2.5a0'] + sphinx,
           tests_require=['pytest_cov', 'pytest'],
           cmdclass=cmdclass,
+          ext_modules=ext_modules,
           use_pyscaffold=True)
 
 
