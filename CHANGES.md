@@ -1,3 +1,9 @@
+# v0.3.6, 2015-12-10
+
+* make sure that climatologies are always 366 elements
+* add new options to climatology calculation for filling NaN values
+* add option to climatology calculation for wraparound before the smoothing
+
 # v0.3.5, 2015-11-04
 
 * fix bug in anomaly calculation that occurred when the climatology series had

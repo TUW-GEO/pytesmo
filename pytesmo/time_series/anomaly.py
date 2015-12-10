@@ -3,6 +3,7 @@ Created on June 20, 2013
 '''
 
 import pandas as pd
+import numpy as np
 from pytesmo.timedate.julian import doy, julian2date
 from pytesmo.time_series.filtering import moving_average
 
@@ -76,7 +77,9 @@ def calc_climatology(Ser,
                      moving_avg_orig=5,
                      moving_avg_clim=30,
                      median=False,
-                     timespan=None):
+                     timespan=None,
+                     fill=np.nan,
+                     wraparound=False):
     '''
     Calculates the climatology of a data set.
 
@@ -100,6 +103,13 @@ def calc_climatology(Ser,
     timespan : [timespan_from, timespan_to], datetime.datetime(y,m,d), optional
         Set this to calculate the climatology based on a subset of the input
         Series
+
+    fill : float or int, optional
+        Fill value to use for days on which no climatology exists
+
+    wraparound : boolean, optional
+        If set then the climatology is wrapped around at the edges before
+        doing the second running average (long-term event correction)
 
     Returns
     -------
@@ -130,6 +140,27 @@ def calc_climatology(Ser,
     else:
         clim = Ser.groupby('doy').mean()
 
-    return moving_average(pd.Series(clim.values.flatten(),
-                                    index=clim.index.values),
-                          window_size=moving_avg_clim)
+    clim_ser = pd.Series(clim.values.flatten(),
+                         index=clim.index.values)
+
+    if wraparound:
+        index_old = clim_ser.index.copy()
+        left_mirror = clim_ser.iloc[-moving_avg_clim:]
+        right_mirror = clim_ser.iloc[:moving_avg_clim]
+        # Shift index to start at 366 - index at -moving_avg_clim
+        # to run over a whole year while keeping gaps the same size
+        right_mirror.index = right_mirror.index + 366 * 2
+        clim_ser.index = clim_ser.index + 366
+        clim_ser = pd.concat([left_mirror,
+                              clim_ser,
+                              right_mirror])
+
+        clim_ser = moving_average(clim_ser, window_size=moving_avg_clim)
+        clim_ser = clim_ser.iloc[moving_avg_clim:-moving_avg_clim]
+        clim_ser.index = index_old
+    else:
+        clim_ser = moving_average(clim_ser, window_size=moving_avg_clim)
+
+    clim_ser = clim_ser.reindex(np.arange(366) + 1)
+    clim_ser = clim_ser.fillna(fill)
+    return clim_ser
