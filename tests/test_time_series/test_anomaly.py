@@ -44,7 +44,8 @@ def test_anomaly_calc_given_climatology():
         np.arange(366), index=pd.date_range('2000-01-01', periods=366))
     anom_should = pd.Series(
         np.zeros(366), index=pd.date_range('2000-01-01', periods=366))
-    anom = anomaly.calc_anomaly(data, climatology=clim, respect_leap_years=False)
+    anom = anomaly.calc_anomaly(
+        data, climatology=clim, respect_leap_years=False)
 
     pdt.assert_series_equal(anom_should, anom, check_dtype=False)
 
@@ -56,6 +57,28 @@ def test_anomaly_calc_given_climatology_no_leap_year():
         np.arange(365), index=pd.date_range('2007-01-01', periods=365))
     anom_should = pd.Series(
         np.zeros(365), index=pd.date_range('2007-01-01', periods=365))
-    anom = anomaly.calc_anomaly(data, climatology=clim, respect_leap_years=True)
+    anom = anomaly.calc_anomaly(
+        data, climatology=clim, respect_leap_years=True)
 
     pdt.assert_series_equal(anom_should, anom, check_dtype=False)
+
+
+def test_climatology_always_366():
+    ts = pd.Series(np.sin(np.arange(366) / 366. * 2 * np.pi), index=pd.date_range(
+        '2000-01-01', freq='D', periods=366))
+    # remove a part of the time series
+    ts['2000-02-01': '2000-02-28'] = np.nan
+    ts = ts.dropna()
+    clim = anomaly.calc_climatology(ts)
+    assert clim.size == 366
+
+
+def test_climatology_always_366_fill():
+    ts = pd.Series(np.sin(np.arange(366) / 366. * 2 * np.pi), index=pd.date_range(
+        '2000-01-01', freq='D', periods=366))
+    # remove a part of the time series
+    ts['2000-02-01': '2000-02-28'] = np.nan
+    ts = ts.dropna()
+    clim = anomaly.calc_climatology(ts, fill=-1)
+    assert clim.size == 366
+    assert clim.iloc[31] == -1
