@@ -82,3 +82,15 @@ def test_climatology_always_366_fill():
     clim = anomaly.calc_climatology(ts, fill=-1)
     assert clim.size == 366
     assert clim.iloc[31] == -1
+
+
+def test_climatology_closed():
+    ts = pd.Series(np.arange(366), index=pd.date_range(
+        '2000-01-01', freq='D', periods=366))
+    # remove a part of the time series
+    ts['2000-02-01': '2000-02-28'] = np.nan
+    ts = ts.dropna()
+    clim = anomaly.calc_climatology(ts, wraparound=True)
+    assert clim.size == 366
+    # test that the arange was closed during the second moving average
+    assert clim.iloc[365] - 187.90 < 0.01
