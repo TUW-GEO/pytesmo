@@ -1,10 +1,35 @@
-"""
-Created on 27.05.2015
-@author: Andreea Plocon, andreea.plocon@geo.tuwien.ac.at
-"""
+# Copyright (c) 2015, Vienna University of Technology (TU Wien), Department
+# of Geodesy and Geoinformation (GEO).
+# All rights reserved.
+
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#   * Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#   * Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#   * Neither the name of the Vienna University of Technology, Department
+#     of Geodesy and Geoinformation nor the names of its contributors may
+#     be used to endorse or promote products derived from this software
+#     without specific prior written permission.
+
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL VIENNA UNIVERSITY OF TECHNOLOGY,
+# DEPARTMENT OF GEODESY AND GEOINFORMATION BE LIABLE FOR ANY
+# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 import itertools
-import pandas as pd
 import warnings
+
+import pandas as pd
 
 
 class DataManager(object):
@@ -157,29 +182,29 @@ class DataManager(object):
         try:
             ref_df = reference['class'].read_ts(*args, **reference['kwargs'])
         except IOError:
-            warnings.warn("IOError while reading reference " + " ".join(args))
+            warnings.warn("IOError while reading reference {:}".format(args))
             return None
 
         if len(ref_df) == 0:
-            warnings.warn("No data for reference" + " ".join(args))
+            warnings.warn("No data for reference {:}".format(args))
             return None
 
         if self.data_prep is not None:
             ref_df = self.data_prep.prep_reference(ref_df)
 
         if len(ref_df) == 0:
-            warnings.warn("No data for reference" + " ".join(args))
+            warnings.warn("No data for reference {:}".format(args))
             return None
 
         if isinstance(ref_df, pd.DataFrame) == False:
-            warnings.warn("Data is not a DataFrame" + " ".join(args))
+            warnings.warn("Data is not a DataFrame {:}".format(args))
             return None
 
         if self.period is not None:
             ref_df = ref_df[self.period[0]:self.period[1]]
 
         if len(ref_df) == 0:
-            warnings.warn("No data for reference" + " ".join(args))
+            warnings.warn("No data for reference {:}".format(args))
             return None
 
         else:
@@ -214,29 +239,29 @@ class DataManager(object):
             other_df = other['class'].read_ts(*args, **other['kwargs'])
         except IOError:
             warnings.warn(
-                "IOError while reading other dataset " + " ".join(args))
+                "IOError while reading other dataset {:}".format(args))
             return None
 
         if len(other_df) == 0:
-            warnings.warn("No data for other dataset" + " ".join(args))
+            warnings.warn("No data for other dataset".format(args))
             return None
 
         if self.data_prep is not None:
             other_df = self.data_prep.prep_other(other_df, other_name)
 
         if len(other_df) == 0:
-            warnings.warn("No data for other dataset" + " ".join(args))
+            warnings.warn("No data for other dataset {:}".format(args))
             return None
 
         if isinstance(other_df, pd.DataFrame) == False:
-            warnings.warn("Data is not a DataFrame" + " ".join(args))
+            warnings.warn("Data is not a DataFrame {:}".format(args))
             return None
 
         if self.period is not None:
             other_df = other_df[self.period[0]:self.period[1]]
 
         if len(other_df) == 0:
-            warnings.warn("No data for other dataset" + " ".join(args))
+            warnings.warn("No data for other dataset {:}".format(args))
             return None
 
         else:
