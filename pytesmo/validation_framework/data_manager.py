@@ -182,29 +182,29 @@ class DataManager(object):
         try:
             ref_df = reference['class'].read_ts(*args, **reference['kwargs'])
         except IOError:
-            warnings.warn("IOError while reading reference " + " ".join(args))
+            warnings.warn("IOError while reading reference {:}".format(args))
             return None
 
         if len(ref_df) == 0:
-            warnings.warn("No data for reference" + " ".join(args))
+            warnings.warn("No data for reference {:}".format(args))
             return None
 
         if self.data_prep is not None:
             ref_df = self.data_prep.prep_reference(ref_df)
 
         if len(ref_df) == 0:
-            warnings.warn("No data for reference" + " ".join(args))
+            warnings.warn("No data for reference {:}".format(args))
             return None
 
         if isinstance(ref_df, pd.DataFrame) == False:
-            warnings.warn("Data is not a DataFrame" + " ".join(args))
+            warnings.warn("Data is not a DataFrame {:}".format(args))
             return None
 
         if self.period is not None:
             ref_df = ref_df[self.period[0]:self.period[1]]
 
         if len(ref_df) == 0:
-            warnings.warn("No data for reference" + " ".join(args))
+            warnings.warn("No data for reference {:}".format(args))
             return None
 
         else:
@@ -239,29 +239,29 @@ class DataManager(object):
             other_df = other['class'].read_ts(*args, **other['kwargs'])
         except IOError:
             warnings.warn(
-                "IOError while reading other dataset " + " ".join(args))
+                "IOError while reading other dataset {:}".format(args))
             return None
 
         if len(other_df) == 0:
-            warnings.warn("No data for other dataset" + " ".join(args))
+            warnings.warn("No data for other dataset".format(args))
             return None
 
         if self.data_prep is not None:
             other_df = self.data_prep.prep_other(other_df, other_name)
 
         if len(other_df) == 0:
-            warnings.warn("No data for other dataset" + " ".join(args))
+            warnings.warn("No data for other dataset {:}".format(args))
             return None
 
         if isinstance(other_df, pd.DataFrame) == False:
-            warnings.warn("Data is not a DataFrame" + " ".join(args))
+            warnings.warn("Data is not a DataFrame {:}".format(args))
             return None
 
         if self.period is not None:
             other_df = other_df[self.period[0]:self.period[1]]
 
         if len(other_df) == 0:
-            warnings.warn("No data for other dataset" + " ".join(args))
+            warnings.warn("No data for other dataset {:}".format(args))
             return None
 
         else:
