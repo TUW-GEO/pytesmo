@@ -36,11 +36,6 @@ If you want to contribute please follow these steps:
 Build status
 ============
 
-Development branch
-
-.. image:: https://travis-ci.org/TUW-GEO/pytesmo.svg?branch=develop
-    :target: https://travis-ci.org/TUW-GEO/pytesmo
-
 Master branch
 
 .. image:: https://travis-ci.org/TUW-GEO/pytesmo.svg?branch=master
