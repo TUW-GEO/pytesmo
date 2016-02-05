@@ -2,6 +2,7 @@
 
 * Fix bug in validation framework due to error prone string formatting in warnings.
 * Remove grid functionality. Use [pygeogrids](https://github.com/TUW-GEO/pygeogrids) from now on.
+* Fix bug in moving average calculation when input had size 1.
 
 
 # v0.3.6, 2015-12-10
