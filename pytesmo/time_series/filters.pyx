@@ -55,7 +55,10 @@ cdef extern from "numpy/npy_math.h":
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
-def exp_filter(np.ndarray[DTYPE_d, ndim=1] in_data, np.ndarray[DTYPE_d, ndim=1] in_jd, int ctime=10, double nan=-999999.0):
+def exp_filter(np.ndarray[DTYPE_d, ndim=1] in_data,
+               np.ndarray[DTYPE_d, ndim=1] in_jd,
+               int ctime=10,
+               double nan=-999999.0):
     """
     Calculates exponentially smoothed time series using an
     iterative algorithm
@@ -101,9 +104,11 @@ def exp_filter(np.ndarray[DTYPE_d, ndim=1] in_data, np.ndarray[DTYPE_d, ndim=1] 
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
-def boxcar_filter(np.ndarray[DTYPE_d, ndim=1] in_data, np.ndarray[DTYPE_d, ndim=1] in_jd, float window=1, double nan=-999999.0):
+def boxcar_filter(np.ndarray[DTYPE_d, ndim=1] in_data,
+                  np.ndarray[DTYPE_d, ndim=1] in_jd,
+                  float window=1, double nan=-999999.0):
     """
-    Calculates exponentially filtered time series using
+    Calculates filtered time series using
     a boxcar filter - basically a moving average calculation
 
     Parameters
