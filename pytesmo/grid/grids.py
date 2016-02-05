@@ -24,8 +24,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from pygeogrids.grids import *
-
 from warnings import warn
-warn("pytesmo grids are deprecated and will be removed in the future."
+warn("pytesmo grids are deprecated and were removed."
      " Use pygeogrids instead!")

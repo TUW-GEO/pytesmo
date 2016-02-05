@@ -1,4 +1,3 @@
 from warnings import warn
-warn("pytesmo grids are deprecated and will be removed in the future."
+warn("pytesmo grids are deprecated and were removed."
      " Use pygeogrids instead!")
-from pygeogrids.netcdf import *
