@@ -65,8 +65,10 @@ def moving_average(Ser,
     else:
         jd_index = Ser.index.values
 
-    filtered = boxcar_filter(np.squeeze(
-        Ser.values.astype(np.double)), jd_index.astype(np.double), window=window_size)
+    filtered = boxcar_filter(
+        np.atleast_1d(np.squeeze(Ser.values.astype(np.double))),
+        jd_index.astype(np.double),
+        window=window_size)
 
     result = pd.Series(filtered, index=Ser.index)
 

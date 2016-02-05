@@ -61,3 +61,16 @@ def test_boxcar_filter():
 
     np.testing.assert_allclose(filtered, [2., 2.5, 2.5, 3.75, np.nan, 6.25,
                                           7.5, 7.5, 8., np.nan])
+
+
+def test_boxcar_filter_arrsize_1():
+    """
+    Test boxcar filter with array of size 1
+    """
+    test_jd = np.arange(1, dtype=np.double)
+    test_data = np.array(
+        [1], dtype=np.double)
+
+    filtered = filters.boxcar_filter(test_data, test_jd, window=5)
+
+    np.testing.assert_allclose(filtered, [1.])
