@@ -1,3 +1,9 @@
+# v0.4.0, unreleased
+
+* Fix bug in validation framework due to error prone string formatting in warnings.
+* Remove grid functionality. Use [pygeogrids](https://github.com/TUW-GEO/pygeogrids) from now on.
+
+
 # v0.3.6, 2015-12-10
 
 * make sure that climatologies are always 366 elements
