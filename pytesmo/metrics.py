@@ -407,6 +407,61 @@ def pearsonr(o, p):
     return sc_stats.pearsonr(o, p)
 
 
+def pearsonr_recursive(x, y, n_old=0, sum_xi_yi=0,
+                       sum_xi=0, sum_yi=0, sum_x2=0,
+                       sum_y2=0):
+    """
+    Calculate pearson correlation in a recursive manner based on
+
+    .. math:: r_{xy} = \\frac{n\\sum x_iy_i-\\sum x_i\\sum y_i} {\\sqrt{n\\sum x_i^2-(\\sum x_i)^2}~\\sqrt{n\\sum y_i^2-(\\sum y_i)^2}}
+
+    Parameters
+    ----------
+    x: numpy.ndarray
+        New values for x
+    y: numpy.ndarray
+        New values for y
+    n_old: float, optional
+        number of observations from previous pass
+    sum_xi_yi: float, optional
+        .. math:: \\sum x_iy_i
+        from previous pass
+    sum_xi: float, optional
+        .. math:: \\sum x_i
+        from previous pass
+    sum_yi: float, optional
+        .. math:: \\sum y_i
+        from previous pass
+    sum_x2: float, optional
+        .. math:: \\sum x_i^2
+        from previous pass
+    sum_y2: float, optional
+        .. math:: \\sum y_i^2
+        from previous pass
+
+    Returns
+    -------
+    r: float
+        Pearson correlation coefficient
+    params: tuple
+       tuple of (n_new, sum_xi_yi, sum_xi, sum_yi, sum_x2, sum_y2) .
+       Can be used when calling the next iteration as ``*params``.
+    """
+
+    n_new = n_old + len(x)
+    sum_xi_yi = sum_xi_yi + np.sum(np.multiply(x, y))
+    sum_xi = sum_xi + np.sum(x)
+    sum_yi = sum_yi + np.sum(y)
+    sum_x2 = sum_x2 + np.sum(x**2)
+    sum_y2 = sum_y2 + np.sum(y**2)
+
+    r = ((n_new * sum_xi_yi - sum_xi * sum_yi) /
+         (np.sqrt(n_new * sum_x2 - sum_xi**2) *
+          np.sqrt(n_new * sum_y2 - sum_yi**2)))
+
+    return r, (n_new, sum_xi_yi, sum_xi, sum_yi, sum_x2, sum_y2)
+
+
 def pearson_conf(r, n, c=95):
     """
     Calcalates the confidence interval of a given pearson
