@@ -70,6 +70,24 @@ def test_pearson_conf():
     nptest.assert_almost_equal(ru, np.array([0.812, 0.857]), decimal=3)
 
 
+def test_pearson_recursive():
+
+    x = np.random.rand(100)
+    y = np.random.rand(100)
+
+    r, p = met.pearsonr(x, y)
+    r_rec, _ = met.pearsonr_recursive(x, y)
+    nptest.assert_almost_equal(r, r_rec)
+
+    args = []
+    for xi, yi in zip(x, y):
+
+        r_rec, args = met.pearsonr_recursive(np.array([xi]),
+                                             np.array([yi]), *args)
+
+    nptest.assert_almost_equal(r, r_rec)
+
+
 def test_bias():
     """
     Test for bias
