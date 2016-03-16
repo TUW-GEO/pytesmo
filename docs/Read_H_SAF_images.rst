@@ -34,7 +34,7 @@ We can either read this image alone if we know the timestamp or iterate over all
 .. code:: python
 
     #the reader returns not only the data but also metadata and the longitudes and latitudes
-    h07_data, metadata, timestamp, lons, lats, time_var = h07_reader.read_img(datetime.datetime(2010,5,1,8,33,1))
+    h07_data, metadata, timestamp, lons, lats, time_var = h07_reader.read(datetime.datetime(2010,5,1,8,33,1))
 let's inspect the data
 
 .. code:: python

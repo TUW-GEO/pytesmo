@@ -94,7 +94,7 @@ class Test_H07(unittest.TestCase):
         assert sorted(timestamps) == sorted(timestamps_should)
 
     def test_image_reading(self):
-        data, meta, timestamp, lons, lats, time_var = self.reader.read_img(
+        data, meta, timestamp, lons, lats, time_var = self.reader.read(
             datetime.datetime(2010, 5, 1, 8, 33, 1))
         ssm_should = np.array([51.2, 65.6, 46.2, 56.9, 61.4, 61.5, 58.1, 47.1, 72.7, 13.8, 60.9, 52.1,
                                78.5, 57.8, 56.2, 79.8, 67.7, 53.8, 86.5, 29.4, 50.6, 88.8, 56.9, 68.9,
