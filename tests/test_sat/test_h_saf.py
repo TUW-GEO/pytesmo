@@ -38,7 +38,7 @@ class Test_H08(unittest.TestCase):
     @pytest.mark.skipif("TRAVIS_PYTHON_VERSION" in os.environ,
                         reason="Needs to much memory on CI server")
     def test_image_reading(self):
-        data, meta, timestamp, lons, lats, time_var = self.reader.read_img(
+        data, meta, timestamp, lons, lats, time_var = self.reader.read(
             datetime.datetime(2010, 5, 1, 8, 33, 1))
         # do not check data content at the moment just shapes and structure
         assert sorted(data.keys()) == sorted(
@@ -51,8 +51,8 @@ class Test_H08(unittest.TestCase):
     @pytest.mark.skipif("TRAVIS_PYTHON_VERSION" in os.environ,
                         reason="Needs to much memory on CI server")
     def test_image_reading_bbox_empty(self):
-        data, meta, timestamp, lons, lats, time_var = self.reader.read_img(datetime.datetime(2010, 5, 1, 8, 33, 1),
-                                                                           lat_lon_bbox=[45, 48, 15, 18])
+        data, meta, timestamp, lons, lats, time_var = self.reader.read(datetime.datetime(2010, 5, 1, 8, 33, 1),
+                                                                       lat_lon_bbox=[45, 48, 15, 18])
         # do not check data content at the moment just shapes and structure
         assert data is None
         assert lons is None
@@ -61,8 +61,8 @@ class Test_H08(unittest.TestCase):
     @pytest.mark.skipif("TRAVIS_PYTHON_VERSION" in os.environ,
                         reason="Needs to much memory on CI server")
     def test_image_reading_bbox(self):
-        data, meta, timestamp, lons, lats, time_var = self.reader.read_img(datetime.datetime(2010, 5, 1, 8, 33, 1),
-                                                                           lat_lon_bbox=[60, 70, 15, 25])
+        data, meta, timestamp, lons, lats, time_var = self.reader.read(datetime.datetime(2010, 5, 1, 8, 33, 1),
+                                                                       lat_lon_bbox=[60, 70, 15, 25])
         # do not check data content at the moment just shapes and structure
         assert sorted(data.keys()) == sorted(
             ['ssm', 'corr_flag', 'ssm_noise', 'proc_flag'])

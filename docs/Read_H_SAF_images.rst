@@ -122,7 +122,7 @@ H08 data has a much higher resolution and comes on a 0.00416 degree grid.
 
 The sample data included in pytesmo was observed on the same time as the included H07 product.
 
-Instead of read_img you can also use the daily_images iterator.
+Instead of read you can also use the daily_images iterator.
 
 You just specify a day and it will read all the images that are in your folder for this day. 
  
@@ -201,7 +201,7 @@ H08 has a very high resolution, so most people will only want to read it for the
 .. code:: python
 
     #the reader returns not only the data but also metadata and the longitudes and latitudes
-    h08_roi, metadata, timestamp, lons, lats, time_var = h08_reader.read_img(datetime.datetime(2010,5,1,8,33,1),
+    h08_roi, metadata, timestamp, lons, lats, time_var = h08_reader.read(datetime.datetime(2010,5,1,8,33,1),
                                                                              lat_lon_bbox=[60,70,15,25])
     
     fig = plt.figure(figsize=(10,10))
