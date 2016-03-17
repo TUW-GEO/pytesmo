@@ -538,47 +538,24 @@ class H07img(MultiTemporalImageBase):
         return timestamps
 
 
-class H14img(dataset_base.DatasetImgBase):
-
+class H14Single(ImageBase):
     """
-    Class for reading HSAF H14 SM DAS 2 products in grib format
-    The images have to be uncompressed in the following folder structure
-    path -
-         month_path_str (default 'h14_%Y%m_grib')
-
-    For example if path is set to /home/user/hsaf14 and month_path_str is left to the default 'h14_%Y%m_grib'
-    then the images for March 2012 have to be in
-    the folder /home/user/hsaf14/h14_201203_grib/
 
     Parameters
     ----------
-    path: string
-        path where the data is stored
-    month_path_str: string, optional
-        if the files are stored in folders by month as is the standard on the HSAF FTP Server
-        then please specify the string that should be used in datetime.datetime.strftime
-        Default: 'h14_%Y%m_grib'
-    file_str: string, optional
-        this string is used in datetime.datetime.strftime to get the filename of a H14 daily grib file
-        Default: 'H14_%Y%m%d00.grib'
     expand_grid : boolean, optional
         if set the images will be expanded to a 2D image during reading
         if false the images will be returned as 1D arrays on the
         reduced gaussian grid
         Default: True
+
     """
 
-    def __init__(self, path, month_path_str='h14_%Y%m_grib',
-                 file_str='H14_%Y%m%d00.grib',
-                 expand_grid=True):
-        self.path = path
-        self.month_path_str = month_path_str
-        self.file_search_str = file_str
-        super(H14img, self).__init__(path, sub_path=month_path_str,
-                                     filename_templ=file_str, grid=None)
+    def __init__(self, filename, mode='r', expand_grid=True):
         self.expand_grid = expand_grid
+        super(H14Single, self).__init__(filename, mode=mode)
 
-    def _read_spec_file(self, filename, timestamp=None):
+    def read(self, timestamp=None):
         """
         Read specific image for given datetime timestamp.
 
@@ -611,11 +588,62 @@ class H14img(dataset_base.DatasetImgBase):
                        '43': 'SM_layer4_100-289cm'}
         data = {}
 
-        with pygrib.open(filename) as grb:
+        with pygrib.open(self.filename) as grb:
             for i, message in enumerate(grb):
                 message.expand_grid(self.expand_grid)
                 if i == 1:
                     lats, lons = message.latlons()
                 data[param_names[message['parameterName']]] = message.values
 
-        return data, {}, timestamp, lons, lats, None
+        return Image(lons, lats, data, {}, timestamp)
+
+    def write(self, data):
+        raise NotImplementedError()
+
+    def flush(self):
+        pass
+
+    def close(self):
+        pass
+
+
+class H14img(MultiTemporalImageBase):
+
+    """
+    Class for reading HSAF H14 SM DAS 2 products in grib format
+    The images have to be uncompressed in the following folder structure
+    path -
+         month_path_str (default 'h14_%Y%m_grib')
+
+    For example if path is set to /home/user/hsaf14 and month_path_str is left to the default 'h14_%Y%m_grib'
+    then the images for March 2012 have to be in
+    the folder /home/user/hsaf14/h14_201203_grib/
+
+    Parameters
+    ----------
+    path: string
+        path where the data is stored
+    month_path_str: string, optional
+        if the files are stored in folders by month as is the standard on the HSAF FTP Server
+        then please specify the string that should be used in datetime.datetime.strftime
+        Default: 'h14_%Y%m_grib'
+    file_str: string, optional
+        this string is used in datetime.datetime.strftime to get the filename of a H14 daily grib file
+        Default: 'H14_%Y%m%d00.grib'
+    datetime_format: string, optional
+        datetime format by which {datetime} will be replaced in file_str
+        Default: %Y%m%d
+    """
+
+    def __init__(self, path, month_path_str='h14_%Y%m_grib',
+                 file_str='H14_{datetime}00.grib',
+                 datetime_format='%Y%m%d',
+                 expand_grid=True):
+        self.path = path
+        self.month_path_str = month_path_str
+        self.file_search_str = file_str
+        super(H14img, self).__init__(path, H14Single,
+                                     subpath_templ=[month_path_str],
+                                     fname_templ=file_str,
+                                     datetime_format=datetime_format,
+                                     ioclass_kws={'expand_grid': expand_grid})

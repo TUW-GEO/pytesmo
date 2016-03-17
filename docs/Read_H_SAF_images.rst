@@ -245,7 +245,7 @@ The H14 product is a global product on a reduced gaussian grid with a resolution
 .. code:: python
 
     #the reader returns not only the data but also metadata and the longitudes and latitudes
-    h14_data, metadata, timestamp, lons, lats, time_var = h14_reader.read_img(datetime.datetime(2014, 5, 15))
+    h14_data, metadata, timestamp, lons, lats, time_var = h14_reader.read(datetime.datetime(2014, 5, 15))
 .. code:: python
 
     print type(h14_data)
@@ -279,7 +279,7 @@ This can be good for working with the data but for plotting the expanded grid is
 
     h14_reader_1d = h_saf.H14img(h14_path, expand_grid=False)
     #the reader returns not only the data but also metadata and the longitudes and latitudes
-    h14_data_1d, metadata, timestamp, lons_1d, lats_1d, time_var = h14_reader_1d.read_img(datetime.datetime(2014, 5, 15))
+    h14_data_1d, metadata, timestamp, lons_1d, lats_1d, time_var = h14_reader_1d.read(datetime.datetime(2014, 5, 15))
     print h14_data_1d['SM_layer1_0-7cm'].shape
     print lons_1d.shape
     print lats_1d.shape

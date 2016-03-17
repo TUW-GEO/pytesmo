@@ -125,7 +125,7 @@ class Test_H14(unittest.TestCase):
         self.expand_reader = None
 
     def test_image_reading(self):
-        data, meta, timestamp, lons, lats, time_var = self.reader.read_img(
+        data, meta, timestamp, lons, lats, time_var = self.reader.read(
             datetime.datetime(2014, 5, 15))
         assert sorted(data.keys()) == sorted(['SM_layer1_0-7cm', 'SM_layer2_7-28cm',
                                               'SM_layer3_28-100cm', 'SM_layer4_100-289cm'])
@@ -135,7 +135,7 @@ class Test_H14(unittest.TestCase):
             assert data[var].shape == (843490,)
 
     def test_expanded_image_reading(self):
-        data, meta, timestamp, lons, lats, time_var = self.expand_reader.read_img(
+        data, meta, timestamp, lons, lats, time_var = self.expand_reader.read(
             datetime.datetime(2014, 5, 15))
         assert sorted(data.keys()) == sorted(['SM_layer1_0-7cm', 'SM_layer2_7-28cm',
                                               'SM_layer3_28-100cm', 'SM_layer4_100-289cm'])
