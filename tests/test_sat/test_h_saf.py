@@ -38,7 +38,7 @@ class Test_H08(unittest.TestCase):
     @pytest.mark.skipif("TRAVIS_PYTHON_VERSION" in os.environ,
                         reason="Needs to much memory on CI server")
     def test_image_reading(self):
-        data, meta, timestamp, lons, lats, time_var = self.reader.read_img(
+        data, meta, timestamp, lons, lats, time_var = self.reader.read(
             datetime.datetime(2010, 5, 1, 8, 33, 1))
         # do not check data content at the moment just shapes and structure
         assert sorted(data.keys()) == sorted(
@@ -51,8 +51,8 @@ class Test_H08(unittest.TestCase):
     @pytest.mark.skipif("TRAVIS_PYTHON_VERSION" in os.environ,
                         reason="Needs to much memory on CI server")
     def test_image_reading_bbox_empty(self):
-        data, meta, timestamp, lons, lats, time_var = self.reader.read_img(datetime.datetime(2010, 5, 1, 8, 33, 1),
-                                                                           lat_lon_bbox=[45, 48, 15, 18])
+        data, meta, timestamp, lons, lats, time_var = self.reader.read(datetime.datetime(2010, 5, 1, 8, 33, 1),
+                                                                       lat_lon_bbox=[45, 48, 15, 18])
         # do not check data content at the moment just shapes and structure
         assert data is None
         assert lons is None
@@ -61,8 +61,8 @@ class Test_H08(unittest.TestCase):
     @pytest.mark.skipif("TRAVIS_PYTHON_VERSION" in os.environ,
                         reason="Needs to much memory on CI server")
     def test_image_reading_bbox(self):
-        data, meta, timestamp, lons, lats, time_var = self.reader.read_img(datetime.datetime(2010, 5, 1, 8, 33, 1),
-                                                                           lat_lon_bbox=[60, 70, 15, 25])
+        data, meta, timestamp, lons, lats, time_var = self.reader.read(datetime.datetime(2010, 5, 1, 8, 33, 1),
+                                                                       lat_lon_bbox=[60, 70, 15, 25])
         # do not check data content at the moment just shapes and structure
         assert sorted(data.keys()) == sorted(
             ['ssm', 'corr_flag', 'ssm_noise', 'proc_flag'])
@@ -94,7 +94,7 @@ class Test_H07(unittest.TestCase):
         assert sorted(timestamps) == sorted(timestamps_should)
 
     def test_image_reading(self):
-        data, meta, timestamp, lons, lats, time_var = self.reader.read_img(
+        data, meta, timestamp, lons, lats, time_var = self.reader.read(
             datetime.datetime(2010, 5, 1, 8, 33, 1))
         ssm_should = np.array([51.2, 65.6, 46.2, 56.9, 61.4, 61.5, 58.1, 47.1, 72.7, 13.8, 60.9, 52.1,
                                78.5, 57.8, 56.2, 79.8, 67.7, 53.8, 86.5, 29.4, 50.6, 88.8, 56.9, 68.9,
@@ -125,7 +125,7 @@ class Test_H14(unittest.TestCase):
         self.expand_reader = None
 
     def test_image_reading(self):
-        data, meta, timestamp, lons, lats, time_var = self.reader.read_img(
+        data, meta, timestamp, lons, lats, time_var = self.reader.read(
             datetime.datetime(2014, 5, 15))
         assert sorted(data.keys()) == sorted(['SM_layer1_0-7cm', 'SM_layer2_7-28cm',
                                               'SM_layer3_28-100cm', 'SM_layer4_100-289cm'])
@@ -135,7 +135,7 @@ class Test_H14(unittest.TestCase):
             assert data[var].shape == (843490,)
 
     def test_expanded_image_reading(self):
-        data, meta, timestamp, lons, lats, time_var = self.expand_reader.read_img(
+        data, meta, timestamp, lons, lats, time_var = self.expand_reader.read(
             datetime.datetime(2014, 5, 15))
         assert sorted(data.keys()) == sorted(['SM_layer1_0-7cm', 'SM_layer2_7-28cm',
                                               'SM_layer3_28-100cm', 'SM_layer4_100-289cm'])

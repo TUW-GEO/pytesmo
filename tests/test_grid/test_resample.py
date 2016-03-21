@@ -54,7 +54,7 @@ class Test_resample_H07(unittest.TestCase):
         self.reader = None
 
     def test_resample_to_zero_dot_one_deg(self):
-        data, meta, timestamp, lons, lats, time_var = self.reader.read_img(
+        data, meta, timestamp, lons, lats, time_var = self.reader.read(
             datetime.datetime(2010, 5, 1, 8, 33, 1))
         # lets resample to a 0.1 degree grid
         # define the grid points in latitude and longitude
