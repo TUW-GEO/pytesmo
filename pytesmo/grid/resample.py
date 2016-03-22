@@ -160,9 +160,9 @@ def resample_to_grid(input_data, src_lon, src_lat, target_lon, target_lat,
         # construct arrays in output grid form
         if fill_value is not None:
             output_array = np.zeros(
-                output_swath.shape, dtype=np.float64) + fill_value
+                output_swath.shape, dtype=data.dtype) + fill_value
         else:
-            output_array = np.zeros(output_swath.shape, dtype=np.float64)
+            output_array = np.zeros(output_swath.shape, dtype=data.dtype)
             output_array = np.ma.array(output_array, mask=mask)
 
         neigh_slice = slice(None, None, None)
