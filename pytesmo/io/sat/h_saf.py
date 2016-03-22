@@ -423,9 +423,17 @@ class H07Single(ImageBase):
 
         data = {'ssm': ssm,
                 'ssm_noise': ssm_noise,
-                'snow_cover': snow_cover,
-                'frozen_prob': frozen_lsf,
-                'topo_complex': topo_complex,
+                'snow cover': snow_cover,
+                'frozen prob': frozen_lsf,
+                'topo complex': topo_complex,
+                'orbit number': orbit_number,
+                'ssm sensitivity': ssm_sens,
+                'frozen prob': frozen_lsf,
+                'snow prob': snow_cover,
+                'ssm mean': ssm_mean,
+                'sigma40': sigma40,
+                'sigma40 noise': sigma40_noise,
+                'direction of motion': direction_of_motion,
                 'jd': dates
                 }
 
