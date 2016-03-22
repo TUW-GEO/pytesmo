@@ -27,6 +27,8 @@ for new features or bug fixes.
 If you want to contribute please follow these steps:
 
 - Fork the pytesmo repository to your account
+- Clone the repository, make sure you use ``git clone --recursive`` to also get
+  the test data repository.
 - make a new feature branch from the pytesmo master branch
 - hack away
 - please include tests for your contributions in one of the test directories
