@@ -104,7 +104,7 @@ Installation
 Necessary Python packages
 -------------------------
 
-In order to enjoy all pytesmo features Python 2.7, 3.3 or 3.4 with the following
+In order to enjoy all pytesmo features Python 2.7, 3.3, 3.4 or 3.5 with the following
 packages should be installed.
 
 * numpy >= 1.7.0 http://www.numpy.org/
@@ -117,22 +117,22 @@ packages should be installed.
 
 optional
 
-* pybufr-ecmwf https://code.google.com/p/pybufr-ecmwf/
+* pybufr-ecmwf https://github.com/jdkloe/pybufr-ecmwf
 
 	for reading the H-SAF H07 and H08 products in BUFR Format. As far as I know
 	this will only work on Linux or in Cygwin but I have no experience using it on
 	Windows. pybufr-ewmwf downloads and installs the BUFR library from the ECMWF
 	website.
 
-* pygrib https://code.google.com/p/pygrib/
+* pygrib https://github.com/jswhit/pygrib
 
 	for reading the H-SAF H14 product
 
 * pykdtree https://github.com/storpipfugl/pykdtree
 
-	which makes Nearest Neighbor search faster
+	which makes Nearest Neighbor search faster (Linux only)
 
-* pyresample https://code.google.com/p/pyresample/
+* pyresample https://github.com/pytroll/pyresample
 
 	for resampling of irregular images onto a regular grid for e.g. plotting
 
@@ -151,39 +151,36 @@ The recommended way of installing python packages is using `pip
 you want from the `python package repository Pypi <https://pypi.python.org/>`_
 and installs it if possible. For more complex packages that depend upon a C or
 Fortran library like netCDF4 or pybufr-ecmwf installation instructions are
-provided on the package website.
+provided on the package website. Try to install these packages with Anaconda_
+whenever possible.
 
-.. note::
 
-    If you are using windows always check
-    http://www.lfd.uci.edu/~gohlke/pythonlibs/ to see if there is already a
-    precompiled .exe or .whl file for you to easily install.
+conda
+-----
+
+It is easiest to install packages that depend on C or Fortran libraries with
+conda. See http://conda.pydata.org/docs/ on how to use it.
+
+The following installation script using ``conda`` should get you started on both
+Windows and Linux.
+
+.. code:
+
+   conda create -q --yes -n test python=2.7 numpy scipy pandas statsmodels netCDF4  cython pytest pip matplotlib pyproj
+   activate test
+   pip install pygeogrids
+   pip install pyresample
+   pip install pytesmo
 
 Windows
 -------
 
-A relatively easy way to install everything but matplotlib-basemap and netCDF4
-is to install `WinPython <https://winpython.github.io/>`_ and then
-download basemap and netCDF4 from http://www.lfd.uci.edu/~gohlke/pythonlibs/. Add them to your
-winpython installation using the winpython Control Panel.
+.. note::
 
-Just make sure that you download both for the same architecture (32/64 bit) and
-the same Python version that you used for WinPython.
+    If you are using windows and conda is missing a package then always check
+    http://www.lfd.uci.edu/~gohlke/pythonlibs/ to see if there is already a
+    precompiled .exe or .whl file for you to easily install.
 
-After that you can also use the winpython control panel to add the relevant
-pytesmo `Windows binaries`_
-
-After that you can open spyder or the Ipython notebook from the winpython
-installation directory and start testing pytesmo.
-
-If you want a system installation of python download the following files and
-install them in order.
-
-* Python windows installer from http://python.org/download/
-* Scipy-stack installer from http://www.lfd.uci.edu/~gohlke/pythonlibs/
-* netCDF4 installer from http://www.lfd.uci.edu/~gohlke/pythonlibs/
-* pygrib installer from http://www.lfd.uci.edu/~gohlke/pythonlibs/
-* pytesmo windows binaries can be installed with pip
 
 Windows binaries
 ----------------
@@ -204,7 +201,7 @@ download and unpack the pytesmo source package which is available from
 
 * Pypi https://pypi.python.org/pypi/pytesmo
 
-just change the active directory to the unpacked pytesmo-0.2.0 folder and use
+just change the active directory to the unpacked pytesmo folder and use
 the following command in the command line::
 
 	python setup.py install
