@@ -70,6 +70,33 @@ class Test_resample_H07(unittest.TestCase):
             assert resampled_data[key].shape == lons_grid.shape
 
 
+def test_resample_dtypes():
+    """
+    Test if dtypes stay the same when resampling.
+    """
+
+    data = {'testint8': np.array([5, 5], dtype=np.int8),
+            'testfloat16': np.array([5, 5], dtype=np.float16)}
+
+    fill_values = {'testint8': 0,
+                   'testfloat16': 999.}
+    lons = np.array([0, 0.1])
+    lats = np.array([0, 0.1])
+    # lets resample to a 0.1 degree grid
+    # define the grid points in latitude and longitude
+    lats_dim = np.arange(-1, 1, 0.1)
+    lons_dim = np.arange(-1, 1, 0.1)
+    # make 2d grid out the 1D grid spacing
+    lons_grid, lats_grid = np.meshgrid(lons_dim, lats_dim)
+
+    resampled_data = resample.resample_to_grid(data, lons, lats,
+                                               lons_grid, lats_grid,
+                                               fill_values=fill_values)
+
+    for key in data:
+        assert resampled_data[key].shape == lons_grid.shape
+        assert resampled_data[key].dtype == data[key].dtype
+
 if __name__ == "__main__":
     # import sys;sys.argv = ['', 'Test.testName']
     unittest.main()
