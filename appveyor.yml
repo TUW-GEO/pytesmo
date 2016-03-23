@@ -71,9 +71,10 @@ install:
   # pip will build them from source using the MSVC compiler matching the
   # target Python version and architecture
   - "conda update --yes conda"
-  - "conda create -q --yes -n test python=%PYTHON_VERSION% numpy scipy pandas statsmodels netCDF4  cython pytest pip matplotlib pyproj"
+  - "conda create -q --yes -n test python=%PYTHON_VERSION% numpy scipy pandas statsmodels netCDF4  cython pytest pip matplotlib pyproj basemap"
   - "activate test"
   - "pip install pygeogrids"
+  - "pip install pygeobase"
   - "pip install pyresample"
   - "python --version"
   - "where python"

@@ -33,9 +33,12 @@ Created on Thu Feb 26 12:36:30 2015
 @author: christoph.paulik@geo.tuwien.ac.at
 '''
 
+import matplotlib
+matplotlib.use('Agg')
 from pytesmo.io.ismn import interface
 import os
 import datetime
+import pytest
 
 
 def test_min_max_obstime_getting():
@@ -99,3 +102,16 @@ def test_interface_network_init():
     hv_interface = interface.ISMN_Interface(
         path_header_values, network=['SCAN', 'MAQU'])
     assert hv_interface.list_networks().size == 2
+
+
+@pytest.mark.mpl_image_compare(tolerance=6)
+def test_interface_plotting():
+    """
+    test plotting of networks
+    """
+    path_header_values = os.path.join(os.path.dirname(__file__),
+                                      '..', 'test-data', 'ismn', 'multinetwork', 'header_values')
+    hv_interface = interface.ISMN_Interface(
+        path_header_values, network=['SCAN'])
+    fig, axes = hv_interface.plot_station_locations()
+    return fig

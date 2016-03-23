@@ -733,10 +733,22 @@ class ISMN_Interface(object):
         else:
             return ISMN_station(self.metadata[all_index])
 
-    def plot_station_locations(self):
+    def plot_station_locations(self, axes=None):
         """
         plots available stations on a world map in robinson projection
         only available if basemap is installed
+
+        Parameters
+        ----------
+        axes: matplotlib.Axes, optional
+            If given then plot will be on this axes.
+
+        Returns
+        -------
+        fig: matplotlib.Figure
+            created figure instance. If axes was given this will be None.
+        axes: matplitlib.Axes
+            used axes instance.
 
         Raises
         ------
@@ -744,6 +756,13 @@ class ISMN_Interface(object):
             if basemap is not installed
         """
         if basemap_installed:
+
+            if axes is None:
+                fig = plt.figure()
+                ax = fig.add_axes([0, 0, 0.9, 1])
+            else:
+                fig = None
+                ax = axes
             colormap = plt.get_cmap('Set1')
 
             ismn_map = Basemap(projection='robin', lon_0=0)
@@ -768,14 +787,15 @@ class ISMN_Interface(object):
                     x, y = ismn_map(lon, lat)
 
                     im = ismn_map.scatter(
-                        x, y, c=netcolor, s=10, marker='s', edgecolors='none')
+                        x, y, c=netcolor, s=10, marker='s', edgecolors='none', ax=ax)
 
             ismn_map.drawcoastlines(linewidth=0.25)
             ismn_map.drawcountries(linewidth=0.25)
             ismn_map.drawstates(linewidth=0.25)
             plt.legend(
                 rect, uniq_networks.tolist(), loc='lower center', ncol=uniq_networks.size / 4)
-            plt.show()
+
+            return fig, ax
         else:
             raise ISMNError('Basemap is not installed.')
 

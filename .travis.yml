@@ -1,5 +1,9 @@
 language: python
 sudo: false
+before_script:
+  - "export DISPLAY=:99.0"
+  - "sh -e /etc/init.d/xvfb start"
+  - sleep 3 # give xvfb some time to start
 addons:
   apt:
     packages:
@@ -32,7 +36,7 @@ install:
   # Useful for debugging any issues with conda
   - conda info -a
 
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy scipy=0.16.1 pandas statsmodels netCDF4  cython pytest pip matplotlib 
+  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy scipy=0.16.1 pandas statsmodels netCDF4  cython pytest pip matplotlib basemap
   - source activate test-environment
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
       pip install pybufr-ecmwf;
