@@ -33,6 +33,8 @@ Created on Thu Feb 26 12:36:30 2015
 @author: christoph.paulik@geo.tuwien.ac.at
 '''
 
+import matplotlib
+matplotlib.use('Agg')
 from pytesmo.io.ismn import interface
 import os
 import datetime
@@ -102,7 +104,7 @@ def test_interface_network_init():
     assert hv_interface.list_networks().size == 2
 
 
-@pytest.mark.mpl_image_compare
+@pytest.mark.mpl_image_compare(tolerance=6)
 def test_interface_plotting():
     """
     test plotting of networks

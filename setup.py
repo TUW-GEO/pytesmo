@@ -55,7 +55,7 @@ def setup_package():
     cmdclass['build_ext'] = NumpyBuildExt
     needs_sphinx = {'build_sphinx', 'upload_docs'}.intersection(sys.argv)
     sphinx = ['sphinx'] if needs_sphinx else []
-    setup(setup_requires=['six', 'pyscaffold>=2.4rc1,<2.5a0'] + sphinx,
+    setup(setup_requires=['six', 'pyscaffold>=2.5a0,<2.6a0'] + sphinx,
           tests_require=['pytest_cov', 'pytest', 'pytest-mpl'],
           cmdclass=cmdclass,
           ext_modules=ext_modules,
