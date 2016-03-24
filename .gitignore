@@ -18,11 +18,13 @@ __pycache__/*
 .pydevproject
 .settings
 .idea
+.python-version
 
 # Package files
 *.egg
 .installed.cfg
 *.egg-info
+.eggs/*
 
 # Unittest and coverage
 htmlcov/*
@@ -37,5 +39,8 @@ dist/*
 sdist/*
 docs/_rst/*
 docs/_build/*
+docs/_static/*
+docs/.ipynb_checkpoints/*
+docs/**/Thumbs.db
 cover/*
 MANIFEST
