@@ -4,7 +4,8 @@
 * Remove grid functionality. Use [pygeogrids](https://github.com/TUW-GEO/pygeogrids) from now on.
 * Fix bug in moving average calculation when input had size 1.
 * Add recursive calculation of Pearson correlation coefficent.
-* Change H-SAF reading interface to use pygeobase consistently.
+* Change H-SAF reading interface to use pygeobase consistently. This changes the
+  interface slightly as the `read_img` method is now called just `read`
 * H07 reader now returns more variables.
 * Resampling interface now respects dtype of input data.
 * Improvements in ISMN plotting interface make it possible to use the plot not
