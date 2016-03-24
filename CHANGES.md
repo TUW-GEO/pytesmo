@@ -7,6 +7,8 @@
 * Change H-SAF reading interface to use pygeobase consistently.
 * H07 reader now returns more variables.
 * Resampling interface now respects dtype of input data.
+* Improvements in ISMN plotting interface make it possible to use the plot not
+  only show it.
 
 
 # v0.3.6, 2015-12-10

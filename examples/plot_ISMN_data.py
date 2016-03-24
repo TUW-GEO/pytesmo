@@ -54,6 +54,9 @@ path_to_ismn_data = os.path.join('/media', 'sf_D', 'small_projects',
 # time, since all metadata has to be collected
 ISMN_reader = ismn.ISMN_Interface(path_to_ismn_data)
 
+# plot available station on a map
+fig, axes = ISMN_reader.plot_station_locations()
+plt.show()
 
 # select random network and station to plot
 networks = ISMN_reader.list_networks()

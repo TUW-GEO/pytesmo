@@ -19,7 +19,8 @@ In[3]::
     ISMN_reader = ismn.ISMN_Interface(path_to_ismn_data)
     
     #plot available station on a map
-    ISMN_reader.plot_station_locations()
+    fig, ax = ISMN_reader.plot_station_locations()
+    plt.show()
 
 
 
