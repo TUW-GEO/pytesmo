@@ -164,7 +164,7 @@ conda. See http://conda.pydata.org/docs/ on how to use it.
 The following installation script using ``conda`` should get you started on both
 Windows and Linux.
 
-.. code:
+.. code::
 
    conda create -q --yes -n test python=2.7 numpy scipy pandas statsmodels netCDF4  cython pytest pip matplotlib pyproj
    activate test
