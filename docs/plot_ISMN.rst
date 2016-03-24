@@ -4,20 +4,20 @@ In[1]::
     import os
     import matplotlib.pyplot as plt
     import random
-    
+
 In[2]::
 
     #path unzipped file downloaded from the ISMN web portal
     #on windows the first string has to be your drive letter
     #like 'C:\\'
     path_to_ismn_data = os.path.join('D:\\','small_projects','cpa_2013_07_ISMN_userformat_reader',
-                                          'header_values_parser_test') 
+                                          'header_values_parser_test')
 In[3]::
 
     #initialize interface, this can take up to a few minutes the first
     #time, since all metadata has to be collected
     ISMN_reader = ismn.ISMN_Interface(path_to_ismn_data)
-    
+
     #plot available station on a map
     fig, ax = ISMN_reader.plot_station_locations()
     plt.show()
@@ -40,12 +40,12 @@ In[4]::
 
     Available Networks:
     ['OZNET']
-    
+
 In[5]::
 
     network = random.choice(networks)
     stations = ISMN_reader.list_stations(network = network)
-    print "Available Stations in Network %s"%network 
+    print "Available Stations in Network %s"%network
     print stations
 
 
@@ -61,7 +61,7 @@ In[5]::
      'Silver_Springs' 'Spring_Bank' 'Strathvale' 'Uri_Park' 'Waitara'
      'Weeroona' 'West_Wyalong_Airfield' 'Widgiewa' 'Wollumbi' 'Wynella'
      'Yamma_Road' 'Yammacoona' 'Yanco_Research_Station']
-    
+
 In[6]::
 
     station = random.choice(stations)
@@ -77,7 +77,7 @@ In[6]::
 
     Available Variables at Station Evergreen
     ['precipitation' 'soil moisture' 'soil temperature']
-    
+
 In[7]::
 
     #to make sure the selected variable is not measured
@@ -85,12 +85,12 @@ In[7]::
     #we also select the first depth and the first sensor
     #even if there is only one
     depths_from,depths_to = station_obj.get_depths(variables[0])
-    
+
     sensors = station_obj.get_sensors(variables[0],depths_from[0],depths_to[0])
-    
+
     #read the data of the variable, depth, sensor combination
     time_series = station_obj.read_variable(variables[0],depth_from=depths_from[0],depth_to=depths_to[0],sensor=sensors[0])
-    
+
     #print information about the selected time series
     print "Selected time series is:"
     print time_series
@@ -100,8 +100,8 @@ In[7]::
 .. parsed-literal::
 
     Selected time series is:
-    OZNET Evergreen -0.50 m - -0.50 m precipitation measured with TB4-0.2-mm-tipping-bucket-raingauge 
-    
+    OZNET Evergreen -0.50 m - -0.50 m precipitation measured with TB4-0.2-mm-tipping-bucket-raingauge
+
 In[8]::
 
     #plot the data
@@ -126,7 +126,7 @@ In[9]::
 .. parsed-literal::
 
     [ 0.   0.   0.3  0.6] [ 0.05  0.3   0.6   0.9 ]
-    
+
 In[10]::
 
     #read sm data measured in first layer 0-0.05m
@@ -138,6 +138,3 @@ In[10]::
 
 
 .. image:: plot_ISMN_files/plot_ISMN_9_0.png
-
-
-    
