@@ -1,4 +1,4 @@
-# v0.4.0, unreleased
+# v0.4.0, 2016-03-24
 
 * Fix bug in validation framework due to error prone string formatting in warnings.
 * Remove grid functionality. Use [pygeogrids](https://github.com/TUW-GEO/pygeogrids) from now on.
