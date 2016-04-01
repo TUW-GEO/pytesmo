@@ -36,10 +36,15 @@ import tempfile
 import netCDF4 as nc
 import numpy as np
 import numpy.testing as nptest
+import pytest
+
+import pygeogrids.grids as grids
+from pygeobase.io_base import GriddedTsBase
 
 import pytesmo.validation_framework.temporal_matchers as temporal_matchers
 import pytesmo.validation_framework.metric_calculators as metrics_calculators
 from pytesmo.validation_framework.results_manager import netcdf_results_manager
+from pytesmo.validation_framework.data_manager import DataManager
 
 from datetime import datetime
 
@@ -208,3 +213,81 @@ def test_ascat_ismn_validation():
                                sorted(results.variables['rho'][:]))
         nptest.assert_allclose(sorted(rmsd_should),
                                sorted(results.variables['RMSD'][:]))
+
+
+class TestDatasetRuntimeError(object):
+    """Test dataset that acts as a fake object for the base classes."""
+
+    def __init__(self, filename, mode='r', message="No such file or directory"):
+        self.filename = filename
+        self.mode = mode
+        raise RuntimeError(message)
+        open(filename, mode)
+
+    def read(self, gpi):
+        return None
+
+    def write(self, gpi, data):
+        return None
+
+    def read_ts(self, gpi):
+        return None
+
+    def write_ts(self, gpi, data):
+        return None
+
+    def close(self):
+        pass
+
+    def flush(self):
+        pass
+
+
+def test_DataManager_RuntimeError():
+    """
+    Test DataManager with some fake Datasets that throw RuntimeError
+    instead of IOError if a file does not exist like netCDF4
+
+    """
+
+    grid = grids.CellGrid(np.array([1, 2, 3, 4]), np.array([1, 2, 3, 4]),
+                          np.array([4, 4, 2, 1]), gpis=np.array([1, 2, 3, 4]))
+
+    ds1 = GriddedTsBase("", grid, TestDatasetRuntimeError)
+    ds2 = GriddedTsBase("", grid, TestDatasetRuntimeError)
+    ds3 = GriddedTsBase("", grid, TestDatasetRuntimeError,
+                        ioclass_kws={'message': 'Other RuntimeError'})
+
+    datasets = {
+        'DS1': {
+            'class': ds1,
+            'columns': ['soil moisture'],
+            'type': 'reference',
+            'args': [],
+            'kwargs': {}
+        },
+        'DS2': {
+            'class': ds2,
+            'columns': ['sm'],
+            'type': 'other',
+            'args': [],
+            'kwargs': {},
+            'grids_compatible': True
+        },
+        'DS3': {
+            'class': ds3,
+            'columns': ['sm'],
+            'type': 'other',
+            'args': [],
+            'kwargs': {},
+            'grids_compatible': True
+        }
+    }
+
+    dm = DataManager(datasets)
+    with pytest.warns(UserWarning):
+        dm.read_reference(1)
+    with pytest.warns(UserWarning):
+        dm.read_other('DS2', 1)
+    with pytest.raises(RuntimeError):
+        dm.read_other('DS3', 1)

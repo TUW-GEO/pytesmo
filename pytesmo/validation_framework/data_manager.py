@@ -184,6 +184,13 @@ class DataManager(object):
         except IOError:
             warnings.warn("IOError while reading reference {:}".format(args))
             return None
+        except RuntimeError as e:
+            if e.args[0] == "No such file or directory":
+                warnings.warn(
+                    "IOError while reading reference {:}".format(args))
+                return None
+            else:
+                raise e
 
         if len(ref_df) == 0:
             warnings.warn("No data for reference {:}".format(args))
@@ -241,6 +248,13 @@ class DataManager(object):
             warnings.warn(
                 "IOError while reading other dataset {:}".format(args))
             return None
+        except RuntimeError as e:
+            if e.args[0] == "No such file or directory":
+                warnings.warn(
+                    "IOError while reading other dataset {:}".format(args))
+                return None
+            else:
+                raise e
 
         if len(other_df) == 0:
             warnings.warn("No data for other dataset".format(args))
