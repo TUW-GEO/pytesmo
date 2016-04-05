@@ -380,6 +380,101 @@ def read_format_ceop(filename):
     return ISMNTimeSeries(metadata)
 
 
+def tail(f, lines=1, _buffer=4098):
+    """Tail a file and get X lines from the end
+
+    Parameters
+    ----------
+    f: file like object
+    lines: int
+       lines from the end of the file to read
+    _buffer: int
+       buffer to use to step backwards in the file.
+
+    References
+    ----------
+    Found at http://stackoverflow.com/a/13790289/1314882
+    """
+    # place holder for the lines found
+    lines_found = []
+
+    # block counter will be multiplied by buffer
+    # to get the block size from the end
+    block_counter = -1
+
+    # loop until we find X lines
+    while len(lines_found) < lines:
+        try:
+            f.seek(block_counter * _buffer, os.SEEK_END)
+        except IOError:  # either file is too small, or too many lines requested
+            f.seek(0)
+            lines_found = f.readlines()
+            break
+
+        lines_found = f.readlines()
+
+        # we found enough lines, get out
+        if len(lines_found) > lines:
+            break
+
+        # decrement the block counter to get the
+        # next X bytes
+        block_counter -= 1
+
+    return lines_found[-lines:]
+
+
+def get_min_max_timestamp_header_values(filename):
+    """
+    Get minimum and maximum observation timestamp from header values format.
+    """
+    with open(filename, mode='rU') as fid:
+        _ = fid.readline()
+        first = fid.readline()
+        last = tail(fid)[0]
+
+    min_date = datetime.strptime(first[:16], '%Y/%m/%d %H:%M')
+    max_date = datetime.strptime(last[:16], '%Y/%m/%d %H:%M')
+    return min_date, max_date
+
+
+def get_min_max_timestamp_ceop_sep(filename):
+    """
+    Get minimum and maximum observation timestamp from ceop_sep format.
+    """
+    with open(filename, mode='rU') as fid:
+        first = fid.readline()
+        last = tail(fid)[0]
+
+    min_date = datetime.strptime(first[:16], '%Y/%m/%d %H:%M')
+    max_date = datetime.strptime(last[:16], '%Y/%m/%d %H:%M')
+    return min_date, max_date
+
+
+def get_min_max_timestamp_ceop(filename):
+    """
+    Get minimum and maximum observation timestamp from ceop format.
+    """
+    with open(filename, mode='rU') as fid:
+        first = fid.readline()
+        last = tail(fid)[0]
+
+    min_date = datetime.strptime(first[:16], '%Y/%m/%d %H:%M')
+    max_date = datetime.strptime(last[:16], '%Y/%m/%d %H:%M')
+    return min_date, max_date
+
+
+def get_min_max_timestamp(filename):
+    """
+    Determine the file type and get the minimum and maximum observation
+    timestamp
+
+    """
+    dicton = globals()
+    func = dicton['get_min_max_timestamp_' + get_format(filename)]
+    return func(filename)
+
+
 def get_format(filename):
     """
     get's the file format from the length of
