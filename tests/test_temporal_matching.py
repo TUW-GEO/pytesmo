@@ -135,3 +135,26 @@ def test_matching():
 
     nptest.assert_allclose(np.array([0, 1, 2, 4]), matched.matched_data)
     assert len(matched) == 4
+
+
+def test_matching_series():
+    """
+    test matching function with pd.Series as input
+    """
+    data = np.arange(5.0)
+    data[3] = np.nan
+
+    ref_ser = pd.Series(data, index=pd.date_range(datetime(2007, 1, 1, 0),
+                                                  "2007-01-05", freq="D"))
+    match_ser = pd.Series(np.arange(5),
+                          index=[datetime(2007, 1, 1, 9),
+                                 datetime(2007, 1, 2, 9),
+                                 datetime(2007, 1, 3, 9),
+                                 datetime(2007, 1, 4, 9),
+                                 datetime(2007, 1, 5, 9)],
+                          name='matched_data')
+
+    matched = tmatching.matching(ref_ser, match_ser)
+
+    nptest.assert_allclose(np.array([0, 1, 2, 4]), matched.matched_data)
+    assert len(matched) == 4

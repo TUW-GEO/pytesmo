@@ -19,6 +19,8 @@ def df_match(reference, *args, **kwds):
         The index of this dataframe will be the reference.
     *args : pandas.DataFrame or pandas.TimeSeries
         The index of this dataframe(s) will be matched.
+        If it is a pandas.Series then it has to have a name. Otherwise
+        no column name can be assigned to the matched DataFrame.
     window : float
         Fraction of days of the maximum pos./neg. distance allowed, i.e. the
         value of window represents the half-winow size (e.g. window=0.5, will
@@ -52,7 +54,7 @@ def df_match(reference, *args, **kwds):
 
     for arg in args:
 
-        if type(arg) == pd.TimeSeries:
+        if type(arg) in [pd.TimeSeries, pd.Series]:
             arg = pd.DataFrame(arg)
         comp_step = arg.index.values - reference.index.values[0]
         values = np.arange(comp_step.size)

@@ -1,3 +1,7 @@
+# v0.4.1, unreleased
+
+* Fix bug in temporal resampling if input was a pandas.Series
+
 # v0.4.0, 2016-03-24
 
 * Fix bug in validation framework due to error prone string formatting in warnings.
