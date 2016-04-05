@@ -53,7 +53,7 @@ variable_lookup = {'sm': 'soil moisture',
                    'sweq': 'snow water equivalent',
                    'tsf': 'surface temperature',
                    'tsfq': 'surface temperature quality flag original'
-                  }
+                   }
 
 
 class ReaderException(Exception):
@@ -91,6 +91,7 @@ class ISMNTimeSeries(object):
     data : pandas.DataFrame
         data of the time series
     """
+
     def __init__(self, data):
 
         for key in data:
@@ -98,9 +99,13 @@ class ISMNTimeSeries(object):
 
     def __repr__(self):
 
-        return '%s %s %.2f m - %.2f m %s measured with %s ' % (self.network, self.station,
-                                                   self.depth_from[0], self.depth_to[0],
-                                                   self.variable[0], self.sensor)
+        return '%s %s %.2f m - %.2f m %s measured with %s ' % (
+            self.network,
+            self.station,
+            self.depth_from[0],
+            self.depth_to[0],
+            self.variable[0],
+            self.sensor)
 
     def plot(self, *args, **kwargs):
         """
@@ -218,7 +223,10 @@ def read_format_header_values(filename):
                               metadata['variable'][0] + '_flag',
                               metadata['variable'][0] + '_orig_flag'])
 
-    date_index = data.apply(lambda x: datetime.strptime('%s%s' % (x['date'], x['time']), '%Y/%m/%d%H:%M'), axis=1)
+    date_index = data.apply(
+        lambda x: datetime.strptime('%s%s' % (x['date'], x['time']),
+                                    '%Y/%m/%d%H:%M'),
+        axis=1)
 
     del data['date']
     del data['time']
@@ -294,7 +302,10 @@ def read_format_ceop_sep(filename):
     data = pd.read_csv(filename, delim_whitespace=True, usecols=[0, 1, 12, 13, 14],
                        names=['date', 'time', metadata['variable'][0], metadata['variable'][0] + '_flag', metadata['variable'][0] + '_orig_flag'])
 
-    date_index = data.apply(lambda x: datetime.strptime('%s%s' % (x['date'], x['time']), '%Y/%m/%d%H:%M'), axis=1)
+    date_index = data.apply(
+        lambda x: datetime.strptime('%s%s' % (x['date'], x['time']),
+                                    '%Y/%m/%d%H:%M'),
+        axis=1)
 
     del data['date']
     del data['time']
@@ -357,24 +368,33 @@ def read_format_ceop(filename):
     metadata = get_metadata_ceop(filename)
     data = pd.read_csv(filename, delim_whitespace=True, usecols=[0, 1, 11, 12, 13, 14, 15],
                        names=['date', 'time', 'depth_from',
-                              metadata['variable'][0], metadata['variable'][0] + '_flag',
-                              metadata['variable'][1], metadata['variable'][1] + '_flag'],
+                              metadata['variable'][0],
+                              metadata['variable'][0] + '_flag',
+                              metadata['variable'][1],
+                              metadata['variable'][1] + '_flag'],
                        na_values=['-999.99'])
 
-    date_index = data.apply(lambda x: datetime.strptime('%s%s' % (x['date'], x['time']), '%Y/%m/%d%H:%M'), axis=1)
+    date_index = data.apply(
+        lambda x: datetime.strptime('%s%s' % (x['date'], x['time']),
+                                    '%Y/%m/%d%H:%M'),
+        axis=1)
     depth_index = data['depth_from']
 
     del data['date']
     del data['time']
     del data['depth_from']
 
-    data.index = pd.MultiIndex.from_arrays([depth_index, depth_index, date_index])
+    data.index = pd.MultiIndex.from_arrays([depth_index,
+                                            depth_index,
+                                            date_index])
     data.index.names = ['depth_from', 'depth_to', 'date']
 
     data = data.sortlevel(0)
 
-    metadata['depth_from'] = np.unique(data.index.get_level_values(0).values).tolist()
-    metadata['depth_to'] = np.unique(data.index.get_level_values(1).values).tolist()
+    metadata['depth_from'] = np.unique(
+        data.index.get_level_values(0).values).tolist()
+    metadata['depth_to'] = np.unique(
+        data.index.get_level_values(1).values).tolist()
     metadata['data'] = data
 
     return ISMNTimeSeries(metadata)
@@ -501,7 +521,8 @@ def get_format(filename):
         return 'ceop_sep'
     if len(header_elements) < 14 and len(filename_elements) >= 9:
         return 'header_values'
-    raise ReaderException("This does not seem to be a valid ISMN filetype %s" % filename)
+    raise ReaderException(
+        "This does not seem to be a valid ISMN filetype %s" % filename)
 
 
 def read_data(filename):
