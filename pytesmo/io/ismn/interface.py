@@ -473,9 +473,7 @@ class ISMN_station(object):
         for var, d1, d2, filename in zip(self.variables, self.depth_from, self.depth_to, self.filenames):
 
             if var == variable and ((d1 >= min_depth) & (d2 <= max_depth)):
-                data = readers.read_data(filename).data.index.to_pydatetime()
-                sdate = data[0]
-                edate = data[-1]
+                sdate, edate = readers.get_min_max_timestamp(filename)
                 if start_date is None or start_date > sdate:
                     start_date = sdate
                 if end_date is None or end_date < edate:

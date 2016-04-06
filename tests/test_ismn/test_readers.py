@@ -169,5 +169,21 @@ class TestReaders(unittest.TestCase):
         with self.assertRaises(readers.ReaderException):
             fileformat = readers.get_format(self.filename_malformed)
 
+    def test_get_min_max_from_file(self):
+        mi, ma = readers.get_min_max_timestamp(
+            self.filename_format_header_values)
+        assert mi == datetime(2007, 1, 1, 1)
+        assert ma == datetime(2007, 1, 31, 23)
+
+        mi, ma = readers.get_min_max_timestamp(
+            self.filename_format_ceop_sep)
+        assert mi == datetime(2007, 1, 1, 1)
+        assert ma == datetime(2007, 1, 31, 23)
+
+        mi, ma = readers.get_min_max_timestamp(
+            self.filename_format_ceop)
+        assert mi == datetime(2010, 10, 21, 1)
+        assert ma == datetime(2010, 10, 22, 19)
+
 if __name__ == '__main__':
     unittest.main()
