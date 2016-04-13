@@ -291,3 +291,14 @@ def test_DataManager_RuntimeError():
         dm.read_other('DS2', 1)
     with pytest.raises(RuntimeError):
         dm.read_other('DS3', 1)
+def test_DataManager_dataset_names():
+
+    dm = setup_TestDataManager()
+    result_names = dm.get_results_names(3)
+    assert result_names == [(('DS1', 'soil moisture'), ('DS2', 'sm'), ('DS3', 'sm')),
+                            (('DS1', 'soil moisture'), ('DS2', 'sm'), ('DS3', 'sm2'))]
+
+    result_names = dm.get_results_names(2)
+    assert result_names == [(('DS1', 'soil moisture'), ('DS2', 'sm')),
+                            (('DS1', 'soil moisture'), ('DS3', 'sm')),
+                            (('DS1', 'soil moisture'), ('DS3', 'sm2'))]

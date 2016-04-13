@@ -130,13 +130,21 @@ class DataManager(object):
 
         return luts
 
-    def get_results_names(self):
+    def get_results_names(self, n=2):
         """
         Return results names based on reference and others names.
 
+        Parameters
+        ----------
+        n: int
+            Number of datasets for combine with each other.
+            If n=2 always two datasets will be combined into one result.
+            If n=3 always three datasets will be combined into one results and so on.
+            n has to be <= the number of total datasets.
+
         Returns
         -------
-        results_names : list
+        results_names : list of tuples
             Containing all combinations of
             (referenceDataset.column, otherDataset.column)
         """
@@ -144,17 +152,36 @@ class DataManager(object):
 
         ref_columns = []
         for column in self.datasets[self.reference_name]['columns']:
-            ref_columns.append(self.reference_name + '.' + column)
+            ref_columns.append((self.reference_name, column))
 
         other_columns = []
-        for other in self.other_name:
+        for other in sorted(self.other_name):
             for column in self.datasets[other]['columns']:
-                other_columns.append(other + '.' + column)
+                other_columns.append((other, column))
 
-        for comb in itertools.product(ref_columns, other_columns):
+        for comb in itertools.product(ref_columns,
+                                      itertools.combinations(other_columns, n - 1)):
             results_names.append(comb)
 
-        return results_names
+        # flatten to one level and remove those that do not have n unique
+        # datasets
+        results_names = flatten(results_names)
+
+        # iterate in chunks of n*2 over the list
+        result_combos = []
+        for chunk in [results_names[pos:pos + n * 2] for pos in range(0, len(results_names), n * 2)]:
+            combo = []
+            datasets = chunk[::2]
+            columns = chunk[1::2]
+            # if datasets are compared to themselves then don't include the
+            # combination
+            if len(set(datasets)) != n:
+                continue
+            for dataset, column in zip(datasets, columns):
+                combo.append((dataset, column))
+            result_combos.append(tuple(combo))
+
+        return result_combos
 
     def read_reference(self, *args):
         """
@@ -280,3 +307,15 @@ class DataManager(object):
 
         else:
             return other_df
+
+
+def flatten(seq):
+    l = []
+    for elt in seq:
+        t = type(elt)
+        if t is tuple or t is list:
+            for elt2 in flatten(elt):
+                l.append(elt2)
+        else:
+            l.append(elt)
+    return l
