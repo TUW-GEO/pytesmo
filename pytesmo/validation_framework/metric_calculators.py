@@ -50,7 +50,7 @@ class BasicMetrics(object):
     and number of observations
     """
 
-    def __init__(self):
+    def __init__(self, other_name='other'):
 
         self.result_template = {'R': np.float32([np.nan]),
                                 'p_R': np.float32([np.nan]),
@@ -64,6 +64,8 @@ class BasicMetrics(object):
                                 'gpi': np.int32([-1]),
                                 'lon': np.float64([np.nan]),
                                 'lat': np.float64([np.nan])}
+
+        self.other_name = other_name
 
     def calc_metrics(self, data, gpi_info):
         """
@@ -94,7 +96,7 @@ class BasicMetrics(object):
         if len(data) < 10:
             return dataset
 
-        x, y = data['ref'].values, data['other'].values
+        x, y = data['ref'].values, data[self.other_name].values
         R, p_R = metrics.pearsonr(x, y)
         rho, p_rho = metrics.spearmanr(x, y)
         # tau, p_tau = metrics.kendalltau(x, y)

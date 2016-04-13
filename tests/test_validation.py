@@ -216,6 +216,91 @@ def test_ascat_ismn_validation():
                                sorted(results.variables['RMSD'][:]))
 
 
+class TestDataset(object):
+    """Test dataset that acts as a fake object for the base classes."""
+
+    def __init__(self, filename, mode='r'):
+        self.filename = filename
+        self.mode = mode
+
+    def read(self, gpi):
+
+        n = 1000
+        x = np.arange(n)
+        y = np.arange(n) * 0.5
+        index = pd.date_range(start="2000-01-01", periods=n, freq="D")
+
+        df = pd.DataFrame({'x': x, 'y': y}, columns=['x', 'y'], index=index)
+        return df
+
+    def write(self, gpi, data):
+        return None
+
+    def read_ts(self, gpi):
+        return self.read(gpi)
+
+    def write_ts(self, gpi, data):
+        return None
+
+    def close(self):
+        pass
+
+    def flush(self):
+        pass
+
+
+def test_validation():
+
+    grid = grids.CellGrid(np.array([1, 2, 3, 4]), np.array([1, 2, 3, 4]),
+                          np.array([4, 4, 2, 1]), gpis=np.array([1, 2, 3, 4]))
+
+    ds1 = GriddedTsBase("", grid, TestDataset)
+    ds2 = GriddedTsBase("", grid, TestDataset)
+    ds3 = GriddedTsBase("", grid, TestDataset)
+
+    datasets = {
+        'DS1': {
+            'class': ds1,
+            'columns': ['x'],
+            'type': 'reference',
+            'args': [],
+            'kwargs': {}
+        },
+        'DS2': {
+            'class': ds2,
+            'columns': ['y'],
+            'type': 'other',
+            'args': [],
+            'kwargs': {},
+            'use_lut': False,
+            'grids_compatible': True
+        },
+        'DS3': {
+            'class': ds3,
+            'columns': ['x', 'y'],
+            'type': 'other',
+            'args': [],
+            'kwargs': {},
+            'use_lut': False,
+            'grids_compatible': True
+        }
+    }
+
+    process = Validation(
+        datasets=datasets,
+        temporal_matcher=temporal_matchers.BasicTemporalMatching(
+            window=1 / 24.0).combinatory_matcher,
+        scaling='lin_cdf_match',
+        scale_to_other=True,
+        metrics_calculators={
+            2: metrics_calculators.BasicMetrics(other_name='n1').calc_metrics},
+        cell_based_jobs=True)
+
+    jobs = process.get_processing_jobs()
+    for job in jobs:
+        results = process.calc(job)
+
+
 class TestDatasetRuntimeError(object):
     """Test dataset that acts as a fake object for the base classes."""
 
