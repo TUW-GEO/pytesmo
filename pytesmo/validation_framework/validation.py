@@ -41,14 +41,15 @@ class Validation(object):
                 nearest neighbour search is necessary.
             'lut_max_dist': float, optional
                 Maximum allowed distance in meters for the lut calculation.
-    temporal_matcher: object
-        Class instance that has a match method that takes a reference and a
-        other DataFrame. It's match method should return a DataFrame with the
-        index of the reference DataFrame and all columns of both DataFrames.
-    metrics_calculator : object
-        Class that has a calc_metrics method that takes a pandas.DataFrame
-        with 2 columns named 'ref' and 'other' and returns a dictionary with
-        the calculated metrics.
+    temporal_matcher: function
+        function that takes a dict of dataframes and a reference_key.
+        It performs the temporal matching on the data and returns a dictionary
+        of matched DataFrames that should be evaluated together by the metric calculator.
+    metrics_calculators : dict of functions
+        The keys of the dict are integers >= 2 and the values are functions that take
+        an input DataFrame with the columns 'ref' for the reference and 'n1', 'n2' and
+        so on for other datasets. In this way multiple metric calculators can be applied to
+        different combinations of n input datasets.
     data_prep: object
         Object that provides the methods prep_reference and prep_other
         which take the pandas.Dataframe provided by the read_ts methods (plus
@@ -76,7 +77,7 @@ class Validation(object):
         Returns processing jobs that this process can understand.
     """
 
-    def __init__(self, datasets, temporal_matcher, metrics_calculator,
+    def __init__(self, datasets, temporal_matcher, metrics_calculators,
                  data_prep=None, period=None, scaling='lin_cdf_match',
                  scale_to_other=False, cell_based_jobs=True):
         """
@@ -84,8 +85,8 @@ class Validation(object):
         """
         self.data_manager = DataManager(datasets, data_prep, period)
 
-        self.temp_matching = temporal_matcher.match
-        self.calc_metrics = metrics_calculator.calc_metrics
+        self.temp_matching = temporal_matcher
+        self.metrics_c = metrics_calculators
 
         self.scaling = scaling
         self.scale_to_index = 0
@@ -112,7 +113,6 @@ class Validation(object):
                   (referenceDataset.column, otherDataset.column)
             Values: dict containing the elements returned by metrics_calculator
         """
-        result_names = self.data_manager.get_results_names()
         results = {}
 
         if self.cell_based_jobs:
@@ -159,46 +159,59 @@ class Validation(object):
             if len(other_dataframes) == 0:
                 continue
 
-            joined_data = {}
-            for other in other_dataframes.keys():
-                joined = self.temp_matching(ref_dataframe,
-                                            other_dataframes[other])
+            df_dict = other_dataframes
+            df_dict.update({self.data_manager.reference_name: ref_dataframe})
 
-                if len(joined) != 0:
-                    joined_data[other] = joined
+            # compute results for combinations as requested by the metrics
+            # calculator dict
+            # First temporal match all the combinations
+            matched_n = {}
+            for n in self.metrics_c:
+                matched_data = self.temp_matching(df_dict,
+                                                  self.data_manager.reference_name,
+                                                  n=n)
+                matched_n[n] = matched_data
 
-            if len(joined_data) == 0:
-                continue
+            for n in self.metrics_c:
+                n_matched_data = matched_n[n]
+                for result in self.data_manager.get_results_names(n):
+                    # find the key into the temporally matched dataset by combining the
+                    # dataset parts of the result_names
+                    dskey = []
+                    rename_dict = {}
+                    f = lambda x: "n{}".format(x) if x > 0 else 'ref'
+                    for i, r in enumerate(result):
+                        dskey.append(r[0])
+                        rename_dict[r[0]] = f(i)
 
-            # compute results for each combination of (ref, other) columns
-            for result in result_names:
-                ref_col = result[0].split('.')[1]
-                other_col = result[1].split('.')[1]
-                other_name = result[1].split('.')[0]
+                    dskey = tuple(dskey)
+                    data = n_matched_data[dskey]
 
-                try:
-                    data = joined_data[other_name][
-                        [ref_col, other_col]].dropna()
-                except KeyError:
-                    continue
+                    # extract only the relevant columns from matched DataFrame
+                    data = data[[x for x in result]]
 
-                data.rename(
-                    columns={ref_col: 'ref', other_col: 'other'}, inplace=True)
+                    # at this stage we can drop the column multiindex and just use
+                    # the dataset name
+                    data.columns = data.columns.droplevel(level=1)
 
-                if len(data) == 0:
-                    continue
+                    data.rename(columns=rename_dict, inplace=True)
 
-                if self.scaling is not None:
-                    try:
-                        data = scaling.scale(
-                            data, method=self.scaling, reference_index=self.scale_to_index)
-                    except ValueError:
+                    if len(data) == 0:
                         continue
 
-                if result not in results.keys():
-                    results[result] = []
+                    if self.scaling is not None:
+                        try:
+                            data = scaling.scale(data,
+                                                 method=self.scaling,
+                                                 reference_index=0)
+                        except ValueError:
+                            continue
 
-                results[result].append(self.calc_metrics(data, gpi_meta))
+                    if result not in results.keys():
+                        results[result] = []
+
+                    metrics_calculator = self.metrics_c[n]
+                    results[result].append(metrics_calculator(data, gpi_meta))
 
         compact_results = {}
         for key in results.keys():
