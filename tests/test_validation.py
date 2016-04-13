@@ -244,12 +244,7 @@ class TestDatasetRuntimeError(object):
         pass
 
 
-def test_DataManager_RuntimeError():
-    """
-    Test DataManager with some fake Datasets that throw RuntimeError
-    instead of IOError if a file does not exist like netCDF4
-
-    """
+def setup_TestDataManager():
 
     grid = grids.CellGrid(np.array([1, 2, 3, 4]), np.array([1, 2, 3, 4]),
                           np.array([4, 4, 2, 1]), gpis=np.array([1, 2, 3, 4]))
@@ -277,7 +272,7 @@ def test_DataManager_RuntimeError():
         },
         'DS3': {
             'class': ds3,
-            'columns': ['sm'],
+            'columns': ['sm', 'sm2'],
             'type': 'other',
             'args': [],
             'kwargs': {},
@@ -286,12 +281,25 @@ def test_DataManager_RuntimeError():
     }
 
     dm = DataManager(datasets)
+    return dm
+
+
+def test_DataManager_RuntimeError():
+    """
+    Test DataManager with some fake Datasets that throw RuntimeError
+    instead of IOError if a file does not exist like netCDF4
+
+    """
+
+    dm = setup_TestDataManager()
     with pytest.warns(UserWarning):
         dm.read_reference(1)
     with pytest.warns(UserWarning):
         dm.read_other('DS2', 1)
     with pytest.raises(RuntimeError):
         dm.read_other('DS3', 1)
+
+
 def test_DataManager_dataset_names():
 
     dm = setup_TestDataManager()
