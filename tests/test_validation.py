@@ -35,6 +35,7 @@ import os
 import tempfile
 import netCDF4 as nc
 import numpy as np
+import pandas as pd
 import numpy.testing as nptest
 import pytest
 
@@ -302,3 +303,95 @@ def test_DataManager_dataset_names():
     assert result_names == [(('DS1', 'soil moisture'), ('DS2', 'sm')),
                             (('DS1', 'soil moisture'), ('DS3', 'sm')),
                             (('DS1', 'soil moisture'), ('DS3', 'sm2'))]
+
+
+def test_combinatory_matcher_n2():
+
+    n = 1000
+    x = np.arange(n)
+    y = np.arange(n) * 0.5
+    index = pd.date_range(start="2000-01-01", periods=n, freq="D")
+
+    df = pd.DataFrame({'x': x, 'y': y}, columns=['x', 'y'], index=index)
+    df2 = pd.DataFrame({'x': x, 'y': y}, columns=['x', 'y'], index=index)
+    df3 = pd.DataFrame({'x': x, 'y': y}, columns=['x', 'y'], index=index)
+
+    df_dict = {'data1': df,
+               'data2': df2,
+               'data3': df3}
+
+    temp_matcher = temporal_matchers.BasicTemporalMatching()
+    matched = temp_matcher.combinatory_matcher(df_dict, 'data1')
+    assert list(matched) == [('data1', 'data2'),
+                             ('data1', 'data3')]
+    assert sorted(list(matched[('data1',
+                                'data2')].columns)) == sorted([('data1', 'x'),
+                                                               ('data1', 'y'),
+                                                               ('data2', 'x'),
+                                                               ('data2', 'y')])
+
+    assert sorted(list(matched[('data1',
+                                'data3')].columns)) == sorted([('data1', 'x'),
+                                                               ('data1', 'y'),
+                                                               ('data3', 'x'),
+                                                               ('data3', 'y')])
+
+
+def test_combinatory_matcher_n3():
+
+    n = 1000
+    x = np.arange(n)
+    y = np.arange(n) * 0.5
+    index = pd.date_range(start="2000-01-01", periods=n, freq="D")
+
+    df = pd.DataFrame({'x': x, 'y': y}, columns=['x', 'y'], index=index)
+    df2 = pd.DataFrame({'x': x, 'y': y}, columns=['x', 'y'], index=index)
+    df3 = pd.DataFrame({'x': x, 'y': y}, columns=['x', 'y'], index=index)
+    df4 = pd.DataFrame({'x': x, 'y': y}, columns=['x', 'y'], index=index)
+
+    df_dict = {'data1': df,
+               'data2': df2,
+               'data3': df3}
+
+    temp_matcher = temporal_matchers.BasicTemporalMatching()
+    matched = temp_matcher.combinatory_matcher(df_dict, 'data1', n=3)
+    assert list(matched) == [('data1', 'data2', 'data3')]
+    assert sorted(list(matched[('data1',
+                                'data2',
+                                'data3')].columns)) == sorted([('data1', 'x'),
+                                                               ('data1', 'y'),
+                                                               ('data2', 'x'),
+                                                               ('data2', 'y'),
+                                                               ('data3', 'x'),
+                                                               ('data3', 'y')])
+
+    df_dict = {'data1': df,
+               'data2': df2,
+               'data3': df3,
+               'data4': df4}
+
+    temp_matcher = temporal_matchers.BasicTemporalMatching()
+    matched = temp_matcher.combinatory_matcher(df_dict, 'data1', n=3)
+    assert sorted(list(matched)) == sorted([('data1', 'data2', 'data3'),
+                                            ('data1', 'data2', 'data4'),
+                                            ('data1', 'data3', 'data4')])
+    assert sorted(list(matched[('data1',
+                                'data2',
+                                'data3')].columns)) == sorted([('data1', 'x'),
+                                                               ('data1', 'y'),
+                                                               ('data2', 'x'),
+                                                               ('data2', 'y'),
+                                                               ('data3', 'x'),
+                                                               ('data3', 'y')])
+
+
+def test_add_name_to_df_columns():
+
+    n = 10
+    x = np.arange(n)
+    y = np.arange(n) * 0.5
+    index = pd.date_range(start="2000-01-01", periods=n, freq="D")
+
+    df = pd.DataFrame({'x': x, 'y': y}, columns=['x', 'y'], index=index)
+    df = temporal_matchers.df_name_multiindex(df, 'test')
+    assert list(df.columns) == [('test', 'x'), ('test', 'y')]
