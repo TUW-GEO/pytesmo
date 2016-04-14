@@ -251,6 +251,47 @@ class TestDataset(object):
 
 def test_validation():
 
+    tst_results = {
+        (('DS1', 'x'), ('DS3', 'y')): {
+            'n_obs': np.array([1000], dtype=np.int32),
+            'tau': np.array([np.nan], dtype=np.float32),
+            'gpi': np.array([4], dtype=np.int32),
+            'RMSD': np.array([0.], dtype=np.float32),
+            'lon': np.array([4.]),
+            'p_tau': np.array([np.nan], dtype=np.float32),
+            'BIAS': np.array([0.], dtype=np.float32),
+            'p_rho': np.array([0.], dtype=np.float32),
+            'rho': np.array([1.], dtype=np.float32),
+            'lat': np.array([4.]),
+            'R': np.array([1.], dtype=np.float32),
+            'p_R': np.array([0.], dtype=np.float32)},
+        (('DS1', 'x'), ('DS2', 'y')): {
+            'n_obs': np.array([1000], dtype=np.int32),
+            'tau': np.array([np.nan], dtype=np.float32),
+            'gpi': np.array([4], dtype=np.int32),
+            'RMSD': np.array([0.], dtype=np.float32),
+            'lon': np.array([4.]),
+            'p_tau': np.array([np.nan], dtype=np.float32),
+            'BIAS': np.array([0.], dtype=np.float32),
+            'p_rho': np.array([0.], dtype=np.float32),
+            'rho': np.array([1.], dtype=np.float32),
+            'lat': np.array([4.]),
+            'R': np.array([1.], dtype=np.float32),
+            'p_R': np.array([0.], dtype=np.float32)},
+        (('DS1', 'x'), ('DS3', 'x')): {
+            'n_obs': np.array([1000], dtype=np.int32),
+            'tau': np.array([np.nan], dtype=np.float32),
+            'gpi': np.array([4], dtype=np.int32),
+            'RMSD': np.array([0.], dtype=np.float32),
+            'lon': np.array([4.]),
+            'p_tau': np.array([np.nan], dtype=np.float32),
+            'BIAS': np.array([0.], dtype=np.float32),
+            'p_rho': np.array([0.], dtype=np.float32),
+            'rho': np.array([1.], dtype=np.float32),
+            'lat': np.array([4.]),
+            'R': np.array([1.], dtype=np.float32),
+            'p_R': np.array([0.], dtype=np.float32)}}
+
     grid = grids.CellGrid(np.array([1, 2, 3, 4]), np.array([1, 2, 3, 4]),
                           np.array([4, 4, 2, 1]), gpis=np.array([1, 2, 3, 4]))
 
@@ -299,6 +340,7 @@ def test_validation():
     jobs = process.get_processing_jobs()
     for job in jobs:
         results = process.calc(job)
+        assert sorted(list(results)) == sorted(list(tst_results))
 
 
 class TestDatasetRuntimeError(object):
