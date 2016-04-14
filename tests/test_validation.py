@@ -541,8 +541,8 @@ def test_combinatory_matcher_n2():
 
     temp_matcher = temporal_matchers.BasicTemporalMatching()
     matched = temp_matcher.combinatory_matcher(df_dict, 'data1')
-    assert list(matched) == [('data1', 'data2'),
-                             ('data1', 'data3')]
+    assert sorted(list(matched)) == sorted([('data1', 'data2'),
+                                            ('data1', 'data3')])
     assert sorted(list(matched[('data1',
                                 'data2')].columns)) == sorted([('data1', 'x'),
                                                                ('data1', 'y'),
