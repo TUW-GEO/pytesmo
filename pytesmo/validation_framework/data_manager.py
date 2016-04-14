@@ -130,12 +130,16 @@ class DataManager(object):
 
         return luts
 
-    def get_results_names(self, n=2):
+    @property
+    def ds_dict(self):
         ds_dict = {}
         for dataset in self.datasets.keys():
             ds_dict[dataset] = self.datasets[dataset]['columns']
+        return ds_dict
 
-        return get_result_names(ds_dict, self.reference_name, n=n)
+    def get_results_names(self, n=2):
+
+        return get_result_names(self.ds_dict, self.reference_name, n=n)
 
     def read_reference(self, *args):
         """
