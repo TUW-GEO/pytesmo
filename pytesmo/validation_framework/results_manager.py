@@ -22,7 +22,10 @@ def netcdf_results_manager(results, save_path):
         Path where the file/files will be saved.
     """
     for key in results.keys():
-        filename = os.path.join(save_path, key[0] + '_with_' + key[1] + '.nc')
+        ds_names = ['.'.join(ds) for ds in key]
+        fname = '_with_'.join(ds_names) + '.nc'
+
+        filename = os.path.join(save_path, fname)
         if not os.path.exists(filename):
             ncfile = netCDF4.Dataset(filename, 'w')
 
