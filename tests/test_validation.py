@@ -181,12 +181,11 @@ def test_ascat_ismn_validation():
     process = Validation(
         datasets=datasets,
         data_prep=DataPreparation(),
-        temporal_matcher=temporal_matchers.BasicTemporalMatching(
-            window=1 / 24.0,
-            reverse=True),
+        temporal_ref='ASCAT',
         scaling='lin_cdf_match',
-        scale_to_other=True,
-        metrics_calculator=metrics_calculators.BasicMetrics(),
+        scaling_ref='ASCAT',
+        metrics_calculators={
+            (2, 2): metrics_calculators.BasicMetrics(other_name='k1').calc_metrics},
         period=period,
         cell_based_jobs=False)
 
@@ -195,7 +194,7 @@ def test_ascat_ismn_validation():
         netcdf_results_manager(results, save_path)
 
     results_fname = os.path.join(
-        save_path, 'ISMN.soil moisture_with_ASCAT.sm.nc')
+        save_path, 'ASCAT.sm_with_ISMN.soil moisture.nc')
 
     vars_should = [u'n_obs', u'tau', u'gpi', u'RMSD', u'lon', u'p_tau',
                    u'BIAS', u'p_rho', u'rho', u'lat', u'R', u'p_R']
@@ -250,7 +249,45 @@ class TestDataset(object):
         pass
 
 
-def test_validation():
+def setup_TestDatasets():
+    grid = grids.CellGrid(np.array([1, 2, 3, 4]), np.array([1, 2, 3, 4]),
+                          np.array([4, 4, 2, 1]), gpis=np.array([1, 2, 3, 4]))
+
+    ds1 = GriddedTsBase("", grid, TestDataset)
+    ds2 = GriddedTsBase("", grid, TestDataset)
+    ds3 = GriddedTsBase("", grid, TestDataset)
+
+    datasets = {
+        'DS1': {
+            'class': ds1,
+            'columns': ['x'],
+            'type': 'reference',
+            'args': [],
+            'kwargs': {}
+        },
+        'DS2': {
+            'class': ds2,
+            'columns': ['y'],
+            'type': 'other',
+            'args': [],
+            'kwargs': {},
+            'use_lut': False,
+            'grids_compatible': True
+        },
+        'DS3': {
+            'class': ds3,
+            'columns': ['x', 'y'],
+            'type': 'other',
+            'args': [],
+            'kwargs': {},
+            'use_lut': False,
+            'grids_compatible': True
+        }
+    }
+    return datasets
+
+
+def test_validation_n2_k2():
 
     tst_results = {
         (('DS1', 'x'), ('DS3', 'y')): {
@@ -293,49 +330,75 @@ def test_validation():
             'R': np.array([1.], dtype=np.float32),
             'p_R': np.array([0.], dtype=np.float32)}}
 
-    grid = grids.CellGrid(np.array([1, 2, 3, 4]), np.array([1, 2, 3, 4]),
-                          np.array([4, 4, 2, 1]), gpis=np.array([1, 2, 3, 4]))
-
-    ds1 = GriddedTsBase("", grid, TestDataset)
-    ds2 = GriddedTsBase("", grid, TestDataset)
-    ds3 = GriddedTsBase("", grid, TestDataset)
-
-    datasets = {
-        'DS1': {
-            'class': ds1,
-            'columns': ['x'],
-            'type': 'reference',
-            'args': [],
-            'kwargs': {}
-        },
-        'DS2': {
-            'class': ds2,
-            'columns': ['y'],
-            'type': 'other',
-            'args': [],
-            'kwargs': {},
-            'use_lut': False,
-            'grids_compatible': True
-        },
-        'DS3': {
-            'class': ds3,
-            'columns': ['x', 'y'],
-            'type': 'other',
-            'args': [],
-            'kwargs': {},
-            'use_lut': False,
-            'grids_compatible': True
-        }
-    }
+    datasets = setup_TestDatasets()
 
     process = Validation(
         datasets=datasets,
         temporal_matcher=temporal_matchers.BasicTemporalMatching(
             window=1 / 24.0).combinatory_matcher,
         scaling='lin_cdf_match',
-        scale_to_other=True,
         metrics_calculators={
-            2: metrics_calculators.BasicMetrics(other_name='n1').calc_metrics},
+            (2, 2): metrics_calculators.BasicMetrics(other_name='k1').calc_metrics},
+        cell_based_jobs=True)
+
+    jobs = process.get_processing_jobs()
+    for job in jobs:
+        results = process.calc(job)
+        assert sorted(list(results)) == sorted(list(tst_results))
+
+
+def test_validation_n3_k2():
+
+    tst_results = {
+        (('DS1', 'x'), ('DS3', 'y')): {
+            'n_obs': np.array([1000], dtype=np.int32),
+            'tau': np.array([np.nan], dtype=np.float32),
+            'gpi': np.array([4], dtype=np.int32),
+            'RMSD': np.array([0.], dtype=np.float32),
+            'lon': np.array([4.]),
+            'p_tau': np.array([np.nan], dtype=np.float32),
+            'BIAS': np.array([0.], dtype=np.float32),
+            'p_rho': np.array([0.], dtype=np.float32),
+            'rho': np.array([1.], dtype=np.float32),
+            'lat': np.array([4.]),
+            'R': np.array([1.], dtype=np.float32),
+            'p_R': np.array([0.], dtype=np.float32)},
+        (('DS1', 'x'), ('DS2', 'y')): {
+            'n_obs': np.array([1000], dtype=np.int32),
+            'tau': np.array([np.nan], dtype=np.float32),
+            'gpi': np.array([4], dtype=np.int32),
+            'RMSD': np.array([0.], dtype=np.float32),
+            'lon': np.array([4.]),
+            'p_tau': np.array([np.nan], dtype=np.float32),
+            'BIAS': np.array([0.], dtype=np.float32),
+            'p_rho': np.array([0.], dtype=np.float32),
+            'rho': np.array([1.], dtype=np.float32),
+            'lat': np.array([4.]),
+            'R': np.array([1.], dtype=np.float32),
+            'p_R': np.array([0.], dtype=np.float32)},
+        (('DS1', 'x'), ('DS3', 'x')): {
+            'n_obs': np.array([1000], dtype=np.int32),
+            'tau': np.array([np.nan], dtype=np.float32),
+            'gpi': np.array([4], dtype=np.int32),
+            'RMSD': np.array([0.], dtype=np.float32),
+            'lon': np.array([4.]),
+            'p_tau': np.array([np.nan], dtype=np.float32),
+            'BIAS': np.array([0.], dtype=np.float32),
+            'p_rho': np.array([0.], dtype=np.float32),
+            'rho': np.array([1.], dtype=np.float32),
+            'lat': np.array([4.]),
+            'R': np.array([1.], dtype=np.float32),
+            'p_R': np.array([0.], dtype=np.float32)}}
+
+    datasets = setup_TestDatasets()
+
+    process = Validation(
+        datasets=datasets,
+        temporal_matcher=temporal_matchers.BasicTemporalMatching(
+            window=1 / 24.0).combinatory_matcher,
+        scaling='lin_cdf_match',
+        metrics_calculators={
+            (3, 2): metrics_calculators.BasicMetrics(other_name='k1').calc_metrics},
         cell_based_jobs=True)
 
     jobs = process.get_processing_jobs()
