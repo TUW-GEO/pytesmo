@@ -46,6 +46,7 @@ import pytesmo.validation_framework.temporal_matchers as temporal_matchers
 import pytesmo.validation_framework.metric_calculators as metrics_calculators
 from pytesmo.validation_framework.results_manager import netcdf_results_manager
 from pytesmo.validation_framework.data_manager import DataManager
+from pytesmo.validation_framework.data_manager import get_result_names
 
 from datetime import datetime
 
@@ -438,6 +439,26 @@ def test_DataManager_dataset_names():
     assert result_names == [(('DS1', 'soil moisture'), ('DS2', 'sm')),
                             (('DS1', 'soil moisture'), ('DS3', 'sm')),
                             (('DS1', 'soil moisture'), ('DS3', 'sm2'))]
+
+
+def test_get_result_names():
+
+    tst_ds_dict = {'DS1': ['soil moisture'],
+                   'DS2': ['sm'],
+                   'DS3': ['sm', 'sm2']}
+    result_names = get_result_names(tst_ds_dict, 'DS1', 3)
+    assert result_names == [(('DS1', 'soil moisture'), ('DS2', 'sm'), ('DS3', 'sm')),
+                            (('DS1', 'soil moisture'), ('DS2', 'sm'), ('DS3', 'sm2'))]
+
+    result_names = get_result_names(tst_ds_dict, 'DS1', 2)
+    assert result_names == [(('DS1', 'soil moisture'), ('DS2', 'sm')),
+                            (('DS1', 'soil moisture'), ('DS3', 'sm')),
+                            (('DS1', 'soil moisture'), ('DS3', 'sm2'))]
+
+    result_names = get_result_names(tst_ds_dict, 'DS2', 2)
+    assert result_names == [(('DS2', 'sm'), ('DS1', 'soil moisture')),
+                            (('DS2', 'sm'), ('DS3', 'sm')),
+                            (('DS2', 'sm'), ('DS3', 'sm2'))]
 
 
 def test_combinatory_matcher_n2():
