@@ -131,57 +131,11 @@ class DataManager(object):
         return luts
 
     def get_results_names(self, n=2):
-        """
-        Return results names based on reference and others names.
+        ds_dict = {}
+        for dataset in self.datasets.keys():
+            ds_dict[dataset] = self.datasets[dataset]['columns']
 
-        Parameters
-        ----------
-        n: int
-            Number of datasets for combine with each other.
-            If n=2 always two datasets will be combined into one result.
-            If n=3 always three datasets will be combined into one results and so on.
-            n has to be <= the number of total datasets.
-
-        Returns
-        -------
-        results_names : list of tuples
-            Containing all combinations of
-            (referenceDataset.column, otherDataset.column)
-        """
-        results_names = []
-
-        ref_columns = []
-        for column in self.datasets[self.reference_name]['columns']:
-            ref_columns.append((self.reference_name, column))
-
-        other_columns = []
-        for other in sorted(self.other_name):
-            for column in self.datasets[other]['columns']:
-                other_columns.append((other, column))
-
-        for comb in itertools.product(ref_columns,
-                                      itertools.combinations(other_columns, n - 1)):
-            results_names.append(comb)
-
-        # flatten to one level and remove those that do not have n unique
-        # datasets
-        results_names = flatten(results_names)
-
-        # iterate in chunks of n*2 over the list
-        result_combos = []
-        for chunk in [results_names[pos:pos + n * 2] for pos in range(0, len(results_names), n * 2)]:
-            combo = []
-            datasets = chunk[::2]
-            columns = chunk[1::2]
-            # if datasets are compared to themselves then don't include the
-            # combination
-            if len(set(datasets)) != n:
-                continue
-            for dataset, column in zip(datasets, columns):
-                combo.append((dataset, column))
-            result_combos.append(tuple(combo))
-
-        return result_combos
+        return get_result_names(ds_dict, self.reference_name, n=n)
 
     def read_reference(self, *args):
         """
@@ -319,3 +273,65 @@ def flatten(seq):
         else:
             l.append(elt)
     return l
+
+
+def get_result_names(ds_dict, refkey, n=2):
+    """
+    Return result names based on all possible combinations based on a
+    reference dataset.
+
+    Parameters
+    ----------
+    ds_dict: dict
+       Dict of lists containing the dataset names as keys and a list of the
+       columns to read from the dataset as values.
+    refkey: string
+       dataset name to use as a reference
+    n: int
+        Number of datasets for combine with each other.
+        If n=2 always two datasets will be combined into one result.
+        If n=3 always three datasets will be combined into one results and so on.
+        n has to be <= the number of total datasets.
+
+    Returns
+    -------
+    results_names : list of tuples
+        Containing all combinations of
+        (referenceDataset.column, otherDataset.column)
+    """
+    results_names = []
+
+    ref_columns = []
+    for column in ds_dict[refkey]:
+        ref_columns.append((refkey, column))
+
+    other_columns = []
+    other_names = list(ds_dict)
+    del other_names[other_names.index(refkey)]
+    for other in sorted(other_names):
+        for column in ds_dict[other]:
+            other_columns.append((other, column))
+
+    for comb in itertools.product(ref_columns,
+                                  itertools.combinations(other_columns, n - 1)):
+        results_names.append(comb)
+
+    # flatten to one level and remove those that do not have n unique
+    # datasets
+    results_names = flatten(results_names)
+
+    # iterate in chunks of n*2 over the list
+    result_combos = []
+    for chunk in [results_names[pos:pos + n * 2] for pos in range(0, len(results_names), n * 2)]:
+        combo = []
+        datasets = chunk[::2]
+        columns = chunk[1::2]
+        # if datasets are compared to themselves then don't include the
+        # combination
+        if len(set(datasets)) != n:
+            continue
+        for dataset, column in zip(datasets, columns):
+            combo.append((dataset, column))
+        result_combos.append(tuple(combo))
+
+    return result_combos
