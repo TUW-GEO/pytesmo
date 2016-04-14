@@ -110,7 +110,6 @@ packages should be installed.
 * numpy >= 1.7.0 http://www.numpy.org/
 * pandas >= 0.11.0 http://pandas.pydata.org/
 * scipy >= 0.12.0 http://www.scipy.org/
-* statsmodels >= 0.4.3 http://statsmodels.sourceforge.net/
 * netCDF4 >= 1.0.1 https://pypi.python.org/pypi/netCDF4
 * pygeogrids https://pypi.python.org/pypi/pygeogrids
 * matplotlib >= 1.2.0 http://matplotlib.org/
@@ -166,7 +165,7 @@ Windows and Linux.
 
 .. code::
 
-   conda create -q --yes -n test python=2.7 numpy scipy pandas statsmodels netCDF4  cython pytest pip matplotlib pyproj
+   conda create -q --yes -n test python=2.7 numpy scipy pandas netCDF4  cython pytest pip matplotlib pyproj
    activate test
    pip install pygeogrids
    pip install pyresample
