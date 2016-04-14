@@ -149,6 +149,18 @@ def test_add_scale(method):
                                df_scaled['y_scaled_' + method].values)
 
 
+def test_single_percentile_data():
+
+    n = 1000
+    x = np.arange(n, dtype=np.float)
+    y = np.ones(n)
+
+    s = scaling.lin_cdf_match(y, x)
+    nptest.assert_almost_equal(s, np.full_like(s, np.nan))
+    s = scaling.cdf_match(y, x)
+    nptest.assert_almost_equal(s, np.full_like(s, np.nan))
+
+
 def test_lin_cdf_match_stored_params():
     """
     Test scaling based on given percentiles.
