@@ -72,6 +72,9 @@ class DataManager(object):
     period : list, optional
         Of type [datetime start, datetime end]. If given then the two input
         datasets will be truncated to start <= dates <= end.
+    read_ts_method_name: string, optional
+        if another method name than 'read_ts' should be used for reading the data
+        then it can be specified here.
 
     Methods
     -------
@@ -86,7 +89,8 @@ class DataManager(object):
         Function to read and prepare the other datasets.
     """
 
-    def __init__(self, datasets, data_prep=None, period=None):
+    def __init__(self, datasets, data_prep=None, period=None,
+                 read_ts_method_name='read_ts'):
         """
         Initialize parameters.
         """
@@ -110,6 +114,7 @@ class DataManager(object):
         self.data_prep = data_prep
         self.period = period
         self.luts = self.get_luts()
+        self.read_ts_method_name = read_ts_method_name
 
     def get_luts(self):
         """
@@ -227,7 +232,8 @@ class DataManager(object):
         args.extend(ds['args'])
 
         try:
-            data_df = ds['class'].read_ts(*args, **ds['kwargs'])
+            func = getattr(ds['class'], self.read_ts_method_name)
+            data_df = func(*args, **ds['kwargs'])
         except IOError:
             warnings.warn(
                 "IOError while reading dataset {} with args {:}".format(name,
