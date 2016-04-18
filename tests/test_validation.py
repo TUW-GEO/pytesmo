@@ -166,12 +166,12 @@ def test_ascat_ismn_validation():
         'ISMN': {
             'class': ismn_reader, 'columns': [
                 'soil moisture'
-            ], 'type': 'reference', 'args': [], 'kwargs': {}
+            ], 'args': [], 'kwargs': {}
         },
         'ASCAT': {
             'class': ascat_reader, 'columns': [
                 'sm'
-            ], 'type': 'other', 'args': [], 'kwargs': {}, 'grids_compatible':
+            ], 'args': [], 'kwargs': {}, 'grids_compatible':
             False, 'use_lut': False, 'lut_max_dist': 30000
         }
     }
@@ -179,7 +179,7 @@ def test_ascat_ismn_validation():
     period = [datetime(2007, 1, 1), datetime(2014, 12, 31)]
 
     process = Validation(
-        datasets=datasets,
+        datasets, 'ISMN',
         data_prep=DataPreparation(),
         temporal_ref='ASCAT',
         scaling='lin_cdf_match',
@@ -261,14 +261,12 @@ def setup_TestDatasets():
         'DS1': {
             'class': ds1,
             'columns': ['x'],
-            'type': 'reference',
             'args': [],
             'kwargs': {}
         },
         'DS2': {
             'class': ds2,
             'columns': ['y'],
-            'type': 'other',
             'args': [],
             'kwargs': {},
             'use_lut': False,
@@ -277,7 +275,6 @@ def setup_TestDatasets():
         'DS3': {
             'class': ds3,
             'columns': ['x', 'y'],
-            'type': 'other',
             'args': [],
             'kwargs': {},
             'use_lut': False,
@@ -333,7 +330,7 @@ def test_validation_n2_k2():
     datasets = setup_TestDatasets()
 
     process = Validation(
-        datasets=datasets,
+        datasets, 'DS1',
         temporal_matcher=temporal_matchers.BasicTemporalMatching(
             window=1 / 24.0).combinatory_matcher,
         scaling='lin_cdf_match',
@@ -393,7 +390,7 @@ def test_validation_n3_k2():
     datasets = setup_TestDatasets()
 
     process = Validation(
-        datasets=datasets,
+        datasets, 'DS1',
         temporal_matcher=temporal_matchers.BasicTemporalMatching(
             window=1 / 24.0).combinatory_matcher,
         scaling='lin_cdf_match',
@@ -449,14 +446,12 @@ def setup_TestDataManager():
         'DS1': {
             'class': ds1,
             'columns': ['soil moisture'],
-            'type': 'reference',
             'args': [],
             'kwargs': {}
         },
         'DS2': {
             'class': ds2,
             'columns': ['sm'],
-            'type': 'other',
             'args': [],
             'kwargs': {},
             'grids_compatible': True
@@ -464,14 +459,13 @@ def setup_TestDataManager():
         'DS3': {
             'class': ds3,
             'columns': ['sm', 'sm2'],
-            'type': 'other',
             'args': [],
             'kwargs': {},
             'grids_compatible': True
         }
     }
 
-    dm = DataManager(datasets)
+    dm = DataManager(datasets, 'DS1')
     return dm
 
 
@@ -507,7 +501,7 @@ def test_DataManager_dataset_names():
 def test_DataManager_get_data():
 
     datasets = setup_TestDatasets()
-    dm = DataManager(datasets)
+    dm = DataManager(datasets, 'DS1')
     data = dm.get_data(1, 1, 1)
     assert sorted(list(data)) == ['DS1', 'DS2', 'DS3']
 

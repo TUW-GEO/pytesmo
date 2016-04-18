@@ -26,11 +26,6 @@ class Validation(object):
                 Class containing the method read_ts for reading the data.
             'columns': list
                 List of columns which will be used in the validation process.
-            'type': string
-                'reference' or 'other'. If the dataset is the reference it will be used
-                as a spatial, temporal and scaling reference. temporal and scaling references
-                can be changed if needed. See the optional parameters ``temporal_ref`` and
-                ``scaling_ref``.
             'args': list, optional
                 Args for reading the data.
             'kwargs': dict, optional
@@ -46,6 +41,10 @@ class Validation(object):
                 nearest neighbour search is necessary.
             'lut_max_dist': float, optional
                 Maximum allowed distance in meters for the lut calculation.
+    spatial_ref: string
+        Name of the dataset used as a spatial, temporal and scaling reference.
+        temporal and scaling references can be changed if needed. See the optional parameters
+        ``temporal_ref`` and ``scaling_ref``.
     metrics_calculators : dict of functions
         The keys of the dict are tuples with the following structure: (n, k) with n >= 2
         and n>=k. n is the number of datasets that should be temporally matched to the
@@ -101,14 +100,15 @@ class Validation(object):
         Returns processing jobs that this process can understand.
     """
 
-    def __init__(self, datasets, metrics_calculators,
+    def __init__(self, datasets, spatial_ref, metrics_calculators,
                  temporal_matcher=None, temporal_window=1 / 24.0,
                  temporal_ref=None, data_prep=None, period=None, scaling='lin_cdf_match',
                  scaling_ref=None, cell_based_jobs=True):
         """
         Initialize parameters.
         """
-        self.data_manager = DataManager(datasets, data_prep, period)
+        self.data_manager = DataManager(
+            datasets, spatial_ref, data_prep, period)
 
         self.temp_matching = temporal_matcher
         if self.temp_matching is None:

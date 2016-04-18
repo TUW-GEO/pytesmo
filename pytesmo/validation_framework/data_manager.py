@@ -46,8 +46,6 @@ class DataManager(object):
                 Class containing the method read_ts for reading the data.
             'columns': list
                 List of columns which will be used in the validation process.
-            'type': string
-                'reference' or 'other'.
             'args': list, optional
                 Args for reading the data.
             'kwargs': dict, optional
@@ -63,6 +61,8 @@ class DataManager(object):
                 nearest neighbour search is necessary.
             'lut_max_dist': float, optional
                 Maximum allowed distance in meters for the lut calculation.
+    ref_name: string
+        Name of the reference dataset
     data_prep : object, optional
         Object that provides the methods prep_reference and prep_other
         which take the pandas.Dataframe provided by the read_ts methods (plus
@@ -89,18 +89,18 @@ class DataManager(object):
         Function to read and prepare the other datasets.
     """
 
-    def __init__(self, datasets, data_prep=None, period=None,
+    def __init__(self, datasets, ref_name,
+                 data_prep=None, period=None,
                  read_ts_method_name='read_ts'):
         """
         Initialize parameters.
         """
         self.datasets = datasets
+        self.reference_name = ref_name
 
         self.other_name = []
         for dataset in datasets.keys():
-            if datasets[dataset]['type'] == 'reference':
-                self.reference_name = dataset
-            else:
+            if dataset != ref_name:
                 self.other_name.append(dataset)
                 if 'use_lut' not in self.datasets[dataset]:
                     self.datasets[dataset]['use_lut'] = False
