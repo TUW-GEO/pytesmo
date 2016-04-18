@@ -128,21 +128,35 @@ def test_ascat_ismn_validation():
     vars_should = [u'n_obs', u'tau', u'gpi', u'RMSD', u'lon', u'p_tau',
                    u'BIAS', u'p_rho', u'rho', u'lat', u'R', u'p_R']
     n_obs_should = [360, 385, 1644, 1881, 1927, 479, 140, 251]
-    rho_should = np.array([0.54618734, 0.71739876, 0.62089276, 0.53246528,
-                           0.30299741, 0.69647062, 0.840593, 0.73913699],
+    rho_should = np.array([0.546187,
+                           0.717398,
+                           0.620892,
+                           0.532465,
+                           0.302997,
+                           0.694713,
+                           0.840592,
+                           0.742065],
                           dtype=np.float32)
 
-    rmsd_should = np.array([11.53626347, 7.54565048, 17.45193481, 21.19371414,
-                            14.24668026, 14.27493, 13.173215, 12.59192371],
+    rmsd_should = np.array([11.536263,
+                            7.545650,
+                            17.451935,
+                            21.193714,
+                            14.246680,
+                            14.494674,
+                            13.173215,
+                            12.903898],
                            dtype=np.float32)
     with nc.Dataset(results_fname) as results:
         assert sorted(results.variables.keys()) == sorted(vars_should)
         assert sorted(results.variables['n_obs'][:].tolist()) == sorted(
             n_obs_should)
         nptest.assert_allclose(sorted(rho_should),
-                               sorted(results.variables['rho'][:]))
+                               sorted(results.variables['rho'][:]),
+                               rtol=1e-4)
         nptest.assert_allclose(sorted(rmsd_should),
-                               sorted(results.variables['RMSD'][:]))
+                               sorted(results.variables['RMSD'][:]),
+                               rtol=1e-4)
 
 
 class TestDataset(object):
