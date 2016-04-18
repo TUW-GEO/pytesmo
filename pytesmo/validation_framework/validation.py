@@ -163,38 +163,13 @@ class Validation(object):
             else:
                 gpi_meta = job
 
-            ref_dataframe = self.data_manager.read_reference(gpi_info[0])
-            # if no reference data available continue with the next gpi
-            if ref_dataframe is None:
+            df_dict = self.data_manager.get_data(gpi_info[0],
+                                                 gpi_info[1],
+                                                 gpi_info[2])
+
+            # if no data is available continue with the next gpi
+            if len(df_dict) == 0:
                 continue
-
-            other_dataframes = {}
-            for other_name in self.data_manager.other_name:
-                grids_compatible = self.data_manager.datasets[
-                    other_name]['grids_compatible']
-                if grids_compatible:
-                    other_dataframe = self.data_manager.read_other(
-                        other_name, gpi_info[0])
-                elif self.luts[other_name] is not None:
-                    other_gpi = self.luts[other_name][gpi_info[0]]
-                    if other_gpi == -1:
-                        continue
-                    other_dataframe = self.data_manager.read_other(
-                        other_name, other_gpi)
-                else:
-                    other_dataframe = self.data_manager.read_other(
-                        other_name, gpi_info[1], gpi_info[2])
-
-                if other_dataframe is not None:
-                    other_dataframes[other_name] = other_dataframe
-
-            # if no other data available continue with the next gpi
-            if len(other_dataframes) == 0:
-                continue
-
-            df_dict = other_dataframes
-            df_dict.update({self.data_manager.reference_name: ref_dataframe})
-
             # compute results for combinations as requested by the metrics
             # calculator dict
             # First temporal match all the combinations

@@ -504,6 +504,14 @@ def test_DataManager_dataset_names():
                             (('DS1', 'soil moisture'), ('DS3', 'sm2'))]
 
 
+def test_DataManager_get_data():
+
+    datasets = setup_TestDatasets()
+    dm = DataManager(datasets)
+    data = dm.get_data(1, 1, 1)
+    assert sorted(list(data)) == ['DS1', 'DS2', 'DS3']
+
+
 def test_get_result_names():
 
     tst_ds_dict = {'DS1': ['soil moisture'],

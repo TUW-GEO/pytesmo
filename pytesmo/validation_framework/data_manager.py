@@ -144,6 +144,10 @@ class DataManager(object):
     def read_reference(self, *args):
         """
         Function to read and prepare the reference dataset.
+
+        Calls read_ts of the dataset and the data_prep function if a
+        DataPreparator exists.
+
         Takes either 1 (gpi) or 2 (lon, lat) arguments.
 
         Parameters
@@ -160,56 +164,20 @@ class DataManager(object):
         ref_df : pandas.DataFrame or None
             Reference dataframe.
         """
-        reference = self.datasets[self.reference_name]
-        args = list(args)
-        args.extend(reference['args'])
+        return self.read_ds(self.reference_name, *args)
 
-        try:
-            ref_df = reference['class'].read_ts(*args, **reference['kwargs'])
-        except IOError:
-            warnings.warn("IOError while reading reference {:}".format(args))
-            return None
-        except RuntimeError as e:
-            if e.args[0] == "No such file or directory":
-                warnings.warn(
-                    "IOError while reading reference {:}".format(args))
-                return None
-            else:
-                raise e
-
-        if len(ref_df) == 0:
-            warnings.warn("No data for reference {:}".format(args))
-            return None
-
-        if self.data_prep is not None:
-            ref_df = self.data_prep.prep_reference(ref_df)
-
-        if len(ref_df) == 0:
-            warnings.warn("No data for reference {:}".format(args))
-            return None
-
-        if isinstance(ref_df, pd.DataFrame) == False:
-            warnings.warn("Data is not a DataFrame {:}".format(args))
-            return None
-
-        if self.period is not None:
-            ref_df = ref_df[self.period[0]:self.period[1]]
-
-        if len(ref_df) == 0:
-            warnings.warn("No data for reference {:}".format(args))
-            return None
-
-        else:
-            return ref_df
-
-    def read_other(self, other_name, *args):
+    def read_other(self, name, *args):
         """
-        Function to read and prepare the other datasets.
+        Function to read and prepare a datasets.
+
+        Calls read_ts of the dataset and the data_prep function if a
+        DataPreparator exists.
+
         Takes either 1 (gpi) or 2 (lon, lat) arguments.
 
         Parameters
         ----------
-        other_name : string
+        name : string
             Name of the other dataset.
         gpi : int
             Grid point index
@@ -220,51 +188,141 @@ class DataManager(object):
 
         Returns
         -------
-        other_df : pandas.DataFrame or None
-            Other dataframe.
+        data_df : pandas.DataFrame or None
+            Data DataFrame.
         """
-        other = self.datasets[other_name]
+        return self.read_ds(name, *args)
+
+    def read_ds(self, name, *args):
+        """
+        Function to read and prepare a datasets.
+
+        Calls read_ts of the dataset and the data_prep function if a
+        DataPreparator exists.
+
+        Takes either 1 (gpi) or 2 (lon, lat) arguments.
+
+        Parameters
+        ----------
+        name : string
+            Name of the other dataset.
+        gpi : int
+            Grid point index
+        lon : float
+            Longitude of point
+        lat : float
+            Latitude of point
+
+        Returns
+        -------
+        data_df : pandas.DataFrame or None
+            Data DataFrame.
+
+        """
+        ds = self.datasets[name]
         args = list(args)
-        args.extend(other['args'])
+        args.extend(ds['args'])
 
         try:
-            other_df = other['class'].read_ts(*args, **other['kwargs'])
+            data_df = ds['class'].read_ts(*args, **ds['kwargs'])
         except IOError:
             warnings.warn(
-                "IOError while reading other dataset {:}".format(args))
+                "IOError while reading dataset {} with args {:}".format(name,
+                                                                        args))
             return None
         except RuntimeError as e:
             if e.args[0] == "No such file or directory":
                 warnings.warn(
-                    "IOError while reading other dataset {:}".format(args))
+                    "IOError while reading dataset {} with args {:}".format(name,
+                                                                            args))
                 return None
             else:
                 raise e
 
-        if len(other_df) == 0:
-            warnings.warn("No data for other dataset".format(args))
+        if len(data_df) == 0:
+            warnings.warn("No data for dataset {}".format(name))
             return None
 
         if self.data_prep is not None:
-            other_df = self.data_prep.prep_other(other_df, other_name)
+            data_df = self.data_prep.prep_other(data_df, name)
 
-        if len(other_df) == 0:
-            warnings.warn("No data for other dataset {:}".format(args))
+        if len(data_df) == 0:
+            warnings.warn("No data for dataset {}".format(name))
             return None
 
-        if isinstance(other_df, pd.DataFrame) == False:
+        if isinstance(data_df, pd.DataFrame) == False:
             warnings.warn("Data is not a DataFrame {:}".format(args))
             return None
 
         if self.period is not None:
-            other_df = other_df[self.period[0]:self.period[1]]
+            data_df = data_df[self.period[0]:self.period[1]]
 
-        if len(other_df) == 0:
+        if len(data_df) == 0:
             warnings.warn("No data for other dataset {:}".format(args))
             return None
 
         else:
-            return other_df
+            return data_df
+
+    def get_data(self, gpi, lon, lat):
+        """
+        Get all the data from this manager for a certain
+        grid point, longitude, latidude combination.
+
+        Parameters
+        ----------
+        self: type
+            description
+        gpi: int
+            grid point indices
+        lon: float
+            grid point longitude
+        lat: type
+            grid point latitude
+
+        Returns
+        -------
+        df_dict: dict of pandas.DataFrames
+            Dictionary with dataset names as the key and
+            pandas.DataFrames containing the data for the point
+            as values.
+            The dict will be empty if no data is available.
+        """
+        df_dict = {}
+
+        ref_dataframe = self.read_reference(gpi)
+        # if no reference data available continue with the next gpi
+        if ref_dataframe is None:
+            return df_dict
+
+        other_dataframes = {}
+        for other_name in self.other_name:
+            grids_compatible = self.datasets[
+                other_name]['grids_compatible']
+            if grids_compatible:
+                other_dataframe = self.read_other(
+                    other_name, gpi)
+            elif self.luts[other_name] is not None:
+                other_gpi = self.luts[other_name][gpi]
+                if other_gpi == -1:
+                    continue
+                other_dataframe = self.read_other(
+                    other_name, other_gpi)
+            else:
+                other_dataframe = self.read_other(
+                    other_name, lon, lat)
+
+            if other_dataframe is not None:
+                other_dataframes[other_name] = other_dataframe
+
+        # if no other data available continue with the next gpi
+        if len(other_dataframes) == 0:
+            return df_dict
+
+        df_dict = other_dataframes
+        df_dict.update({self.reference_name: ref_dataframe})
+
+        return df_dict
 
 
 def flatten(seq):
