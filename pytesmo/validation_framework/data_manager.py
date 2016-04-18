@@ -98,6 +98,8 @@ class DataManager(object):
                 self.reference_name = dataset
             else:
                 self.other_name.append(dataset)
+                if 'use_lut' not in self.datasets[dataset]:
+                    self.datasets[dataset]['use_lut'] = False
 
         try:
             self.reference_grid = self.datasets[
@@ -107,6 +109,7 @@ class DataManager(object):
 
         self.data_prep = data_prep
         self.period = period
+        self.luts = self.get_luts()
 
     def get_luts(self):
         """
