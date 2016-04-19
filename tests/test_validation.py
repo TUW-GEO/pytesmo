@@ -570,6 +570,46 @@ def setup_TestDataManager():
     return dm
 
 
+def test_DataManager_default_add():
+
+    grid = grids.CellGrid(np.array([1, 2, 3, 4]), np.array([1, 2, 3, 4]),
+                          np.array([4, 4, 2, 1]), gpis=np.array([1, 2, 3, 4]))
+
+    ds1 = GriddedTsBase("", grid, TestDataset)
+
+    datasets = {
+        'DS1': {
+            'class': ds1,
+            'columns': ['soil moisture'],
+        },
+        'DS2': {
+            'class': ds1,
+            'columns': ['soil moisture'],
+        }
+    }
+
+    dm = DataManager(datasets, 'DS1')
+    assert dm.datasets == {
+        'DS1': {
+            'class': ds1,
+            'columns': ['soil moisture'],
+            'args': [],
+            'kwargs': {},
+            'use_lut': False,
+            'lut_max_dist': None,
+            'grids_compatible': False
+        },
+        'DS2': {
+            'class': ds1,
+            'columns': ['soil moisture'],
+            'args': [],
+            'kwargs': {},
+            'use_lut': False,
+            'lut_max_dist': None,
+            'grids_compatible': False
+        }}
+
+
 def test_DataManager_RuntimeError():
     """
     Test DataManager with some fake Datasets that throw RuntimeError

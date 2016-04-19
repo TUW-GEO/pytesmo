@@ -54,13 +54,16 @@ class DataManager(object):
                 If set to True the grid point index is used directly when
                 reading other, if False then lon, lat is used and a nearest
                 neighbour search is necessary.
+                default: False
             'use_lut': boolean, optional
                 If set to True the grid point index (obtained from a
                 calculated lut between reference and other) is used when
                 reading other, if False then lon, lat is used and a
                 nearest neighbour search is necessary.
+                default: False
             'lut_max_dist': float, optional
                 Maximum allowed distance in meters for the lut calculation.
+                default: None
     ref_name: string
         Name of the reference dataset
     data_prep : object, optional
@@ -96,6 +99,7 @@ class DataManager(object):
         Initialize parameters.
         """
         self.datasets = datasets
+        self._add_default_values()
         self.reference_name = ref_name
 
         self.other_name = []
@@ -115,6 +119,21 @@ class DataManager(object):
         self.period = period
         self.luts = self.get_luts()
         self.read_ts_method_name = read_ts_method_name
+
+    def _add_default_values(self):
+        """
+        Add defaults for args, kwargs, grids_compatible, use_lut and
+        lut_max_dist to dataset dictionary.
+        """
+        defaults = {'use_lut': False,
+                    'args': [],
+                    'kwargs': {},
+                    'grids_compatible': False,
+                    'lut_max_dist': None}
+        for dataset in self.datasets.keys():
+            new_defaults = dict(defaults)
+            new_defaults.update(self.datasets[dataset])
+            self.datasets[dataset] = new_defaults
 
     def get_luts(self):
         """
