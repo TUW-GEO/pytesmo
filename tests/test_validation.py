@@ -223,7 +223,7 @@ class TestDataset(object):
         self.filename = filename
         self.mode = mode
 
-    def read(self, gpi):
+    def read(self, *args):
 
         n = 1000
         x = np.arange(n)
@@ -236,8 +236,8 @@ class TestDataset(object):
     def write(self, gpi, data):
         return None
 
-    def read_ts(self, gpi):
-        return self.read(gpi)
+    def read_ts(self, *args, **kwargs):
+        return self.read(*args, **kwargs)
 
     def write_ts(self, gpi, data):
         return None
@@ -247,6 +247,29 @@ class TestDataset(object):
 
     def flush(self):
         pass
+
+
+class MaskingTestDataset(TestDataset):
+
+    def read(self, *args, **kwargs):
+        limit = kwargs.pop("limit")
+        data = super(MaskingTestDataset, self).read(*args)
+        data = data[['x']]
+        data = data < limit
+        return data
+
+
+def test_masking_testdataset():
+
+    ds = MaskingTestDataset("")
+    data = ds.read(1, limit=500)
+    data_should = np.concatenate([np.ones((500), dtype=bool),
+                                  np.zeros((500), dtype=bool)])
+    nptest.assert_almost_equal(data['x'].values, data_should)
+    data = ds.read(1, limit=250)
+    data_should = np.concatenate([np.ones((250), dtype=bool),
+                                  np.zeros((750), dtype=bool)])
+    nptest.assert_almost_equal(data['x'].values, data_should)
 
 
 def setup_TestDatasets():
@@ -402,6 +425,84 @@ def test_validation_n3_k2():
     for job in jobs:
         results = process.calc(job)
         assert sorted(list(results)) == sorted(list(tst_results))
+
+
+def test_validation_n3_k2_masking():
+
+    # test result for one gpi in a cell
+    tst_results_one = {
+        (('DS1', 'x'), ('DS3', 'y')): {
+            'n_obs': np.array([250], dtype=np.int32)},
+        (('DS1', 'x'), ('DS2', 'y')): {
+            'n_obs': np.array([250], dtype=np.int32)},
+        (('DS1', 'x'), ('DS3', 'x')): {
+            'n_obs': np.array([250], dtype=np.int32)}}
+
+    # test result for two gpis in a cell
+    tst_results_two = {
+        (('DS1', 'x'), ('DS3', 'y')): {
+            'n_obs': np.array([250, 250], dtype=np.int32)},
+        (('DS1', 'x'), ('DS2', 'y')): {
+            'n_obs': np.array([250, 250], dtype=np.int32)},
+        (('DS1', 'x'), ('DS3', 'x')): {
+            'n_obs': np.array([250, 250], dtype=np.int32)}}
+
+    # cell 4 in this example has two gpis so it returns different results.
+    tst_results = {1: tst_results_one,
+                   2: tst_results_one,
+                   4: tst_results_two}
+
+    datasets = setup_TestDatasets()
+
+    # setup masking datasets
+
+    grid = grids.CellGrid(np.array([1, 2, 3, 4]), np.array([1, 2, 3, 4]),
+                          np.array([4, 4, 2, 1]), gpis=np.array([1, 2, 3, 4]))
+
+    mds1 = GriddedTsBase("", grid, MaskingTestDataset)
+    mds2 = GriddedTsBase("", grid, MaskingTestDataset)
+
+    mds = {
+        'masking1': {
+            'class': mds1,
+            'columns': ['x'],
+            'args': [],
+            'kwargs': {'limit': 500},
+            'use_lut': False,
+            'grids_compatible': True},
+        'masking2': {
+            'class': mds2,
+            'columns': ['x'],
+            'args': [],
+            'kwargs': {'limit': 750},
+            'use_lut': False,
+            'grids_compatible': True}
+    }
+
+    process = Validation(
+        datasets, 'DS1',
+        temporal_matcher=temporal_matchers.BasicTemporalMatching(
+            window=1 / 24.0).combinatory_matcher,
+        scaling='lin_cdf_match',
+        metrics_calculators={
+            (3, 2): metrics_calculators.BasicMetrics(other_name='k1').calc_metrics},
+        masking_datasets=mds,
+        cell_based_jobs=True)
+
+    gpi_info = (1, 1, 1)
+    ref_df = datasets['DS1']['class'].read_ts(1)
+    new_ref_df = process.mask_dataset(ref_df, gpi_info)
+    assert len(new_ref_df) == 250
+    nptest.assert_allclose(new_ref_df.x.values, np.arange(750, 1000))
+    jobs = process.get_processing_jobs()
+    for job in jobs:
+        results = process.calc(job)
+        tst = tst_results[job]
+        assert sorted(list(results)) == sorted(list(tst))
+        for key, tst_key in zip(sorted(results),
+                                sorted(tst)):
+            nptest.assert_almost_equal(results[key]['n_obs'],
+                                       tst[tst_key]['n_obs'])
 
 
 class TestDatasetRuntimeError(object):

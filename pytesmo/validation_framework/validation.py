@@ -82,6 +82,10 @@ class Validation(object):
     period : list, optional
         Of type [datetime start, datetime end]. If given then the two input
         datasets will be truncated to start <= dates <= end.
+    masking_datasets : dict of dictionaries
+        Same format as the datasets with the difference that the read_ts method of these
+        datasets has to return pandas.DataFrames with only boolean columns. True means that the
+        observations at this timestamp should be masked and False means that it should be kept.
     scaling : string
         If set then the data will be scaled into the reference space using the
         method specified by the string.
@@ -102,8 +106,11 @@ class Validation(object):
 
     def __init__(self, datasets, spatial_ref, metrics_calculators,
                  temporal_matcher=None, temporal_window=1 / 24.0,
-                 temporal_ref=None, data_prep=None, period=None, scaling='lin_cdf_match',
-                 scaling_ref=None, cell_based_jobs=True):
+                 temporal_ref=None, data_prep=None,
+                 masking_datasets=None,
+                 period=None,
+                 scaling='lin_cdf_match', scaling_ref=None,
+                 cell_based_jobs=True):
         """
         Initialize parameters.
         """
@@ -120,6 +127,17 @@ class Validation(object):
             self.temporal_ref = self.data_manager.reference_name
 
         self.metrics_c = metrics_calculators
+
+        self.masking_dm = None
+        if masking_datasets is not None:
+            # add temporal reference dataset to the masking datasets since it
+            # is necessary for temporally matching the masking datasets to the
+            # common time stamps. Use _reference here to make a clash with the
+            # names of the masking datasets unlikely
+            masking_datasets.update(
+                {'_reference': datasets[self.temporal_ref]})
+            self.masking_dm = DataManager(masking_datasets, '_reference',
+                                          period=period)
 
         self.scaling = scaling
         self.scaling_ref = scaling_ref
@@ -138,6 +156,9 @@ class Validation(object):
         ----------
         job : object
             Job of type that self.get_processing_jobs() returns.
+            Tuple of (grid point indices, longitute, latitude, ...) where ... stands
+            for any additional fields. This job object is also given to the metrics
+            calculator.
 
         Returns
         -------
@@ -170,6 +191,12 @@ class Validation(object):
             # if no data is available continue with the next gpi
             if len(df_dict) == 0:
                 continue
+
+            if self.masking_dm is not None:
+                ref_df = df_dict[self.temporal_ref]
+                df_dict[self.temporal_ref] = self.mask_dataset(ref_df,
+                                                               gpi_info)
+
             # compute results for combinations as requested by the metrics
             # calculator dict
             # First temporal match all the combinations
@@ -245,7 +272,8 @@ class Validation(object):
                         results[result] = []
 
                     metrics_calculator = self.metrics_c[(n, k)]
-                    results[result].append(metrics_calculator(data, gpi_meta))
+                    metrics = metrics_calculator(data, gpi_meta)
+                    results[result].append(metrics)
 
         compact_results = {}
         for key in results.keys():
@@ -258,6 +286,53 @@ class Validation(object):
                     np.array(entries, dtype=results[key][0][field_name].dtype)
 
         return compact_results
+
+    def mask_dataset(self, ref_df, gpi_info):
+        """
+        Mask the temporal reference dataset with the data read
+        through the masking datasets.
+
+        Parameters
+        ----------
+        gpi_info: tuple
+            tuple of at least, (gpi, lon, lat)
+
+        Returns
+        -------
+        mask: numpy.ndarray
+            boolean array of the size of the temporal reference read
+        """
+
+        # read only masking datasets and use the already read reference
+        masking_df_dict = self.masking_dm.get_other_data(gpi_info[0],
+                                                         gpi_info[1],
+                                                         gpi_info[2])
+        masking_df_dict.update({'_reference': ref_df})
+        matched_masking = self.temp_matching(masking_df_dict,
+                                             '_reference',
+                                             n=len(masking_df_dict))
+        # this will only be one element since n is the same as the
+        # number of masking datasets
+        ds_key, ds = matched_masking.popitem()
+        for result in get_result_names(self.masking_dm.ds_dict,
+                                       '_reference',
+                                       n=len(self.masking_dm.ds_dict)):
+            # get length of matched dataset and make a mask choosing all the
+            # observations by default to start
+            choose_all = np.ones(len(masking_df_dict['_reference']),
+                                 dtype=bool)
+            for key in result:
+                if key[0] != '_reference':
+                    # this is necessary since the boolean datatype might have
+                    # been changed to float 1.0 and 0.0 issue with temporal
+                    # resampling that is not easily resolved since most
+                    # datatypes have no nan representation. We also switch the
+                    # meaning of True False (from masking to choosing) here so
+                    # we can use it in the indexing without inversion.
+                    choose = (ds[key] == False)
+                    choose_all = choose_all & choose
+
+        return ref_df[choose_all]
 
     def get_processing_jobs(self):
         """
