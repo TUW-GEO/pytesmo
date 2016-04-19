@@ -280,8 +280,6 @@ class DataManager(object):
 
         Parameters
         ----------
-        self: type
-            description
         gpi: int
             grid point indices
         lon: float
@@ -304,6 +302,40 @@ class DataManager(object):
         if ref_dataframe is None:
             return df_dict
 
+        other_dataframes = self.get_other_data(gpi, lon, lat)
+        # if no other data available continue with the next gpi
+        if len(other_dataframes) == 0:
+            return df_dict
+
+        df_dict = other_dataframes
+        df_dict.update({self.reference_name: ref_dataframe})
+
+        return df_dict
+
+    def get_other_data(self, gpi, lon, lat):
+        """
+        Get all the data for non reference datasets
+        from this manager for a certain
+        grid point, longitude, latidude combination.
+
+        Parameters
+        ----------
+        gpi: int
+            grid point indices
+        lon: float
+            grid point longitude
+        lat: type
+            grid point latitude
+
+        Returns
+        -------
+        other_dataframes: dict of pandas.DataFrames
+            Dictionary with dataset names as the key and
+            pandas.DataFrames containing the data for the point
+            as values.
+            The dict will be empty if no data is available.
+        """
+
         other_dataframes = {}
         for other_name in self.other_name:
             grids_compatible = self.datasets[
@@ -323,15 +355,7 @@ class DataManager(object):
 
             if other_dataframe is not None:
                 other_dataframes[other_name] = other_dataframe
-
-        # if no other data available continue with the next gpi
-        if len(other_dataframes) == 0:
-            return df_dict
-
-        df_dict = other_dataframes
-        df_dict.update({self.reference_name: ref_dataframe})
-
-        return df_dict
+        return other_dataframes
 
 
 def flatten(seq):
