@@ -692,6 +692,9 @@ class AscatNetcdf(object):
 
         lon, lat = self.grid.gpi2lonlat(gpi)
 
+        if not self.read_bulk:
+            ncfile.close()
+
         return df, gpi, lon, lat, cell, topo, wetland, porosity
 
 
