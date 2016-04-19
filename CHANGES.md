@@ -1,6 +1,18 @@
-# v0.4.1, unreleased
+# v0.5.0, unrelased
 
 * Fix bug in temporal resampling if input was a pandas.Series
+* Major refactoring of validation framwork. Please see updated documentation and
+  example for detailed changes. The most important breaking changes are:
+  - 'type' is no longer used in the dataset dictionary. 
+  - the temporal matcher does no longer need to be specified since a reasonable
+    default was developed that should handle most cases
+  - metrics calculators are now given as dictionaries of functions. Please see
+    the docs for an explanation and an example. 
+  - cell_based_jobs keyword was removed in favor of a more general definition of jobs.
+
+  New features are the possibility to use unrelated masking datasets and the
+  possibility to temporally match any number of datasets and give them in sets
+  of k datasets to multiple metric calculators.
 
 # v0.4.0, 2016-03-24
 
