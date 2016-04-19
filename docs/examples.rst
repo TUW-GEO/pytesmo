@@ -63,8 +63,22 @@ The Soil Water Index(SWI) which is a method to estimate root zone soil moisture 
    swi_calculation/swi_calc.rst
 
 
-Comparing ASCAT and insitu data from the ISMN
-=============================================
+.. include::
+   validation_framework.rst
+
+
+Triple collocation and triple collocation based scaling
+=======================================================
+
+This example shows how to use the triple collocation routines in the :mod:`pytesmo.metrics` module.
+It also is a crash course to the theory behind triple collocation and links to relevant publications.
+
+
+.. include::
+   Triple collocation.rst
+
+Comparing ASCAT and insitu data from the ISMN without the validation framework
+==============================================================================
 
 This example program loops through all insitu stations that measure soil moisture with a depth between 0 and 0.1m
 it then finds the nearest ASCAT grid point and reads the ASCAT data. After temporal matching and scaling using linear CDF matching it computes
@@ -78,33 +92,6 @@ It can be found in the /examples folder of the pytesmo package under the name co
 
 .. include::
    compare_ASCAT_ISMN.rst
-
-Comparison of ASCAT and ISMN using the pytesmo validation framework
-===================================================================
-
-The pytesmo validation framework uses IPython to do a comparison of two or more
-datasets using parallel processing. The validation frameworks also stores the
-results as a CF compliant netCDF file.
-
-.. include::
-   setup_validation_ASCAT_ISMN.rst
-
-If custom data preparation e.g. special masking is necessary before the data
-comparison then a custom DataPreparation class can be used. The following shows
-an example of such a class:
-
-.. include::
-   data_preparation_ASCAT_ISMN.rst
-
-Triple collocation and triple collocation based scaling
-=======================================================
-
-This example shows how to use the triple collocation routines in the :mod:`pytesmo.metrics` module.
-It also is a crash course to the theory behind triple collocation and links to relevant publications.
-
-
-.. include::
-   Triple collocation.rst
 
 Reading and plotting ASCAT data from binary format
 ==================================================
