@@ -100,3 +100,46 @@ def interp_uniq(src):
             uniq_ind = np.unique(src, return_index=True)[1]
 
     return src
+
+
+def element_iterable(el):
+    """
+    Test if a element is iterable
+
+    Parameters
+    ----------
+    el: object
+
+
+    Returns
+    -------
+    iterable: boolean
+       if True then then el is iterable
+       if Fales then not
+    """
+    try:
+        el[0]
+        iterable = True
+    except (TypeError, IndexError):
+        iterable = False
+
+    return iterable
+
+
+def ensure_iterable(el):
+    """
+    Ensure that an object is iterable by putting it into a list.
+
+    Parameters
+    ----------
+    el: object
+
+    Returns
+    -------
+    iterable: list
+        [el]
+    """
+    if not element_iterable(el):
+        return [el]
+    else:
+        return el

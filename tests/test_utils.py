@@ -35,6 +35,7 @@ Created on Tue Nov  3 14:56:50 2015
 
 from pytesmo.utils import ml_percentile
 from pytesmo.utils import interp_uniq
+from pytesmo.utils import ensure_iterable
 import numpy as np
 import numpy.testing as nptest
 
@@ -65,3 +66,9 @@ def test_interp_unique():
 
     nptest.assert_almost_equal(src_perc, [1., 1.025, 1.05, 1.1, 1.55, 3.275,
                                           5., 5.3, 8.4, 9.2, 9.6, 9.8, 10.])
+
+
+def test_ensure_iterable():
+    el = 1
+    new_el = ensure_iterable(el)
+    assert new_el == [el]
