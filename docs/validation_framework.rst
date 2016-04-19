@@ -190,14 +190,6 @@ framework can go through the jobs and read the correct time series.
     2007-01-01 05:00:00          0.214                  U                       M
 
 
-Create the variable ***save\_path*** which is a string representing the
-path where the results will be saved. **DO NOT CHANGE** the name
-***save\_path*** because it will be searched during the parallel
-processing!
-
-.. code:: python
-
-    save_path = tempfile.mkdtemp()
 
 Initialize the Validation class
 -------------------------------
@@ -269,6 +261,15 @@ this:
 
     { (3 ,2): metric_calc,
       (3, 3): triple_collocation}
+
+Create the variable ***save\_path*** which is a string representing the
+path where the results will be saved. **DO NOT CHANGE** the name
+***save\_path*** because it will be searched during the parallel
+processing!
+
+.. code:: python
+
+    save_path = tempfile.mkdtemp()
 
 .. code:: python
 
