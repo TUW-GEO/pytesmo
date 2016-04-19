@@ -5,11 +5,13 @@ except ImportError:
     pass
 
 import numpy as np
+from pygeogrids.grids import CellGrid
 
 import pytesmo.scaling as scaling
 from pytesmo.validation_framework.data_manager import DataManager
 from pytesmo.validation_framework.data_manager import get_result_names
 import pytesmo.validation_framework.temporal_matchers as temporal_matchers
+from pytesmo.utils import ensure_iterable
 
 
 class Validation(object):
@@ -86,9 +88,6 @@ class Validation(object):
     scaling_ref : string, optional
         If the scaling should be done to another dataset than the spatial reference then
         give the dataset name here.
-    cell_based_jobs : boolean, optional
-        If True then the jobs will be cell based, if false jobs will be tuples
-        of (gpi, lon, lat).
 
     Methods
     -------
@@ -103,8 +102,7 @@ class Validation(object):
                  temporal_ref=None,
                  masking_datasets=None,
                  period=None,
-                 scaling='lin_cdf_match', scaling_ref=None,
-                 cell_based_jobs=True):
+                 scaling='lin_cdf_match', scaling_ref=None):
         """
         Initialize parameters.
         """
@@ -137,21 +135,27 @@ class Validation(object):
         if self.scaling_ref is None:
             self.scaling_ref = self.data_manager.reference_name
 
-        self.cell_based_jobs = cell_based_jobs
-
         self.luts = self.data_manager.get_luts()
 
-    def calc(self, job):
+    def calc(self, gpis, lons, lats, *args):
         """
-        Takes either a cell or a gpi_info tuple and performs the validation.
+        The argument iterables (lists or numpy.ndarrays) are processed one after the other in
+        tuples of the form (gpis[n], lons[n], lats[n], arg1[n], ..).
 
         Parameters
         ----------
-        job : object
-            Job of type that self.get_processing_jobs() returns.
-            Tuple of (grid point indices, longitute, latitude, ...) where ... stands
-            for any additional fields. This job object is also given to the metrics
-            calculator.
+        gpis : iterable
+            The grid point indices is an identificator by which the
+            spatial reference dataset can be read. This is either a list
+            or a numpy.ndarray or any other iterable containing this indicator.
+        lons: iterable
+            Longitudes of the points identified by the gpis. Has to be the same size as gpis.
+        lats: iterable
+            latitudes of the points identified by the gpis. Has to be the same size as gpis.
+        args: iterables
+            any addiational arguments have to have the same size as the gpis iterable. They are
+            given to the metrics calculators as metadata. Common usage is e.g. the long name
+            or network name of an in situ station.
 
         Returns
         -------
@@ -162,20 +166,16 @@ class Validation(object):
         """
         results = {}
 
-        if self.cell_based_jobs:
-            process_gpis, process_lons, process_lats = self.data_manager.\
-                reference_grid.grid_points_for_cell(job)
-        else:
-            process_gpis, process_lons, process_lats = [
-                job[0]], [job[1]], [job[2]]
+        gpis = ensure_iterable(gpis)
+        lons = ensure_iterable(lons)
+        lats = ensure_iterable(lats)
+        for arg, i in enumerate(args):
+            args[i] = ensure_iterable(arg)
 
-        for gpi_info in zip(process_gpis, process_lons, process_lats):
+        for gpi_info in zip(gpis, lons, lats, *args):
             # if processing is cell based gpi_metainfo is limited to gpi, lon,
             # lat at the moment
-            if self.cell_based_jobs:
-                gpi_meta = gpi_info
-            else:
-                gpi_meta = job
+            gpi_meta = gpi_info
 
             df_dict = self.data_manager.get_data(gpi_info[0],
                                                  gpi_info[1],
@@ -336,10 +336,17 @@ class Validation(object):
         jobs : list
             List of cells or gpis to process.
         """
+        jobs = []
         if self.data_manager.reference_grid is not None:
-            if self.cell_based_jobs:
-                return self.data_manager.reference_grid.get_cells()
+            if type(self.data_manager.reference_grid) is CellGrid:
+                cells = self.data_manager.reference_grid.get_cells()
+                for cell in cells:
+                    (cell_gpis,
+                     cell_lons,
+                     cell_lats) = self.data_manager.reference_grid.grid_points_for_cell(cell)
+                    jobs.append([cell_gpis, cell_lons, cell_lats])
             else:
-                return zip(self.data_manager.reference_grid.get_grid_points())
-        else:
-            return []
+                gpis, lons, lats = self.data_manager.reference_grid.get_grid_points()
+                jobs = [gpis, lons, lats]
+
+        return jobs

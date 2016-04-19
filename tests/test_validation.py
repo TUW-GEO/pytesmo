@@ -116,11 +116,10 @@ def test_ascat_ismn_validation():
         scaling_ref='ASCAT',
         metrics_calculators={
             (2, 2): metrics_calculators.BasicMetrics(other_name='k1').calc_metrics},
-        period=period,
-        cell_based_jobs=False)
+        period=period)
 
     for job in jobs:
-        results = process.calc(job)
+        results = process.calc(*job)
         netcdf_results_manager(results, save_path)
 
     results_fname = os.path.join(
@@ -288,12 +287,11 @@ def test_validation_n2_k2():
             window=1 / 24.0).combinatory_matcher,
         scaling='lin_cdf_match',
         metrics_calculators={
-            (2, 2): metrics_calculators.BasicMetrics(other_name='k1').calc_metrics},
-        cell_based_jobs=True)
+            (2, 2): metrics_calculators.BasicMetrics(other_name='k1').calc_metrics})
 
     jobs = process.get_processing_jobs()
     for job in jobs:
-        results = process.calc(job)
+        results = process.calc(*job)
         assert sorted(list(results)) == sorted(list(tst_results))
 
 
@@ -348,12 +346,11 @@ def test_validation_n3_k2():
             window=1 / 24.0).combinatory_matcher,
         scaling='lin_cdf_match',
         metrics_calculators={
-            (3, 2): metrics_calculators.BasicMetrics(other_name='k1').calc_metrics},
-        cell_based_jobs=True)
+            (3, 2): metrics_calculators.BasicMetrics(other_name='k1').calc_metrics})
 
     jobs = process.get_processing_jobs()
     for job in jobs:
-        results = process.calc(job)
+        results = process.calc(*job)
         assert sorted(list(results)) == sorted(list(tst_results))
 
 
@@ -379,8 +376,8 @@ def test_validation_n3_k2_masking():
 
     # cell 4 in this example has two gpis so it returns different results.
     tst_results = {1: tst_results_one,
-                   2: tst_results_one,
-                   4: tst_results_two}
+                   1: tst_results_one,
+                   2: tst_results_two}
 
     datasets = setup_TestDatasets()
 
@@ -416,8 +413,7 @@ def test_validation_n3_k2_masking():
         scaling='lin_cdf_match',
         metrics_calculators={
             (3, 2): metrics_calculators.BasicMetrics(other_name='k1').calc_metrics},
-        masking_datasets=mds,
-        cell_based_jobs=True)
+        masking_datasets=mds)
 
     gpi_info = (1, 1, 1)
     ref_df = datasets['DS1']['class'].read_ts(1)
@@ -426,8 +422,8 @@ def test_validation_n3_k2_masking():
     nptest.assert_allclose(new_ref_df.x.values, np.arange(750, 1000))
     jobs = process.get_processing_jobs()
     for job in jobs:
-        results = process.calc(job)
-        tst = tst_results[job]
+        results = process.calc(*job)
+        tst = tst_results[len(job[0])]
         assert sorted(list(results)) == sorted(list(tst))
         for key, tst_key in zip(sorted(results),
                                 sorted(tst)):
