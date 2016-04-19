@@ -13,6 +13,13 @@
   New features are the possibility to use unrelated masking datasets and the
   possibility to temporally match any number of datasets and give them in sets
   of k datasets to multiple metric calculators.
+  
+* Changes in the scaling module, escpecially CDF matching. The new CDF scaling
+  module is more modular and does not make any assumptions about how unique the
+  percentiles for the CDF matching have to be. CDF matching now returns NaN
+  values if non unique percentiles are in the data. There are new functions that
+  rescale based on pre-calculated percentiles so these can be used if the user
+  wants to make sure that the percentiles are unique before matching.
 
 # v0.4.0, 2016-03-24
 
