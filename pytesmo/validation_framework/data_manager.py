@@ -66,12 +66,6 @@ class DataManager(object):
                 default: None
     ref_name: string
         Name of the reference dataset
-    data_prep : object, optional
-        Object that provides the methods prep_reference and prep_other
-        which take the pandas.Dataframe provided by the read_ts methods (plus
-        other_name for prep_other) and do some data preparation on it before
-        temporal matching etc. can be used e.g. for special masking or anomaly
-        calculations.
     period : list, optional
         Of type [datetime start, datetime end]. If given then the two input
         datasets will be truncated to start <= dates <= end.
@@ -93,7 +87,7 @@ class DataManager(object):
     """
 
     def __init__(self, datasets, ref_name,
-                 data_prep=None, period=None,
+                 period=None,
                  read_ts_method_name='read_ts'):
         """
         Initialize parameters.
@@ -115,7 +109,6 @@ class DataManager(object):
         except AttributeError:
             self.reference_grid = None
 
-        self.data_prep = data_prep
         self.period = period
         self.luts = self.get_luts()
         self.read_ts_method_name = read_ts_method_name
@@ -172,9 +165,7 @@ class DataManager(object):
         """
         Function to read and prepare the reference dataset.
 
-        Calls read_ts of the dataset and the data_prep function if a
-        DataPreparator exists.
-
+        Calls read_ts of the dataset.
         Takes either 1 (gpi) or 2 (lon, lat) arguments.
 
         Parameters
@@ -197,8 +188,7 @@ class DataManager(object):
         """
         Function to read and prepare a datasets.
 
-        Calls read_ts of the dataset and the data_prep function if a
-        DataPreparator exists.
+        Calls read_ts of the dataset.
 
         Takes either 1 (gpi) or 2 (lon, lat) arguments.
 
@@ -224,8 +214,7 @@ class DataManager(object):
         """
         Function to read and prepare a datasets.
 
-        Calls read_ts of the dataset and the data_prep function if a
-        DataPreparator exists.
+        Calls read_ts of the dataset.
 
         Takes either 1 (gpi) or 2 (lon, lat) arguments.
 
@@ -270,9 +259,6 @@ class DataManager(object):
         if len(data_df) == 0:
             warnings.warn("No data for dataset {}".format(name))
             return None
-
-        if self.data_prep is not None:
-            data_df = self.data_prep.prep_other(data_df, name)
 
         if len(data_df) == 0:
             warnings.warn("No data for dataset {}".format(name))

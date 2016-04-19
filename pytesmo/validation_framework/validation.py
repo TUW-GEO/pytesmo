@@ -73,12 +73,6 @@ class Validation(object):
     temporal_ref: string, optional
         If the temporal matching should use another dataset than the spatial reference
         as a reference dataset then give the dataset name here.
-    data_prep: object, optional
-        Object that provides the methods prep_reference and prep_other
-        which take the pandas.Dataframe provided by the read_ts methods (plus
-        other_name for prep_other) and do some data preparation on it before
-        temporal matching etc. can be used e.g. for special masking or anomaly
-        calculations.
     period : list, optional
         Of type [datetime start, datetime end]. If given then the two input
         datasets will be truncated to start <= dates <= end.
@@ -106,7 +100,7 @@ class Validation(object):
 
     def __init__(self, datasets, spatial_ref, metrics_calculators,
                  temporal_matcher=None, temporal_window=1 / 24.0,
-                 temporal_ref=None, data_prep=None,
+                 temporal_ref=None,
                  masking_datasets=None,
                  period=None,
                  scaling='lin_cdf_match', scaling_ref=None,
@@ -114,8 +108,7 @@ class Validation(object):
         """
         Initialize parameters.
         """
-        self.data_manager = DataManager(
-            datasets, spatial_ref, data_prep, period)
+        self.data_manager = DataManager(datasets, spatial_ref, period)
 
         self.temp_matching = temporal_matcher
         if self.temp_matching is None:
