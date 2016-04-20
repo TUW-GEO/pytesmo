@@ -190,16 +190,7 @@ class Validation(object):
                 df_dict[self.temporal_ref] = self.mask_dataset(ref_df,
                                                                gpi_info)
 
-            # compute results for combinations as requested by the metrics
-            # calculator dict
-            # First temporal match all the combinations
-            matched_n = {}
-            for n, k in self.metrics_c:
-                matched_data = self.temp_matching(df_dict,
-                                                  self.temporal_ref,
-                                                  n=n)
-
-                matched_n[(n, k)] = matched_data
+            matched_n = self.temporal_match_datasets(df_dict)
 
             for n, k in self.metrics_c:
                 n_matched_data = matched_n[(n, k)]
@@ -326,6 +317,32 @@ class Validation(object):
                     choose_all = choose_all & choose
 
         return ref_df[choose_all]
+
+    def temporal_match_datasets(self, df_dict):
+        """
+        Temporally match all the requested combinations of datasets.
+
+        Parameters
+        ----------
+        df_dict: dict of pandas.DataFrames
+            DataFrames read by the data readers for each dataset
+
+        Returns
+        -------
+        matched_n: dict of pandas.DataFrames
+            for each (n, k) in the metrics calculators the n temporally
+            matched dataframes
+        """
+
+        matched_n = {}
+        for n, k in self.metrics_c:
+            matched_data = self.temp_matching(df_dict,
+                                              self.temporal_ref,
+                                              n=n)
+
+            matched_n[(n, k)] = matched_data
+
+        return matched_n
 
     def get_processing_jobs(self):
         """
