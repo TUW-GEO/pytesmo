@@ -173,9 +173,6 @@ class Validation(object):
             args[i] = ensure_iterable(arg)
 
         for gpi_info in zip(gpis, lons, lats, *args):
-            # if processing is cell based gpi_metainfo is limited to gpi, lon,
-            # lat at the moment
-            gpi_meta = gpi_info
 
             df_dict = self.data_manager.get_data(gpi_info[0],
                                                  gpi_info[1],
@@ -184,48 +181,13 @@ class Validation(object):
             # if no data is available continue with the next gpi
             if len(df_dict) == 0:
                 continue
+            matched_data, result = self.perform_validation(df_dict, gpi_info)
 
-            if self.masking_dm is not None:
-                ref_df = df_dict[self.temporal_ref]
-                df_dict[self.temporal_ref] = self.mask_dataset(ref_df,
-                                                               gpi_info)
-
-            matched_n = self.temporal_match_datasets(df_dict)
-
-            for n, k in self.metrics_c:
-                n_matched_data = matched_n[(n, k)]
-                for data, result_key in self.k_datasets_from(n_matched_data, n, k):
-
-                    if len(data) == 0:
-                        continue
-                    # at this stage we can drop the column multiindex and just use
-                    # the dataset name
-                    data.columns = data.columns.droplevel(level=1)
-                    # Rename the columns to 'ref', 'k1', 'k2', ...
-                    rename_dict = {}
-                    f = lambda x: "k{}".format(x) if x > 0 else 'ref'
-                    for i, r in enumerate(result_key):
-                        rename_dict[r[0]] = f(i)
-                    data.rename(columns=rename_dict, inplace=True)
-
-                    if self.scaling is not None:
-                        # get scaling index by finding the column in the
-                        # DataFrame that belongs to the scaling reference
-                        scaling_index = data.columns.tolist().index(
-                            rename_dict[self.scaling_ref])
-                        try:
-                            data = scaling.scale(data,
-                                                 method=self.scaling,
-                                                 reference_index=scaling_index)
-                        except ValueError:
-                            continue
-
-                    if result_key not in results.keys():
-                        results[result_key] = []
-
-                    metrics_calculator = self.metrics_c[(n, k)]
-                    metrics = metrics_calculator(data, gpi_meta)
-                    results[result_key].append(metrics)
+            # add result of one gpi to global results dictionary
+            for r in result:
+                if r not in results:
+                    results[r] = []
+                results[r] = results[r] + result[r]
 
         compact_results = {}
         for key in results.keys():
@@ -238,6 +200,74 @@ class Validation(object):
                     np.array(entries, dtype=results[key][0][field_name].dtype)
 
         return compact_results
+
+    def perform_validation(self,
+                           df_dict,
+                           gpi_info):
+        """
+        Perform the validation for one grid point index and return the
+        matched datasets as well as the calculated metrics.
+
+        Parameters
+        ----------
+        df_dict: dict of pandas.DataFrames
+            DataFrames read by the data readers for each dataset
+        gpi_info: tuple
+            tuple of at least, (gpi, lon, lat)
+
+        Returns
+        -------
+        matched_n: dict of pandas.DataFrames
+            temporally matched data stored by (n, k) tuples
+        results: dict
+            Dictonary of calculated metrics stored by dataset combinations tuples.
+        """
+
+        if self.masking_dm is not None:
+            ref_df = df_dict[self.temporal_ref]
+            df_dict[self.temporal_ref] = self.mask_dataset(ref_df,
+                                                           gpi_info)
+
+        matched_n = self.temporal_match_datasets(df_dict)
+
+        results = {}
+
+        for n, k in self.metrics_c:
+            n_matched_data = matched_n[(n, k)]
+            for data, result_key in self.k_datasets_from(n_matched_data, n, k):
+
+                if len(data) == 0:
+                    continue
+                # at this stage we can drop the column multiindex and just use
+                # the dataset name
+                data.columns = data.columns.droplevel(level=1)
+                # Rename the columns to 'ref', 'k1', 'k2', ...
+                rename_dict = {}
+                f = lambda x: "k{}".format(x) if x > 0 else 'ref'
+                for i, r in enumerate(result_key):
+                    rename_dict[r[0]] = f(i)
+                data.rename(columns=rename_dict, inplace=True)
+
+                if self.scaling is not None:
+                    # get scaling index by finding the column in the
+                    # DataFrame that belongs to the scaling reference
+                    scaling_index = data.columns.tolist().index(
+                        rename_dict[self.scaling_ref])
+                    try:
+                        data = scaling.scale(data,
+                                             method=self.scaling,
+                                             reference_index=scaling_index)
+                    except ValueError:
+                        continue
+
+                if result_key not in results.keys():
+                    results[result_key] = []
+
+                metrics_calculator = self.metrics_c[(n, k)]
+                metrics = metrics_calculator(data, gpi_info)
+                results[result_key].append(metrics)
+
+        return matched_n, results
 
     def mask_dataset(self, ref_df, gpi_info):
         """
