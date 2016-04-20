@@ -194,51 +194,19 @@ class Validation(object):
 
             for n, k in self.metrics_c:
                 n_matched_data = matched_n[(n, k)]
-                for result in get_result_names(self.data_manager.ds_dict,
-                                               self.temporal_ref,
-                                               n=k):
-                    # find the key into the temporally matched dataset by combining the
-                    # dataset parts of the result_names
-                    dskey = []
-                    rename_dict = {}
-                    f = lambda x: "k{}".format(x) if x > 0 else 'ref'
-                    for i, r in enumerate(result):
-                        dskey.append(r[0])
-                        rename_dict[r[0]] = f(i)
-
-                    dskey = tuple(dskey)
-                    if n == k:
-                        # we should have an exact match of datasets and
-                        # temporal matches
-                        data = n_matched_data[dskey]
-                    else:
-                        # more datasets were temporally matched than are
-                        # requested now so we select a temporally matched
-                        # dataset that has the first key in common with the
-                        # requested one ensuring that it was used as a
-                        # reference and also has the rest of the requested
-                        # datasets in the key
-                        first_match = [
-                            key for key in n_matched_data if dskey[0] == key[0]]
-                        found_key = None
-                        for key in first_match:
-                            for dsk in dskey[1:]:
-                                if dsk not in key:
-                                    continue
-                            found_key = key
-                        data = n_matched_data[found_key]
-
-                    # extract only the relevant columns from matched DataFrame
-                    data = data[[x for x in result]]
-
-                    # at this stage we can drop the column multiindex and just use
-                    # the dataset name
-                    data.columns = data.columns.droplevel(level=1)
-
-                    data.rename(columns=rename_dict, inplace=True)
+                for data, result_key in self.k_datasets_from(n_matched_data, n, k):
 
                     if len(data) == 0:
                         continue
+                    # at this stage we can drop the column multiindex and just use
+                    # the dataset name
+                    data.columns = data.columns.droplevel(level=1)
+                    # Rename the columns to 'ref', 'k1', 'k2', ...
+                    rename_dict = {}
+                    f = lambda x: "k{}".format(x) if x > 0 else 'ref'
+                    for i, r in enumerate(result_key):
+                        rename_dict[r[0]] = f(i)
+                    data.rename(columns=rename_dict, inplace=True)
 
                     if self.scaling is not None:
                         # get scaling index by finding the column in the
@@ -252,12 +220,12 @@ class Validation(object):
                         except ValueError:
                             continue
 
-                    if result not in results.keys():
-                        results[result] = []
+                    if result_key not in results.keys():
+                        results[result_key] = []
 
                     metrics_calculator = self.metrics_c[(n, k)]
                     metrics = metrics_calculator(data, gpi_meta)
-                    results[result].append(metrics)
+                    results[result_key].append(metrics)
 
         compact_results = {}
         for key in results.keys():
@@ -343,6 +311,69 @@ class Validation(object):
             matched_n[(n, k)] = matched_data
 
         return matched_n
+
+    def k_datasets_from(self, n_matched_data, n, k):
+        """
+        Extract k datasets from n temporally matched ones.
+
+        This is used to send combinations of k datasets to
+        metrics calculators expecting only k datasets.
+
+        Parameters
+        ----------
+        n_matched_data: dict of pandas.DataFrames
+            DataFrames in which n datasets were temporally matched.
+            The key is a tuple of the dataset names.
+        n: int
+            The value of n used
+        k: int
+            Combinations of how many datasets to return at once.
+
+        Yields
+        ------
+        data: pd.DataFrame
+            pandas DataFrame with k columns extracted from the
+            temporally matched datasets
+        result: tuple
+            Tuple describing which datasets and columns are in
+            the returned data. ((dataset_name, column_name), (dataset_name2, column_name2))
+        """
+
+        for result in get_result_names(self.data_manager.ds_dict,
+                                       self.temporal_ref,
+                                       n=k):
+            # find the key into the temporally matched dataset by combining the
+            # dataset parts of the result_names
+            dskey = []
+            for i, r in enumerate(result):
+                dskey.append(r[0])
+
+            dskey = tuple(dskey)
+            if n == k:
+                # we should have an exact match of datasets and
+                # temporal matches
+                data = n_matched_data[dskey]
+            else:
+                # more datasets were temporally matched than are
+                # requested now so we select a temporally matched
+                # dataset that has the first key in common with the
+                # requested one ensuring that it was used as a
+                # reference and also has the rest of the requested
+                # datasets in the key
+                first_match = [
+                    key for key in n_matched_data if dskey[0] == key[0]]
+                found_key = None
+                for key in first_match:
+                    for dsk in dskey[1:]:
+                        if dsk not in key:
+                            continue
+                    found_key = key
+                data = n_matched_data[found_key]
+
+            # extract only the relevant columns from matched DataFrame
+            data = data[[x for x in result]]
+
+            yield data, result
 
     def get_processing_jobs(self):
         """
