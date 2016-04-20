@@ -255,14 +255,7 @@ class Validation(object):
             boolean array of the size of the temporal reference read
         """
 
-        # read only masking datasets and use the already read reference
-        masking_df_dict = self.masking_dm.get_other_data(gpi_info[0],
-                                                         gpi_info[1],
-                                                         gpi_info[2])
-        masking_df_dict.update({'_reference': ref_df})
-        matched_masking = self.temp_matching(masking_df_dict,
-                                             '_reference',
-                                             n=len(masking_df_dict))
+        matched_masking = self.temporal_match_masking_data(ref_df, gpi_info)
         # this will only be one element since n is the same as the
         # number of masking datasets
         ds_key, ds = matched_masking.popitem()
@@ -271,7 +264,7 @@ class Validation(object):
                                        n=len(self.masking_dm.ds_dict)):
             # get length of matched dataset and make a mask choosing all the
             # observations by default to start
-            choose_all = np.ones(len(masking_df_dict['_reference']),
+            choose_all = np.ones(len(ref_df),
                                  dtype=bool)
             for key in result:
                 if key[0] != '_reference':
@@ -285,6 +278,34 @@ class Validation(object):
                     choose_all = choose_all & choose
 
         return ref_df[choose_all]
+
+    def temporal_match_masking_data(self, ref_df, gpi_info):
+        """
+        Temporal match the masking data to the reference DataFrame
+
+        Parameters
+        ----------
+        ref_df: pandas.DataFrame
+            Reference data
+        gpi_info: tuple or list
+            contains, (gpi, lon, lat)
+
+        Returns
+        -------
+        matched_masking: dict of pandas.DataFrames
+            Contains temporally matched masking data. This dict has only one key
+            being a tuple that contains the matched datasets.
+        """
+
+        # read only masking datasets and use the already read reference
+        masking_df_dict = self.masking_dm.get_other_data(gpi_info[0],
+                                                         gpi_info[1],
+                                                         gpi_info[2])
+        masking_df_dict.update({'_reference': ref_df})
+        matched_masking = self.temp_matching(masking_df_dict,
+                                             '_reference',
+                                             n=len(masking_df_dict))
+        return matched_masking
 
     def temporal_match_datasets(self, df_dict):
         """
