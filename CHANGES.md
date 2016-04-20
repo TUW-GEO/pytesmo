@@ -1,4 +1,4 @@
-# v0.5.0, unrelased
+# v0.5.0, 2016-04-20
 
 * Fix bug in temporal resampling if input was a pandas.Series
 * Major refactoring of validation framwork. Please see updated documentation and
