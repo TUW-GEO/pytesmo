@@ -228,16 +228,20 @@ class Validation(object):
         used_data: dict
             The DataFrame used for calculation of each set of metrics.
         """
+        results = {}
+        used_data = {}
+        matched_n = {}
 
         if self.masking_dm is not None:
             ref_df = df_dict[self.temporal_ref]
-            df_dict[self.temporal_ref] = self.mask_dataset(ref_df,
-                                                           gpi_info)
+            masked_ref_df = self.mask_dataset(ref_df,
+                                              gpi_info)
+            if len(masked_ref_df) == 0:
+                return matched_n, results, used_data
+
+            df_dict[self.temporal_ref]
 
         matched_n = self.temporal_match_datasets(df_dict)
-
-        results = {}
-        used_data = {}
 
         for n, k in self.metrics_c:
             n_matched_data = matched_n[(n, k)]
