@@ -31,6 +31,8 @@ import warnings
 
 import pandas as pd
 
+from pygeobase.object_base import TS
+
 
 class DataManager(object):
 
@@ -249,6 +251,8 @@ class DataManager(object):
         try:
             func = getattr(ds['class'], self.read_ts_names[name])
             data_df = func(*args, **ds['kwargs'])
+            if type(data_df) is TS:
+                data_df = TS.data
         except IOError:
             warnings.warn(
                 "IOError while reading dataset {} with args {:}".format(name,
