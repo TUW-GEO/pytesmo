@@ -271,10 +271,6 @@ class DataManager(object):
             warnings.warn("No data for dataset {}".format(name))
             return None
 
-        if len(data_df) == 0:
-            warnings.warn("No data for dataset {}".format(name))
-            return None
-
         if isinstance(data_df, pd.DataFrame) == False:
             warnings.warn("Data is not a DataFrame {:}".format(args))
             return None
@@ -283,7 +279,8 @@ class DataManager(object):
             data_df = data_df[self.period[0]:self.period[1]]
 
         if len(data_df) == 0:
-            warnings.warn("No data for other dataset {:}".format(args))
+            warnings.warn("No data for dataset {} with arguments {:}".format(name,
+                                                                             args))
             return None
 
         else:
