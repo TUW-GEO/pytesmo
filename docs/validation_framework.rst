@@ -22,7 +22,9 @@ the used datasets:
    `pygeobase <https://github.com/TUW-GEO/pygeobase>`__ documentation
    for more details on how a fully compatible dataset class should look.
    But a simple ``read_ts`` method should do for the validation
-   framework.
+   framework. This assumption can be relaxed by using the
+   ``read_ts_names`` keyword in the
+   pytesmo.validation\_framework.data\_manager.DataManager class.
 -  The ``read_ts`` method returns a pandas.DataFrame time series.
 -  Ideally the datasets classes also have a ``grid`` attribute that is a
    `pygeogrids <http://pygeogrids.readthedocs.org/en/latest/>`__ grid.
@@ -37,7 +39,7 @@ comparison study it is often necessary to choose a spatial reference
 grid, a temporal reference and a scaling or data space reference.
 
 Spatial reference
-^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~
 
 The spatial reference is the one to which all the other datasets are
 matched spatially. Often through nearest neighbor search. The validation
@@ -49,7 +51,7 @@ matching then a preprocessing of the data is the only option at the
 moment.
 
 Temporal reference
-^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~
 
 The temporal reference is the dataset to which the other dataset are
 temporally matched. That means that the nearest observation to the
@@ -60,7 +62,7 @@ reference dataset at once can be configured, we will cover how to do
 this later.
 
 Data space reference
-^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~
 
 It is often necessary to bring all the datasets into a common data space
 by using. Scaling is often used for that and pytesmo offers a choice of
@@ -188,7 +190,6 @@ framework can go through the jobs and read the correct time series.
     2007-01-01 03:00:00          0.214                  U                       M
     2007-01-01 04:00:00          0.214                  U                       M
     2007-01-01 05:00:00          0.214                  U                       M
-
 
 
 Initialize the Validation class
