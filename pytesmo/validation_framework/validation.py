@@ -245,6 +245,8 @@ class Validation(object):
 
         for n, k in self.metrics_c:
             n_matched_data = matched_n[(n, k)]
+            if len(n_matched_data) == 0:
+                continue
             for data, result_key in self.k_datasets_from(n_matched_data, n, k):
 
                 if len(data) == 0:

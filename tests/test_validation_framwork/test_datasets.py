@@ -45,12 +45,17 @@ class TestDataset(object):
         self.filename = filename
         self.mode = mode
 
-    def read(self, *args):
+    def read(self, *args, **kwargs):
+
+        if 'start' in kwargs:
+            start = kwargs['start']
+        else:
+            start = '2000-01-01'
 
         n = 1000
         x = np.arange(n)
         y = np.arange(n) * 0.5
-        index = pd.date_range(start="2000-01-01", periods=n, freq="D")
+        index = pd.date_range(start=start, periods=n, freq="D")
 
         df = pd.DataFrame({'x': x, 'y': y}, columns=['x', 'y'], index=index)
         return df
@@ -125,6 +130,32 @@ def setup_TestDatasets():
             'columns': ['x', 'y'],
             'args': [],
             'kwargs': {},
+            'use_lut': False,
+            'grids_compatible': True
+        }
+    }
+    return datasets
+
+
+def setup_two_without_overlap():
+    grid = grids.CellGrid(np.array([1, 2, 3, 4]), np.array([1, 2, 3, 4]),
+                          np.array([4, 4, 2, 1]), gpis=np.array([1, 2, 3, 4]))
+
+    ds1 = GriddedTsBase("", grid, TestDataset)
+    ds2 = GriddedTsBase("", grid, TestDataset)
+
+    datasets = {
+        'DS1': {
+            'class': ds1,
+            'columns': ['x'],
+            'args': [],
+            'kwargs': {}
+        },
+        'DS2': {
+            'class': ds2,
+            'columns': ['y'],
+            'args': [],
+            'kwargs': {'start': '1990-01-01'},
             'use_lut': False,
             'grids_compatible': True
         }

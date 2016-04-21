@@ -53,6 +53,7 @@ from pytesmo.validation_framework.validation import Validation
 from pytesmo.validation_framework.validation import args_to_iterable
 
 from test_datasets import setup_TestDatasets
+from test_datasets import setup_two_without_overlap
 from test_datasets import MaskingTestDataset
 
 
@@ -204,6 +205,26 @@ def test_validation_n2_k2():
             'p_R': np.array([0.], dtype=np.float32)}}
 
     datasets = setup_TestDatasets()
+
+    process = Validation(
+        datasets, 'DS1',
+        temporal_matcher=temporal_matchers.BasicTemporalMatching(
+            window=1 / 24.0).combinatory_matcher,
+        scaling='lin_cdf_match',
+        metrics_calculators={
+            (2, 2): metrics_calculators.BasicMetrics(other_name='k1').calc_metrics})
+
+    jobs = process.get_processing_jobs()
+    for job in jobs:
+        results = process.calc(*job)
+        assert sorted(list(results)) == sorted(list(tst_results))
+
+
+def test_validation_n2_k2_temporal_matching_no_matches():
+
+    tst_results = {}
+
+    datasets = setup_two_without_overlap()
 
     process = Validation(
         datasets, 'DS1',
