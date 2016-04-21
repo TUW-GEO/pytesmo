@@ -61,7 +61,7 @@ class BasicMetrics(object):
         impact performance of e.g. global validation studies
     """
 
-    def __init__(self, other_name='other',
+    def __init__(self, other_name='k1',
                  calc_tau=False):
 
         self.result_template = {'R': np.float32([np.nan]),
