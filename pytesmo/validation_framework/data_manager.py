@@ -276,7 +276,10 @@ class DataManager(object):
             return None
 
         if self.period is not None:
-            data_df = data_df[self.period[0]:self.period[1]]
+            # here we use the isoformat since pandas slice behavior is
+            # different when using datetime objects.
+            data_df = data_df[
+                self.period[0].isoformat():self.period[1].isoformat()]
 
         if len(data_df) == 0:
             warnings.warn("No data for dataset {} with arguments {:}".format(name,
