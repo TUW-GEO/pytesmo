@@ -1,3 +1,10 @@
+# v0.5.1, 2016-04-21
+
+* Fix bug in jobs argument passing to Validation class. 
+* Add support to use a pre initialized DataManager instance in the Validation class.
+* Add support for per dataset reading method names in the DataManager. This
+  relaxes the assumption that every dataset has a `read_ts` method.
+
 # v0.5.0, 2016-04-20
 
 * Fix bug in temporal resampling if input was a pandas.Series
