@@ -5,6 +5,7 @@ except ImportError:
     pass
 
 import numpy as np
+import pandas as pd
 from pygeogrids.grids import CellGrid
 
 import pytesmo.scaling as scaling
@@ -239,7 +240,7 @@ class Validation(object):
             if len(masked_ref_df) == 0:
                 return matched_n, results, used_data
 
-            df_dict[self.temporal_ref]
+            df_dict[self.temporal_ref] = masked_ref_df
 
         matched_n = self.temporal_match_datasets(df_dict)
 
@@ -308,20 +309,20 @@ class Validation(object):
                                        n=len(self.masking_dm.ds_dict)):
             # get length of matched dataset and make a mask choosing all the
             # observations by default to start
-            choose_all = np.ones(len(ref_df),
-                                 dtype=bool)
+            choose_all = pd.DataFrame(index=ref_df.index)
             for key in result:
                 if key[0] != '_reference':
                     # this is necessary since the boolean datatype might have
                     # been changed to float 1.0 and 0.0 issue with temporal
                     # resampling that is not easily resolved since most
-                    # datatypes have no nan representation. We also switch the
-                    # meaning of True False (from masking to choosing) here so
-                    # we can use it in the indexing without inversion.
-                    choose = (ds[key] == False)
-                    choose_all = choose_all & choose
+                    # datatypes have no nan representation.
+                    choose = pd.Series((ds[key] == False), index=ds.index)
+                    choose = choose.reindex(index=choose_all.index,
+                                            fill_value=True)
+                    choose_all[key] = choose.copy()
+            choosing = choose_all.apply(np.all, axis=1)
 
-        return ref_df[choose_all]
+        return ref_df[choosing]
 
     def temporal_match_masking_data(self, ref_df, gpi_info):
         """
