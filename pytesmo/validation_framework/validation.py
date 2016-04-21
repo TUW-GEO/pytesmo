@@ -440,7 +440,12 @@ class Validation(object):
         if len(list(n_matched_data)[0]) == len(dskey):
             # we should have an exact match of datasets and
             # temporal matches
-            data = n_matched_data[dskey]
+            try:
+                data = n_matched_data[dskey]
+            except KeyError:
+                # if not then temporal matching between two datasets was
+                # unsuccessful
+                return []
         else:
             # more datasets were temporally matched than are
             # requested now so we select a temporally matched

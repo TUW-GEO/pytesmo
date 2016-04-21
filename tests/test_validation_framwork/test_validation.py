@@ -54,6 +54,7 @@ from pytesmo.validation_framework.validation import args_to_iterable
 
 from test_datasets import setup_TestDatasets
 from test_datasets import setup_two_without_overlap
+from test_datasets import setup_three_with_two_overlapping
 from test_datasets import MaskingTestDataset
 
 
@@ -351,6 +352,52 @@ def test_validation_n3_k2():
         scaling='lin_cdf_match',
         metrics_calculators={
             (3, 2): metrics_calculators.BasicMetrics(other_name='k1').calc_metrics})
+
+    jobs = process.get_processing_jobs()
+    for job in jobs:
+        results = process.calc(*job)
+        assert sorted(list(results)) == sorted(list(tst_results))
+
+
+def test_validation_n3_k2_temporal_matching_no_matches():
+
+    tst_results = {
+        (('DS1', 'x'), ('DS3', 'y')): {
+            'n_obs': np.array([1000], dtype=np.int32),
+            'tau': np.array([np.nan], dtype=np.float32),
+            'gpi': np.array([4], dtype=np.int32),
+            'RMSD': np.array([0.], dtype=np.float32),
+            'lon': np.array([4.]),
+            'p_tau': np.array([np.nan], dtype=np.float32),
+            'BIAS': np.array([0.], dtype=np.float32),
+            'p_rho': np.array([0.], dtype=np.float32),
+            'rho': np.array([1.], dtype=np.float32),
+            'lat': np.array([4.]),
+            'R': np.array([1.], dtype=np.float32),
+            'p_R': np.array([0.], dtype=np.float32)},
+        (('DS1', 'x'), ('DS3', 'x')): {
+            'n_obs': np.array([1000], dtype=np.int32),
+            'tau': np.array([np.nan], dtype=np.float32),
+            'gpi': np.array([4], dtype=np.int32),
+            'RMSD': np.array([0.], dtype=np.float32),
+            'lon': np.array([4.]),
+            'p_tau': np.array([np.nan], dtype=np.float32),
+            'BIAS': np.array([0.], dtype=np.float32),
+            'p_rho': np.array([0.], dtype=np.float32),
+            'rho': np.array([1.], dtype=np.float32),
+            'lat': np.array([4.]),
+            'R': np.array([1.], dtype=np.float32),
+            'p_R': np.array([0.], dtype=np.float32)}}
+
+    datasets = setup_three_with_two_overlapping()
+
+    process = Validation(
+        datasets, 'DS1',
+        temporal_matcher=temporal_matchers.BasicTemporalMatching(
+            window=1 / 24.0).combinatory_matcher,
+        scaling='lin_cdf_match',
+        metrics_calculators={
+            (2, 2): metrics_calculators.BasicMetrics(other_name='k1').calc_metrics})
 
     jobs = process.get_processing_jobs()
     for job in jobs:

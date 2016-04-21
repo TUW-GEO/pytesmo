@@ -161,3 +161,38 @@ def setup_two_without_overlap():
         }
     }
     return datasets
+
+
+def setup_three_with_two_overlapping():
+    grid = grids.CellGrid(np.array([1, 2, 3, 4]), np.array([1, 2, 3, 4]),
+                          np.array([4, 4, 2, 1]), gpis=np.array([1, 2, 3, 4]))
+
+    ds1 = GriddedTsBase("", grid, TestDataset)
+    ds2 = GriddedTsBase("", grid, TestDataset)
+    ds3 = GriddedTsBase("", grid, TestDataset)
+
+    datasets = {
+        'DS1': {
+            'class': ds1,
+            'columns': ['x'],
+            'args': [],
+            'kwargs': {}
+        },
+        'DS2': {
+            'class': ds2,
+            'columns': ['y'],
+            'args': [],
+            'kwargs': {'start': '1990-01-01'},
+            'use_lut': False,
+            'grids_compatible': True
+        },
+        'DS3': {
+            'class': ds3,
+            'columns': ['x', 'y'],
+            'args': [],
+            'kwargs': {},
+            'use_lut': False,
+            'grids_compatible': True
+        }
+    }
+    return datasets
