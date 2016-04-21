@@ -165,12 +165,14 @@ class Validation(object):
             Values: dict containing the elements returned by metrics_calculator
         """
         results = {}
-
-        gpis = ensure_iterable(gpis)
-        lons = ensure_iterable(lons)
-        lats = ensure_iterable(lats)
-        for arg, i in enumerate(args):
-            args[i] = ensure_iterable(arg)
+        if len(args) > 0:
+            gpis, lons, lats, args = args_to_iterable(gpis,
+                                                      lons,
+                                                      lats,
+                                                      *args,
+                                                      n=3)
+        else:
+            gpis, lons, lats = args_to_iterable(gpis, lons, lats)
 
         for gpi_info in zip(gpis, lons, lats, *args):
 
@@ -449,3 +451,31 @@ class Validation(object):
                 jobs = [gpis, lons, lats]
 
         return jobs
+
+
+def args_to_iterable(*args, **kwargs):
+    """
+    Convert arguments to iterables.
+
+
+    Parameters
+    ----------
+    args: iterables or not
+        arguments
+    n : int, optional
+        number of explicit arguments
+    """
+    if 'n' in kwargs:
+        n = kwargs['n']
+    else:
+        n = len(args)
+
+    arguments = []
+    for i, arg in enumerate(args):
+        arguments.append(ensure_iterable(arg))
+
+    it = iter(arguments)
+    for _ in range(n):
+        yield next(it, None)
+    if n < len(args):
+        yield tuple(it)

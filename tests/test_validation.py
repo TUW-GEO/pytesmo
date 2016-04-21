@@ -53,6 +53,7 @@ from datetime import datetime
 from pytesmo.io.sat.ascat import AscatH25_SSM
 from pytesmo.io.ismn.interface import ISMN_Interface
 from pytesmo.validation_framework.validation import Validation
+from pytesmo.validation_framework.validation import args_to_iterable
 
 
 def test_ascat_ismn_validation():
@@ -697,3 +698,58 @@ def test_add_name_to_df_columns():
     df = pd.DataFrame({'x': x, 'y': y}, columns=['x', 'y'], index=index)
     df = temporal_matchers.df_name_multiindex(df, 'test')
     assert list(df.columns) == [('test', 'x'), ('test', 'y')]
+
+
+def test_args_to_iterable_non_iterables():
+
+    gpis = 1
+    lons = 1
+    lats = 1
+    arg1 = 1
+    arg2 = 2
+    arg3 = 3
+    gpis_, lons_, lats_, args = args_to_iterable(gpis, lons, lats,
+                                                 arg1, arg2, arg3, n=3)
+
+    assert gpis_ == [gpis]
+    assert lons_ == [lons]
+    assert lats_ == [lats]
+    assert args == ([arg1], [arg2], [arg3])
+
+
+def test_args_to_iterable_n3():
+
+    gpis = [1, 2, 3]
+    lons = [2, 3, 4]
+    lats = [3, 4, 5]
+    arg1 = [1, 1, 1]
+    arg2 = [1, 1, 1]
+    gpis_, lons_, lats_, args = args_to_iterable(gpis, lons, lats,
+                                                 arg1, arg2, n=3)
+
+    assert gpis_ == gpis
+    assert lons_ == lons
+    assert lats_ == lats
+    assert args == (arg1, arg2)
+
+    zipped_should = [(1, 2, 3, 1, 1),
+                     (2, 3, 4, 1, 1),
+                     (3, 4, 5, 1, 1)]
+
+    for i, t in enumerate(zip(gpis_, lons_, lats_, *args)):
+        assert zipped_should[i] == t
+
+
+def test_args_to_iterable_mixed():
+
+    gpis = [1, 2, 3]
+    lons = [2, 3, 4]
+    lats = 1
+    arg1 = 1
+    gpis_, lons_, lats_, args = args_to_iterable(gpis, lons, lats,
+                                                 arg1)
+
+    assert gpis_ == gpis
+    assert lons_ == lons
+    assert lats_ == [lats]
+    assert args == [arg1]
