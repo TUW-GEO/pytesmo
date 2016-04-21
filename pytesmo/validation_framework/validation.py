@@ -184,7 +184,8 @@ class Validation(object):
             # if no data is available continue with the next gpi
             if len(df_dict) == 0:
                 continue
-            matched_data, result = self.perform_validation(df_dict, gpi_info)
+            matched_data, result, used_data = self.perform_validation(
+                df_dict, gpi_info)
 
             # add result of one gpi to global results dictionary
             for r in result:
@@ -224,6 +225,8 @@ class Validation(object):
             temporally matched data stored by (n, k) tuples
         results: dict
             Dictonary of calculated metrics stored by dataset combinations tuples.
+        used_data: dict
+            The DataFrame used for calculation of each set of metrics.
         """
 
         if self.masking_dm is not None:
@@ -234,6 +237,7 @@ class Validation(object):
         matched_n = self.temporal_match_datasets(df_dict)
 
         results = {}
+        used_data = {}
 
         for n, k in self.metrics_c:
             n_matched_data = matched_n[(n, k)]
@@ -267,10 +271,11 @@ class Validation(object):
                     results[result_key] = []
 
                 metrics_calculator = self.metrics_c[(n, k)]
+                used_data[result_key] = data
                 metrics = metrics_calculator(data, gpi_info)
                 results[result_key].append(metrics)
 
-        return matched_n, results
+        return matched_n, results, used_data
 
     def mask_dataset(self, ref_df, gpi_info):
         """
