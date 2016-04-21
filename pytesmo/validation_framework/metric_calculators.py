@@ -127,6 +127,36 @@ class BasicMetrics(object):
         return dataset
 
 
+class BasicMetricsPlusMSE(BasicMetrics):
+    """
+    Basic Metrics plus Mean squared Error and the decomposition of the MSE
+    into correlation, bias and variance parts.
+    """
+
+    def __init__(self, other_name='k1',
+                 calc_tau=False):
+
+        super(BasicMetricsPlusMSE, self).__init__(other_name=other_name,
+                                                  calc_tau=calc_tau)
+        self.result_template.update({'mse': np.float32([np.nan]),
+                                     'mse_corr': np.float32([np.nan]),
+                                     'mse_bias': np.float32([np.nan]),
+                                     'mse_var': np.float32([np.nan])})
+
+    def calc_metrics(self, data, gpi_info):
+        dataset = super(BasicMetricsPlusMSE, self).calc_metrics(data, gpi_info)
+        if len(data) < 10:
+            return dataset
+        x, y = data['ref'].values, data[self.other_name].values
+        mse, mse_corr, mse_bias, mse_var = metrics.mse(x, y)
+        dataset['mse'][0] = mse
+        dataset['mse_corr'][0] = mse_corr
+        dataset['mse_bias'][0] = mse_bias
+        dataset['mse_var'][0] = mse_var
+
+        return dataset
+
+
 class FTMetrics(object):
     """
     This class computes Freeze/Thaw Metrics
