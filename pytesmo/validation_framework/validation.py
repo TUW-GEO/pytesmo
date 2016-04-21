@@ -396,38 +396,60 @@ class Validation(object):
         for result in get_result_names(self.data_manager.ds_dict,
                                        self.temporal_ref,
                                        n=k):
-            # find the key into the temporally matched dataset by combining the
-            # dataset parts of the result_names
-            dskey = []
-            for i, r in enumerate(result):
-                dskey.append(r[0])
-
-            dskey = tuple(dskey)
-            if n == k:
-                # we should have an exact match of datasets and
-                # temporal matches
-                data = n_matched_data[dskey]
-            else:
-                # more datasets were temporally matched than are
-                # requested now so we select a temporally matched
-                # dataset that has the first key in common with the
-                # requested one ensuring that it was used as a
-                # reference and also has the rest of the requested
-                # datasets in the key
-                first_match = [
-                    key for key in n_matched_data if dskey[0] == key[0]]
-                found_key = None
-                for key in first_match:
-                    for dsk in dskey[1:]:
-                        if dsk not in key:
-                            continue
-                    found_key = key
-                data = n_matched_data[found_key]
-
-            # extract only the relevant columns from matched DataFrame
-            data = data[[x for x in result]]
-
+            data = self.get_data_for_result_tuple(n_matched_data, result)
             yield data, result
+
+    def get_data_for_result_tuple(self, n_matched_data, result_tuple):
+        """
+        Extract a dataframe for a given result tuple from the
+        matched dataframes.
+
+        Parameters
+        ----------
+        n_matched_data: dict of pandas.DataFrames
+            DataFrames in which n datasets were temporally matched.
+            The key is a tuple of the dataset names.
+        result_tuple: tuple
+            Tuple describing which datasets and columns should be
+            extracted. ((dataset_name, column_name), (dataset_name2, column_name2))
+
+        Returns
+        -------
+        data: pd.DataFrame
+            pandas DataFrame with columns extracted from the
+            temporally matched datasets
+        """
+        # find the key into the temporally matched dataset by combining the
+        # dataset parts of the result_names
+        dskey = []
+        for i, r in enumerate(result_tuple):
+            dskey.append(r[0])
+
+        dskey = tuple(dskey)
+        if len(list(n_matched_data)[0]) == len(dskey):
+            # we should have an exact match of datasets and
+            # temporal matches
+            data = n_matched_data[dskey]
+        else:
+            # more datasets were temporally matched than are
+            # requested now so we select a temporally matched
+            # dataset that has the first key in common with the
+            # requested one ensuring that it was used as a
+            # reference and also has the rest of the requested
+            # datasets in the key
+            first_match = [
+                key for key in n_matched_data if dskey[0] == key[0]]
+            found_key = None
+            for key in first_match:
+                for dsk in dskey[1:]:
+                    if dsk not in key:
+                        continue
+                found_key = key
+            data = n_matched_data[found_key]
+
+        # extract only the relevant columns from matched DataFrame
+        data = data[[x for x in result_tuple]]
+        return data
 
     def get_processing_jobs(self):
         """
