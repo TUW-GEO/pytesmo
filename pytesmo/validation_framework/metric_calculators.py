@@ -43,14 +43,26 @@ class BasicMetrics(object):
     This class just computes the basic metrics,
     Pearson's R
     Spearman's rho
+    optionally Kendall's tau
     RMSD
     BIAS
 
     it also stores information about gpi, lat, lon
     and number of observations
+
+    Parameters
+    ----------
+    other_name: string, optional
+        Name of the column of the non-reference / other dataset in the
+        pandas DataFrame
+    calc_tau: boolean, optional
+        if True then also tau is calculated. This is set to False by default
+        since the calculation of Kendalls tau is rather slow and can significantly
+        impact performance of e.g. global validation studies
     """
 
-    def __init__(self, other_name='other'):
+    def __init__(self, other_name='other',
+                 calc_tau=False):
 
         self.result_template = {'R': np.float32([np.nan]),
                                 'p_R': np.float32([np.nan]),
@@ -82,7 +94,7 @@ class BasicMetrics(object):
 
         Notes
         -----
-        Kendall tau is not calculated at the moment
+        Kendall tau is calculation is optional at the moment
         because the scipy implementation is very slow which is problematic for
         global comparisons
         """
@@ -99,15 +111,17 @@ class BasicMetrics(object):
         x, y = data['ref'].values, data[self.other_name].values
         R, p_R = metrics.pearsonr(x, y)
         rho, p_rho = metrics.spearmanr(x, y)
-        # tau, p_tau = metrics.kendalltau(x, y)
         RMSD = metrics.rmsd(x, y)
         BIAS = metrics.bias(x, y)
 
         dataset['R'][0], dataset['p_R'][0] = R, p_R
         dataset['rho'][0], dataset['p_rho'][0] = rho, p_rho
-        # dataset['tau'][0], dataset['p_tau'][0] = tau, p_tau
         dataset['RMSD'][0] = RMSD
         dataset['BIAS'][0] = BIAS
+
+        if self.calc_tau:
+            tau, p_tau = metrics.kendalltau(x, y)
+            dataset['tau'][0], dataset['p_tau'][0] = tau, p_tau
 
         return dataset
 
