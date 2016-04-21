@@ -21,7 +21,7 @@ class Validation(object):
 
     Parameters
     ----------
-    datasets : dict of dicts
+    datasets : dict of dicts, or pytesmo.validation_framwork.data_manager.DataManager
         Keys: string, datasets names
         Values: dict, containing the following fields
             'class': object
@@ -103,10 +103,11 @@ class Validation(object):
                  masking_datasets=None,
                  period=None,
                  scaling='lin_cdf_match', scaling_ref=None):
-        """
-        Initialize parameters.
-        """
-        self.data_manager = DataManager(datasets, spatial_ref, period)
+
+        if type(datasets) is DataManager:
+            self.data_manager = datasets
+        else:
+            self.data_manager = DataManager(datasets, spatial_ref, period)
 
         self.temp_matching = temporal_matcher
         if self.temp_matching is None:
