@@ -78,6 +78,7 @@ class BasicMetrics(object):
                                 'lat': np.float64([np.nan])}
 
         self.other_name = other_name
+        self.calc_tau = calc_tau
 
     def calc_metrics(self, data, gpi_info):
         """
