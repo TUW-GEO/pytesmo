@@ -31,6 +31,8 @@ import warnings
 
 import pandas as pd
 
+from pygeobase.object_base import TS
+
 
 class DataManager(object):
 
@@ -69,9 +71,10 @@ class DataManager(object):
     period : list, optional
         Of type [datetime start, datetime end]. If given then the two input
         datasets will be truncated to start <= dates <= end.
-    read_ts_method_name: string, optional
+    read_ts_names: string or dict of strings, optional
         if another method name than 'read_ts' should be used for reading the data
-        then it can be specified here.
+        then it can be specified here. If it is a dict then specify a
+        function name for each dataset.
 
     Methods
     -------
@@ -88,7 +91,7 @@ class DataManager(object):
 
     def __init__(self, datasets, ref_name,
                  period=None,
-                 read_ts_method_name='read_ts'):
+                 read_ts_names='read_ts'):
         """
         Initialize parameters.
         """
@@ -111,7 +114,13 @@ class DataManager(object):
 
         self.period = period
         self.luts = self.get_luts()
-        self.read_ts_method_name = read_ts_method_name
+        if type(read_ts_names) is dict:
+            self.read_ts_names = read_ts_names
+        else:
+            d = {}
+            for dataset in datasets:
+                d[dataset] = read_ts_names
+            self.read_ts_names = d
 
     def _add_default_values(self):
         """
@@ -240,8 +249,10 @@ class DataManager(object):
         args.extend(ds['args'])
 
         try:
-            func = getattr(ds['class'], self.read_ts_method_name)
+            func = getattr(ds['class'], self.read_ts_names[name])
             data_df = func(*args, **ds['kwargs'])
+            if type(data_df) is TS:
+                data_df = TS.data
         except IOError:
             warnings.warn(
                 "IOError while reading dataset {} with args {:}".format(name,
@@ -260,19 +271,19 @@ class DataManager(object):
             warnings.warn("No data for dataset {}".format(name))
             return None
 
-        if len(data_df) == 0:
-            warnings.warn("No data for dataset {}".format(name))
-            return None
-
         if isinstance(data_df, pd.DataFrame) == False:
             warnings.warn("Data is not a DataFrame {:}".format(args))
             return None
 
         if self.period is not None:
-            data_df = data_df[self.period[0]:self.period[1]]
+            # here we use the isoformat since pandas slice behavior is
+            # different when using datetime objects.
+            data_df = data_df[
+                self.period[0].isoformat():self.period[1].isoformat()]
 
         if len(data_df) == 0:
-            warnings.warn("No data for other dataset {:}".format(args))
+            warnings.warn("No data for dataset {} with arguments {:}".format(name,
+                                                                             args))
             return None
 
         else:

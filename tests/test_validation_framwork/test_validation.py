@@ -35,9 +35,7 @@ import os
 import tempfile
 import netCDF4 as nc
 import numpy as np
-import pandas as pd
 import numpy.testing as nptest
-import pytest
 
 import pygeogrids.grids as grids
 from pygeobase.io_base import GriddedTsBase
@@ -46,23 +44,26 @@ import pytesmo.validation_framework.temporal_matchers as temporal_matchers
 import pytesmo.validation_framework.metric_calculators as metrics_calculators
 from pytesmo.validation_framework.results_manager import netcdf_results_manager
 from pytesmo.validation_framework.data_manager import DataManager
-from pytesmo.validation_framework.data_manager import get_result_names
 
 from datetime import datetime
 
 from pytesmo.io.sat.ascat import AscatH25_SSM
 from pytesmo.io.ismn.interface import ISMN_Interface
 from pytesmo.validation_framework.validation import Validation
+from pytesmo.validation_framework.validation import args_to_iterable
+
+from test_datasets import setup_TestDatasets
+from test_datasets import MaskingTestDataset
 
 
 def test_ascat_ismn_validation():
     """
     Test processing framework with some ISMN and ASCAT sample data
     """
-    ascat_data_folder = os.path.join(os.path.dirname(__file__), 'test-data',
+    ascat_data_folder = os.path.join(os.path.dirname(__file__), '..', 'test-data',
                                      'sat', 'ascat', 'netcdf', '55R22')
 
-    ascat_grid_folder = os.path.join(os.path.dirname(__file__), 'test-data',
+    ascat_grid_folder = os.path.join(os.path.dirname(__file__), '..', 'test-data',
                                      'sat', 'ascat', 'netcdf', 'grid')
 
     ascat_reader = AscatH25_SSM(ascat_data_folder, ascat_grid_folder)
@@ -71,7 +72,7 @@ def test_ascat_ismn_validation():
 
     # Initialize ISMN reader
 
-    ismn_data_folder = os.path.join(os.path.dirname(__file__), 'test-data',
+    ismn_data_folder = os.path.join(os.path.dirname(__file__), '..', 'test-data',
                                     'ismn', 'multinetwork', 'header_values')
     ismn_reader = ISMN_Interface(ismn_data_folder)
 
@@ -159,97 +160,6 @@ def test_ascat_ismn_validation():
                                rtol=1e-4)
 
 
-class TestDataset(object):
-    """Test dataset that acts as a fake object for the base classes."""
-
-    def __init__(self, filename, mode='r'):
-        self.filename = filename
-        self.mode = mode
-
-    def read(self, *args):
-
-        n = 1000
-        x = np.arange(n)
-        y = np.arange(n) * 0.5
-        index = pd.date_range(start="2000-01-01", periods=n, freq="D")
-
-        df = pd.DataFrame({'x': x, 'y': y}, columns=['x', 'y'], index=index)
-        return df
-
-    def write(self, gpi, data):
-        return None
-
-    def read_ts(self, *args, **kwargs):
-        return self.read(*args, **kwargs)
-
-    def write_ts(self, gpi, data):
-        return None
-
-    def close(self):
-        pass
-
-    def flush(self):
-        pass
-
-
-class MaskingTestDataset(TestDataset):
-
-    def read(self, *args, **kwargs):
-        limit = kwargs.pop("limit")
-        data = super(MaskingTestDataset, self).read(*args)
-        data = data[['x']]
-        data = data < limit
-        return data
-
-
-def test_masking_testdataset():
-
-    ds = MaskingTestDataset("")
-    data = ds.read(1, limit=500)
-    data_should = np.concatenate([np.ones((500), dtype=bool),
-                                  np.zeros((500), dtype=bool)])
-    nptest.assert_almost_equal(data['x'].values, data_should)
-    data = ds.read(1, limit=250)
-    data_should = np.concatenate([np.ones((250), dtype=bool),
-                                  np.zeros((750), dtype=bool)])
-    nptest.assert_almost_equal(data['x'].values, data_should)
-
-
-def setup_TestDatasets():
-    grid = grids.CellGrid(np.array([1, 2, 3, 4]), np.array([1, 2, 3, 4]),
-                          np.array([4, 4, 2, 1]), gpis=np.array([1, 2, 3, 4]))
-
-    ds1 = GriddedTsBase("", grid, TestDataset)
-    ds2 = GriddedTsBase("", grid, TestDataset)
-    ds3 = GriddedTsBase("", grid, TestDataset)
-
-    datasets = {
-        'DS1': {
-            'class': ds1,
-            'columns': ['x'],
-            'args': [],
-            'kwargs': {}
-        },
-        'DS2': {
-            'class': ds2,
-            'columns': ['y'],
-            'args': [],
-            'kwargs': {},
-            'use_lut': False,
-            'grids_compatible': True
-        },
-        'DS3': {
-            'class': ds3,
-            'columns': ['x', 'y'],
-            'args': [],
-            'kwargs': {},
-            'use_lut': False,
-            'grids_compatible': True
-        }
-    }
-    return datasets
-
-
 def test_validation_n2_k2():
 
     tst_results = {
@@ -302,6 +212,65 @@ def test_validation_n2_k2():
         scaling='lin_cdf_match',
         metrics_calculators={
             (2, 2): metrics_calculators.BasicMetrics(other_name='k1').calc_metrics})
+
+    jobs = process.get_processing_jobs()
+    for job in jobs:
+        results = process.calc(*job)
+        assert sorted(list(results)) == sorted(list(tst_results))
+
+
+def test_validation_n2_k2_data_manager_argument():
+
+    tst_results = {
+        (('DS1', 'x'), ('DS3', 'y')): {
+            'n_obs': np.array([1000], dtype=np.int32),
+            'tau': np.array([np.nan], dtype=np.float32),
+            'gpi': np.array([4], dtype=np.int32),
+            'RMSD': np.array([0.], dtype=np.float32),
+            'lon': np.array([4.]),
+            'p_tau': np.array([np.nan], dtype=np.float32),
+            'BIAS': np.array([0.], dtype=np.float32),
+            'p_rho': np.array([0.], dtype=np.float32),
+            'rho': np.array([1.], dtype=np.float32),
+            'lat': np.array([4.]),
+            'R': np.array([1.], dtype=np.float32),
+            'p_R': np.array([0.], dtype=np.float32)},
+        (('DS1', 'x'), ('DS2', 'y')): {
+            'n_obs': np.array([1000], dtype=np.int32),
+            'tau': np.array([np.nan], dtype=np.float32),
+            'gpi': np.array([4], dtype=np.int32),
+            'RMSD': np.array([0.], dtype=np.float32),
+            'lon': np.array([4.]),
+            'p_tau': np.array([np.nan], dtype=np.float32),
+            'BIAS': np.array([0.], dtype=np.float32),
+            'p_rho': np.array([0.], dtype=np.float32),
+            'rho': np.array([1.], dtype=np.float32),
+            'lat': np.array([4.]),
+            'R': np.array([1.], dtype=np.float32),
+            'p_R': np.array([0.], dtype=np.float32)},
+        (('DS1', 'x'), ('DS3', 'x')): {
+            'n_obs': np.array([1000], dtype=np.int32),
+            'tau': np.array([np.nan], dtype=np.float32),
+            'gpi': np.array([4], dtype=np.int32),
+            'RMSD': np.array([0.], dtype=np.float32),
+            'lon': np.array([4.]),
+            'p_tau': np.array([np.nan], dtype=np.float32),
+            'BIAS': np.array([0.], dtype=np.float32),
+            'p_rho': np.array([0.], dtype=np.float32),
+            'rho': np.array([1.], dtype=np.float32),
+            'lat': np.array([4.]),
+            'R': np.array([1.], dtype=np.float32),
+            'p_R': np.array([0.], dtype=np.float32)}}
+
+    datasets = setup_TestDatasets()
+    dm = DataManager(datasets, 'DS1')
+
+    process = Validation(dm, 'DS1',
+                         temporal_matcher=temporal_matchers.BasicTemporalMatching(
+                             window=1 / 24.0).combinatory_matcher,
+                         scaling='lin_cdf_match',
+                         metrics_calculators={
+                             (2, 2): metrics_calculators.BasicMetrics(other_name='k1').calc_metrics})
 
     jobs = process.get_processing_jobs()
     for job in jobs:
@@ -445,255 +414,56 @@ def test_validation_n3_k2_masking():
                                        tst[tst_key]['n_obs'])
 
 
-class TestDatasetRuntimeError(object):
-    """Test dataset that acts as a fake object for the base classes."""
+def test_args_to_iterable_non_iterables():
 
-    def __init__(self, filename, mode='r', message="No such file or directory"):
-        self.filename = filename
-        self.mode = mode
-        raise RuntimeError(message)
-        open(filename, mode)
+    gpis = 1
+    lons = 1
+    lats = 1
+    arg1 = 1
+    arg2 = 2
+    arg3 = 3
+    gpis_, lons_, lats_, args = args_to_iterable(gpis, lons, lats,
+                                                 arg1, arg2, arg3, n=3)
 
-    def read(self, gpi):
-        return None
-
-    def write(self, gpi, data):
-        return None
-
-    def read_ts(self, gpi):
-        return None
-
-    def write_ts(self, gpi, data):
-        return None
-
-    def close(self):
-        pass
-
-    def flush(self):
-        pass
+    assert gpis_ == [gpis]
+    assert lons_ == [lons]
+    assert lats_ == [lats]
+    assert args == ([arg1], [arg2], [arg3])
 
 
-def setup_TestDataManager():
+def test_args_to_iterable_n3():
 
-    grid = grids.CellGrid(np.array([1, 2, 3, 4]), np.array([1, 2, 3, 4]),
-                          np.array([4, 4, 2, 1]), gpis=np.array([1, 2, 3, 4]))
+    gpis = [1, 2, 3]
+    lons = [2, 3, 4]
+    lats = [3, 4, 5]
+    arg1 = [1, 1, 1]
+    arg2 = [1, 1, 1]
+    gpis_, lons_, lats_, args = args_to_iterable(gpis, lons, lats,
+                                                 arg1, arg2, n=3)
 
-    ds1 = GriddedTsBase("", grid, TestDatasetRuntimeError)
-    ds2 = GriddedTsBase("", grid, TestDatasetRuntimeError)
-    ds3 = GriddedTsBase("", grid, TestDatasetRuntimeError,
-                        ioclass_kws={'message': 'Other RuntimeError'})
+    assert gpis_ == gpis
+    assert lons_ == lons
+    assert lats_ == lats
+    assert args == (arg1, arg2)
 
-    datasets = {
-        'DS1': {
-            'class': ds1,
-            'columns': ['soil moisture'],
-            'args': [],
-            'kwargs': {}
-        },
-        'DS2': {
-            'class': ds2,
-            'columns': ['sm'],
-            'args': [],
-            'kwargs': {},
-            'grids_compatible': True
-        },
-        'DS3': {
-            'class': ds3,
-            'columns': ['sm', 'sm2'],
-            'args': [],
-            'kwargs': {},
-            'grids_compatible': True
-        }
-    }
+    zipped_should = [(1, 2, 3, 1, 1),
+                     (2, 3, 4, 1, 1),
+                     (3, 4, 5, 1, 1)]
 
-    dm = DataManager(datasets, 'DS1')
-    return dm
+    for i, t in enumerate(zip(gpis_, lons_, lats_, *args)):
+        assert zipped_should[i] == t
 
 
-def test_DataManager_default_add():
+def test_args_to_iterable_mixed():
 
-    grid = grids.CellGrid(np.array([1, 2, 3, 4]), np.array([1, 2, 3, 4]),
-                          np.array([4, 4, 2, 1]), gpis=np.array([1, 2, 3, 4]))
+    gpis = [1, 2, 3]
+    lons = [2, 3, 4]
+    lats = 1
+    arg1 = 1
+    gpis_, lons_, lats_, args = args_to_iterable(gpis, lons, lats,
+                                                 arg1)
 
-    ds1 = GriddedTsBase("", grid, TestDataset)
-
-    datasets = {
-        'DS1': {
-            'class': ds1,
-            'columns': ['soil moisture'],
-        },
-        'DS2': {
-            'class': ds1,
-            'columns': ['soil moisture'],
-        }
-    }
-
-    dm = DataManager(datasets, 'DS1')
-    assert dm.datasets == {
-        'DS1': {
-            'class': ds1,
-            'columns': ['soil moisture'],
-            'args': [],
-            'kwargs': {},
-            'use_lut': False,
-            'lut_max_dist': None,
-            'grids_compatible': False
-        },
-        'DS2': {
-            'class': ds1,
-            'columns': ['soil moisture'],
-            'args': [],
-            'kwargs': {},
-            'use_lut': False,
-            'lut_max_dist': None,
-            'grids_compatible': False
-        }}
-
-
-def test_DataManager_RuntimeError():
-    """
-    Test DataManager with some fake Datasets that throw RuntimeError
-    instead of IOError if a file does not exist like netCDF4
-
-    """
-
-    dm = setup_TestDataManager()
-    with pytest.warns(UserWarning):
-        dm.read_reference(1)
-    with pytest.warns(UserWarning):
-        dm.read_other('DS2', 1)
-    with pytest.raises(RuntimeError):
-        dm.read_other('DS3', 1)
-
-
-def test_DataManager_dataset_names():
-
-    dm = setup_TestDataManager()
-    result_names = dm.get_results_names(3)
-    assert result_names == [(('DS1', 'soil moisture'), ('DS2', 'sm'), ('DS3', 'sm')),
-                            (('DS1', 'soil moisture'), ('DS2', 'sm'), ('DS3', 'sm2'))]
-
-    result_names = dm.get_results_names(2)
-    assert result_names == [(('DS1', 'soil moisture'), ('DS2', 'sm')),
-                            (('DS1', 'soil moisture'), ('DS3', 'sm')),
-                            (('DS1', 'soil moisture'), ('DS3', 'sm2'))]
-
-
-def test_DataManager_get_data():
-
-    datasets = setup_TestDatasets()
-    dm = DataManager(datasets, 'DS1')
-    data = dm.get_data(1, 1, 1)
-    assert sorted(list(data)) == ['DS1', 'DS2', 'DS3']
-
-
-def test_get_result_names():
-
-    tst_ds_dict = {'DS1': ['soil moisture'],
-                   'DS2': ['sm'],
-                   'DS3': ['sm', 'sm2']}
-    result_names = get_result_names(tst_ds_dict, 'DS1', 3)
-    assert result_names == [(('DS1', 'soil moisture'), ('DS2', 'sm'), ('DS3', 'sm')),
-                            (('DS1', 'soil moisture'), ('DS2', 'sm'), ('DS3', 'sm2'))]
-
-    result_names = get_result_names(tst_ds_dict, 'DS1', 2)
-    assert result_names == [(('DS1', 'soil moisture'), ('DS2', 'sm')),
-                            (('DS1', 'soil moisture'), ('DS3', 'sm')),
-                            (('DS1', 'soil moisture'), ('DS3', 'sm2'))]
-
-    result_names = get_result_names(tst_ds_dict, 'DS2', 2)
-    assert result_names == [(('DS2', 'sm'), ('DS1', 'soil moisture')),
-                            (('DS2', 'sm'), ('DS3', 'sm')),
-                            (('DS2', 'sm'), ('DS3', 'sm2'))]
-
-
-def test_combinatory_matcher_n2():
-
-    n = 1000
-    x = np.arange(n)
-    y = np.arange(n) * 0.5
-    index = pd.date_range(start="2000-01-01", periods=n, freq="D")
-
-    df = pd.DataFrame({'x': x, 'y': y}, columns=['x', 'y'], index=index)
-    df2 = pd.DataFrame({'x': x, 'y': y}, columns=['x', 'y'], index=index)
-    df3 = pd.DataFrame({'x': x, 'y': y}, columns=['x', 'y'], index=index)
-
-    df_dict = {'data1': df,
-               'data2': df2,
-               'data3': df3}
-
-    temp_matcher = temporal_matchers.BasicTemporalMatching()
-    matched = temp_matcher.combinatory_matcher(df_dict, 'data1')
-    assert sorted(list(matched)) == sorted([('data1', 'data2'),
-                                            ('data1', 'data3')])
-    assert sorted(list(matched[('data1',
-                                'data2')].columns)) == sorted([('data1', 'x'),
-                                                               ('data1', 'y'),
-                                                               ('data2', 'x'),
-                                                               ('data2', 'y')])
-
-    assert sorted(list(matched[('data1',
-                                'data3')].columns)) == sorted([('data1', 'x'),
-                                                               ('data1', 'y'),
-                                                               ('data3', 'x'),
-                                                               ('data3', 'y')])
-
-
-def test_combinatory_matcher_n3():
-
-    n = 1000
-    x = np.arange(n)
-    y = np.arange(n) * 0.5
-    index = pd.date_range(start="2000-01-01", periods=n, freq="D")
-
-    df = pd.DataFrame({'x': x, 'y': y}, columns=['x', 'y'], index=index)
-    df2 = pd.DataFrame({'x': x, 'y': y}, columns=['x', 'y'], index=index)
-    df3 = pd.DataFrame({'x': x, 'y': y}, columns=['x', 'y'], index=index)
-    df4 = pd.DataFrame({'x': x, 'y': y}, columns=['x', 'y'], index=index)
-
-    df_dict = {'data1': df,
-               'data2': df2,
-               'data3': df3}
-
-    temp_matcher = temporal_matchers.BasicTemporalMatching()
-    matched = temp_matcher.combinatory_matcher(df_dict, 'data1', n=3)
-    assert list(matched) == [('data1', 'data2', 'data3')]
-    assert sorted(list(matched[('data1',
-                                'data2',
-                                'data3')].columns)) == sorted([('data1', 'x'),
-                                                               ('data1', 'y'),
-                                                               ('data2', 'x'),
-                                                               ('data2', 'y'),
-                                                               ('data3', 'x'),
-                                                               ('data3', 'y')])
-
-    df_dict = {'data1': df,
-               'data2': df2,
-               'data3': df3,
-               'data4': df4}
-
-    temp_matcher = temporal_matchers.BasicTemporalMatching()
-    matched = temp_matcher.combinatory_matcher(df_dict, 'data1', n=3)
-    assert sorted(list(matched)) == sorted([('data1', 'data2', 'data3'),
-                                            ('data1', 'data2', 'data4'),
-                                            ('data1', 'data3', 'data4')])
-    assert sorted(list(matched[('data1',
-                                'data2',
-                                'data3')].columns)) == sorted([('data1', 'x'),
-                                                               ('data1', 'y'),
-                                                               ('data2', 'x'),
-                                                               ('data2', 'y'),
-                                                               ('data3', 'x'),
-                                                               ('data3', 'y')])
-
-
-def test_add_name_to_df_columns():
-
-    n = 10
-    x = np.arange(n)
-    y = np.arange(n) * 0.5
-    index = pd.date_range(start="2000-01-01", periods=n, freq="D")
-
-    df = pd.DataFrame({'x': x, 'y': y}, columns=['x', 'y'], index=index)
-    df = temporal_matchers.df_name_multiindex(df, 'test')
-    assert list(df.columns) == [('test', 'x'), ('test', 'y')]
+    assert gpis_ == gpis
+    assert lons_ == lons
+    assert lats_ == [lats]
+    assert args == [arg1]

@@ -21,7 +21,7 @@ class Validation(object):
 
     Parameters
     ----------
-    datasets : dict of dicts
+    datasets : dict of dicts, or pytesmo.validation_framwork.data_manager.DataManager
         Keys: string, datasets names
         Values: dict, containing the following fields
             'class': object
@@ -103,10 +103,11 @@ class Validation(object):
                  masking_datasets=None,
                  period=None,
                  scaling='lin_cdf_match', scaling_ref=None):
-        """
-        Initialize parameters.
-        """
-        self.data_manager = DataManager(datasets, spatial_ref, period)
+
+        if type(datasets) is DataManager:
+            self.data_manager = datasets
+        else:
+            self.data_manager = DataManager(datasets, spatial_ref, period)
 
         self.temp_matching = temporal_matcher
         if self.temp_matching is None:
@@ -165,17 +166,16 @@ class Validation(object):
             Values: dict containing the elements returned by metrics_calculator
         """
         results = {}
-
-        gpis = ensure_iterable(gpis)
-        lons = ensure_iterable(lons)
-        lats = ensure_iterable(lats)
-        for arg, i in enumerate(args):
-            args[i] = ensure_iterable(arg)
+        if len(args) > 0:
+            gpis, lons, lats, args = args_to_iterable(gpis,
+                                                      lons,
+                                                      lats,
+                                                      *args,
+                                                      n=3)
+        else:
+            gpis, lons, lats = args_to_iterable(gpis, lons, lats)
 
         for gpi_info in zip(gpis, lons, lats, *args):
-            # if processing is cell based gpi_metainfo is limited to gpi, lon,
-            # lat at the moment
-            gpi_meta = gpi_info
 
             df_dict = self.data_manager.get_data(gpi_info[0],
                                                  gpi_info[1],
@@ -184,89 +184,14 @@ class Validation(object):
             # if no data is available continue with the next gpi
             if len(df_dict) == 0:
                 continue
+            matched_data, result, used_data = self.perform_validation(
+                df_dict, gpi_info)
 
-            if self.masking_dm is not None:
-                ref_df = df_dict[self.temporal_ref]
-                df_dict[self.temporal_ref] = self.mask_dataset(ref_df,
-                                                               gpi_info)
-
-            # compute results for combinations as requested by the metrics
-            # calculator dict
-            # First temporal match all the combinations
-            matched_n = {}
-            for n, k in self.metrics_c:
-                matched_data = self.temp_matching(df_dict,
-                                                  self.temporal_ref,
-                                                  n=n)
-
-                matched_n[(n, k)] = matched_data
-
-            for n, k in self.metrics_c:
-                n_matched_data = matched_n[(n, k)]
-                for result in get_result_names(self.data_manager.ds_dict,
-                                               self.temporal_ref,
-                                               n=k):
-                    # find the key into the temporally matched dataset by combining the
-                    # dataset parts of the result_names
-                    dskey = []
-                    rename_dict = {}
-                    f = lambda x: "k{}".format(x) if x > 0 else 'ref'
-                    for i, r in enumerate(result):
-                        dskey.append(r[0])
-                        rename_dict[r[0]] = f(i)
-
-                    dskey = tuple(dskey)
-                    if n == k:
-                        # we should have an exact match of datasets and
-                        # temporal matches
-                        data = n_matched_data[dskey]
-                    else:
-                        # more datasets were temporally matched than are
-                        # requested now so we select a temporally matched
-                        # dataset that has the first key in common with the
-                        # requested one ensuring that it was used as a
-                        # reference and also has the rest of the requested
-                        # datasets in the key
-                        first_match = [
-                            key for key in n_matched_data if dskey[0] == key[0]]
-                        found_key = None
-                        for key in first_match:
-                            for dsk in dskey[1:]:
-                                if dsk not in key:
-                                    continue
-                            found_key = key
-                        data = n_matched_data[found_key]
-
-                    # extract only the relevant columns from matched DataFrame
-                    data = data[[x for x in result]]
-
-                    # at this stage we can drop the column multiindex and just use
-                    # the dataset name
-                    data.columns = data.columns.droplevel(level=1)
-
-                    data.rename(columns=rename_dict, inplace=True)
-
-                    if len(data) == 0:
-                        continue
-
-                    if self.scaling is not None:
-                        # get scaling index by finding the column in the
-                        # DataFrame that belongs to the scaling reference
-                        scaling_index = data.columns.tolist().index(
-                            rename_dict[self.scaling_ref])
-                        try:
-                            data = scaling.scale(data,
-                                                 method=self.scaling,
-                                                 reference_index=scaling_index)
-                        except ValueError:
-                            continue
-
-                    if result not in results.keys():
-                        results[result] = []
-
-                    metrics_calculator = self.metrics_c[(n, k)]
-                    metrics = metrics_calculator(data, gpi_meta)
-                    results[result].append(metrics)
+            # add result of one gpi to global results dictionary
+            for r in result:
+                if r not in results:
+                    results[r] = []
+                results[r] = results[r] + result[r]
 
         compact_results = {}
         for key in results.keys():
@@ -279,6 +204,78 @@ class Validation(object):
                     np.array(entries, dtype=results[key][0][field_name].dtype)
 
         return compact_results
+
+    def perform_validation(self,
+                           df_dict,
+                           gpi_info):
+        """
+        Perform the validation for one grid point index and return the
+        matched datasets as well as the calculated metrics.
+
+        Parameters
+        ----------
+        df_dict: dict of pandas.DataFrames
+            DataFrames read by the data readers for each dataset
+        gpi_info: tuple
+            tuple of at least, (gpi, lon, lat)
+
+        Returns
+        -------
+        matched_n: dict of pandas.DataFrames
+            temporally matched data stored by (n, k) tuples
+        results: dict
+            Dictonary of calculated metrics stored by dataset combinations tuples.
+        used_data: dict
+            The DataFrame used for calculation of each set of metrics.
+        """
+
+        if self.masking_dm is not None:
+            ref_df = df_dict[self.temporal_ref]
+            df_dict[self.temporal_ref] = self.mask_dataset(ref_df,
+                                                           gpi_info)
+
+        matched_n = self.temporal_match_datasets(df_dict)
+
+        results = {}
+        used_data = {}
+
+        for n, k in self.metrics_c:
+            n_matched_data = matched_n[(n, k)]
+            for data, result_key in self.k_datasets_from(n_matched_data, n, k):
+
+                if len(data) == 0:
+                    continue
+                # at this stage we can drop the column multiindex and just use
+                # the dataset name
+                data.columns = data.columns.droplevel(level=1)
+                # Rename the columns to 'ref', 'k1', 'k2', ...
+                rename_dict = {}
+                f = lambda x: "k{}".format(x) if x > 0 else 'ref'
+                for i, r in enumerate(result_key):
+                    rename_dict[r[0]] = f(i)
+                data.rename(columns=rename_dict, inplace=True)
+
+                if self.scaling is not None:
+                    # get scaling index by finding the column in the
+                    # DataFrame that belongs to the scaling reference
+                    scaling_index = data.columns.tolist().index(
+                        rename_dict[self.scaling_ref])
+                    try:
+                        data = scaling.scale(data,
+                                             method=self.scaling,
+                                             reference_index=scaling_index)
+                    except ValueError:
+                        continue
+
+                if result_key not in results.keys():
+                    results[result_key] = []
+
+                metrics_calculator = self.metrics_c[(n, k)]
+                used_data[result_key] = data
+                metrics = metrics_calculator(data, gpi_info)
+                results[result_key].append(metrics)
+
+        return matched_n, results, used_data
 
     def mask_dataset(self, ref_df, gpi_info):
         """
@@ -296,14 +293,7 @@ class Validation(object):
             boolean array of the size of the temporal reference read
         """
 
-        # read only masking datasets and use the already read reference
-        masking_df_dict = self.masking_dm.get_other_data(gpi_info[0],
-                                                         gpi_info[1],
-                                                         gpi_info[2])
-        masking_df_dict.update({'_reference': ref_df})
-        matched_masking = self.temp_matching(masking_df_dict,
-                                             '_reference',
-                                             n=len(masking_df_dict))
+        matched_masking = self.temporal_match_masking_data(ref_df, gpi_info)
         # this will only be one element since n is the same as the
         # number of masking datasets
         ds_key, ds = matched_masking.popitem()
@@ -312,7 +302,7 @@ class Validation(object):
                                        n=len(self.masking_dm.ds_dict)):
             # get length of matched dataset and make a mask choosing all the
             # observations by default to start
-            choose_all = np.ones(len(masking_df_dict['_reference']),
+            choose_all = np.ones(len(ref_df),
                                  dtype=bool)
             for key in result:
                 if key[0] != '_reference':
@@ -326,6 +316,145 @@ class Validation(object):
                     choose_all = choose_all & choose
 
         return ref_df[choose_all]
+
+    def temporal_match_masking_data(self, ref_df, gpi_info):
+        """
+        Temporal match the masking data to the reference DataFrame
+
+        Parameters
+        ----------
+        ref_df: pandas.DataFrame
+            Reference data
+        gpi_info: tuple or list
+            contains, (gpi, lon, lat)
+
+        Returns
+        -------
+        matched_masking: dict of pandas.DataFrames
+            Contains temporally matched masking data. This dict has only one key
+            being a tuple that contains the matched datasets.
+        """
+
+        # read only masking datasets and use the already read reference
+        masking_df_dict = self.masking_dm.get_other_data(gpi_info[0],
+                                                         gpi_info[1],
+                                                         gpi_info[2])
+        masking_df_dict.update({'_reference': ref_df})
+        matched_masking = self.temp_matching(masking_df_dict,
+                                             '_reference',
+                                             n=len(masking_df_dict))
+        return matched_masking
+
+    def temporal_match_datasets(self, df_dict):
+        """
+        Temporally match all the requested combinations of datasets.
+
+        Parameters
+        ----------
+        df_dict: dict of pandas.DataFrames
+            DataFrames read by the data readers for each dataset
+
+        Returns
+        -------
+        matched_n: dict of pandas.DataFrames
+            for each (n, k) in the metrics calculators the n temporally
+            matched dataframes
+        """
+
+        matched_n = {}
+        for n, k in self.metrics_c:
+            matched_data = self.temp_matching(df_dict,
+                                              self.temporal_ref,
+                                              n=n)
+
+            matched_n[(n, k)] = matched_data
+
+        return matched_n
+
+    def k_datasets_from(self, n_matched_data, n, k):
+        """
+        Extract k datasets from n temporally matched ones.
+
+        This is used to send combinations of k datasets to
+        metrics calculators expecting only k datasets.
+
+        Parameters
+        ----------
+        n_matched_data: dict of pandas.DataFrames
+            DataFrames in which n datasets were temporally matched.
+            The key is a tuple of the dataset names.
+        n: int
+            The value of n used
+        k: int
+            Combinations of how many datasets to return at once.
+
+        Yields
+        ------
+        data: pd.DataFrame
+            pandas DataFrame with k columns extracted from the
+            temporally matched datasets
+        result: tuple
+            Tuple describing which datasets and columns are in
+            the returned data. ((dataset_name, column_name), (dataset_name2, column_name2))
+        """
+
+        for result in get_result_names(self.data_manager.ds_dict,
+                                       self.temporal_ref,
+                                       n=k):
+            data = self.get_data_for_result_tuple(n_matched_data, result)
+            yield data, result
+
+    def get_data_for_result_tuple(self, n_matched_data, result_tuple):
+        """
+        Extract a dataframe for a given result tuple from the
+        matched dataframes.
+
+        Parameters
+        ----------
+        n_matched_data: dict of pandas.DataFrames
+            DataFrames in which n datasets were temporally matched.
+            The key is a tuple of the dataset names.
+        result_tuple: tuple
+            Tuple describing which datasets and columns should be
+            extracted. ((dataset_name, column_name), (dataset_name2, column_name2))
+
+        Returns
+        -------
+        data: pd.DataFrame
+            pandas DataFrame with columns extracted from the
+            temporally matched datasets
+        """
+        # find the key into the temporally matched dataset by combining the
+        # dataset parts of the result_names
+        dskey = []
+        for i, r in enumerate(result_tuple):
+            dskey.append(r[0])
+
+        dskey = tuple(dskey)
+        if len(list(n_matched_data)[0]) == len(dskey):
+            # we should have an exact match of datasets and
+            # temporal matches
+            data = n_matched_data[dskey]
+        else:
+            # more datasets were temporally matched than are
+            # requested now so we select a temporally matched
+            # dataset that has the first key in common with the
+            # requested one ensuring that it was used as a
+            # reference and also has the rest of the requested
+            # datasets in the key
+            first_match = [
+                key for key in n_matched_data if dskey[0] == key[0]]
+            found_key = None
+            for key in first_match:
+                for dsk in dskey[1:]:
+                    if dsk not in key:
+                        continue
+                found_key = key
+            data = n_matched_data[found_key]
+
+        # extract only the relevant columns from matched DataFrame
+        data = data[[x for x in result_tuple]]
+        return data
 
     def get_processing_jobs(self):
         """
@@ -350,3 +479,31 @@ class Validation(object):
                 jobs = [gpis, lons, lats]
 
         return jobs
+
+
+def args_to_iterable(*args, **kwargs):
+    """
+    Convert arguments to iterables.
+
+
+    Parameters
+    ----------
+    args: iterables or not
+        arguments
+    n : int, optional
+        number of explicit arguments
+    """
+    if 'n' in kwargs:
+        n = kwargs['n']
+    else:
+        n = len(args)
+
+    arguments = []
+    for i, arg in enumerate(args):
+        arguments.append(ensure_iterable(arg))
+
+    it = iter(arguments)
+    for _ in range(n):
+        yield next(it, None)
+    if n < len(args):
+        yield tuple(it)

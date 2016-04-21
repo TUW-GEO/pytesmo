@@ -43,14 +43,26 @@ class BasicMetrics(object):
     This class just computes the basic metrics,
     Pearson's R
     Spearman's rho
+    optionally Kendall's tau
     RMSD
     BIAS
 
     it also stores information about gpi, lat, lon
     and number of observations
+
+    Parameters
+    ----------
+    other_name: string, optional
+        Name of the column of the non-reference / other dataset in the
+        pandas DataFrame
+    calc_tau: boolean, optional
+        if True then also tau is calculated. This is set to False by default
+        since the calculation of Kendalls tau is rather slow and can significantly
+        impact performance of e.g. global validation studies
     """
 
-    def __init__(self, other_name='other'):
+    def __init__(self, other_name='k1',
+                 calc_tau=False):
 
         self.result_template = {'R': np.float32([np.nan]),
                                 'p_R': np.float32([np.nan]),
@@ -66,6 +78,7 @@ class BasicMetrics(object):
                                 'lat': np.float64([np.nan])}
 
         self.other_name = other_name
+        self.calc_tau = calc_tau
 
     def calc_metrics(self, data, gpi_info):
         """
@@ -82,7 +95,7 @@ class BasicMetrics(object):
 
         Notes
         -----
-        Kendall tau is not calculated at the moment
+        Kendall tau is calculation is optional at the moment
         because the scipy implementation is very slow which is problematic for
         global comparisons
         """
@@ -99,15 +112,47 @@ class BasicMetrics(object):
         x, y = data['ref'].values, data[self.other_name].values
         R, p_R = metrics.pearsonr(x, y)
         rho, p_rho = metrics.spearmanr(x, y)
-        # tau, p_tau = metrics.kendalltau(x, y)
         RMSD = metrics.rmsd(x, y)
         BIAS = metrics.bias(x, y)
 
         dataset['R'][0], dataset['p_R'][0] = R, p_R
         dataset['rho'][0], dataset['p_rho'][0] = rho, p_rho
-        # dataset['tau'][0], dataset['p_tau'][0] = tau, p_tau
         dataset['RMSD'][0] = RMSD
         dataset['BIAS'][0] = BIAS
+
+        if self.calc_tau:
+            tau, p_tau = metrics.kendalltau(x, y)
+            dataset['tau'][0], dataset['p_tau'][0] = tau, p_tau
+
+        return dataset
+
+
+class BasicMetricsPlusMSE(BasicMetrics):
+    """
+    Basic Metrics plus Mean squared Error and the decomposition of the MSE
+    into correlation, bias and variance parts.
+    """
+
+    def __init__(self, other_name='k1',
+                 calc_tau=False):
+
+        super(BasicMetricsPlusMSE, self).__init__(other_name=other_name,
+                                                  calc_tau=calc_tau)
+        self.result_template.update({'mse': np.float32([np.nan]),
+                                     'mse_corr': np.float32([np.nan]),
+                                     'mse_bias': np.float32([np.nan]),
+                                     'mse_var': np.float32([np.nan])})
+
+    def calc_metrics(self, data, gpi_info):
+        dataset = super(BasicMetricsPlusMSE, self).calc_metrics(data, gpi_info)
+        if len(data) < 10:
+            return dataset
+        x, y = data['ref'].values, data[self.other_name].values
+        mse, mse_corr, mse_bias, mse_var = metrics.mse(x, y)
+        dataset['mse'][0] = mse
+        dataset['mse_corr'][0] = mse_corr
+        dataset['mse_bias'][0] = mse_bias
+        dataset['mse_var'][0] = mse_var
 
         return dataset
 
