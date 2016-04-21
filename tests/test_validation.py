@@ -35,8 +35,9 @@ import os
 import tempfile
 import netCDF4 as nc
 import numpy as np
-import pandas as pd
 import numpy.testing as nptest
+import pandas as pd
+import pandas.util.testing as pdtest
 import pytest
 
 import pygeogrids.grids as grids
@@ -182,6 +183,9 @@ class TestDataset(object):
 
     def read_ts(self, *args, **kwargs):
         return self.read(*args, **kwargs)
+
+    def read_ts_other(self, *args, **kwargs):
+        return self.read(*args, **kwargs) * 2
 
     def write_ts(self, gpi, data):
         return None
@@ -549,6 +553,31 @@ def test_DataManager_default_add():
             'lut_max_dist': None,
             'grids_compatible': False
         }}
+
+
+def test_DataManager_read_ts_method_names():
+
+    ds1 = TestDataset("")
+
+    datasets = {
+        'DS1': {
+            'class': ds1,
+            'columns': ['soil moisture'],
+        },
+        'DS2': {
+            'class': ds1,
+            'columns': ['soil moisture'],
+        }
+    }
+
+    read_ts_method_names = {'DS1': 'read_ts',
+                            'DS2': 'read_ts_other'}
+    dm = DataManager(datasets, 'DS1',
+                     read_ts_names=read_ts_method_names)
+    data = dm.read_ds('DS1', 1)
+    data_other = dm.read_ds('DS2', 1)
+    pdtest.assert_frame_equal(data, ds1.read_ts(1))
+    pdtest.assert_frame_equal(data_other, ds1.read_ts_other(1))
 
 
 def test_DataManager_RuntimeError():
