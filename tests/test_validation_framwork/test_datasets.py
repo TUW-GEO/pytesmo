@@ -45,12 +45,17 @@ class TestDataset(object):
         self.filename = filename
         self.mode = mode
 
-    def read(self, *args):
+    def read(self, *args, **kwargs):
+
+        if 'start' in kwargs:
+            start = kwargs['start']
+        else:
+            start = '2000-01-01'
 
         n = 1000
         x = np.arange(n)
         y = np.arange(n) * 0.5
-        index = pd.date_range(start="2000-01-01", periods=n, freq="D")
+        index = pd.date_range(start=start, periods=n, freq="D")
 
         df = pd.DataFrame({'x': x, 'y': y}, columns=['x', 'y'], index=index)
         return df
@@ -81,6 +86,7 @@ class MaskingTestDataset(TestDataset):
         data = super(MaskingTestDataset, self).read(*args)
         data = data[['x']]
         data = data < limit
+        data = data[:limit]
         return data
 
 
@@ -88,12 +94,10 @@ def test_masking_testdataset():
 
     ds = MaskingTestDataset("")
     data = ds.read(1, limit=500)
-    data_should = np.concatenate([np.ones((500), dtype=bool),
-                                  np.zeros((500), dtype=bool)])
+    data_should = np.ones((500), dtype=bool)
     nptest.assert_almost_equal(data['x'].values, data_should)
     data = ds.read(1, limit=250)
-    data_should = np.concatenate([np.ones((250), dtype=bool),
-                                  np.zeros((750), dtype=bool)])
+    data_should = np.ones((250), dtype=bool)
     nptest.assert_almost_equal(data['x'].values, data_should)
 
 
@@ -117,6 +121,67 @@ def setup_TestDatasets():
             'columns': ['y'],
             'args': [],
             'kwargs': {},
+            'use_lut': False,
+            'grids_compatible': True
+        },
+        'DS3': {
+            'class': ds3,
+            'columns': ['x', 'y'],
+            'args': [],
+            'kwargs': {},
+            'use_lut': False,
+            'grids_compatible': True
+        }
+    }
+    return datasets
+
+
+def setup_two_without_overlap():
+    grid = grids.CellGrid(np.array([1, 2, 3, 4]), np.array([1, 2, 3, 4]),
+                          np.array([4, 4, 2, 1]), gpis=np.array([1, 2, 3, 4]))
+
+    ds1 = GriddedTsBase("", grid, TestDataset)
+    ds2 = GriddedTsBase("", grid, TestDataset)
+
+    datasets = {
+        'DS1': {
+            'class': ds1,
+            'columns': ['x'],
+            'args': [],
+            'kwargs': {}
+        },
+        'DS2': {
+            'class': ds2,
+            'columns': ['y'],
+            'args': [],
+            'kwargs': {'start': '1990-01-01'},
+            'use_lut': False,
+            'grids_compatible': True
+        }
+    }
+    return datasets
+
+
+def setup_three_with_two_overlapping():
+    grid = grids.CellGrid(np.array([1, 2, 3, 4]), np.array([1, 2, 3, 4]),
+                          np.array([4, 4, 2, 1]), gpis=np.array([1, 2, 3, 4]))
+
+    ds1 = GriddedTsBase("", grid, TestDataset)
+    ds2 = GriddedTsBase("", grid, TestDataset)
+    ds3 = GriddedTsBase("", grid, TestDataset)
+
+    datasets = {
+        'DS1': {
+            'class': ds1,
+            'columns': ['x'],
+            'args': [],
+            'kwargs': {}
+        },
+        'DS2': {
+            'class': ds2,
+            'columns': ['y'],
+            'args': [],
+            'kwargs': {'start': '1990-01-01'},
             'use_lut': False,
             'grids_compatible': True
         },

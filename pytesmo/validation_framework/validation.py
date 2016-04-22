@@ -5,6 +5,7 @@ except ImportError:
     pass
 
 import numpy as np
+import pandas as pd
 from pygeogrids.grids import CellGrid
 
 import pytesmo.scaling as scaling
@@ -228,20 +229,30 @@ class Validation(object):
         used_data: dict
             The DataFrame used for calculation of each set of metrics.
         """
+        results = {}
+        used_data = {}
+        matched_n = {}
 
         if self.masking_dm is not None:
             ref_df = df_dict[self.temporal_ref]
-            df_dict[self.temporal_ref] = self.mask_dataset(ref_df,
-                                                           gpi_info)
+            masked_ref_df = self.mask_dataset(ref_df,
+                                              gpi_info)
+            if len(masked_ref_df) == 0:
+                return matched_n, results, used_data
+
+            df_dict[self.temporal_ref] = masked_ref_df
 
         matched_n = self.temporal_match_datasets(df_dict)
 
-        results = {}
-        used_data = {}
-
         for n, k in self.metrics_c:
             n_matched_data = matched_n[(n, k)]
-            for data, result_key in self.k_datasets_from(n_matched_data, n, k):
+            if len(n_matched_data) == 0:
+                continue
+            result_names = get_result_names(self.data_manager.ds_dict,
+                                            self.temporal_ref,
+                                            n=k)
+            for data, result_key in self.k_datasets_from(n_matched_data,
+                                                         result_names):
 
                 if len(data) == 0:
                     continue
@@ -296,26 +307,28 @@ class Validation(object):
         matched_masking = self.temporal_match_masking_data(ref_df, gpi_info)
         # this will only be one element since n is the same as the
         # number of masking datasets
-        ds_key, ds = matched_masking.popitem()
-        for result in get_result_names(self.masking_dm.ds_dict,
-                                       '_reference',
-                                       n=len(self.masking_dm.ds_dict)):
-            # get length of matched dataset and make a mask choosing all the
-            # observations by default to start
-            choose_all = np.ones(len(ref_df),
-                                 dtype=bool)
+        result_names = get_result_names(self.masking_dm.ds_dict,
+                                        '_reference',
+                                        n=2)
+        choose_all = pd.DataFrame(index=ref_df.index)
+        for data, result in self.k_datasets_from(matched_masking,
+                                                 result_names):
+            if len(data) == 0:
+                continue
+
             for key in result:
                 if key[0] != '_reference':
                     # this is necessary since the boolean datatype might have
                     # been changed to float 1.0 and 0.0 issue with temporal
                     # resampling that is not easily resolved since most
-                    # datatypes have no nan representation. We also switch the
-                    # meaning of True False (from masking to choosing) here so
-                    # we can use it in the indexing without inversion.
-                    choose = (ds[key] == False)
-                    choose_all = choose_all & choose
+                    # datatypes have no nan representation.
+                    choose = pd.Series((data[key] == False), index=data.index)
+                    choose = choose.reindex(index=choose_all.index,
+                                            fill_value=True)
+                    choose_all[key] = choose.copy()
+        choosing = choose_all.apply(np.all, axis=1)
 
-        return ref_df[choose_all]
+        return ref_df[choosing]
 
     def temporal_match_masking_data(self, ref_df, gpi_info):
         """
@@ -342,7 +355,7 @@ class Validation(object):
         masking_df_dict.update({'_reference': ref_df})
         matched_masking = self.temp_matching(masking_df_dict,
                                              '_reference',
-                                             n=len(masking_df_dict))
+                                             n=2)
         return matched_masking
 
     def temporal_match_datasets(self, df_dict):
@@ -371,7 +384,7 @@ class Validation(object):
 
         return matched_n
 
-    def k_datasets_from(self, n_matched_data, n, k):
+    def k_datasets_from(self, n_matched_data, result_names):
         """
         Extract k datasets from n temporally matched ones.
 
@@ -383,10 +396,8 @@ class Validation(object):
         n_matched_data: dict of pandas.DataFrames
             DataFrames in which n datasets were temporally matched.
             The key is a tuple of the dataset names.
-        n: int
-            The value of n used
-        k: int
-            Combinations of how many datasets to return at once.
+        result_names: list
+            result names to extract
 
         Yields
         ------
@@ -398,9 +409,7 @@ class Validation(object):
             the returned data. ((dataset_name, column_name), (dataset_name2, column_name2))
         """
 
-        for result in get_result_names(self.data_manager.ds_dict,
-                                       self.temporal_ref,
-                                       n=k):
+        for result in result_names:
             data = self.get_data_for_result_tuple(n_matched_data, result)
             yield data, result
 
@@ -434,7 +443,12 @@ class Validation(object):
         if len(list(n_matched_data)[0]) == len(dskey):
             # we should have an exact match of datasets and
             # temporal matches
-            data = n_matched_data[dskey]
+            try:
+                data = n_matched_data[dskey]
+            except KeyError:
+                # if not then temporal matching between two datasets was
+                # unsuccessful
+                return []
         else:
             # more datasets were temporally matched than are
             # requested now so we select a temporally matched
