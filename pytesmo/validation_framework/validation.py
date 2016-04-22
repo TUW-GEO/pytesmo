@@ -248,7 +248,11 @@ class Validation(object):
             n_matched_data = matched_n[(n, k)]
             if len(n_matched_data) == 0:
                 continue
-            for data, result_key in self.k_datasets_from(n_matched_data, n, k):
+            result_names = get_result_names(self.data_manager.ds_dict,
+                                            self.temporal_ref,
+                                            n=k)
+            for data, result_key in self.k_datasets_from(n_matched_data,
+                                                         result_names):
 
                 if len(data) == 0:
                     continue
@@ -303,24 +307,26 @@ class Validation(object):
         matched_masking = self.temporal_match_masking_data(ref_df, gpi_info)
         # this will only be one element since n is the same as the
         # number of masking datasets
-        ds_key, ds = matched_masking.popitem()
-        for result in get_result_names(self.masking_dm.ds_dict,
-                                       '_reference',
-                                       n=len(self.masking_dm.ds_dict)):
-            # get length of matched dataset and make a mask choosing all the
-            # observations by default to start
-            choose_all = pd.DataFrame(index=ref_df.index)
+        result_names = get_result_names(self.masking_dm.ds_dict,
+                                        '_reference',
+                                        n=2)
+        choose_all = pd.DataFrame(index=ref_df.index)
+        for data, result in self.k_datasets_from(matched_masking,
+                                                 result_names):
+            if len(data) == 0:
+                continue
+
             for key in result:
                 if key[0] != '_reference':
                     # this is necessary since the boolean datatype might have
                     # been changed to float 1.0 and 0.0 issue with temporal
                     # resampling that is not easily resolved since most
                     # datatypes have no nan representation.
-                    choose = pd.Series((ds[key] == False), index=ds.index)
+                    choose = pd.Series((data[key] == False), index=data.index)
                     choose = choose.reindex(index=choose_all.index,
                                             fill_value=True)
                     choose_all[key] = choose.copy()
-            choosing = choose_all.apply(np.all, axis=1)
+        choosing = choose_all.apply(np.all, axis=1)
 
         return ref_df[choosing]
 
@@ -349,7 +355,7 @@ class Validation(object):
         masking_df_dict.update({'_reference': ref_df})
         matched_masking = self.temp_matching(masking_df_dict,
                                              '_reference',
-                                             n=len(masking_df_dict))
+                                             n=2)
         return matched_masking
 
     def temporal_match_datasets(self, df_dict):
@@ -378,7 +384,7 @@ class Validation(object):
 
         return matched_n
 
-    def k_datasets_from(self, n_matched_data, n, k):
+    def k_datasets_from(self, n_matched_data, result_names):
         """
         Extract k datasets from n temporally matched ones.
 
@@ -390,10 +396,8 @@ class Validation(object):
         n_matched_data: dict of pandas.DataFrames
             DataFrames in which n datasets were temporally matched.
             The key is a tuple of the dataset names.
-        n: int
-            The value of n used
-        k: int
-            Combinations of how many datasets to return at once.
+        result_names: list
+            result names to extract
 
         Yields
         ------
@@ -405,9 +409,7 @@ class Validation(object):
             the returned data. ((dataset_name, column_name), (dataset_name2, column_name2))
         """
 
-        for result in get_result_names(self.data_manager.ds_dict,
-                                       self.temporal_ref,
-                                       n=k):
+        for result in result_names:
             data = self.get_data_for_result_tuple(n_matched_data, result)
             yield data, result
 

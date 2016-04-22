@@ -86,6 +86,7 @@ class MaskingTestDataset(TestDataset):
         data = super(MaskingTestDataset, self).read(*args)
         data = data[['x']]
         data = data < limit
+        data = data[:limit]
         return data
 
 
@@ -93,12 +94,10 @@ def test_masking_testdataset():
 
     ds = MaskingTestDataset("")
     data = ds.read(1, limit=500)
-    data_should = np.concatenate([np.ones((500), dtype=bool),
-                                  np.zeros((500), dtype=bool)])
+    data_should = np.ones((500), dtype=bool)
     nptest.assert_almost_equal(data['x'].values, data_should)
     data = ds.read(1, limit=250)
-    data_should = np.concatenate([np.ones((250), dtype=bool),
-                                  np.zeros((750), dtype=bool)])
+    data_should = np.ones((250), dtype=bool)
     nptest.assert_almost_equal(data['x'].values, data_should)
 
 
