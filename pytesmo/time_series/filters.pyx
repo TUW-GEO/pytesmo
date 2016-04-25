@@ -129,6 +129,7 @@ def boxcar_filter(np.ndarray[DTYPE_d, ndim=1] in_data,
     cdef unsigned int j
     cdef bint isnan
     cdef double sum = 0
+    cdef double limit = window / 2.0
     cdef int nobs = 0
 
     filtered.fill(np.nan)
@@ -138,13 +139,26 @@ def boxcar_filter(np.ndarray[DTYPE_d, ndim=1] in_data,
         if not isnan:
             sum = 0
             nobs = 0
-            for j in range(in_jd.shape[0]):
+            for j in range(i, in_jd.shape[0]):
                 isnan = (in_data[j] == nan) or npy_isnan(in_data[j])
                 if not isnan:
                     tdiff = in_jd[j] - in_jd[i]
-                    if fabs(tdiff) <= window / 2:
+                    if fabs(tdiff) <= limit:
                         sum = sum + in_data[j]
                         nobs = nobs + 1
+                    else:
+                        break
+
+            for j in range(i, -1, -1):
+                if i != j:
+                    isnan = (in_data[j] == nan) or npy_isnan(in_data[j])
+                    if not isnan:
+                        tdiff = in_jd[j] - in_jd[i]
+                        if fabs(tdiff) <= limit:
+                            sum = sum + in_data[j]
+                            nobs = nobs + 1
+                        else:
+                            break
 
             filtered[i] = sum / nobs
 
