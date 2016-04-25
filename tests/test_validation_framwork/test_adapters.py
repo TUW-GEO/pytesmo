@@ -59,9 +59,25 @@ def test_anomaly_adapter():
     nptest.assert_almost_equal(data_anom['y'].values[0], -4.25)
 
 
+def test_anomaly_adapter_one_column():
+    ds = TestDataset('', n=20)
+    ds_anom = AnomalyAdapter(ds, columns=['x'])
+    data_anom = ds_anom.read_ts()
+    nptest.assert_almost_equal(data_anom['x'].values[0], -8.5)
+    nptest.assert_almost_equal(data_anom['y'].values[0], 0)
+
+
 def test_anomaly_clim_adapter():
     ds = TestDataset('', n=20)
     ds_anom = AnomalyClimAdapter(ds)
     data_anom = ds_anom.read_ts()
     nptest.assert_almost_equal(data_anom['x'].values[4], -5.5)
     nptest.assert_almost_equal(data_anom['y'].values[4], -2.75)
+
+
+def test_anomaly_clim_adapter_one_column():
+    ds = TestDataset('', n=20)
+    ds_anom = AnomalyClimAdapter(ds, columns=['x'])
+    data_anom = ds_anom.read_ts()
+    nptest.assert_almost_equal(data_anom['x'].values[4], -5.5)
+    nptest.assert_almost_equal(data_anom['y'].values[4], 2)

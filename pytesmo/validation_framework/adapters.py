@@ -89,14 +89,21 @@ class AnomalyAdapter(object):
         The window-size [days] of the moving-average window to calculate the
         anomaly reference (only used if climatology is not provided)
         Default: 35 (days)
+    columns: list, optional
+        columns in the dataset for which to calculate anomalies. 
     """
 
-    def __init__(self, cls, window_size=35):
+    def __init__(self, cls, window_size=35, columns=None):
         self.cls = cls
         self.window_size = window_size
+        self.columns = columns
 
     def calc_anom(self, data):
-        for column in data:
+        if self.columns is None:
+            ite = data
+        else:
+            ite = self.columns
+        for column in ite:
             data[column] = calc_anomaly(data[column],
                                         window_size=self.window_size)
         return data
@@ -121,16 +128,23 @@ class AnomalyClimAdapter(object):
     ----------
     cls : class instance
         Must have a read_ts or read method returning a pandas.DataFrame
+    columns: list, optional
+        columns in the dataset for which to calculate anomalies. 
     kwargs:
         Any additional arguments will be given to the calc_climatology function.
     """
 
-    def __init__(self, cls, **kwargs):
+    def __init__(self, cls, columns=None, **kwargs):
         self.cls = cls
         self.kwargs = kwargs
+        self.columns = columns
 
     def calc_anom(self, data):
-        for column in data:
+        if self.columns is None:
+            ite = data
+        else:
+            ite = self.columns
+        for column in ite:
             clim = calc_climatology(data[column], **self.kwargs)
             data[column] = calc_anomaly(data[column], climatology=clim)
         return data
