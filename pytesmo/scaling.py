@@ -8,6 +8,7 @@ from scipy import stats
 import numpy as np
 import pandas as pd
 import scipy.interpolate as sc_int
+from warnings import warn
 
 
 def add_scaled(df, method='linreg', label_in=None, label_scale=None):
@@ -306,9 +307,16 @@ def gen_cdf_match(src,
     # This is important if the stored percentiles were generated
     # using a subset of the data and the new data has values outside
     # of this original range
-    inter = sc_int.InterpolatedUnivariateSpline(perc_src,
-                                                perc_ref,
-                                                k=k)
+    try:
+        inter = sc_int.InterpolatedUnivariateSpline(perc_src,
+                                                    perc_ref,
+                                                    k=k)
+    except Exception:
+        # here we must catch all exceptions since scipy does not raise a proper
+        # Exception
+        warn("Too few percentiles for chosen k.")
+        return np.full_like(src, np.nan)
+
     scaled = inter(src)
     if max_val is not None:
         scaled[scaled > max_val] = max_val
