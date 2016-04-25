@@ -1,3 +1,8 @@
+# v0.5.2, 2016-04-xx
+
+* Fix bugs when the validation framework encountered empty datasets for various reasons.
+* Add dataset adapters for masking and anomaly calculation.
+
 # v0.5.1, 2016-04-21
 
 * Fix bug in jobs argument passing to Validation class. 
