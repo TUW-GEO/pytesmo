@@ -108,3 +108,37 @@ class AnomalyAdapter(object):
     def read(self, *args, **kwargs):
         data = self.cls.read(*args, **kwargs)
         return self.calc_anom(data)
+
+
+class AnomalyClimAdapter(object):
+    """
+    Takes the pandas DataFrame that the read_ts or read method of the instance
+    returns and calculates the anomaly of the time series based on a moving
+    average.
+
+
+    Parameters
+    ----------
+    cls : class instance
+        Must have a read_ts or read method returning a pandas.DataFrame
+    kwargs:
+        Any additional arguments will be given to the calc_climatology function.
+    """
+
+    def __init__(self, cls, **kwargs):
+        self.cls = cls
+        self.kwargs = kwargs
+
+    def calc_anom(self, data):
+        for column in data:
+            clim = calc_climatology(data[column], **self.kwargs)
+            data[column] = calc_anomaly(data[column], climatology=clim)
+        return data
+
+    def read_ts(self, *args, **kwargs):
+        data = self.cls.read_ts(*args, **kwargs)
+        return self.calc_anom(data)
+
+    def read(self, *args, **kwargs):
+        data = self.cls.read(*args, **kwargs)
+        return self.calc_anom(data)

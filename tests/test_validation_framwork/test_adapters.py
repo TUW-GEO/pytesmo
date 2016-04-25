@@ -32,6 +32,7 @@ Test for the adapters.
 
 from pytesmo.validation_framework.adapters import MaskingAdapter
 from pytesmo.validation_framework.adapters import AnomalyAdapter
+from pytesmo.validation_framework.adapters import AnomalyClimAdapter
 from test_datasets import TestDataset
 
 import numpy as np
@@ -56,3 +57,11 @@ def test_anomaly_adapter():
     data_anom = ds_anom.read_ts()
     nptest.assert_almost_equal(data_anom['x'].values[0], -8.5)
     nptest.assert_almost_equal(data_anom['y'].values[0], -4.25)
+
+
+def test_anomaly_clim_adapter():
+    ds = TestDataset('', n=20)
+    ds_anom = AnomalyClimAdapter(ds)
+    data_anom = ds_anom.read_ts()
+    nptest.assert_almost_equal(data_anom['x'].values[4], -5.5)
+    nptest.assert_almost_equal(data_anom['y'].values[4], -2.75)
