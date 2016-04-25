@@ -255,6 +255,12 @@ def cdf_match(src, ref,
 
     perc_src = np.array(np.percentile(src, np.linspace(0, 100, nbins)))
     perc_ref = np.array(np.percentile(ref, np.linspace(0, 100, nbins)))
+    uniq_ind = np.unique(perc_src, return_index=True)[1]
+    perc_src = perc_src[uniq_ind]
+    perc_ref = perc_ref[uniq_ind]
+    uniq_ind = np.unique(perc_ref, return_index=True)[1]
+    perc_src = perc_src[uniq_ind]
+    perc_ref = perc_ref[uniq_ind]
 
     return gen_cdf_match(src, perc_src, perc_ref,
                          min_val=min_val, max_val=max_val,
@@ -295,7 +301,7 @@ def gen_cdf_match(src,
     CDF matched values: numpy.array
         dataset src with CDF as ref
     """
-    # InterpolatedUnivariateSpline uses linear interpolation
+    # InterpolatedUnivariateSpline uses extrapolation
     # outside of boundaries so all values can be rescaled
     # This is important if the stored percentiles were generated
     # using a subset of the data and the new data has values outside
