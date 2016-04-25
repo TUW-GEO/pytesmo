@@ -31,6 +31,7 @@ Test for the adapters.
 '''
 
 from pytesmo.validation_framework.adapters import MaskingAdapter
+from pytesmo.validation_framework.adapters import AnomalyAdapter
 from test_datasets import TestDataset
 
 import numpy as np
@@ -47,3 +48,11 @@ def test_masking_adapter():
 
     nptest.assert_almost_equal(
         data_masked['y'].values, np.ones((20), dtype=bool))
+
+
+def test_anomaly_adapter():
+    ds = TestDataset('', n=20)
+    ds_anom = AnomalyAdapter(ds)
+    data_anom = ds_anom.read_ts()
+    nptest.assert_almost_equal(data_anom['x'].values[0], -8.5)
+    nptest.assert_almost_equal(data_anom['y'].values[0], -4.25)

@@ -32,6 +32,8 @@ framework.
 '''
 
 import operator
+from pytesmo.time_series.anomaly import calc_anomaly
+from pytesmo.time_series.anomaly import calc_climatology
 
 
 class MaskingAdapter(object):
@@ -70,3 +72,39 @@ class MaskingAdapter(object):
     def read(self, *args, **kwargs):
         data = self.cls.read(*args, **kwargs)
         return self.operator(data, self.threshold)
+
+
+class AnomalyAdapter(object):
+    """
+    Takes the pandas DataFrame that the read_ts or read method of the instance
+    returns and calculates the anomaly of the time series based on a moving
+    average.
+
+
+    Parameters
+    ----------
+    cls : class instance
+        Must have a read_ts or read method returning a pandas.DataFrame
+    window_size : float, optional
+        The window-size [days] of the moving-average window to calculate the
+        anomaly reference (only used if climatology is not provided)
+        Default: 35 (days)
+    """
+
+    def __init__(self, cls, window_size=35):
+        self.cls = cls
+        self.window_size = window_size
+
+    def calc_anom(self, data):
+        for column in data:
+            data[column] = calc_anomaly(data[column],
+                                        window_size=self.window_size)
+        return data
+
+    def read_ts(self, *args, **kwargs):
+        data = self.cls.read_ts(*args, **kwargs)
+        return self.calc_anom(data)
+
+    def read(self, *args, **kwargs):
+        data = self.cls.read(*args, **kwargs)
+        return self.calc_anom(data)
