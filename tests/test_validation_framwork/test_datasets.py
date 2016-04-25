@@ -41,9 +41,10 @@ from pygeobase.io_base import GriddedTsBase
 class TestDataset(object):
     """Test dataset that acts as a fake object for the base classes."""
 
-    def __init__(self, filename, mode='r'):
+    def __init__(self, filename, mode='r', n=1000):
         self.filename = filename
         self.mode = mode
+        self.n = n
 
     def read(self, *args, **kwargs):
 
@@ -52,10 +53,9 @@ class TestDataset(object):
         else:
             start = '2000-01-01'
 
-        n = 1000
-        x = np.arange(n)
-        y = np.arange(n) * 0.5
-        index = pd.date_range(start=start, periods=n, freq="D")
+        x = np.arange(self.n)
+        y = np.arange(self.n) * 0.5
+        index = pd.date_range(start=start, periods=self.n, freq="D")
 
         df = pd.DataFrame({'x': x, 'y': y}, columns=['x', 'y'], index=index)
         return df

@@ -366,11 +366,52 @@ you can then execute the following code:
 .. code:: python
 
     from pytesmo.validation_framework import start_validation
-    
+
     # Note that before starting the validation you must start a controller
     # and engines, for example by using: ipcluster start -n 4
     # This command will launch a controller and 4 engines on the local machine.
     # Also, do not forget to change the setup_code path to your current setup.
-    
+
     setup_code = "my_validation.py"
     start_validation(setup_code)
+
+Masking datasets
+----------------
+
+Masking datasets are datasets that return a pandas DataFrame with
+boolean values. ``True`` means that the observation should be masked,
+``False`` means it should be kept. All masking datasets are temporally
+matched in pairs to the temporal reference dataset. Only observations
+for which all masking datasets have a value of ``False`` are kept for
+further validation.
+
+The masking datasets have the same format as the dataset dictionary and
+can be specified in the Validation class with the ``masking_datasets``
+keyword.
+
+Masking adapter
+~~~~~~~~~~~~~~~
+
+To easily transform an existing dataset into a masking dataset
+``pytesmo`` offers a adapter class that calls the ``read_ts`` method of
+an existing dataset and performs the masking based on an operator and a
+given threshold.
+
+.. code:: python
+
+    from pytesmo.validation_framework.adapters import MaskingAdapter
+    
+    ds_mask = MaskingAdapter(ismn_reader, '<', 0.2)
+    print ds_mask.read_ts(ids[0])['soil moisture'].head()
+
+
+.. parsed-literal::
+
+    date
+    2007-01-01 01:00:00    False
+    2007-01-01 02:00:00    False
+    2007-01-01 03:00:00    False
+    2007-01-01 04:00:00    False
+    2007-01-01 05:00:00    False
+    Name: soil moisture, dtype: bool
+
