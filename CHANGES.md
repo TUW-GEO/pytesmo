@@ -2,6 +2,7 @@
 
 * Fix bugs when the validation framework encountered empty datasets for various reasons.
 * Add dataset adapters for masking and anomaly calculation.
+* Improve performance of moving average calculation and ISMN readers.
 
 # v0.5.1, 2016-04-21
 

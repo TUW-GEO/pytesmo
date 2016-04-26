@@ -221,18 +221,10 @@ def read_format_header_values(filename):
     data = pd.read_csv(filename, skiprows=1, delim_whitespace=True,
                        names=['date', 'time', metadata['variable'][0],
                               metadata['variable'][0] + '_flag',
-                              metadata['variable'][0] + '_orig_flag'])
+                              metadata['variable'][0] + '_orig_flag'],
+                       parse_dates=[[0, 1]])
 
-    date_index = data.apply(
-        lambda x: datetime.strptime('%s%s' % (x['date'], x['time']),
-                                    '%Y/%m/%d%H:%M'),
-        axis=1)
-
-    del data['date']
-    del data['time']
-
-    data.index = date_index
-    data.index.names = ['date']
+    data.set_index('date_time', inplace=True)
 
     metadata['data'] = data
 
@@ -300,18 +292,13 @@ def read_format_ceop_sep(filename):
     metadata = get_metadata_ceop_sep(filename)
 
     data = pd.read_csv(filename, delim_whitespace=True, usecols=[0, 1, 12, 13, 14],
-                       names=['date', 'time', metadata['variable'][0], metadata['variable'][0] + '_flag', metadata['variable'][0] + '_orig_flag'])
+                       names=['date', 'time',
+                              metadata['variable'][0],
+                              metadata['variable'][0] + '_flag',
+                              metadata['variable'][0] + '_orig_flag'],
+                       parse_dates=[[0, 1]])
 
-    date_index = data.apply(
-        lambda x: datetime.strptime('%s%s' % (x['date'], x['time']),
-                                    '%Y/%m/%d%H:%M'),
-        axis=1)
-
-    del data['date']
-    del data['time']
-
-    data.index = date_index
-    data.index.names = ['date']
+    data.set_index('date_time', inplace=True)
 
     metadata['data'] = data
 
@@ -372,16 +359,13 @@ def read_format_ceop(filename):
                               metadata['variable'][0] + '_flag',
                               metadata['variable'][1],
                               metadata['variable'][1] + '_flag'],
-                       na_values=['-999.99'])
+                       na_values=['-999.99'],
+                       parse_dates=[[0, 1]])
 
-    date_index = data.apply(
-        lambda x: datetime.strptime('%s%s' % (x['date'], x['time']),
-                                    '%Y/%m/%d%H:%M'),
-        axis=1)
+    date_index = data['date_time']
     depth_index = data['depth_from']
 
-    del data['date']
-    del data['time']
+    del data['date_time']
     del data['depth_from']
 
     data.index = pd.MultiIndex.from_arrays([depth_index,
