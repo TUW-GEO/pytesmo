@@ -1,4 +1,4 @@
-# v0.5.2, 2016-04-xx
+# v0.5.2, 2016-04-26
 
 * Fix bugs when the validation framework encountered empty datasets for various reasons.
 * Add dataset adapters for masking and anomaly calculation.
