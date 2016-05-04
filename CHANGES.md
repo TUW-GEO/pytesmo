@@ -1,3 +1,8 @@
+# v0.5.3, unreleased
+
+* The H07 reader now returns also ssm mean as a value between 0 and 100. Before
+  it was between 0 and 1 and inconsistent with the other ssm values.
+
 # v0.5.2, 2016-04-26
 
 * Fix bugs when the validation framework encountered empty datasets for various reasons.

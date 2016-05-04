@@ -430,7 +430,7 @@ class H07Single(ImageBase):
                 'ssm sensitivity': ssm_sens,
                 'frozen prob': frozen_lsf,
                 'snow prob': snow_cover,
-                'ssm mean': ssm_mean,
+                'ssm mean': ssm_mean * 100,
                 'sigma40': sigma40,
                 'sigma40 noise': sigma40_noise,
                 'direction of motion': direction_of_motion,
