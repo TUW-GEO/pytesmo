@@ -98,6 +98,7 @@ def test_julian2date():
 def test_julian2date_single_array():
     (year, month, day,
      hour, minute, second, micro) = julian2date(np.array([2457533.9306828701]))
+    assert type(year) == np.ndarray
     assert year == 2016
     assert month == 5
     assert day == 25
