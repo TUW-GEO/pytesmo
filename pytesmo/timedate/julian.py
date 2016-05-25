@@ -161,8 +161,8 @@ def julian2date(julian):
     minute.clip(min=0, max=59)
     second = (fraction - minute / 1440.) * 86400.
     second.clip(min=0, max=None)
-    second = second.astype(np.int32)
     microsecond = ((second - np.int32(second)) * 1e6).astype(np.int32)
+    second = second.astype(np.int32)
 
     return year, month, day, hour, minute, second, microsecond
 
