@@ -131,19 +131,19 @@ def julian2date(julian):
     min_julian = 2299160
     max_julian = 1827933925
 
-    julian = np.array(julian, dtype=float)
+    julian = np.atleast_1d(np.array(julian, dtype=float))
 
     if np.min(julian) < min_julian or np.max(julian) > max_julian:
         raise ValueError("Value of Julian date is out of allowed range.")
 
-    jn = np.int32(np.round(julian + 0.0000001))
+    jn = (np.round(julian + 0.0000001)).astype(np.int32)
 
-    jalpha = np.int32(((jn - 1867216) - 0.25) / 36524.25)
+    jalpha = (((jn - 1867216) - 0.25) / 36524.25).astype(np.int32)
     ja = jn + 1 + jalpha - (np.int32(0.25 * jalpha))
     jb = ja + 1524
-    jc = np.int32(6680.0 + ((jb - 2439870.0) - 122.1) / 365.25)
-    jd = np.int32(365.0 * jc + (0.25 * jc))
-    je = np.int32((jb - jd) / 30.6001)
+    jc = (6680.0 + ((jb - 2439870.0) - 122.1) / 365.25).astype(np.int32)
+    jd = (365.0 * jc + (0.25 * jc)).astype(np.int32)
+    je = ((jb - jd) / 30.6001).astype(np.int32)
 
     day = jb - jd - np.int64(30.6001 * je)
     month = je - 1
@@ -152,7 +152,7 @@ def julian2date(julian):
     year = year - (month > 2)
 
     fraction = (julian + 0.5 - jn).astype(np.float64)
-    eps = (1e-12 * np.abs(jn)).astype(np.float64)
+    eps = (np.float64(1e-12) * np.abs(jn)).astype(np.float64)
     eps.clip(min=np.float64(1e-12), max=None)
     hour = (fraction * 24. + eps).astype(np.int64)
     hour.clip(min=0, max=23)
@@ -161,8 +161,8 @@ def julian2date(julian):
     minute.clip(min=0, max=59)
     second = (fraction - minute / 1440.) * 86400.
     second.clip(min=0, max=None)
-    second = second.astype(np.int32)
     microsecond = ((second - np.int32(second)) * 1e6).astype(np.int32)
+    second = second.astype(np.int32)
 
     return year, month, day, hour, minute, second, microsecond
 
@@ -182,8 +182,13 @@ def julian2datetime(julian, tz=None):
             type(julian) == np.ndarray or type(julian) == np.flatiter:
         return np.array([dt.datetime(y, m, d, h, mi, s, ms, tz)
                          for y, m, d, h, mi, s, ms in
-                         zip(year, month, day, hour, minute,
-                             second, microsecond)])
+                         zip(np.atleast_1d(year),
+                             np.atleast_1d(month),
+                             np.atleast_1d(day),
+                             np.atleast_1d(hour),
+                             np.atleast_1d(minute),
+                             np.atleast_1d(second),
+                             np.atleast_1d(microsecond))])
 
     return dt.datetime(year, month, day, hour, minute, second, microsecond, tz)
 
