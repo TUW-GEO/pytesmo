@@ -17,6 +17,15 @@ Documentation
 Please see the latest documentation including examples of how to install and use pytesmo
 at http://rs.geo.tuwien.ac.at/validation_tool/pytesmo/
 
+Citation
+========
+
+If you use the software please cite it. Until our paper is finished please use
+the Zenodo DOI below:
+
+.. image:: https://zenodo.org/badge/12761/TUW-GEO/pytesmo.svg
+   :target: https://zenodo.org/badge/latestdoi/12761/TUW-GEO/pytesmo
+
 Contribute
 ==========
 
