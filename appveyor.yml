@@ -66,7 +66,7 @@ install:
   - "activate test"
   - "pip install pygeogrids"
   - "pip install pygeobase"
-  - "pip install pyresample"
+  - "pip install pyresample==1.1.6"
   - "python --version"
   - "where python"
 
