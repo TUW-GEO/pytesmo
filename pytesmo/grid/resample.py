@@ -185,3 +185,25 @@ def resample_to_grid(input_data, src_lon, src_lat, target_lon, target_lat,
         output_data[param] = output_array.reshape(output_shape)
 
     return output_data
+
+
+def hamming_window(radius, distances):
+    """
+    Hamming window filter.
+
+    Parameters
+    ----------
+    radius : float32
+        Radius of the window.
+    distances : numpy.ndarray
+        Array with distances.
+
+    Returns
+    -------
+    weights : numpy.ndarray
+        Distance weights.
+    """
+    alpha = 0.54
+    weights = alpha + (1 - alpha) * np.cos(np.pi / radius * distances)
+
+    return weights

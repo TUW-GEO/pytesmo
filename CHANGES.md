@@ -3,6 +3,7 @@
 * The H07 reader now returns also ssm mean as a value between 0 and 100. Before
   it was between 0 and 1 and inconsistent with the other ssm values.
 * Fix small bug in julian date calculation and add tests for it.
+* Add hamming window to resample module
 
 # v0.5.2, 2016-04-26
 
