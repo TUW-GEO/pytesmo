@@ -39,6 +39,7 @@ from pytesmo.io.ismn import interface
 import os
 import datetime
 import pytest
+import numpy.testing as nptest
 
 
 def test_min_max_obstime_getting():
@@ -102,6 +103,20 @@ def test_interface_network_init():
     hv_interface = interface.ISMN_Interface(
         path_header_values, network=['SCAN', 'MAQU'])
     assert hv_interface.list_networks().size == 2
+
+
+def test_find_nearest_station():
+    """
+    Test nearest neighbor search
+    """
+    path_header_values = os.path.join(os.path.dirname(__file__),
+                                      '..', 'test-data', 'ismn', 'multinetwork', 'header_values')
+    hv_interface = interface.ISMN_Interface(
+        path_header_values, network=['SCAN'])
+    station, distance = hv_interface.find_nearest_station(-90, 35, True)
+    assert station.station == "AAMU-jtg"
+    assert station.network == "SCAN"
+    nptest.assert_almost_equal(distance, 316228.53147802927)
 
 
 @pytest.mark.mpl_image_compare(tolerance=6)
