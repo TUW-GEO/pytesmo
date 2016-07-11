@@ -32,7 +32,7 @@ Created on Aug 5, 2013
 
 import pytesmo.io.ismn.metadata_collector as metadata_collector
 import pytesmo.io.ismn.readers as readers
-import pygeogrids.nearest_neighbor as NN
+import pygeogrids.grids as grids
 
 import os
 import numpy as np
@@ -509,8 +509,8 @@ class ISMN_Interface(object):
     ----------
     metadata : numpy.array
         metadata array for all stations contained in the path given during initialization
-    kdTree : pytesmo.grid.nearest_neighbor.findGeoNN
-        kdTree for finding nearest insitu station for given lon lat
+    grid : pygeogrids.grid.BasicGrid
+        Grid object used for finding nearest insitu station for given lon lat
 
     Methods
     -------
@@ -549,7 +549,10 @@ class ISMN_Interface(object):
                     raise ISMNError("Network {} not found".format(net))
             self.metadata = self.metadata[mask]
 
-        self.kdTree = None
+        # initialize grid object for all stations
+        self.grid = grids.BasicGrid(self.metadata['longitude'],
+                                    self.metadata['latitude'],
+                                    setup_kdTree=False)
 
     def list_networks(self):
         """
@@ -717,11 +720,8 @@ class ISMN_Interface(object):
             distance to station in meters, measured in cartesian coordinates and not on
             a great circle. Should be OK for small distances
         """
-        if self.kdTree is None:
-            self.kdTree = NN.findGeoNN(
-                self.metadata['longitude'], self.metadata['latitude'])
 
-        d, index = self.kdTree.find_nearest_index(lon, lat)
+        index, d = self.grid.find_nearest_gpi(lon, lat)
 
         all_index = np.where(
             self.metadata['station'] == self.metadata['station'][index])
