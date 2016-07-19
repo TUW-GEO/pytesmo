@@ -67,6 +67,7 @@ install:
   - "pip install pygeogrids"
   - "pip install pygeobase"
   - "pip install pyresample==1.1.6"
+  - "pip install ascat"
   - "python --version"
   - "where python"
 
