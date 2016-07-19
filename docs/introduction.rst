@@ -35,13 +35,6 @@ Supported Datasets
 Soil moisture is observed using different methods and instruments, in this
 version several satellite datasets as well as in situ data are supported.
 
-ERS
----
-
-* ERS-1/2 AMI 25km SSM (Surface Soil Moisture)
-
-  available from http://rs.geo.tuwien.ac.at/products
-
 ASCAT
 -----
 
@@ -58,6 +51,15 @@ H-SAF data is also supported via the `ascat package
 follow the `installation instructions
 <https://github.com/TUW-GEO/ascat#installation>`_.
 
+ERS
+---
+
+* ERS-1/2 AMI 25km SSM (Surface Soil Moisture)
+
+  available from http://rs.geo.tuwien.ac.at/products
+
+To read the ERS please also install the `ascat package
+<https://github.com/TUW-GEO/ascat>`_.
 
 Data from the International Soil Moisture Network (ISMN)
 --------------------------------------------------------

@@ -30,7 +30,7 @@ Created on Oct 22, 2013
 @author: Christoph Paulik christoph.paulik@geo.tuwien.ac.at
 '''
 
-from pytesmo.io.sat.ascat import AscatNetcdf, ASCATTimeSeries
+from ascat import AscatNetcdf, ASCATTimeSeries
 
 
 class ERSTimeSeries(ASCATTimeSeries):
@@ -41,13 +41,6 @@ class ERSTimeSeries(ASCATTimeSeries):
 
     """
 
-    def __init__(self, gpi, lon, lat, cell, data,
-                 topo_complex=None, wetland_frac=None,
-                 porosity_gldas=None, porosity_hwsd=None):
-        super(ERSTimeSeries, self).__init__(gpi, lon, lat, cell, data,
-                                            topo_complex=topo_complex, wetland_frac=wetland_frac,
-                                            porosity_gldas=porosity_gldas, porosity_hwsd=porosity_hwsd)
-
     def __repr__(self):
         return "ERS time series gpi:%d lat:%2.3f lon:%3.3f" % (self.gpi, self.latitude, self.longitude)
 
@@ -55,8 +48,8 @@ class ERSTimeSeries(ASCATTimeSeries):
 class ERS_SSM(AscatNetcdf):
 
     """
-    class for reading ERS SSM data. It extends :class:`pytesmo.io.sat.ascat.AscatNetcdf` 
-    instance and provides the 
+    class for reading ERS SSM data. It extends :class:`pytesmo.io.sat.ascat.AscatNetcdf`
+    instance and provides the
     information necessary for reading SSM data
 
     Parameters
@@ -67,19 +60,19 @@ class ERS_SSM(AscatNetcdf):
         path to grid_info folder which contains txt files with information about
         grid point index,latitude, longitude and cell
     grid_info_filename : string, optional
-        name of the grid info netCDF file in grid_path    
-        default 'TUW_WARP5_grid_info_2_1.nc'      
+        name of the grid info netCDF file in grid_path
+        default 'TUW_WARP5_grid_info_2_1.nc'
     advisory_flags_path : string, optional
-        path to advisory flags .dat files, if not provided they will not be used    
+        path to advisory flags .dat files, if not provided they will not be used
     topo_threshold : int, optional
-        if topographic complexity of read grid point is above this 
+        if topographic complexity of read grid point is above this
         threshold a warning is output during reading
     wetland_threshold : int, optional
-        if wetland fraction of read grid point is above this 
+        if wetland fraction of read grid point is above this
         threshold a warning is output during reading
     netcdftemplate : string, optional
         string template for the netCDF filename. This specifies where the cell number is
-        in the netCDF filename. Standard value is 'TUW_ERS_AMI_SSM_WARP55R11_%04d.nc' in 
+        in the netCDF filename. Standard value is 'TUW_ERS_AMI_SSM_WARP55R11_%04d.nc' in
         which %04d will be substituded for the cell number during reading of the data
     include_in_df : list, optional
         list of variables which should be included in the returned DataFrame.
@@ -89,8 +82,8 @@ class ERS_SSM(AscatNetcdf):
     Attributes
     ----------
     include_in_df : list
-        list of variables in the netcdf file 
-        that should be returned to the user after reading 
+        list of variables in the netcdf file
+        that should be returned to the user after reading
 
     Methods
     -------
@@ -99,7 +92,7 @@ class ERS_SSM(AscatNetcdf):
     """
 
     def __init__(self, path, grid_path, grid_info_filename='TUW_WARP5_grid_info_2_1.nc',
-                 topo_threshold=50, wetland_threshold=50, netcdftemplate='TUW_ERS_AMI_SSM_WARP55R11_%04d.nc',
+                 topo_threshold=50, wetland_threshold=50, netcdftemplate='TUW_ERS_AMI_SSM_WARP55R11_{:04d}',
                  include_in_df=['sm', 'sm_noise', 'proc_flag', 'orbit_dir']):
 
         super(ERS_SSM, self).__init__(path, grid_path, grid_info_filename=grid_info_filename,
@@ -124,15 +117,15 @@ class ERS_SSM(AscatNetcdf):
         lat : float
             latitude of point
         mask_frozen_prob : int,optional
-            if included in kwargs then all observations taken when 
-            frozen probability > mask_frozen_prob are removed from the result 
+            if included in kwargs then all observations taken when
+            frozen probability > mask_frozen_prob are removed from the result
         mask_snow_prob : int,optional
-            if included in kwargs then all observations taken when 
+            if included in kwargs then all observations taken when
             snow probability > mask_snow_prob are removed from the result
         absolute_values : boolean, optional
-            if True soil porosities from HWSD and GLDAS will be used to 
-            derive absolute values which will be available in the 
-            pandas.DataFrame in the columns 
+            if True soil porosities from HWSD and GLDAS will be used to
+            derive absolute values which will be available in the
+            pandas.DataFrame in the columns
             'sm_por_gldas','sm_noise_por_gldas',
             'sm_por_hwsd','sm_noise_por_hwsd'
 
@@ -142,7 +135,7 @@ class ERS_SSM(AscatNetcdf):
             :class:`pytesmo.io.sat.ers.ERSTimeSeries` instance
         """
         df, gpi, lon, lat, cell, topo, wetland, porosity = super(
-            ERS_SSM, self)._read_ts(*args, **kwargs)
+            ERS_SSM, self).read(*args, **kwargs)
 
         return ERSTimeSeries(gpi, lon, lat, cell, df,
                              topo_complex=topo, wetland_frac=wetland,

@@ -34,7 +34,7 @@ Created on Jun 11, 2014
 
 import pytesmo.grid.resample as resample
 import numpy as np
-import pytesmo.io.sat.h_saf as H_SAF
+import ascat
 import os
 import sys
 import functools
@@ -50,7 +50,7 @@ class Test_resample_H07(unittest.TestCase):
     def setUp(self):
         data_path = os.path.join(os.path.dirname(__file__), '..',
                                  'test-data', 'sat', 'h_saf', 'h07')
-        self.reader = H_SAF.H07img(data_path)
+        self.reader = ascat.H07img(data_path)
 
     def tearDown(self):
         self.reader = None
