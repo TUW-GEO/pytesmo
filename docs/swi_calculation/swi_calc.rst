@@ -6,7 +6,7 @@
     import matplotlib.pyplot as plt
 
     from pytesmo.time_series.filters import exp_filter
-    import pytesmo.io.sat.ascat as ascat
+    import ascat
 
 
     ascat_folder = os.path.join('/media', 'sf_R', 'Datapool_processed',

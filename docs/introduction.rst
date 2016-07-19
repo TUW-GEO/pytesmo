@@ -16,8 +16,6 @@ It contains the code used for the calculation of metrics by the `Satellite Soil
 Moisture Validation Tool For ASCAT
 <http://rs.geo.tuwien.ac.at/validation_tool/ascat.html>`_. See :mod:`pytesmo.metrics`.
 
-
-
 Features
 ========
 
@@ -30,7 +28,6 @@ Features
 * calculate standard metrics like correlation coefficients, RMSD, bias, as well
   as more complex ones like :ref:`triple-collocation-example` or MSE as a
   decomposition of the RMSD see :mod:`pytesmo.metrics`
-
 
 Supported Datasets
 ==================
@@ -48,31 +45,18 @@ ERS
 ASCAT
 -----
 
-* ASCAT SSM(Surface Soil Moisture) Time Series
-
-  Available in netCDF format from `H-SAF
-  <http://hsaf.meteoam.it/soil-moisture.php>`_ (H25 product)
-
-
-* ASCAT SWI(Soil Water Index) Time Series
-
-  Available in binary format from `TU Wien <http://rs.geo.tuwien.ac.at/products/>`_
+Ascat data is supported via the `ascat package
+<https://github.com/TUW-GEO/ascat>`_. If you want to use this data then please
+follow the `installation instructions
+<https://github.com/TUW-GEO/ascat#installation>`_.
 
 H-SAF image products
 --------------------
 
-`H-SAF <http://hsaf.meteoam.it/soil-moisture.php>`_ provides three different
-image products:
-
-* SM OBS 1 - H07 - Large scale surface soil moisture by radar scatterometer in
-  BUFR format over Europe
-* SM OBS 2 - H08 - Small scale surface soil moisture by radar scatterometer in
-  BUFR format over Europe
-* SM DAS 2 - H14 - Profile index in the roots region by scatterometer data
-  assimilation in GRIB format, global
-
-They are available after registration from the `H-SAF Website
-<http://hsaf.meteoam.it/soil-moisture.php>`_
+H-SAF data is also supported via the `ascat package
+<https://github.com/TUW-GEO/ascat>`_. If you want to use this data then please
+follow the `installation instructions
+<https://github.com/TUW-GEO/ascat#installation>`_.
 
 
 Data from the International Soil Moisture Network (ISMN)
@@ -115,17 +99,6 @@ packages should be installed.
 * matplotlib >= 1.2.0 http://matplotlib.org/
 
 optional
-
-* pybufr-ecmwf https://github.com/jdkloe/pybufr-ecmwf
-
-	for reading the H-SAF H07 and H08 products in BUFR Format. As far as I know
-	this will only work on Linux or in Cygwin but I have no experience using it on
-	Windows. pybufr-ewmwf downloads and installs the BUFR library from the ECMWF
-	website.
-
-* pygrib https://github.com/jswhit/pygrib
-
-	for reading the H-SAF H14 product
 
 * pykdtree https://github.com/storpipfugl/pykdtree
 
