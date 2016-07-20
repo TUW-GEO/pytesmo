@@ -2,7 +2,7 @@
 .. code:: python
 
     import pytesmo.io.ismn.interface as ismn
-    import pytesmo.io.sat.ascat as ascat
+    import ascat
     import pytesmo.temporal_matching as temp_match
     import pytesmo.scaling as scaling
     import pytesmo.df_metrics as df_metrics

@@ -47,6 +47,7 @@ install:
   - pip install pyresample
   - pip install pygeogrids
   - pip install pygeobase
+  - pip install ascat
   - python setup.py install
   - pip list
   - which pip
