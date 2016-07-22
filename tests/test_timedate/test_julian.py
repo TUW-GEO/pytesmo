@@ -93,6 +93,15 @@ def test_julian2date():
     assert minute == 20
     assert second == 10
     assert micro == 999976
+    (year, month, day,
+     hour, minute, second, micro) = julian2date(2454515.40972)
+    assert year == 2008
+    assert month == 2
+    assert day == 18
+    assert hour == 21
+    assert minute == 49
+    assert second == 59
+    assert micro == 807989
 
 
 def test_julian2date_single_array():
