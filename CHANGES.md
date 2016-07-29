@@ -1,5 +1,7 @@
-# v0.5.3, unreleased
+# v0.6.0, 2016-07-29
 
+* Moved the ASCAT readers to the ascat package. The functionality is the same, just replace
+  `import pytesmo.io.sat.ascat` by `import ascat` and everything should work the same as before.
 * The H07 reader now returns also ssm mean as a value between 0 and 100. Before
   it was between 0 and 1 and inconsistent with the other ssm values.
 * Fix small bug in julian date calculation and add tests for it.
