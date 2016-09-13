@@ -140,8 +140,8 @@ Windows and Linux.
 
 .. code::
 
-   conda create -q --yes -n test python=2.7 numpy scipy pandas netCDF4  cython pytest pip matplotlib pyproj
-   activate test
+   conda create -n pytesmo -c conda-forge python=2.7 numpy scipy pandas netCDF4 cython pytest pip matplotlib pyproj
+   source activate test
    pip install pygeogrids
    pip install pyresample
    pip install pytesmo
