@@ -1,4 +1,4 @@
-Introduction to pytesmo a python Toolbox for the Evaluation of Soil Moisture Observations
+Introduction to pytesmo a Python Toolbox for the Evaluation of Soil Moisture Observations
 *****************************************************************************************
 
 pytesmo is a package which aims it is to provide a standard library that can be
