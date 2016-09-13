@@ -11,8 +11,24 @@
 import sys
 import os
 import inspect
-from sphinx import apidoc
 
+on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
+if on_rtd:
+    os.environ['SPHINX_APIDOC_OPTIONS'] = ','.join(['members',
+                                                    'undoc-members',
+                                                    'inherited-members',
+                                                    'show-inheritance'])
+    from sphinx import apidoc
+
+    __location__ = os.path.join(os.getcwd(), os.path.dirname(
+        inspect.getfile(inspect.currentframe())))
+
+    output_dir = os.path.join(__location__, "../docs/api")
+    module_dir = os.path.join(__location__, "../pytesmo")
+    cmd_line_template = "sphinx-apidoc -f -o {outputdir} {moduledir}"
+    cmd_line = cmd_line_template.format(
+        outputdir=output_dir, moduledir=module_dir)
+    apidoc.main(cmd_line.split(" "))
 
 __location__ = os.path.join(os.getcwd(), os.path.dirname(
     inspect.getfile(inspect.currentframe())))
@@ -35,7 +51,7 @@ namespace_pkg = ".".join([namespace[-1], package]) if namespace else package
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.intersphinx', 'sphinx.ext.todo',
               'sphinx.ext.autosummary', 'sphinx.ext.viewcode', 'sphinx.ext.coverage',
-              'sphinx.ext.doctest', 'sphinx.ext.ifconfig', 'sphinx.ext.pngmath', 'numpydoc']
+              'sphinx.ext.doctest', 'sphinx.ext.ifconfig', 'sphinx.ext.pngmath', 'sphinx.ext.napoleon']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

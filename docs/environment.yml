@@ -1,0 +1,22 @@
+name: pytesmo-docs
+channels:
+  - conda-forge
+dependencies:
+  - numpy
+  - scipy
+  - pandas
+  - netcdf4
+  - cython
+  - matplotlib
+  - basemap
+  - pybufr-ecmwf
+  - pygrib
+  - pykdtree
+  - pyresample
+  - pyproj
+  - ipython
+  - ipyparallel
+  - pip:
+      - pygeobase
+      - pygeogrids
+      - ascat
