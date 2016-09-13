@@ -51,6 +51,30 @@ H-SAF data is also supported via the `ascat package
 follow the `installation instructions
 <https://github.com/TUW-GEO/ascat#installation>`_.
 
+SMAP
+----
+
+SMAP data is supported via the `smap_io package
+<https://github.com/TUW-GEO/smap_io>`_. If you want to use this data then please
+follow the `installation instructions
+<https://github.com/TUW-GEO/smap_io#installation>`_.
+
+GLDAS Noah
+----------
+
+GLDAS Noah data is supported via the `gldas package
+<https://github.com/TUW-GEO/gldas>`_. If you want to use this data then please
+follow the `installation instructions
+<https://github.com/TUW-GEO/gldas#installation>`_.
+
+ERA Interim
+-----------
+
+ERA Interim data is supported via the `ecmwf_models package
+<https://github.com/TUW-GEO/ecmwf_models>`_. If you want to use this data then please
+follow the `installation instructions
+<https://github.com/TUW-GEO/ecmwf_models#installation>`_.
+
 ERS
 ---
 

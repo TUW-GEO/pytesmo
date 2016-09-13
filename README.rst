@@ -18,7 +18,7 @@ Documentation
 =============
 
 Please see the latest documentation including examples of how to install and use pytesmo
-at http://rs.geo.tuwien.ac.at/validation_tool/pytesmo/
+at http://pytesmo.readthedocs.io/ .
 
 Citation
 ========
