@@ -11,7 +11,8 @@ from pytesmo.time_series.filtering import moving_average
 def calc_anomaly(Ser,
                  window_size=35,
                  climatology=None,
-                 respect_leap_years=True):
+                 respect_leap_years=True,
+                 return_clim=False):
     '''
     Calculates the anomaly of a time series (Pandas series).
     Both, climatology based, or moving-average based anomalies can be
@@ -31,9 +32,15 @@ def calc_anomaly(Ser,
 
     timespan : [timespan_from, timespan_to], datetime.datetime(y,m,d), optional
         If set, only a subset
+
     respect_leap_years : boolean, optional
         If set then leap years will be respected during matching of the climatology
         to the time series
+
+    return_clim : boolean, optional
+        if set to true the return argument will be a DataFrame which
+        also contains the climatology time series.
+        Only has an effect if climatology is used.
 
     Returns
     -------
@@ -65,6 +72,10 @@ def calc_anomaly(Ser,
 
         anomaly = df['absolute'] - df['climatology']
         anomaly.index = df.index
+
+        if return_clim:
+            anomaly = pd.DataFrame({'anomaly': anomaly})
+            anomaly['climatology'] = df['climatology']
 
     else:
         reference = moving_average(Ser, window_size=window_size)

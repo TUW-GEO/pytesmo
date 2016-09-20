@@ -1,3 +1,9 @@
+# v0.6.1, unreleased
+
+* Add return_clim keyword to anomaly calculation. Useful for getting both
+  anomaly and climatology in one pandas.DataFrame. Also used in time series
+  anomaly plot.
+
 # v0.6.0, 2016-07-29
 
 * Moved the ASCAT readers to the ascat package. The functionality is the same, just replace
