@@ -124,7 +124,7 @@ def plot_clim_anom(df, clim=None, axes=None, markersize=0.75,
         if clim is None:
             clima = anom.calc_climatology(Ser)
         else:
-            clima = clim[column]
+            clima = pd.Series(clim[column])
         anomaly = anom.calc_anomaly(Ser, climatology=clima, return_clim=True)
 
         anomaly[Ser.name] = Ser
