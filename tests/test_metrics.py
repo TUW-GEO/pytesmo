@@ -179,6 +179,36 @@ def test_rmsd():
     nptest.assert_almost_equal(rmsd_obs, rmsd_pred, 6)
 
 
+def test_ubrmsd():
+    """
+    Test for ubrmsd
+    """
+    # example 1
+    x = np.arange(10)
+    y = np.arange(10) + 2
+
+    ubrmsd_pred = 0
+    ubrmsd_obs = met.ubrmsd(x, y)
+
+    nptest.assert_equal(ubrmsd_obs, ubrmsd_pred)
+    # aslo check consistency with direct formula
+    ubrmsd_direct = np.sqrt(met.rmsd(x, y) ** 2 - met.bias(x, y)**2)
+    nptest.assert_equal(ubrmsd_obs, ubrmsd_direct)
+
+    # example 2, with outlier
+    x = np.arange(10)
+    y = np.arange(10) + 2
+    y[-1] = 100.
+
+    ubrmsd_pred = 26.7
+    ubrmsd_obs = met.ubrmsd(x, y)
+
+    nptest.assert_almost_equal(ubrmsd_obs, ubrmsd_pred, 6)
+    # aslo check consistency with direct formula
+    ubrmsd_direct = np.sqrt(met.rmsd(x, y) ** 2 - met.bias(x, y)**2)
+    nptest.assert_almost_equal(ubrmsd_obs, ubrmsd_direct)
+
+
 def test_mse():
     """
     Test for mse
