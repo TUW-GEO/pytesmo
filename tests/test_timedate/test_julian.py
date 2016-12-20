@@ -134,6 +134,9 @@ def test_julian2datetime():
     dt = julian2datetime(2457533.9306828701)
     dt_should = datetime(2016, 5, 25, 10, 20, 10, 999976)
     assert dt == dt_should
+    dt = julian2datetime(2457173.8604166666)
+    dt_should = datetime(2015, 5, 31, 8, 39)
+    assert dt == dt_should
 
 
 def test_julian2datetime_single_array():
