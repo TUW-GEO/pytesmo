@@ -1,3 +1,7 @@
+# v0.6.2, 2017-01-13
+
+* Fix metadata for new version of pypi.
+
 # v0.6.1, 2017-01-13
 
 * Add return_clim keyword to anomaly calculation. Useful for getting both
