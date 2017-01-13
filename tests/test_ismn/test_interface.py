@@ -119,7 +119,7 @@ def test_find_nearest_station():
     nptest.assert_almost_equal(distance, 316228.53147802927)
 
 
-@pytest.mark.mpl_image_compare(tolerance=6)
+@pytest.mark.mpl_image_compare(tolerance=7)
 def test_interface_plotting():
     """
     test plotting of networks
