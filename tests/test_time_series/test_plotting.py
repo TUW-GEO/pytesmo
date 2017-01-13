@@ -39,7 +39,7 @@ import pytest
 import pytesmo.time_series.plotting as plotting
 
 
-@pytest.mark.mpl_image_compare(tolerance=13)
+@pytest.mark.mpl_image_compare(tolerance=21)
 def test_anomaly_calc_given_climatology():
 
     clim = pd.DataFrame({'data': np.concatenate((np.arange(150) - 40,
