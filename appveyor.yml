@@ -62,7 +62,7 @@ install:
   # target Python version and architecture
   - "conda update --yes conda"
   - "conda config --add channels https://conda.anaconda.org/ioos"
-  - "conda create -q --yes -n test python=%PYTHON_VERSION% numpy scipy pandas netCDF4  cython pytest pip matplotlib pyproj basemap"
+  - "conda create -q --yes -n test -c conda-forge python=%PYTHON_VERSION% numpy scipy pandas netCDF4=1.2.4 cython pytest pip matplotlib pyproj basemap"
   - "activate test"
   - "pip install pygeogrids"
   - "pip install pygeobase"
