@@ -1,4 +1,4 @@
-# v0.6.1, unreleased
+# v0.6.1, 2017-01-13
 
 * Add return_clim keyword to anomaly calculation. Useful for getting both
   anomaly and climatology in one pandas.DataFrame. Also used in time series
