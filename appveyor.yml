@@ -36,6 +36,16 @@ environment:
       PYTHON_ARCH: "64"
       MINICONDA_VERSION: "3"
 
+    - PYTHON: "C:\\Python36_32"
+      PYTHON_VERSION: "3.6"
+      PYTHON_ARCH: "32"
+      MINICONDA_VERSION: "3"
+
+    - PYTHON: "C:\\Python36_64"
+      PYTHON_VERSION: "3.6"
+      PYTHON_ARCH: "64"
+      MINICONDA_VERSION: "3"
+
 install:
   - "git submodule update --init --recursive"
   - ECHO "Filesystem root:"
