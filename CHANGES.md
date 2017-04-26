@@ -1,3 +1,7 @@
+# v0.6.3, unreleased
+
+* temporal matching performance improvement of approx. 50%
+
 # v0.6.2, 2017-01-13
 
 * Fix metadata for new version of pypi.

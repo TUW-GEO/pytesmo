@@ -77,8 +77,8 @@ def df_match(reference, *args, **kwds):
             (arg.index.values[np.int32(matched[valid_match])] -
              reference.index.values[valid_match]) / np.timedelta64(1, 'D')
 
-        arg['index'] = arg.index.values
-        arg['merge_key'] = np.arange(len(arg))
+        arg = arg.assign(index=arg.index.values,
+                         merge_key=np.arange(len(arg)))
 
         arg_matched = pd.DataFrame({'merge_key': matched,
                                     'distance': distance,
