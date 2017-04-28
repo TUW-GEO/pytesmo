@@ -1,4 +1,4 @@
-# v0.6.3, unreleased
+# v0.6.3, 2017-04-28
 
 * temporal matching performance improvement of approx. 50%
 * Add functions for handling dekadal dates. See `pytesmo.timedate.dekad`.
