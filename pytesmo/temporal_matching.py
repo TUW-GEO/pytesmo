@@ -54,7 +54,7 @@ def df_match(reference, *args, **kwds):
 
     for arg in args:
 
-        if type(arg) in [pd.TimeSeries, pd.Series]:
+        if type(arg) is pd.Series:
             arg = pd.DataFrame(arg)
         comp_step = arg.index.values - reference.index.values[0]
         values = np.arange(comp_step.size)
