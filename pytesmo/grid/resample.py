@@ -35,10 +35,10 @@ from pyresample import geometry, kd_tree
 import numpy as np
 
 
-def resample_to_grid(input_data, src_lon, src_lat, target_lon, target_lat,
-                     methods='nn', weight_funcs=None,
-                     min_neighbours=1, search_rad=18000, neighbours=8,
-                     fill_values=None):
+def resample_to_grid_only_valid_return(input_data, src_lon, src_lat, target_lon, target_lat,
+                                       methods='nn', weight_funcs=None,
+                                       min_neighbours=1, search_rad=18000, neighbours=8,
+                                       fill_values=None):
     """
     resamples data from dictionary of numpy arrays using pyresample
     to given grid.
@@ -84,7 +84,10 @@ def resample_to_grid(input_data, src_lon, src_lat, target_lon, target_lat,
     Returns
     -------
     data : dict of numpy.arrays
-        resampled data on given grid
+        resampled data on part of the target grid over which data was found
+    mask: numpy.ndarray
+        boolean mask into target grid that specifies where data was resampled
+
     Raises
     ------
     ValueError :
@@ -92,7 +95,6 @@ def resample_to_grid(input_data, src_lon, src_lat, target_lon, target_lat,
     """
     output_data = {}
 
-    output_shape = target_lat.shape
     if target_lon.ndim == 2:
         target_lat = target_lat.ravel()
         target_lon = target_lon.ravel()
@@ -152,26 +154,18 @@ def resample_to_grid(input_data, src_lon, src_lat, target_lon, target_lat,
         else:
             weight_func = None
 
-        if type(fill_values) == dict:
-            fill_value = fill_values[param]
-        else:
-            fill_value = fill_values
-
-        # construct arrays in output grid form
-        if fill_value is not None:
-            output_array = np.zeros(
-                output_swath.shape, dtype=data.dtype) + fill_value
-        else:
-            output_array = np.zeros(output_swath.shape, dtype=data.dtype)
-            output_array = np.ma.array(output_array, mask=mask)
-
         neigh_slice = slice(None, None, None)
         # check if method is nn, if so only use first row of index_array and
         # distance_array
         if method == 'nn':
             neigh_slice = (slice(None, None, None), 0)
 
-        output_array[enough_neighbours] = kd_tree.get_sample_from_neighbour_info(
+        if type(fill_values) == dict:
+            fill_value = fill_values[param]
+        else:
+            fill_value = fill_values
+
+        output_array = kd_tree.get_sample_from_neighbour_info(
             method,
             enough_neighbours.shape,
             data,
@@ -181,6 +175,98 @@ def resample_to_grid(input_data, src_lon, src_lat, target_lon, target_lat,
             distance_array[neigh_slice],
             weight_funcs=weight_func,
             fill_value=fill_value)
+
+        output_data[param] = output_array
+
+    return output_data, mask
+
+
+def resample_to_grid(input_data, src_lon, src_lat, target_lon, target_lat,
+                     methods='nn', weight_funcs=None,
+                     min_neighbours=1, search_rad=18000, neighbours=8,
+                     fill_values=None):
+    """
+    resamples data from dictionary of numpy arrays using pyresample
+    to given grid.
+    Searches for the neighbours and then resamples the data
+    to the grid given in togrid if at least
+    min_neighbours neighbours are found
+
+    Parameters
+    ----------
+    input_data : dict of numpy.arrays
+    src_lon : numpy.array
+        longitudes of the input data
+    src_lat : numpy.array
+        src_latitudes of the input data
+    target_lon : numpy.array
+        longitudes of the output data
+    target_src_lat : numpy.array
+        src_latitudes of the output data
+    methods : string or dict, optional
+        method of spatial averaging. this is given to pyresample
+        and can be
+        'nn' : nearest neighbour
+        'custom' : custom weight function has to be supplied in weight_funcs
+        see pyresample documentation for more details
+        can also be a dictionary with a method for each array in input data dict
+    weight_funcs : function or dict of functions, optional
+        if method is 'custom' a function like func(distance) has to be given
+        can also be a dictionary with a function for each array in input data dict
+    min_neighbours: int, optional
+        if given then only points with at least this number of neighbours will be
+        resampled
+        Default : 1
+    search_rad : float, optional
+        search radius in meters of neighbour search
+        Default : 18000
+    neighbours : int, optional
+        maximum number of neighbours to look for for each input grid point
+        Default : 8
+    fill_values : number or dict, optional
+        if given the output array will be filled with this value if no valid
+        resampled value could be computed, if not a masked array will be returned
+        can also be a dict with a fill value for each variable
+    Returns
+    -------
+    data : dict of numpy.arrays
+        resampled data on given grid
+    Raises
+    ------
+    ValueError :
+        if empty dataset is resampled
+    """
+
+    output_data = {}
+    if target_lon.ndim == 2:
+        target_lat = target_lat.ravel()
+        target_lon = target_lon.ravel()
+    output_shape = target_lat.shape
+
+    resampled_data, mask = resample_to_grid_only_valid_return(input_data,
+                                                              src_lon, src_lat,
+                                                              target_lon, target_lat,
+                                                              methods=methods,
+                                                              weight_funcs=weight_funcs,
+                                                              min_neighbours=min_neighbours,
+                                                              search_rad=search_rad,
+                                                              neighbours=neighbours)
+    for param in input_data:
+        data = resampled_data[param]
+
+        if type(fill_values) == dict:
+            fill_value = fill_values[param]
+        else:
+            fill_value = fill_values
+
+        # construct arrays in output grid form
+        if fill_value is not None:
+            output_array = np.zeros(
+                output_shape, dtype=data.dtype) + fill_value
+        else:
+            output_array = np.zeros(output_shape, dtype=data.dtype)
+            output_array = np.ma.array(output_array, mask=mask)
+        output_array[~mask] = data
 
         output_data[param] = output_array.reshape(output_shape)
 
