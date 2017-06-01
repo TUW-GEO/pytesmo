@@ -238,10 +238,10 @@ def resample_to_grid(input_data, src_lon, src_lat, target_lon, target_lat,
     """
 
     output_data = {}
+    output_shape = target_lat.shape
     if target_lon.ndim == 2:
         target_lat = target_lat.ravel()
         target_lon = target_lon.ravel()
-    output_shape = target_lat.shape
 
     resampled_data, mask = resample_to_grid_only_valid_return(input_data,
                                                               src_lon, src_lat,
@@ -253,6 +253,7 @@ def resample_to_grid(input_data, src_lon, src_lat, target_lon, target_lat,
                                                               neighbours=neighbours)
     for param in input_data:
         data = resampled_data[param]
+        orig_data = input_data[param]
 
         if type(fill_values) == dict:
             fill_value = fill_values[param]
@@ -262,9 +263,9 @@ def resample_to_grid(input_data, src_lon, src_lat, target_lon, target_lat,
         # construct arrays in output grid form
         if fill_value is not None:
             output_array = np.zeros(
-                output_shape, dtype=data.dtype) + fill_value
+                target_lat.shape, dtype=orig_data.dtype) + fill_value
         else:
-            output_array = np.zeros(output_shape, dtype=data.dtype)
+            output_array = np.zeros(target_lat.shape, dtype=orig_data.dtype)
             output_array = np.ma.array(output_array, mask=mask)
         output_array[~mask] = data
 
