@@ -59,8 +59,12 @@ def moving_average(Ser,
     # if index is datetimeindex then convert it to julian date
     if type(Ser.index) == pd.DatetimeIndex:
 
-        jd_index = julday(Ser.index.month, Ser.index.day, Ser.index.year,
-                          Ser.index.hour, Ser.index.minute, Ser.index.second)
+        jd_index = julday(np.asarray(Ser.index.month),
+                          np.asarray(Ser.index.day),
+                          np.asarray(Ser.index.year),
+                          np.asarray(Ser.index.hour),
+                          np.asarray(Ser.index.minute),
+                          np.asarray(Ser.index.second))
 
     else:
         jd_index = Ser.index.values

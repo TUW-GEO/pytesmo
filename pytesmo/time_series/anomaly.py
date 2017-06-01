@@ -52,7 +52,9 @@ def calc_anomaly(Ser,
 
         if type(Ser.index) == pd.DatetimeIndex:
 
-            year, month, day = Ser.index.year, Ser.index.month, Ser.index.day
+            year, month, day = (np.asarray(Ser.index.year),
+                                np.asarray(Ser.index.month),
+                                np.asarray(Ser.index.day))
 
         else:
             year, month, day = julian2date(Ser.index.values)[0:3]
