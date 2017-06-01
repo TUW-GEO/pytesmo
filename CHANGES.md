@@ -1,3 +1,7 @@
+# v0.6.4, 2017-06-01
+
+* Refactor resampling routine to be more modular and better usable outside of pytesmo.
+
 # v0.6.3, 2017-04-28
 
 * temporal matching performance improvement of approx. 50%
