@@ -129,6 +129,48 @@ class Test(unittest.TestCase):
     def test_runningdekad2date(self):
         assert dk.runningdekad2date(2014, 35) == datetime(2014, 12, 20)
 
+
+def test_check_dekad_startdate():
+    assert dk.check_dekad_startdate(datetime(2000, 1, 1))
+    assert dk.check_dekad_startdate(datetime(2000, 1, 11))
+    assert dk.check_dekad_startdate(datetime(2000, 1, 21))
+    assert not dk.check_dekad_startdate(datetime(2000, 1, 22))
+
+
+def test_check_dekad_enddate():
+    assert dk.check_dekad_enddate(datetime(2000, 1, 10))
+    assert dk.check_dekad_enddate(datetime(2000, 1, 20))
+    assert dk.check_dekad_enddate(datetime(2000, 1, 31))
+    assert dk.check_dekad_enddate(datetime(2000, 2, 29))
+    assert not dk.check_dekad_enddate(datetime(2000, 2, 28))
+
+
+def test_dekad_startdate_from_date():
+    assert datetime(2000, 1, 1) == dk.dekad_startdate_from_date(
+        datetime(2000, 1, 10))
+    assert datetime(2000, 2, 21) == dk.dekad_startdate_from_date(
+        datetime(2000, 2, 29))
+    assert datetime(2000, 2, 11) == dk.dekad_startdate_from_date(
+        datetime(2000, 2, 17))
+
+
+def test_group_into_dekads():
+    dtimes = [datetime(2000, 1, 10),
+              datetime(2000, 1, 11),
+              datetime(2000, 1, 12),
+              datetime(2000, 1, 23)]
+    groups = dk.group_into_dekads(dtimes)
+    assert groups == {datetime(2000, 1, 10): [datetime(2000, 1, 10)],
+                      datetime(2000, 1, 20): [datetime(2000, 1, 11),
+                                              datetime(2000, 1, 12)],
+                      datetime(2000, 1, 31): [datetime(2000, 1, 23)]}
+    groups = dk.group_into_dekads(dtimes,
+                                  use_dekad_startdate=True)
+    assert groups == {datetime(2000, 1, 1): [datetime(2000, 1, 10)],
+                      datetime(2000, 1, 11): [datetime(2000, 1, 11),
+                                              datetime(2000, 1, 12)],
+                      datetime(2000, 1, 21): [datetime(2000, 1, 23)]}
+
 if __name__ == "__main__":
     # import sys;sys.argv = ['', 'Test.testName']
     unittest.main()

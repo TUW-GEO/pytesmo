@@ -140,6 +140,79 @@ def check_dekad(date):
     return new_date
 
 
+def dekad_startdate_from_date(dt_in):
+    """
+    dekadal startdate that a date falls in
+
+    Parameters
+    ----------
+    run_dt: datetime.datetime
+
+    Returns
+    -------
+    startdate: datetime.datetime
+        startdate of dekad
+    """
+    if dt_in.day <= 10:
+        startdate = datetime(dt_in.year,
+                             dt_in.month,
+                             1, 0, 0, 0)
+    if dt_in.day >= 11 and dt_in.day <= 20:
+        startdate = datetime(dt_in.year,
+                             dt_in.month,
+                             11, 0, 0, 0)
+    if dt_in.day >= 21:
+        startdate = datetime(dt_in.year,
+                             dt_in.month,
+                             21, 0, 0, 0)
+    return startdate
+
+
+def check_dekad_enddate(dt):
+    """
+    Check if a date is a dekad enddate
+    """
+    return check_dekad(dt) == dt
+
+
+def check_dekad_startdate(dt):
+    """
+    Check if a date is a dekad startdate
+    """
+    if dt.day in [1, 11, 21]:
+        return True
+    else:
+        return False
+
+
+def group_into_dekads(dates, use_dekad_startdate=False):
+    """
+    Group a list of dates into dekads.
+
+    Parameters
+    ----------
+    dates: list of datetime.datetime
+    use_dekad_startdates: boolean, optional
+        If set the dekad reference dates will
+        be the startdates of the dekad
+
+    Returns
+    -------
+    groups: dict
+        keys: dekad reference dates
+        values: list of dates belonging to dekad
+    """
+    groups = {}
+    for dt in dates:
+        dekad_date = check_dekad(dt)
+        if use_dekad_startdate:
+            dekad_date = dekad_startdate_from_date(dekad_date)
+        if dekad_date not in groups:
+            groups[dekad_date] = []
+        groups[dekad_date].append(dt)
+    return groups
+
+
 def dekad2day(year, month, dekad):
     """Gets the day of a dekad.
 

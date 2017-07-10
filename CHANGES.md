@@ -1,3 +1,7 @@
+# v0.6.5, 2017-07-10
+
+* Add additonal functions for working with dekads.
+
 # v0.6.4, 2017-06-02
 
 * Refactor resampling routine to be more modular and better usable outside of pytesmo.
