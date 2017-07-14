@@ -58,6 +58,9 @@ function InstallMiniconda ($miniconda_version, $architecture, $python_home) {
     #Start-Sleep -s 15
     if (Test-Path $python_home) {
         Write-Host "Miniconda $miniconda_version ($architecture) installation complete"
+        If (Test-Path $filepath){
+	          Remove-Item $filepath
+        }
     } else {
         Write-Host "Failed to install Python in $python_home"
         Exit 1
