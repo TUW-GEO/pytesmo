@@ -1,3 +1,8 @@
+# v0.6.6, 2017-07-14
+
+* Compatible with Python 3.6
+
+
 # v0.6.5, 2017-07-10
 
 * Add additonal functions for working with dekads.
