@@ -66,6 +66,7 @@ install:
   - "python --version"
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
 
+  - "git status"
   # Install the build dependencies of the project. If some dependencies contain
   # compiled extensions and are not provided as pre-built wheel packages,
   # pip will build them from source using the MSVC compiler matching the
@@ -78,6 +79,7 @@ install:
   - "pip install pygeobase"
   - "pip install pyresample==1.1.6"
   - "pip install ascat"
+  - "git status"
   - "python --version"
   - "where python"
 
@@ -85,11 +87,15 @@ build: false  # Not a C# project, build stuff at the test step instead.
 
 test_script:
   # Build the compiled extension and run the project tests
+  - "git status"
   - "%CMD_IN_ENV% python setup.py test"
+  - "git status"
 
 after_test:
   # If tests are successful, create a whl package for the project.
+  - "git status"
   - "%CMD_IN_ENV% python setup.py bdist_wheel bdist_wininst"
+  - "git status"
   - ps: "ls dist"
 
 artifacts:
