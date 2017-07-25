@@ -145,18 +145,16 @@ def calc_climatology(Ser,
     Ser = pd.DataFrame(Ser)
 
     if type(Ser.index) == pd.DatetimeIndex:
-
-        if respect_leap_years:
-            doys = doy(Ser.index.month, Ser.index.day, Ser.index.year)
-        else:
-            doys = doy(Ser.index.month, Ser.index.day)
-
+        year, month, day = (np.asarray(Ser.index.year),
+                            np.asarray(Ser.index.month),
+                            np.asarray(Ser.index.day))
     else:
         year, month, day = julian2date(Ser.index.values)[0:3]
-        if respect_leap_years:
-            doys = doy(month, day, year)
-        else:
-            doys = doy(month, day)
+
+    if respect_leap_years:
+        doys = doy(month, day, year)
+    else:
+        doys = doy(month, day)
 
     Ser['doy'] = doys
 
