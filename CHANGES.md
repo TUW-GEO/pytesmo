@@ -1,3 +1,8 @@
+# v0.6.7, 2017-07-25
+
+* Add respect leap years option for climatology calculation.
+
+
 # v0.6.6, 2017-07-14
 
 * Compatible with Python 3.6
