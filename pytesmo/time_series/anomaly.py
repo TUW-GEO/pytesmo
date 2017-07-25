@@ -93,7 +93,7 @@ def calc_climatology(Ser,
                      timespan=None,
                      fill=np.nan,
                      wraparound=False,
-                     respect_leap_years=True):
+                     respect_leap_years=False):
     '''
     Calculates the climatology of a data set.
 
@@ -128,7 +128,7 @@ def calc_climatology(Ser,
     respect_leap_years : boolean, optional
         If set then leap years will be respected during the calculation of 
         the climatology
-        Default: True
+        Default: False
 
     Returns
     -------
