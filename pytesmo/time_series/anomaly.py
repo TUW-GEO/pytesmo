@@ -92,7 +92,8 @@ def calc_climatology(Ser,
                      median=False,
                      timespan=None,
                      fill=np.nan,
-                     wraparound=False):
+                     wraparound=False,
+                     respect_leap_years=False):
     '''
     Calculates the climatology of a data set.
 
@@ -124,6 +125,11 @@ def calc_climatology(Ser,
         If set then the climatology is wrapped around at the edges before
         doing the second running average (long-term event correction)
 
+    respect_leap_years : boolean, optional
+        If set then leap years will be respected during the calculation of 
+        the climatology
+        Default: False
+
     Returns
     -------
     climatology : pandas.Series
@@ -139,11 +145,15 @@ def calc_climatology(Ser,
     Ser = pd.DataFrame(Ser)
 
     if type(Ser.index) == pd.DatetimeIndex:
-
-        doys = doy(Ser.index.month, Ser.index.day)
-
+        year, month, day = (np.asarray(Ser.index.year),
+                            np.asarray(Ser.index.month),
+                            np.asarray(Ser.index.day))
     else:
         year, month, day = julian2date(Ser.index.values)[0:3]
+
+    if respect_leap_years:
+        doys = doy(month, day, year)
+    else:
         doys = doy(month, day)
 
     Ser['doy'] = doys
