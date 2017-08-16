@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 import scipy.interpolate as sc_int
 from warnings import warn
+from pytesmo.utils import unique_percentiles_interpolate
 
 
 def add_scaled(df, method='linreg', label_in=None, label_scale=None):
@@ -203,6 +204,8 @@ def lin_cdf_match(src, ref,
 def lin_cdf_match_stored_params(src, perc_src, perc_ref,
                                 min_val=None, max_val=None):
     """
+    Performs cdf matching using given percentiles.
+
     Parameters
     ----------
     src: numpy.array
@@ -218,6 +221,7 @@ def lin_cdf_match_stored_params(src, perc_src, perc_ref,
     max_val: float, optional
         Maximum allowed value, output data is capped at this value
     """
+
     return gen_cdf_match(src, perc_src, perc_ref,
                          min_val=min_val, max_val=max_val,
                          k=1)
@@ -254,14 +258,13 @@ def cdf_match(src, ref,
         dataset src with CDF as ref
     '''
 
-    perc_src = np.array(np.percentile(src, np.linspace(0, 100, nbins)))
-    perc_ref = np.array(np.percentile(ref, np.linspace(0, 100, nbins)))
-    uniq_ind = np.unique(perc_src, return_index=True)[1]
-    perc_src = perc_src[uniq_ind]
-    perc_ref = perc_ref[uniq_ind]
-    uniq_ind = np.unique(perc_ref, return_index=True)[1]
-    perc_src = perc_src[uniq_ind]
-    perc_ref = perc_ref[uniq_ind]
+    percentiles = np.linspace(0, 100, nbins)
+    perc_src = np.array(np.percentile(src, percentiles))
+    perc_src = unique_percentiles_interpolate(perc_src,
+                                              percentiles=percentiles)
+    perc_ref = np.array(np.percentile(ref, percentiles))
+    perc_ref = unique_percentiles_interpolate(perc_ref,
+                                              percentiles=percentiles)
 
     return gen_cdf_match(src, perc_src, perc_ref,
                          min_val=min_val, max_val=max_val,

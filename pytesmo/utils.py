@@ -30,6 +30,7 @@
 Module containing utility functions that do not fit into other modules
 '''
 import numpy as np
+import scipy.interpolate as sc_int
 
 
 def ml_percentile(in_data, percentiles):
@@ -100,6 +101,48 @@ def interp_uniq(src):
             uniq_ind = np.unique(src, return_index=True)[1]
 
     return src
+
+
+def unique_percentiles_interpolate(perc_values,
+                                   percentiles=[0, 5, 10, 30, 50,
+                                                70, 90, 95, 100],
+                                   k=1):
+    """
+    Try to ensure that percentile values are unique
+    and have values for the given percentiles.
+
+    If only all the values in perc_values are the same.
+    The array is unchanged.
+
+    Parameters
+    ----------
+    perc_values: list or numpy.ndarray
+        calculated values for the given percentiles
+    percentiles: list or numpy.ndarray
+        Percentiles to use for CDF matching
+    k: int
+        Degree of spline interpolation to use for
+        filling duplicate percentile values
+
+    Returns
+    -------
+    uniq_perc_values: numpy.ndarray
+        Unique percentile values generated through linear
+        interpolation over removed duplicate percentile values
+    """
+    uniq_ind = np.unique(perc_values, return_index=True)[1]
+    if len(uniq_ind) == 1:
+        uniq_ind = np.repeat(uniq_ind, 2)
+    uniq_ind[-1] = len(percentiles) - 1
+    uniq_perc_values = perc_values[uniq_ind]
+
+    inter = sc_int.InterpolatedUnivariateSpline(
+        np.array(percentiles)[uniq_ind],
+        uniq_perc_values,
+        k=k, ext=0,
+        check_finite=True)
+    uniq_perc_values = inter(percentiles)
+    return uniq_perc_values
 
 
 def element_iterable(el):
