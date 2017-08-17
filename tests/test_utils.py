@@ -37,6 +37,7 @@ from pytesmo.utils import ml_percentile
 from pytesmo.utils import interp_uniq
 from pytesmo.utils import ensure_iterable
 from pytesmo.utils import unique_percentiles_interpolate
+from pytesmo.utils import unique_percentiles_beta
 import numpy as np
 import numpy.testing as nptest
 
@@ -85,6 +86,24 @@ def test_unique_percentile_interpolation():
     nptest.assert_almost_equal(src_perc, [1.,   1.025,   1.05,   1.1,
                                           2.,   3.5,   5.,   5.3,
                                           8.4,   8.93333333,   9.46666667,   9.73333333,  10.])
+
+
+def test_unique_percentile_beta():
+    """
+    test generation of unique percentile values
+    by fitting CDF of a beta distribution
+    """
+
+    arr1 = np.array([1, 1, 1, 2, 2, 2, 5, 5, 6, 10, 10, 10, 10])
+    percentiles = [0, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 100]
+    p = ml_percentile(arr1, percentiles)
+    src_perc = unique_percentiles_beta(p,
+                                       percentiles=percentiles)
+    assert len(p) == len(src_perc)
+
+    nptest.assert_almost_equal(src_perc, [1.,   1.00013305,   1.00371443,   1.08957949,
+                                          1.50096583,   2.50963215,   4.18025716,   6.24205978,
+                                          8.16856852,   9.45324093,   9.94854144,   9.99597975,  10.])
 
 
 def test_ensure_iterable():

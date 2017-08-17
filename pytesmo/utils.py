@@ -31,6 +31,8 @@ Module containing utility functions that do not fit into other modules
 '''
 import numpy as np
 import scipy.interpolate as sc_int
+import scipy.optimize as sc_opt
+import scipy.special as sc_special
 
 
 def ml_percentile(in_data, percentiles):
@@ -143,6 +145,52 @@ def unique_percentiles_interpolate(perc_values,
         check_finite=True)
     uniq_perc_values = inter(percentiles)
     return uniq_perc_values
+
+
+def unique_percentiles_beta(perc_values,
+                            percentiles):
+    """
+    Compute unique percentile values
+    by fitting the CDF of a beta distribution to the
+    percentiles.
+
+    Parameters
+    ----------
+    perc_values: list or numpy.ndarray
+        calculated values for the given percentiles
+    percentiles: list or numpy.ndarray
+        Percentiles to use for CDF matching
+
+    Returns
+    -------
+    uniq_perc_values: numpy.ndarray
+        Unique percentile values generated through fitting
+        the CDF of a beta distribution.
+
+    Raises
+    ------
+    RuntimeError
+        If no fit could be found.
+    """
+
+    # normalize between 0 and 1
+    min_value = np.min(perc_values)
+    perc_values = perc_values - min_value
+    max_value = np.max(perc_values)
+    perc_values = perc_values / max_value
+    percentiles = np.asanyarray(percentiles)
+    percentiles = percentiles / 100.0
+
+    p, ier = sc_opt.curve_fit(betainc,
+                              percentiles,
+                              perc_values)
+    uniq_perc_values = sc_special.betainc(p[0], p[1], percentiles)
+    uniq_perc_values = uniq_perc_values * max_value + min_value
+    return uniq_perc_values
+
+
+def betainc(x, a, b):
+    return sc_special.betainc(a, b, x)
 
 
 def element_iterable(el):
