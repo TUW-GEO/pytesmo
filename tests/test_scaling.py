@@ -39,9 +39,7 @@ import numpy.testing as nptest
 import pytest
 
 
-scaling_methods = ['linreg', 'mean_std',
-                   'min_max', 'lin_cdf_match',
-                   'cdf_match']
+scaling_methods = list(scaling.get_scaling_method_lut().keys())
 
 
 def test_mean_std_scaling():

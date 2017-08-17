@@ -41,12 +41,7 @@ def add_scaled(df, method='linreg', label_in=None, label_scale=None):
     if label_scale == None:
         label_scale = df.columns.values[1]
 
-    dicton = globals()
-    try:
-        scaling_func = dicton[method]
-    except KeyError as e:
-        print('scaling method not found')
-        raise e
+    scaling_func = get_scaling_function(method)
 
     scaled = scaling_func(df[label_in].values, df[label_scale].values)
 
@@ -78,12 +73,7 @@ def scale(df, method='linreg', reference_index=0):
         all time series of the input DataFrame scaled to the one specified by
         reference_index
     """
-    dicton = globals()
-    try:
-        scaling_func = dicton[method]
-    except KeyError as e:
-        print('scaling method not found')
-        raise e
+    scaling_func = get_scaling_function(method)
 
     reference = df[df.columns.values[reference_index]]
     df = df.drop([df.columns.values[reference_index]], axis=1)
@@ -96,6 +86,52 @@ def scale(df, method='linreg', reference_index=0):
     df.insert(reference_index, reference.name, reference)
 
     return df
+
+
+def get_scaling_method_lut():
+    """
+    Get all defined scaling methods and their function names.
+
+    Returns
+    -------
+    lut: dictionary
+       key: scaling method name
+       value: function
+    """
+
+    lut = {'linreg': linreg,
+           'mean_std': mean_std,
+           'min_max': min_max,
+           'lin_cdf_match': lin_cdf_match,
+           'cdf_match': cdf_match}
+    return lut
+
+
+def get_scaling_function(method):
+    """
+    Get scaling function based on method name.
+
+    Parameters
+    ----------
+    method: string
+        method name as string
+
+    Returns
+    -------
+    scaling_func: function
+        function(src:numpy.ndarray, ref:numpy.ndarray) > scaled_src:np.ndarray
+
+    Raises
+    ------
+    KeyError:
+        if method is not found
+    """
+    lut = get_scaling_method_lut()
+    try:
+        return lut[method]
+    except KeyError as e:
+        warn('scaling method not found')
+        raise e
 
 
 def min_max(src, ref):
