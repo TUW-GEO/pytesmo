@@ -8,9 +8,9 @@ import numpy as np
 import pandas as pd
 from pygeogrids.grids import CellGrid
 
-import pytesmo.scaling as scaling
 from pytesmo.validation_framework.data_manager import DataManager
 from pytesmo.validation_framework.data_manager import get_result_names
+from pytesmo.validation_framework.data_scalers import DefaultScaler
 import pytesmo.validation_framework.temporal_matchers as temporal_matchers
 from pytesmo.utils import ensure_iterable
 
@@ -83,9 +83,14 @@ class Validation(object):
         Same format as the datasets with the difference that the read_ts method of these
         datasets has to return pandas.DataFrames with only boolean columns. True means that the
         observations at this timestamp should be masked and False means that it should be kept.
-    scaling : string
-        If set then the data will be scaled into the reference space using the
-        method specified by the string.
+    scaling : string, None or class instance
+        - If set then the data will be scaled into the reference space using the
+          method specified by the string using the
+          :py:class:`pytesmo.validation_framework.data_scalers.DefaultScaler` class.
+        - If set to None then no scaling will be performed.
+        - It can also be set to a class instance that implements a
+          ``scale(self, data, reference_index, gpi_info)`` method. See
+          :py:class:`pytesmo.validation_framework.data_scalers.DefaultScaler` for an example.
     scaling_ref : string, optional
         If the scaling should be done to another dataset than the spatial reference then
         give the dataset name here.
@@ -132,7 +137,10 @@ class Validation(object):
             self.masking_dm = DataManager(masking_datasets, '_reference',
                                           period=period)
 
-        self.scaling = scaling
+        if type(scaling) == str:
+            self.scaling = DefaultScaler(scaling)
+        else:
+            self.scaling = scaling
         self.scaling_ref = scaling_ref
         if self.scaling_ref is None:
             self.scaling_ref = self.data_manager.reference_name
@@ -256,27 +264,27 @@ class Validation(object):
 
                 if len(data) == 0:
                     continue
+
                 # at this stage we can drop the column multiindex and just use
                 # the dataset name
                 data.columns = data.columns.droplevel(level=1)
+
+                if self.scaling is not None:
+                    # get scaling index by finding the column in the
+                    # DataFrame that belongs to the scaling reference
+                    scaling_index = data.columns.tolist().index(self.scaling_ref)
+                    try:
+                        data = self.scaling.scale(data,
+                                                  scaling_index,
+                                                  gpi_info)
+                    except ValueError:
+                        continue
                 # Rename the columns to 'ref', 'k1', 'k2', ...
                 rename_dict = {}
                 f = lambda x: "k{}".format(x) if x > 0 else 'ref'
                 for i, r in enumerate(result_key):
                     rename_dict[r[0]] = f(i)
                 data.rename(columns=rename_dict, inplace=True)
-
-                if self.scaling is not None:
-                    # get scaling index by finding the column in the
-                    # DataFrame that belongs to the scaling reference
-                    scaling_index = data.columns.tolist().index(
-                        rename_dict[self.scaling_ref])
-                    try:
-                        data = scaling.scale(data,
-                                             method=self.scaling,
-                                             reference_index=scaling_index)
-                    except ValueError:
-                        continue
 
                 if result_key not in results.keys():
                     results[result_key] = []
