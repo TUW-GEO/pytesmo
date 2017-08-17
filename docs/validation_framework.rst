@@ -6,7 +6,7 @@ The pytesmo validation framework takes care of iterating over datasets,
 spatial and temporal matching as well as sclaing. It uses metric
 calculators to then calculate metrics that are returned to the user.
 There are several metrics calculators included in pytesmo but new ones
-can be added simply.
+can be added simply by writing a new class.
 
 Overview
 --------
@@ -65,10 +65,12 @@ Data space reference
 ~~~~~~~~~~~~~~~~~~~~
 
 It is often necessary to bring all the datasets into a common data space
-by using. Scaling is often used for that and pytesmo offers a choice of
-several scaling algorithms (e.g. CDF matching, min-max scaling, mean-std
-scaling, triple collocation based scaling). The data space reference can
-also be chosen independently from the other two references.
+by using scaling. Pytesmo offers a choice of several scaling algorithms
+(e.g. CDF matching, min-max scaling, mean-std scaling, triple
+collocation based scaling). The data space reference can also be chosen
+independently from the other two references. New scaling methods can be
+implemented by writing a scaler class. An example of a scaler class can
+be found in the :py:class:`pytesmo.validation_framework.data_scalers.DefaultScaler`.
 
 Data Flow
 ---------
@@ -77,14 +79,16 @@ After it is initialized, the validation framework works through the
 following steps:
 
 1. Read all the datasets for a certain job (gpi, lon, lat)
-2. Read all the masking dataset if any
+2. Read all the masking datasets if any
 3. Mask the temporal reference dataset using the masking data
 4. Temporally match all the chosen combinations of temporal reference
    and other datasets
-5. Turn the temporally matched time series over to the metric
+5. Scale all datasets into the data space of the data space reference,
+   if scaling is activated
+6. Turn the temporally matched time series over to the metric
    calculators
-6. Get the calculated metrics from the metric calculators
-7. Put all the metrics into a dictionary by dataset combination and
+7. Get the calculated metrics from the metric calculators
+8. Put all the metrics into a dictionary by dataset combination and
    return them.
 
 Masking datasets
@@ -99,6 +103,7 @@ type. Everywhere where the masking dataset is ``True`` the data will be
 masked.
 
 Let's look at a first example.
+
 
 Example soil moisture validation: ASCAT - ISMN
 ----------------------------------------------
