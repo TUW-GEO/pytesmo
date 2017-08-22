@@ -5,6 +5,8 @@
 * Make validation framework work with datasets that contain NaN columns.
 * Make validation framework work with pygeobase.object_base.TS objects and
   subclasses.
+* Add scaler classes to the validation framework making it possible to use e.g.
+  stored CDF parameters during validation.
 
 # v0.6.7, 2017-07-25
 
