@@ -169,7 +169,8 @@ class FTMetrics(object):
     and number of total observations
     """
 
-    def __init__(self, frozen_flag=2):
+    def __init__(self, frozen_flag=2,
+                 other_name='k1'):
 
         self.frozen_flag_value = frozen_flag
         self.result_template = {'ssf_fr_temp_un': np.float32([np.nan]),
@@ -180,6 +181,7 @@ class FTMetrics(object):
                                 'gpi': np.int32([-1]),
                                 'lon': np.float64([np.nan]),
                                 'lat': np.float64([np.nan])}
+        self.other_name = other_name
 
     def calc_metrics(self, data, gpi_info):
         """
@@ -209,7 +211,7 @@ class FTMetrics(object):
 
         # if len(data) < 10: return dataset
 
-        ssf, temp = data['ref'].values, data['other'].values
+        ssf, temp = data['ref'].values, data[self.other_name].values
         # SSF <= 1 unfrozen
         # SSF >= 2 frozen
 
