@@ -583,3 +583,18 @@ def test_args_to_iterable_mixed():
     assert lons_ == lons
     assert lats_ == [lats]
     assert args == [arg1]
+
+
+def test_args_to_iterable_mixed_strings():
+
+    gpis = [1, 2, 3]
+    lons = [2, 3, 4]
+    lats = 1
+    arg1 = 'test'
+    gpis_, lons_, lats_, args = args_to_iterable(gpis, lons, lats,
+                                                 arg1)
+
+    assert gpis_ == gpis
+    assert lons_ == lons
+    assert lats_ == [lats]
+    assert args == [arg1]

@@ -220,6 +220,8 @@ def element_iterable(el):
 def ensure_iterable(el):
     """
     Ensure that an object is iterable by putting it into a list.
+    Strings are handled slightly differently. They are
+    technically iterable but we want to keep the whole.
 
     Parameters
     ----------
@@ -230,6 +232,8 @@ def ensure_iterable(el):
     iterable: list
         [el]
     """
+    if type(el) == str:
+        return [el]
     if not element_iterable(el):
         return [el]
     else:

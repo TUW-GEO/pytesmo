@@ -7,6 +7,8 @@
   subclasses.
 * Add scaler classes to the validation framework making it possible to use e.g.
   stored CDF parameters during validation.
+* ensure_iterable does no longer take a single string as an iterable. We want to
+  keep the string as one object.
 
 # v0.6.7, 2017-07-25
 

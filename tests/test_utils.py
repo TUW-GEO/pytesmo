@@ -111,3 +111,9 @@ def test_ensure_iterable():
     el = 1
     new_el = ensure_iterable(el)
     assert new_el == [el]
+
+
+def test_ensure_iterable_string():
+    el = 'test'
+    new_el = ensure_iterable(el)
+    assert new_el == [el]
