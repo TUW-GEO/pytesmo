@@ -1,3 +1,11 @@
+# v0.6.8, unreleased
+
+* Adapt valdiation framework examples to new ASCAT package version.
+* Adapt ERS reader to new ASCAT package version.
+* Make validation framework work with datasets that contain NaN columns.
+* Make validation framework work with pygeobase.object_base.TS objects and
+  subclasses.
+
 # v0.6.7, 2017-07-25
 
 * Add respect leap years option for climatology calculation.
