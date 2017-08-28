@@ -50,57 +50,58 @@ class TestERSNetCDF(unittest.TestCase):
                                             '..', 'test-data', 'sat',
                                             'ascat', 'netcdf', 'grid')
 
+        self.static_layers_folder = os.path.join(os.path.dirname(__file__),
+                                                 '..', 'test-data', 'sat',
+                                                 'h_saf', 'static_layer')
         # init the ERS_SSM reader with the paths
         self.ers_SSM_reader = ers.ERS_SSM(
-            self.ers_folder, self.ers_grid_folder)
+            self.ers_folder, self.ers_grid_folder,
+            static_layer_path=self.static_layers_folder)
 
     def test_read_ssm(self):
 
         gpi = 2329253
-        result = self.ers_SSM_reader.read_ssm(gpi, absolute_values=True)
+        result = self.ers_SSM_reader.read(gpi, absolute_sm=True)
         assert result.gpi == gpi
         np.testing.assert_approx_equal(
             result.longitude, 14.28413, significant=4)
         np.testing.assert_approx_equal(
             result.latitude, 45.698074, significant=4)
 
-        assert list(result.data.columns) == ['orbit_dir', 'proc_flag',
-                                             'sm', 'sm_noise',
-                                             'sm_por_gldas',
-                                             'sm_noise_por_gldas',
-                                             'sm_por_hwsd',
-                                             'sm_noise_por_hwsd',
-                                             'frozen_prob',
-                                             'snow_prob']
+        assert list(result.data.columns.values) == ['orbit_dir', 'proc_flag',
+                                                    'sm', 'sm_noise',
+                                                    'snow_prob',
+                                                    'frozen_prob',
+                                                    'abs_sm_gldas',
+                                                    'abs_sm_noise_gldas',
+                                                    'abs_sm_hwsd',
+                                                    'abs_sm_noise_hwsd']
         assert len(result.data) == 478
         assert result.data.ix[15].name == datetime(1992, 1, 27, 21, 11, 42, 55)
         assert result.data.ix[15]['sm'] == 57
         assert result.data.ix[15]['sm_noise'] == 7
-        assert result.data.ix[15]['frozen_prob'] == 18
-        assert result.data.ix[15]['snow_prob'] == 0
         assert result.data.ix[15]['orbit_dir'].decode('utf-8') == 'A'
         assert result.data.ix[15]['proc_flag'] == 0
         np.testing.assert_approx_equal(
-            result.data.ix[15]['sm_por_gldas'], 0.3090667, significant=6)
+            result.data.ix[15]['abs_sm_gldas'], 0.30780001223, significant=6)
 
         np.testing.assert_approx_equal(
-            result.data.ix[15]['sm_noise_por_gldas'], 0.03795555,
+            result.data.ix[15]['abs_sm_noise_gldas'], 0.03780000150,
             significant=6)
 
         np.testing.assert_approx_equal(
-            result.data.ix[15]['sm_por_hwsd'], 0.2452333, significant=6)
+            result.data.ix[15]['abs_sm_hwsd'], 0.245100004076, significant=6)
         np.testing.assert_approx_equal(
-            result.data.ix[15]['sm_noise_por_hwsd'], 0.03011637, significant=6)
+            result.data.ix[15]['abs_sm_noise_hwsd'], 0.0301000005006, significant=6)
         assert result.topo_complex == 14
         assert result.wetland_frac == 0
         np.testing.assert_approx_equal(
-            result.porosity_gldas, 0.54222, significant=5)
+            result.porosity_gldas, 0.540000, significant=5)
         np.testing.assert_approx_equal(
-            result.porosity_hwsd, 0.430234, significant=5)
+            result.porosity_hwsd, 0.430000, significant=5)
 
     def test_neighbor_search(self):
 
-        self.ers_SSM_reader._load_grid_info()
         gpi, distance = self.ers_SSM_reader.grid.find_nearest_gpi(3.25, 46.13)
         assert gpi == 2346869
         np.testing.assert_approx_equal(distance, 2267.42, significant=2)
