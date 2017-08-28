@@ -115,10 +115,11 @@ perform a comparison between ASCAT and ISMN data.
     
     from datetime import datetime
     
-    from ascat import AscatH25_SSM
+    from ascat.timeseries import AscatSsmCdr
     from pytesmo.io.ismn.interface import ISMN_Interface
     from pytesmo.validation_framework.validation import Validation
     from pytesmo.validation_framework.results_manager import netcdf_results_manager
+
 
 First we initialize the data readers that we want to use. In this case
 the ASCAT soil moisture time series and in situ data from the ISMN.
@@ -127,20 +128,23 @@ Initialize ASCAT reader
 
 .. code:: python
 
-    ascat_data_folder = os.path.join('/media/sf_R', 'Datapool_processed', 'WARP', 'WARP5.5',
-                                     'IRMA1_WARP5.5_P2', 'R1', '080_ssm', 'netcdf')
+    ascat_data_folder = os.path.join('/home', 'cpa', 'workspace', 'pytesmo',
+                                     'tests', 'test-data', 'sat', 'ascat', 'netcdf', '55R22')
     ascat_grid_folder = os.path.join('/media/sf_R', 'Datapool_processed', 'WARP',
                                      'ancillary', 'warp5_grid')
+    static_layers_folder = os.path.join('/home', 'cpa', 'workspace', 'pytesmo',
+                                        'tests', 'test-data', 'sat',
+                                        'h_saf', 'static_layer')
     
-    ascat_reader = AscatH25_SSM(ascat_data_folder, ascat_grid_folder)
-    ascat_reader.read_bulk = True
-    ascat_reader._load_grid_info()
+    
+    ascat_reader = AscatSsmCdr(ascat_data_folder, ascat_grid_folder,
+                               static_layer_path=static_layers_folder)
 
 Initialize ISMN reader
 
 .. code:: python
 
-    ismn_data_folder = '/data/Development/python/workspace/pytesmo/tests/test-data/ismn/format_header_values/'
+    ismn_data_folder = '/data/Development/python/workspace/pytesmo/tests/test-data/ismn/multinetwork/header_values/'
     ismn_reader = ISMN_Interface(ismn_data_folder)
 
 The validation is run based on jobs. A job consists of at least three
@@ -166,7 +170,7 @@ the parallel processing!
 
 .. parsed-literal::
 
-    [(0, 2.9567000000000001, 43.149999999999999)]
+    [(0, 102.13330000000001, 33.666600000000003), (1, 102.13330000000001, 33.883299999999998), (2, -120.9675, 38.430030000000002), (3, -120.78559, 38.149560000000001), (4, -120.80638999999999, 38.17353), (5, -105.417, 34.25), (6, -97.082999999999998, 37.133000000000003), (7, -86.549999999999997, 34.783000000000001)]
 
 
 For this small test dataset it is only one job
@@ -184,12 +188,12 @@ framework can go through the jobs and read the correct time series.
 .. parsed-literal::
 
                          soil moisture soil moisture_flag soil moisture_orig_flag
-    date                                                                         
-    2007-01-01 01:00:00          0.214                  U                       M
-    2007-01-01 02:00:00          0.214                  U                       M
-    2007-01-01 03:00:00          0.214                  U                       M
-    2007-01-01 04:00:00          0.214                  U                       M
-    2007-01-01 05:00:00          0.214                  U                       M
+    date_time                                                                    
+    2008-07-01 00:00:00           0.45                  U                       M
+    2008-07-01 01:00:00           0.45                  U                       M
+    2008-07-01 02:00:00           0.45                  U                       M
+    2008-07-01 03:00:00           0.45                  U                       M
+    2008-07-01 04:00:00           0.45                  U                       M
 
 
 Initialize the Validation class
@@ -285,17 +289,101 @@ processing!
 
 .. parsed-literal::
 
-    {(('ASCAT', 'sm'), ('ISMN', 'soil moisture')): {'BIAS': array([-0.34625292], dtype=float32),
-                                                    'R': array([ 0.46913505], dtype=float32),
-                                                    'RMSD': array([ 9.74285984], dtype=float32),
+    {(('ASCAT', 'sm'), ('ISMN', 'soil moisture')): {'BIAS': array([-0.04330891], dtype=float32),
+                                                    'R': array([ 0.7128256], dtype=float32),
+                                                    'RMSD': array([ 7.72966719], dtype=float32),
                                                     'gpi': array([0], dtype=int32),
-                                                    'lat': array([ 43.15]),
-                                                    'lon': array([ 2.9567]),
-                                                    'n_obs': array([31], dtype=int32),
-                                                    'p_R': array([ 0.00776013], dtype=float32),
-                                                    'p_rho': array([ 0.00407545], dtype=float32),
+                                                    'lat': array([ 33.6666]),
+                                                    'lon': array([ 102.1333]),
+                                                    'n_obs': array([384], dtype=int32),
+                                                    'p_R': array([ 0.], dtype=float32),
+                                                    'p_rho': array([ 0.], dtype=float32),
                                                     'p_tau': array([ nan], dtype=float32),
-                                                    'rho': array([ 0.50121337], dtype=float32),
+                                                    'rho': array([ 0.70022893], dtype=float32),
+                                                    'tau': array([ nan], dtype=float32)}}
+    {(('ASCAT', 'sm'), ('ISMN', 'soil moisture')): {'BIAS': array([ 0.237454], dtype=float32),
+                                                    'R': array([ 0.4996146], dtype=float32),
+                                                    'RMSD': array([ 11.58347607], dtype=float32),
+                                                    'gpi': array([1], dtype=int32),
+                                                    'lat': array([ 33.8833]),
+                                                    'lon': array([ 102.1333]),
+                                                    'n_obs': array([357], dtype=int32),
+                                                    'p_R': array([  6.12721281e-24], dtype=float32),
+                                                    'p_rho': array([  2.47165110e-28], dtype=float32),
+                                                    'p_tau': array([ nan], dtype=float32),
+                                                    'rho': array([ 0.53934574], dtype=float32),
+                                                    'tau': array([ nan], dtype=float32)}}
+    {(('ASCAT', 'sm'), ('ISMN', 'soil moisture')): {'BIAS': array([-0.63301021], dtype=float32),
+                                                    'R': array([ 0.78071409], dtype=float32),
+                                                    'RMSD': array([ 14.57700157], dtype=float32),
+                                                    'gpi': array([2], dtype=int32),
+                                                    'lat': array([ 38.43003]),
+                                                    'lon': array([-120.9675]),
+                                                    'n_obs': array([482], dtype=int32),
+                                                    'p_R': array([ 0.], dtype=float32),
+                                                    'p_rho': array([ 0.], dtype=float32),
+                                                    'p_tau': array([ nan], dtype=float32),
+                                                    'rho': array([ 0.69356072], dtype=float32),
+                                                    'tau': array([ nan], dtype=float32)}}
+    {(('ASCAT', 'sm'), ('ISMN', 'soil moisture')): {'BIAS': array([-1.9682411], dtype=float32),
+                                                    'R': array([ 0.79960084], dtype=float32),
+                                                    'RMSD': array([ 13.06224251], dtype=float32),
+                                                    'gpi': array([3], dtype=int32),
+                                                    'lat': array([ 38.14956]),
+                                                    'lon': array([-120.78559]),
+                                                    'n_obs': array([141], dtype=int32),
+                                                    'p_R': array([  1.38538225e-32], dtype=float32),
+                                                    'p_rho': array([  4.62621032e-39], dtype=float32),
+                                                    'p_tau': array([ nan], dtype=float32),
+                                                    'rho': array([ 0.84189808], dtype=float32),
+                                                    'tau': array([ nan], dtype=float32)}}
+    {(('ASCAT', 'sm'), ('ISMN', 'soil moisture')): {'BIAS': array([-0.21823417], dtype=float32),
+                                                    'R': array([ 0.80635566], dtype=float32),
+                                                    'RMSD': array([ 12.90389824], dtype=float32),
+                                                    'gpi': array([4], dtype=int32),
+                                                    'lat': array([ 38.17353]),
+                                                    'lon': array([-120.80639]),
+                                                    'n_obs': array([251], dtype=int32),
+                                                    'p_R': array([ 0.], dtype=float32),
+                                                    'p_rho': array([  4.20389539e-45], dtype=float32),
+                                                    'p_tau': array([ nan], dtype=float32),
+                                                    'rho': array([ 0.74206454], dtype=float32),
+                                                    'tau': array([ nan], dtype=float32)}}
+    {(('ASCAT', 'sm'), ('ISMN', 'soil moisture')): {'BIAS': array([-0.14228749], dtype=float32),
+                                                    'R': array([ 0.50703788], dtype=float32),
+                                                    'RMSD': array([ 14.24668026], dtype=float32),
+                                                    'gpi': array([5], dtype=int32),
+                                                    'lat': array([ 34.25]),
+                                                    'lon': array([-105.417]),
+                                                    'n_obs': array([1927], dtype=int32),
+                                                    'p_R': array([ 0.], dtype=float32),
+                                                    'p_rho': array([  3.32948515e-42], dtype=float32),
+                                                    'p_tau': array([ nan], dtype=float32),
+                                                    'rho': array([ 0.30299741], dtype=float32),
+                                                    'tau': array([ nan], dtype=float32)}}
+    {(('ASCAT', 'sm'), ('ISMN', 'soil moisture')): {'BIAS': array([ 0.2600247], dtype=float32),
+                                                    'R': array([ 0.53643185], dtype=float32),
+                                                    'RMSD': array([ 21.19682884], dtype=float32),
+                                                    'gpi': array([6], dtype=int32),
+                                                    'lat': array([ 37.133]),
+                                                    'lon': array([-97.083]),
+                                                    'n_obs': array([1887], dtype=int32),
+                                                    'p_R': array([ 0.], dtype=float32),
+                                                    'p_rho': array([ 0.], dtype=float32),
+                                                    'p_tau': array([ nan], dtype=float32),
+                                                    'rho': array([ 0.53143877], dtype=float32),
+                                                    'tau': array([ nan], dtype=float32)}}
+    {(('ASCAT', 'sm'), ('ISMN', 'soil moisture')): {'BIAS': array([-0.04437888], dtype=float32),
+                                                    'R': array([ 0.6058206], dtype=float32),
+                                                    'RMSD': array([ 17.3883934], dtype=float32),
+                                                    'gpi': array([7], dtype=int32),
+                                                    'lat': array([ 34.783]),
+                                                    'lon': array([-86.55]),
+                                                    'n_obs': array([1652], dtype=int32),
+                                                    'p_R': array([ 0.], dtype=float32),
+                                                    'p_rho': array([ 0.], dtype=float32),
+                                                    'p_tau': array([ nan], dtype=float32),
+                                                    'rho': array([ 0.62204134], dtype=float32),
                                                     'tau': array([ nan], dtype=float32)}}
 
 
@@ -325,18 +413,26 @@ stored netCDF file which is named after the dictionary key:
 
 .. parsed-literal::
 
-    n_obs [31]
-    tau [ nan]
-    gpi [0]
-    RMSD [ 9.74285984]
-    lon [ 2.9567]
-    p_tau [ nan]
-    BIAS [-0.34625292]
-    p_rho [ 0.00407545]
-    rho [ 0.50121337]
-    lat [ 43.15]
-    R [ 0.46913505]
-    p_R [ 0.00776013]
+    n_obs [ 384  357  482  141  251 1927 1887 1652]
+    tau [ nan  nan  nan  nan  nan  nan  nan  nan]
+    gpi [0 1 2 3 4 5 6 7]
+    RMSD [  7.72966719  11.58347607  14.57700157  13.06224251  12.90389824
+      14.24668026  21.19682884  17.3883934 ]
+    lon [ 102.1333   102.1333  -120.9675  -120.78559 -120.80639 -105.417    -97.083
+      -86.55   ]
+    p_tau [ nan  nan  nan  nan  nan  nan  nan  nan]
+    BIAS [-0.04330891  0.237454   -0.63301021 -1.9682411  -0.21823417 -0.14228749
+      0.2600247  -0.04437888]
+    p_rho [  0.00000000e+00   2.47165110e-28   0.00000000e+00   4.62621032e-39
+       4.20389539e-45   3.32948515e-42   0.00000000e+00   0.00000000e+00]
+    rho [ 0.70022893  0.53934574  0.69356072  0.84189808  0.74206454  0.30299741
+      0.53143877  0.62204134]
+    lat [ 33.6666   33.8833   38.43003  38.14956  38.17353  34.25     37.133
+      34.783  ]
+    R [ 0.7128256   0.4996146   0.78071409  0.79960084  0.80635566  0.50703788
+      0.53643185  0.6058206 ]
+    p_R [  0.00000000e+00   6.12721281e-24   0.00000000e+00   1.38538225e-32
+       0.00000000e+00   0.00000000e+00   0.00000000e+00   0.00000000e+00]
 
 
 Parallel processing
@@ -407,11 +503,12 @@ given threshold.
 
 .. parsed-literal::
 
-    date
-    2007-01-01 01:00:00    False
-    2007-01-01 02:00:00    False
-    2007-01-01 03:00:00    False
-    2007-01-01 04:00:00    False
-    2007-01-01 05:00:00    False
+    date_time
+    2008-07-01 00:00:00    False
+    2008-07-01 01:00:00    False
+    2008-07-01 02:00:00    False
+    2008-07-01 03:00:00    False
+    2008-07-01 04:00:00    False
     Name: soil moisture, dtype: bool
+
 

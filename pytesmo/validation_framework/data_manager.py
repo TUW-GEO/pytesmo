@@ -251,8 +251,8 @@ class DataManager(object):
         try:
             func = getattr(ds['class'], self.read_ts_names[name])
             data_df = func(*args, **ds['kwargs'])
-            if type(data_df) is TS:
-                data_df = TS.data
+            if type(data_df) is TS or issubclass(type(data_df), TS):
+                data_df = data_df.data
         except IOError:
             warnings.warn(
                 "IOError while reading dataset {} with args {:}".format(name,

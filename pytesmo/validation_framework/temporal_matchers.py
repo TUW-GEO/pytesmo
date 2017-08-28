@@ -71,7 +71,7 @@ class BasicTemporalMatching(object):
             match = match.drop('distance', axis=1)
             matched_data = matched_data.join(match)
 
-        return matched_data.dropna()
+        return matched_data.dropna(how='all')
 
     def combinatory_matcher(self, df_dict, refkey, n=2):
         """

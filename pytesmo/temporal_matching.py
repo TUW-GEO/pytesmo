@@ -105,10 +105,10 @@ def df_match(reference, *args, **kwds):
             arg_matched.loc[invalid_dist] = np.nan
 
         if "dropna" in kwds and kwds['dropna']:
-            arg_matched = arg_matched.dropna()
+            arg_matched = arg_matched.dropna(how='all')
 
         if "dropduplicates" in kwds and kwds['dropduplicates']:
-            arg_matched = arg_matched.dropna()
+            arg_matched = arg_matched.dropna(how='all')
             g = arg_matched.groupby('merge_key')
             min_dists = g.distance.apply(lambda x: x.abs().idxmin())
             arg_matched = arg_matched.ix[min_dists]

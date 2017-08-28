@@ -468,6 +468,8 @@ class Validation(object):
 
         # extract only the relevant columns from matched DataFrame
         data = data[[x for x in result_tuple]]
+        # drop values if one column is NaN
+        data = data.dropna()
         return data
 
     def get_processing_jobs(self):

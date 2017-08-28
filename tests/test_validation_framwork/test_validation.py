@@ -47,7 +47,7 @@ from pytesmo.validation_framework.data_manager import DataManager
 
 from datetime import datetime
 
-from ascat import AscatH25_SSM
+from ascat.timeseries import AscatSsmCdr
 from pytesmo.io.ismn.interface import ISMN_Interface
 from pytesmo.validation_framework.validation import Validation
 from pytesmo.validation_framework.validation import args_to_iterable
@@ -68,9 +68,13 @@ def test_ascat_ismn_validation():
     ascat_grid_folder = os.path.join(os.path.dirname(__file__), '..', 'test-data',
                                      'sat', 'ascat', 'netcdf', 'grid')
 
-    ascat_reader = AscatH25_SSM(ascat_data_folder, ascat_grid_folder)
+    static_layers_folder = os.path.join(os.path.dirname(__file__),
+                                        '..', 'test-data', 'sat',
+                                        'h_saf', 'static_layer')
+
+    ascat_reader = AscatSsmCdr(ascat_data_folder, ascat_grid_folder,
+                               static_layer_path=static_layers_folder)
     ascat_reader.read_bulk = True
-    ascat_reader._load_grid_info()
 
     # Initialize ISMN reader
 
@@ -130,26 +134,16 @@ def test_ascat_ismn_validation():
 
     vars_should = [u'n_obs', u'tau', u'gpi', u'RMSD', u'lon', u'p_tau',
                    u'BIAS', u'p_rho', u'rho', u'lat', u'R', u'p_R']
-    n_obs_should = [360, 385, 1644, 1881, 1927, 479, 140, 251]
-    rho_should = np.array([0.546187,
-                           0.717398,
-                           0.620892,
-                           0.532465,
-                           0.302997,
-                           0.694713,
-                           0.840592,
-                           0.742065],
-                          dtype=np.float32)
+    n_obs_should = [384,  357,  482,  141,  251, 1927, 1887, 1652]
+    rho_should = np.array([0.70022893, 0.53934574,
+                           0.69356072, 0.84189808,
+                           0.74206454, 0.30299741,
+                           0.53143877, 0.62204134], dtype=np.float32)
 
-    rmsd_should = np.array([11.536263,
-                            7.545650,
-                            17.451935,
-                            21.193714,
-                            14.246680,
-                            14.494674,
-                            13.173215,
-                            12.903898],
-                           dtype=np.float32)
+    rmsd_should = np.array([7.72966719, 11.58347607,
+                            14.57700157, 13.06224251,
+                            12.90389824, 14.24668026,
+                            21.19682884, 17.3883934], dtype=np.float32)
     with nc.Dataset(results_fname) as results:
         assert sorted(results.variables.keys()) == sorted(vars_should)
         assert sorted(results.variables['n_obs'][:].tolist()) == sorted(
