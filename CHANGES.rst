@@ -1,7 +1,7 @@
 v0.6.8, 2017-08-29
 ==================
 
--  Adapt valdiation framework examples to new ASCAT package version.
+-  Adapt validation framework examples to new ASCAT package version.
 -  Adapt ERS reader to new ASCAT package version.
 -  Make validation framework work with datasets that contain NaN
    columns.
