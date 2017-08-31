@@ -1,3 +1,8 @@
+v0.7.1, unreleased
+==================
+
+- Remove pytesmo.io.ismn module and move it to the ismn package.
+
 v0.6.8, 2017-08-29
 ==================
 

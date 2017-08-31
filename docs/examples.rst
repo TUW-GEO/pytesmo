@@ -3,16 +3,6 @@
 Examples
 ********
 
-Reading and plotting data from the ISMN
-=======================================
-
-This example program chooses a random Network and Station and plots the first variable,depth,sensor
-combination. To see how to get data for a variable from all stations see the next example.
-
-It can be found in the /examples folder of the pytesmo package under the name plot_ISMN_data.py.
-
-.. include::
-   plot_ISMN.rst
 
 
 Calculating anomalies and climatologies

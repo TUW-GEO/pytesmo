@@ -48,7 +48,7 @@ from pytesmo.validation_framework.data_manager import DataManager
 from datetime import datetime
 
 from ascat.timeseries import AscatSsmCdr
-from pytesmo.io.ismn.interface import ISMN_Interface
+from ismn.interface import ISMN_Interface
 from pytesmo.validation_framework.validation import Validation
 from pytesmo.validation_framework.validation import args_to_iterable
 
