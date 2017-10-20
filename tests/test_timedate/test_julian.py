@@ -37,6 +37,7 @@ from pytesmo.timedate.julian import julday
 from pytesmo.timedate.julian import caldat
 from pytesmo.timedate.julian import julian2date
 from pytesmo.timedate.julian import julian2datetime
+from pytesmo.timedate.julian import doy
 
 
 def test_julday():
@@ -153,3 +154,24 @@ def test_julian2datetime_array():
     dt_should = np.array([dts, dts])
     assert type(dt) == np.ndarray
     assert np.all(dt == dt_should)
+
+
+def test_doy():
+    day_of_year = doy(1, 28)
+    assert day_of_year == 28
+    day_of_year = doy(2, 29)
+    assert day_of_year == 31 + 29
+    day_of_year = doy(3, 1, year=2004)
+    assert day_of_year == 31 + 29 + 1
+    # test numpy arrays as input
+    days = np.array([28, 29, 1], dtype=int)
+    months = np.array([1, 2, 3])
+    days_of_year = doy(months, days, year=np.array([2005, 2004, 2004]))
+    nptest.assert_allclose(days_of_year, np.array([28,
+                                                   31 + 29,
+                                                   31 + 29 + 1]))
+
+    days_of_year = doy(months, days, year=2004)
+    nptest.assert_allclose(days_of_year, np.array([28,
+                                                   31 + 29,
+                                                   31 + 29 + 1]))
