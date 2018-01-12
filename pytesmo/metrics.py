@@ -342,7 +342,7 @@ def tcol_snr(x, y, z, ref_ind=0):
     return snr, np.sqrt(err_var) * beta, beta
 
 
-def EC(data, correlated=None, err_cov=None, abs_est=True):
+def ecol(data, correlated=None, err_cov=None, abs_est=True):
     """
     Extended collocation analysis to obtain estimates of:
         - signal variances
