@@ -342,6 +342,159 @@ def tcol_snr(x, y, z, ref_ind=0):
     return snr, np.sqrt(err_var) * beta, beta
 
 
+def ecol(data, correlated=None, err_cov=None, abs_est=True):
+    """
+    Extended collocation analysis to obtain estimates of:
+        - signal variances
+        - error variances
+        - signal-to-noise ratios [dB]
+        - error cross-covariances (and -correlations)
+    based on an arbitrary number of N>3 data sets.
+
+    !!! EACH DATA SET MUST BE MEMBER OF >= 1 TRIPLET THAT FULFILLS THE CLASSICAL TRIPLE COLLOCATION ASSUMPTIONS !!!
+
+    Parameters
+    ----------
+    data : pd.DataFrame
+        Temporally matched input data sets in each column
+    correlated : tuple of tuples (string)
+        A tuple containing tuples of data set names (column names), between
+        which the error cross-correlation shall be estimated.
+        e.g. [['AMSR-E','SMOS'],['GLDAS','ERA']] estimates error cross-correlations
+        between (AMSR-E and SMOS), and (GLDAS and ERA), respectively.
+    err_cov :
+        A priori known error cross-covariances that shall be included
+        in the estimation (to obtain unbiased estimates)
+    abs_est :
+        Force absolute values for signal and error variance estimates
+        (to mitiate the issue of estimation uncertainties)
+
+    Returns
+    -------
+    A dictionary with the following entries (<name> correspond to data set (df column's) names:
+    - sig_<name> : signal variance of <name>
+    - err_<name> : error variance of <name>
+    - snr_<name> : SNR (in dB) of <name>
+    - err_cov_<name1>_<name2> : error covariance between <name1> and <name2>
+    - err_corr_<name1>_<name2> : error correlation between <name1> and <name2>
+
+    Notes
+    -----
+    Rescaling parameters can be derived from the signal variances
+    e.g., scaling <src> against <ref>:
+    beta =  np.sqrt(sig_<ref> / sig_<src>)
+    rescaled = (data[<src>] - data[<src>].mean()) * beta + data[<ref>].mean()
+
+    References
+    ----------
+    .. [Gruber2016] Gruber, A., Su, C. H., Crow, W. T., Zwieback, S., Dorigo, W. A., & Wagner, W. (2016). Estimating error
+    cross-correlations in soil moisture data sets using extended collocation analysis. Journal of Geophysical
+    Research: Atmospheres, 121(3), 1208-1219.
+    """
+
+    data.dropna(inplace=True)
+
+    cols = data.columns.values
+    cov = data.cov()
+
+    # subtract a-priori known error covariances to obtained unbiased estimates
+    if err_cov is not None:
+        cov[err_cov[0]][err_cov[1]] -= err_cov[2]
+        cov[err_cov[1]][err_cov[0]] -= err_cov[2]
+
+    # ----- Building up the observation vector y and the design matrix A -----
+
+    # Initial lenght of the parameter vector x:
+    # n error variances + n signal variances
+    n_x = 2 * len(cols)
+
+    # First n elements in y: variances of all data sets
+    y = cov.values.diagonal()
+
+    # Extend y if data sets with correlated errors exist
+    if correlated is not None:
+        # additionally estimated in x:
+        # k error covariances, and k cross-biased signal variances
+        # (biased with the respective beta_i*beta_j)
+        n_x += 2 * len(correlated)
+
+        # add covariances between the correlated data sets to the y vector
+        y = np.hstack((y, [cov[ds[0]][ds[1]] for ds in correlated]))
+
+    # Generate the first part of the design matrix A (total variance = signal variance + error variance)
+    A = np.hstack((np.matrix(np.identity(int(n_x / 2))), np.matrix(np.identity(int(n_x / 2))))).astype('int')
+
+    # build up A and y components for estimating signal variances (biased with beta_i**2 only)
+    # i.e., the classical TC based signal variance estimators cov(a,c)*cov(a,d)/cov(c,d)
+    for col in cols:
+
+        others = cols[cols != col]
+        combs = list(combinations(others, 2))
+
+        for comb in combs:
+            if correlated is not None:
+                if check_if_biased([[col, comb[0]], [col, comb[1]], [comb[0], comb[1]]], correlated):
+                    continue
+
+            A_line = np.zeros(n_x).astype('int')
+            A_line[np.where(cols == col)[0][0]] = 1
+            A = np.vstack((A, A_line))
+
+            y = np.append(y, cov[col][comb[0]] * cov[col][comb[1]] / cov[comb[0]][comb[1]])
+
+    # build up A and y components for the cross-biased signal variabilities (with beta_i*beta_j)
+    # i.e., the cross-biased signal variance estimators (cov(a,c)*cov(b,d)/cov(c,d))
+    if correlated is not None:
+        for i in np.arange(len(correlated)):
+            others = cols[(cols != correlated[i][0]) & (cols != correlated[i][1])]
+            combs = list(permutations(others, 2))
+
+            for comb in combs:
+                if check_if_biased([[correlated[i][0], comb[0]], [correlated[i][1], comb[1]], comb], correlated):
+                    continue
+
+                A_line = np.zeros(n_x).astype('int')
+                A_line[len(cols) + i] = 1
+                A = np.vstack((A, A_line))
+
+                y = np.append(y,
+                              cov[correlated[i][0]][comb[0]] * cov[correlated[i][1]][comb[1]] / cov[comb[0]][comb[1]])
+
+    y = np.matrix(y).T
+
+    # ----- Solving for the parameter vector x -----
+
+    x = (A.T * A).I * A.T * y
+    x = np.squeeze(np.array(x))
+
+    # ----- Building up the result dictionary -----
+
+    tags = np.hstack(('sig_' + cols, 'err_' + cols, 'snr_' + cols))
+
+    if correlated is not None:
+
+        # remove the cross-biased signal variabilities (with beta_i*beta_j) as they are not useful
+        x = np.delete(x, np.arange(len(correlated)) + len(cols))
+
+        # Derive error cross-correlations from error covariances and error variances
+        for i in np.arange(len(correlated)):
+            x = np.append(x, x[2 * len(cols) + i] / np.sqrt(x[len(cols) + np.where(cols == correlated[i][0])[0][0]] * x[
+                len(cols) + np.where(cols == correlated[i][1])[0][0]]))
+
+        # add error covariances and correlations to the result dictionary
+        tags = np.append(tags, np.array(['err_cov_' + ds[0] + '_' + ds[1] for ds in correlated]))
+        tags = np.append(tags, np.array(['err_corr_' + ds[0] + '_' + ds[1] for ds in correlated]))
+
+    # force absolute signal and error variance estimates to compensate for estimation uncertainties
+    if abs_est is True:
+        x[0:2 * len(cols)] = np.abs(x[0:2 * len(cols)])
+
+    # calculate and add SNRs (in decibel units)
+    x = np.insert(x, 2 * len(cols), 10 * np.log10(x[0:len(cols)] / x[len(cols):2 * len(cols)]))
+
+    return dict(zip(tags, x))
+
+
 def nash_sutcliffe(o, p):
     """
     Nash Sutcliffe model efficiency coefficient E. The range of E lies between
