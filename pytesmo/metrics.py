@@ -30,7 +30,7 @@ from __future__ import division
 
 import numpy as np
 import scipy.stats as sc_stats
-
+from itertools import permutations,combinations
 
 def bias(o, p):
     """
@@ -341,6 +341,17 @@ def tcol_snr(x, y, z, ref_ind=0):
 
     return snr, np.sqrt(err_var) * beta, beta
 
+def check_if_biased(combs,correlated):
+    """
+    Supporting function for extended collocation
+    Checks whether the estimators are biased by checking of not
+    too manny data sets (are assumed to have cross-correlated errors)
+    """
+    for corr in correlated:
+        for comb in combs:
+            if (np.array_equal(comb,corr))|(np.array_equal(comb,corr[::-1])):
+                return True
+    return False
 
 def ecol(data, correlated=None, err_cov=None, abs_est=True):
     """
@@ -384,6 +395,28 @@ def ecol(data, correlated=None, err_cov=None, abs_est=True):
     e.g., scaling <src> against <ref>:
     beta =  np.sqrt(sig_<ref> / sig_<src>)
     rescaled = (data[<src>] - data[<src>].mean()) * beta + data[<ref>].mean()
+
+    Examples
+    --------
+    # Just random numbers for demonstrations
+    ds1 = np.random.normal(0,1,500)
+    ds2 = np.random.normal(0,1,500)
+    ds3 = np.random.normal(0,1,500)
+    ds4 = np.random.normal(0,1,500)
+    ds5 = np.random.normal(0,1,500)
+
+    # Three data sets without cross-correlated errors: This is equivalent
+    # to standard triple collocation.
+    df = pd.DataFrame({'ds1':ds1,'ds2':ds2,'ds3':ds3},
+                      index=np.arange(500))
+    res = ecol(df)
+
+    # Five data sets, where data sets (1 and 2), and (3 and 4), are assumed
+    # to have cross-correlated errors.
+    df = pd.DataFrame({'ds1':ds1,'ds2':ds2,'ds3':ds3,'ds4':ds4,'ds5':ds5},
+                      index=np.arange(500),)
+    correlated = [['ds1','ds2'],['ds3','ds4']]
+    res = ecol(df,correlated=correlated)
 
     References
     ----------
