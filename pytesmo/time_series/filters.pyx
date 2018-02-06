@@ -78,25 +78,28 @@ def exp_filter(np.ndarray[DTYPE_d, ndim=1] in_data,
     cdef np.ndarray[DTYPE_f, ndim = 1] filtered = np.empty(len(in_data))
     cdef double tdiff
     cdef float ef
-    cdef float nom = 1
-    cdef float denom = 1
+    cdef float gain = 1
     cdef bint isnan
     cdef double last_jd_var
+    cdef double last_filtered_var
     cdef unsigned int i
 
     filtered.fill(np.nan)
+    filtered[0] = in_data[0]
 
     last_jd_var = in_jd[0]
+    last_filtered_var = filtered[0]
 
-    for i in range(in_jd.shape[0]):
-        isnan = (in_data[i] == nan) or npy_isnan(in_data[i])
+    for i in range(in_jd.shape[0] - 1):
+        index = i + 1
+        isnan = (in_data[index] == nan) or npy_isnan(in_data[index])
         if not isnan:
-            tdiff = in_jd[i] - last_jd_var
+            tdiff = in_jd[index] - last_jd_var
             ef = exp(-tdiff / ctime)
-            nom = ef * nom + in_data[i]
-            denom = ef * denom + 1
-            last_jd_var = in_jd[i]
-            filtered[i] = nom / denom
+            gain = gain / (gain + ef)
+            filtered[index] = last_filtered_var + gain * (in_data[index] - last_filtered_var)
+            last_jd_var = in_jd[index]
+            last_filtered_var = filtered[index]
 
     return filtered
 
