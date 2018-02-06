@@ -16,16 +16,6 @@ environment:
       PYTHON_ARCH: "64"
       MINICONDA_VERSION: "2"
 
-    - PYTHON: "C:\\Python34_32"
-      PYTHON_VERSION: "3.4.1"
-      PYTHON_ARCH: "32"
-      MINICONDA_VERSION: "3"
-
-    - PYTHON: "C:\\Python34_64"
-      PYTHON_VERSION: "3.4.1"
-      PYTHON_ARCH: "64"
-      MINICONDA_VERSION: "3"
-
     - PYTHON: "C:\\Python35_32"
       PYTHON_VERSION: "3.5"
       PYTHON_ARCH: "32"
