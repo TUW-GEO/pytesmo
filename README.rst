@@ -10,9 +10,6 @@ pytesmo
 .. image:: https://badge.fury.io/py/pytesmo.svg
     :target: https://badge.fury.io/py/pytesmo
 
-.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.1168015.svg
-   :target: https://doi.org/10.5281/zenodo.1168015
-
 .. image:: https://readthedocs.org/projects/pytesmo/badge/?version=latest
     :target: https://pytesmo.readthedocs.io/en/latest/?badge=latest
 
@@ -23,11 +20,17 @@ datasets with a (initial) focus on soil moisture.
 Citation
 ========
 
-If you use the software please cite it. Until our paper is finished please use
-the Zenodo DOI below:
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.596422.svg
+   :target: https://doi.org/10.5281/zenodo.596422
 
-.. image:: https://zenodo.org/badge/12761/TUW-GEO/pytesmo.svg
-   :target: https://zenodo.org/badge/latestdoi/12761/TUW-GEO/pytesmo
+If you use the software in a publication then please cite it using the Zenodo DOI.
+Be aware that this badge links to the latest package version.
+
+Please select your specific version at https://doi.org/10.5281/zenodo.596422 to get the DOI of that version.
+You should normally always use the DOI for the specific version of your record in citations.
+This is to ensure that other researchers can access the exact research artefact you used for reproducibility.
+
+You can find additional information regarding DOI versioning at http://help.zenodo.org/#versioning
 
 Installation
 ============
