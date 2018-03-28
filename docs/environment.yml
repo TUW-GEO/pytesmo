@@ -1,3 +1,4 @@
+#this file is not used at the moment
 name: pytesmo-docs
 channels:
   - conda-forge
