@@ -40,7 +40,7 @@ install:
   - pip install pygrib==1.9.9
   - pip install pygeogrids
   - pip install pygeobase
-  - pip install ascat
+  - pip install ascat==0.9
   - python setup.py install
   - pip list
   - which pip
