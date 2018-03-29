@@ -73,6 +73,7 @@ def test_ascat_ismn_validation():
                                         'h_saf', 'static_layer')
 
     ascat_reader = AscatSsmCdr(ascat_data_folder, ascat_grid_folder,
+                               grid_filename='TUW_WARP5_grid_info_2_1.nc',
                                static_layer_path=static_layers_folder)
     ascat_reader.read_bulk = True
 
