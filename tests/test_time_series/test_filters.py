@@ -47,6 +47,20 @@ def test_exp_filter():
                                           np.nan, 3.757916, 4.687961, 5.547327,
                                           6.378209, np.nan], rtol=1e-5)
 
+def test_exp_filter_first_nan():
+    """
+    Test exponential filter with first value being a nan value
+    """
+    test_jd = np.arange(11, dtype=np.double)
+    test_data = np.array(
+        [np.nan, 0.5, 2, 3, 4, -999999.0, 6, 7, 8, 9, np.nan], dtype=np.double)
+
+    filtered = filters.exp_filter(test_data, test_jd, ctime=5)
+
+    np.testing.assert_allclose(filtered, [np.nan, 0.5 , 1.324751, 1.997798, 2.656881,
+                                          np.nan, 3.757916, 4.687961, 5.547327,
+                                          6.378209, np.nan], rtol=1e-5)
+
 def test_boxcar_filter():
     """
     Test boxcar filter

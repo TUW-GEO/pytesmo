@@ -1394,10 +1394,10 @@ typedef struct {
 
 
 /* CIntToPy.proto */
-static CYTHON_INLINE PyObject* __Pyx_PyInt_From_long(long value);
+static CYTHON_INLINE PyObject* __Pyx_PyInt_From_Py_intptr_t(Py_intptr_t value);
 
 /* CIntToPy.proto */
-static CYTHON_INLINE PyObject* __Pyx_PyInt_From_Py_intptr_t(Py_intptr_t value);
+static CYTHON_INLINE PyObject* __Pyx_PyInt_From_long(long value);
 
 /* CIntToPy.proto */
 static CYTHON_INLINE PyObject* __Pyx_PyInt_From_unsigned_int(unsigned int value);
@@ -1624,6 +1624,7 @@ static const char __pyx_k_ValueError[] = "ValueError";
 static const char __pyx_k_exp_filter[] = "exp_filter";
 static const char __pyx_k_DTYPE_float[] = "DTYPE_float";
 static const char __pyx_k_ImportError[] = "ImportError";
+static const char __pyx_k_found_index[] = "found_index";
 static const char __pyx_k_last_jd_var[] = "last_jd_var";
 static const char __pyx_k_RuntimeError[] = "RuntimeError";
 static const char __pyx_k_boxcar_filter[] = "boxcar_filter";
@@ -1656,6 +1657,7 @@ static PyObject *__pyx_n_s_exp_filter;
 static PyObject *__pyx_n_s_fill;
 static PyObject *__pyx_n_s_filtered;
 static PyObject *__pyx_n_s_float;
+static PyObject *__pyx_n_s_found_index;
 static PyObject *__pyx_n_s_gain;
 static PyObject *__pyx_n_s_i;
 static PyObject *__pyx_n_s_import;
@@ -1823,6 +1825,7 @@ static PyObject *__pyx_pf_7pytesmo_11time_series_7filters_exp_filter(CYTHON_UNUS
   double __pyx_v_last_jd_var;
   double __pyx_v_last_filtered_var;
   unsigned int __pyx_v_i;
+  int __pyx_v_found_index;
   long __pyx_v_index;
   __Pyx_LocalBuf_ND __pyx_pybuffernd_filtered;
   __Pyx_Buffer __pyx_pybuffer_filtered;
@@ -1839,21 +1842,24 @@ static PyObject *__pyx_pf_7pytesmo_11time_series_7filters_exp_filter(CYTHON_UNUS
   PyObject *__pyx_t_5 = NULL;
   PyObject *__pyx_t_6 = NULL;
   PyArrayObject *__pyx_t_7 = NULL;
-  Py_ssize_t __pyx_t_8;
-  Py_ssize_t __pyx_t_9;
-  Py_ssize_t __pyx_t_10;
-  Py_ssize_t __pyx_t_11;
-  long __pyx_t_12;
-  unsigned int __pyx_t_13;
-  int __pyx_t_14;
-  Py_ssize_t __pyx_t_15;
-  int __pyx_t_16;
-  Py_ssize_t __pyx_t_17;
-  Py_ssize_t __pyx_t_18;
+  npy_intp __pyx_t_8;
+  unsigned int __pyx_t_9;
+  int __pyx_t_10;
+  size_t __pyx_t_11;
+  int __pyx_t_12;
+  size_t __pyx_t_13;
+  size_t __pyx_t_14;
+  size_t __pyx_t_15;
+  size_t __pyx_t_16;
+  size_t __pyx_t_17;
+  long __pyx_t_18;
   Py_ssize_t __pyx_t_19;
   Py_ssize_t __pyx_t_20;
   Py_ssize_t __pyx_t_21;
   Py_ssize_t __pyx_t_22;
+  Py_ssize_t __pyx_t_23;
+  Py_ssize_t __pyx_t_24;
+  Py_ssize_t __pyx_t_25;
   __Pyx_RefNannySetupContext("exp_filter", 0);
   __pyx_pybuffer_filtered.pybuffer.buf = NULL;
   __pyx_pybuffer_filtered.refcount = 0;
@@ -1962,18 +1968,27 @@ static PyObject *__pyx_pf_7pytesmo_11time_series_7filters_exp_filter(CYTHON_UNUS
  */
   __pyx_v_gain = 1.0;
 
-  /* "pytesmo/time_series/filters.pyx":87
+  /* "pytesmo/time_series/filters.pyx":86
+ *     cdef double last_filtered_var
  *     cdef unsigned int i
+ *     cdef int found_index = -1             # <<<<<<<<<<<<<<
+ * 
+ *     filtered.fill(np.nan)
+ */
+  __pyx_v_found_index = -1;
+
+  /* "pytesmo/time_series/filters.pyx":88
+ *     cdef int found_index = -1
  * 
  *     filtered.fill(np.nan)             # <<<<<<<<<<<<<<
- *     filtered[0] = in_data[0]
  * 
+ *     # find the first non nan value in the time series
  */
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_filtered), __pyx_n_s_fill); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 87, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_filtered), __pyx_n_s_fill); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 88, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_6 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 87, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 88, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_n_s_nan); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 87, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_n_s_nan); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 88, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
   __pyx_t_6 = NULL;
@@ -1987,14 +2002,14 @@ static PyObject *__pyx_pf_7pytesmo_11time_series_7filters_exp_filter(CYTHON_UNUS
     }
   }
   if (!__pyx_t_6) {
-    __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_t_3, __pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 87, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_t_3, __pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 88, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     __Pyx_GOTREF(__pyx_t_1);
   } else {
     #if CYTHON_FAST_PYCALL
     if (PyFunction_Check(__pyx_t_3)) {
       PyObject *__pyx_temp[2] = {__pyx_t_6, __pyx_t_2};
-      __pyx_t_1 = __Pyx_PyFunction_FastCall(__pyx_t_3, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 87, __pyx_L1_error)
+      __pyx_t_1 = __Pyx_PyFunction_FastCall(__pyx_t_3, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 88, __pyx_L1_error)
       __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
       __Pyx_GOTREF(__pyx_t_1);
       __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
@@ -2003,20 +2018,20 @@ static PyObject *__pyx_pf_7pytesmo_11time_series_7filters_exp_filter(CYTHON_UNUS
     #if CYTHON_FAST_PYCCALL
     if (__Pyx_PyFastCFunction_Check(__pyx_t_3)) {
       PyObject *__pyx_temp[2] = {__pyx_t_6, __pyx_t_2};
-      __pyx_t_1 = __Pyx_PyCFunction_FastCall(__pyx_t_3, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 87, __pyx_L1_error)
+      __pyx_t_1 = __Pyx_PyCFunction_FastCall(__pyx_t_3, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 88, __pyx_L1_error)
       __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
       __Pyx_GOTREF(__pyx_t_1);
       __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     } else
     #endif
     {
-      __pyx_t_5 = PyTuple_New(1+1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 87, __pyx_L1_error)
+      __pyx_t_5 = PyTuple_New(1+1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 88, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_5);
       __Pyx_GIVEREF(__pyx_t_6); PyTuple_SET_ITEM(__pyx_t_5, 0, __pyx_t_6); __pyx_t_6 = NULL;
       __Pyx_GIVEREF(__pyx_t_2);
       PyTuple_SET_ITEM(__pyx_t_5, 0+1, __pyx_t_2);
       __pyx_t_2 = 0;
-      __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_5, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 87, __pyx_L1_error)
+      __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_5, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 88, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_1);
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     }
@@ -2024,158 +2039,238 @@ static PyObject *__pyx_pf_7pytesmo_11time_series_7filters_exp_filter(CYTHON_UNUS
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "pytesmo/time_series/filters.pyx":88
+  /* "pytesmo/time_series/filters.pyx":92
+ *     # find the first non nan value in the time series
  * 
- *     filtered.fill(np.nan)
- *     filtered[0] = in_data[0]             # <<<<<<<<<<<<<<
+ *     for i in range(in_jd.shape[0]):             # <<<<<<<<<<<<<<
  * 
- *     last_jd_var = in_jd[0]
+ *         isnan = (in_data[i] == nan) or npy_isnan(in_data[i])
  */
-  __pyx_t_8 = 0;
-  __pyx_t_9 = 0;
-  *__Pyx_BufPtrStrided1d(__pyx_t_7pytesmo_11time_series_7filters_DTYPE_f *, __pyx_pybuffernd_filtered.rcbuffer->pybuffer.buf, __pyx_t_9, __pyx_pybuffernd_filtered.diminfo[0].strides) = (*__Pyx_BufPtrStrided1d(__pyx_t_7pytesmo_11time_series_7filters_DTYPE_d *, __pyx_pybuffernd_in_data.rcbuffer->pybuffer.buf, __pyx_t_8, __pyx_pybuffernd_in_data.diminfo[0].strides));
-
-  /* "pytesmo/time_series/filters.pyx":90
- *     filtered[0] = in_data[0]
- * 
- *     last_jd_var = in_jd[0]             # <<<<<<<<<<<<<<
- *     last_filtered_var = filtered[0]
- * 
- */
-  __pyx_t_10 = 0;
-  __pyx_v_last_jd_var = (*__Pyx_BufPtrStrided1d(__pyx_t_7pytesmo_11time_series_7filters_DTYPE_d *, __pyx_pybuffernd_in_jd.rcbuffer->pybuffer.buf, __pyx_t_10, __pyx_pybuffernd_in_jd.diminfo[0].strides));
-
-  /* "pytesmo/time_series/filters.pyx":91
- * 
- *     last_jd_var = in_jd[0]
- *     last_filtered_var = filtered[0]             # <<<<<<<<<<<<<<
- * 
- *     for i in range(in_jd.shape[0] - 1):
- */
-  __pyx_t_11 = 0;
-  __pyx_v_last_filtered_var = (*__Pyx_BufPtrStrided1d(__pyx_t_7pytesmo_11time_series_7filters_DTYPE_f *, __pyx_pybuffernd_filtered.rcbuffer->pybuffer.buf, __pyx_t_11, __pyx_pybuffernd_filtered.diminfo[0].strides));
-
-  /* "pytesmo/time_series/filters.pyx":93
- *     last_filtered_var = filtered[0]
- * 
- *     for i in range(in_jd.shape[0] - 1):             # <<<<<<<<<<<<<<
- *         index = i + 1
- *         isnan = (in_data[index] == nan) or npy_isnan(in_data[index])
- */
-  __pyx_t_12 = ((__pyx_v_in_jd->dimensions[0]) - 1);
-  for (__pyx_t_13 = 0; __pyx_t_13 < __pyx_t_12; __pyx_t_13+=1) {
-    __pyx_v_i = __pyx_t_13;
+  __pyx_t_8 = (__pyx_v_in_jd->dimensions[0]);
+  for (__pyx_t_9 = 0; __pyx_t_9 < __pyx_t_8; __pyx_t_9+=1) {
+    __pyx_v_i = __pyx_t_9;
 
     /* "pytesmo/time_series/filters.pyx":94
+ *     for i in range(in_jd.shape[0]):
  * 
- *     for i in range(in_jd.shape[0] - 1):
- *         index = i + 1             # <<<<<<<<<<<<<<
- *         isnan = (in_data[index] == nan) or npy_isnan(in_data[index])
+ *         isnan = (in_data[i] == nan) or npy_isnan(in_data[i])             # <<<<<<<<<<<<<<
  *         if not isnan:
+ *             last_jd_var = in_jd[i]
  */
-    __pyx_v_index = (__pyx_v_i + 1);
-
-    /* "pytesmo/time_series/filters.pyx":95
- *     for i in range(in_jd.shape[0] - 1):
- *         index = i + 1
- *         isnan = (in_data[index] == nan) or npy_isnan(in_data[index])             # <<<<<<<<<<<<<<
- *         if not isnan:
- *             tdiff = in_jd[index] - last_jd_var
- */
-    __pyx_t_15 = __pyx_v_index;
-    __pyx_t_16 = (((*__Pyx_BufPtrStrided1d(__pyx_t_7pytesmo_11time_series_7filters_DTYPE_d *, __pyx_pybuffernd_in_data.rcbuffer->pybuffer.buf, __pyx_t_15, __pyx_pybuffernd_in_data.diminfo[0].strides)) == __pyx_v_nan) != 0);
-    if (!__pyx_t_16) {
+    __pyx_t_11 = __pyx_v_i;
+    __pyx_t_12 = (((*__Pyx_BufPtrStrided1d(__pyx_t_7pytesmo_11time_series_7filters_DTYPE_d *, __pyx_pybuffernd_in_data.rcbuffer->pybuffer.buf, __pyx_t_11, __pyx_pybuffernd_in_data.diminfo[0].strides)) == __pyx_v_nan) != 0);
+    if (!__pyx_t_12) {
     } else {
-      __pyx_t_14 = __pyx_t_16;
+      __pyx_t_10 = __pyx_t_12;
       goto __pyx_L5_bool_binop_done;
     }
-    __pyx_t_17 = __pyx_v_index;
-    __pyx_t_16 = (npy_isnan((*__Pyx_BufPtrStrided1d(__pyx_t_7pytesmo_11time_series_7filters_DTYPE_d *, __pyx_pybuffernd_in_data.rcbuffer->pybuffer.buf, __pyx_t_17, __pyx_pybuffernd_in_data.diminfo[0].strides))) != 0);
-    __pyx_t_14 = __pyx_t_16;
+    __pyx_t_13 = __pyx_v_i;
+    __pyx_t_12 = (npy_isnan((*__Pyx_BufPtrStrided1d(__pyx_t_7pytesmo_11time_series_7filters_DTYPE_d *, __pyx_pybuffernd_in_data.rcbuffer->pybuffer.buf, __pyx_t_13, __pyx_pybuffernd_in_data.diminfo[0].strides))) != 0);
+    __pyx_t_10 = __pyx_t_12;
     __pyx_L5_bool_binop_done:;
-    __pyx_v_isnan = __pyx_t_14;
+    __pyx_v_isnan = __pyx_t_10;
 
-    /* "pytesmo/time_series/filters.pyx":96
- *         index = i + 1
- *         isnan = (in_data[index] == nan) or npy_isnan(in_data[index])
+    /* "pytesmo/time_series/filters.pyx":95
+ * 
+ *         isnan = (in_data[i] == nan) or npy_isnan(in_data[i])
  *         if not isnan:             # <<<<<<<<<<<<<<
- *             tdiff = in_jd[index] - last_jd_var
- *             ef = exp(-tdiff / ctime)
+ *             last_jd_var = in_jd[i]
+ *             last_filtered_var = in_data[i]
  */
-    __pyx_t_14 = ((!(__pyx_v_isnan != 0)) != 0);
-    if (__pyx_t_14) {
-
-      /* "pytesmo/time_series/filters.pyx":97
- *         isnan = (in_data[index] == nan) or npy_isnan(in_data[index])
- *         if not isnan:
- *             tdiff = in_jd[index] - last_jd_var             # <<<<<<<<<<<<<<
- *             ef = exp(-tdiff / ctime)
- *             gain = gain / (gain + ef)
- */
-      __pyx_t_18 = __pyx_v_index;
-      __pyx_v_tdiff = ((*__Pyx_BufPtrStrided1d(__pyx_t_7pytesmo_11time_series_7filters_DTYPE_d *, __pyx_pybuffernd_in_jd.rcbuffer->pybuffer.buf, __pyx_t_18, __pyx_pybuffernd_in_jd.diminfo[0].strides)) - __pyx_v_last_jd_var);
-
-      /* "pytesmo/time_series/filters.pyx":98
- *         if not isnan:
- *             tdiff = in_jd[index] - last_jd_var
- *             ef = exp(-tdiff / ctime)             # <<<<<<<<<<<<<<
- *             gain = gain / (gain + ef)
- *             filtered[index] = last_filtered_var + gain *(in_data[index] - last_filtered_var)
- */
-      __pyx_v_ef = exp(((-__pyx_v_tdiff) / __pyx_v_ctime));
-
-      /* "pytesmo/time_series/filters.pyx":99
- *             tdiff = in_jd[index] - last_jd_var
- *             ef = exp(-tdiff / ctime)
- *             gain = gain / (gain + ef)             # <<<<<<<<<<<<<<
- *             filtered[index] = last_filtered_var + gain *(in_data[index] - last_filtered_var)
- *             last_jd_var = in_jd[index]
- */
-      __pyx_v_gain = (__pyx_v_gain / (__pyx_v_gain + __pyx_v_ef));
-
-      /* "pytesmo/time_series/filters.pyx":100
- *             ef = exp(-tdiff / ctime)
- *             gain = gain / (gain + ef)
- *             filtered[index] = last_filtered_var + gain *(in_data[index] - last_filtered_var)             # <<<<<<<<<<<<<<
- *             last_jd_var = in_jd[index]
- *             last_filtered_var = filtered[index]
- */
-      __pyx_t_19 = __pyx_v_index;
-      __pyx_t_20 = __pyx_v_index;
-      *__Pyx_BufPtrStrided1d(__pyx_t_7pytesmo_11time_series_7filters_DTYPE_f *, __pyx_pybuffernd_filtered.rcbuffer->pybuffer.buf, __pyx_t_20, __pyx_pybuffernd_filtered.diminfo[0].strides) = (__pyx_v_last_filtered_var + (__pyx_v_gain * ((*__Pyx_BufPtrStrided1d(__pyx_t_7pytesmo_11time_series_7filters_DTYPE_d *, __pyx_pybuffernd_in_data.rcbuffer->pybuffer.buf, __pyx_t_19, __pyx_pybuffernd_in_data.diminfo[0].strides)) - __pyx_v_last_filtered_var)));
-
-      /* "pytesmo/time_series/filters.pyx":101
- *             gain = gain / (gain + ef)
- *             filtered[index] = last_filtered_var + gain *(in_data[index] - last_filtered_var)
- *             last_jd_var = in_jd[index]             # <<<<<<<<<<<<<<
- *             last_filtered_var = filtered[index]
- * 
- */
-      __pyx_t_21 = __pyx_v_index;
-      __pyx_v_last_jd_var = (*__Pyx_BufPtrStrided1d(__pyx_t_7pytesmo_11time_series_7filters_DTYPE_d *, __pyx_pybuffernd_in_jd.rcbuffer->pybuffer.buf, __pyx_t_21, __pyx_pybuffernd_in_jd.diminfo[0].strides));
-
-      /* "pytesmo/time_series/filters.pyx":102
- *             filtered[index] = last_filtered_var + gain *(in_data[index] - last_filtered_var)
- *             last_jd_var = in_jd[index]
- *             last_filtered_var = filtered[index]             # <<<<<<<<<<<<<<
- * 
- *     return filtered
- */
-      __pyx_t_22 = __pyx_v_index;
-      __pyx_v_last_filtered_var = (*__Pyx_BufPtrStrided1d(__pyx_t_7pytesmo_11time_series_7filters_DTYPE_f *, __pyx_pybuffernd_filtered.rcbuffer->pybuffer.buf, __pyx_t_22, __pyx_pybuffernd_filtered.diminfo[0].strides));
+    __pyx_t_10 = ((!(__pyx_v_isnan != 0)) != 0);
+    if (__pyx_t_10) {
 
       /* "pytesmo/time_series/filters.pyx":96
- *         index = i + 1
- *         isnan = (in_data[index] == nan) or npy_isnan(in_data[index])
+ *         isnan = (in_data[i] == nan) or npy_isnan(in_data[i])
+ *         if not isnan:
+ *             last_jd_var = in_jd[i]             # <<<<<<<<<<<<<<
+ *             last_filtered_var = in_data[i]
+ *             # set the first filtered value to the first found non nan value
+ */
+      __pyx_t_14 = __pyx_v_i;
+      __pyx_v_last_jd_var = (*__Pyx_BufPtrStrided1d(__pyx_t_7pytesmo_11time_series_7filters_DTYPE_d *, __pyx_pybuffernd_in_jd.rcbuffer->pybuffer.buf, __pyx_t_14, __pyx_pybuffernd_in_jd.diminfo[0].strides));
+
+      /* "pytesmo/time_series/filters.pyx":97
+ *         if not isnan:
+ *             last_jd_var = in_jd[i]
+ *             last_filtered_var = in_data[i]             # <<<<<<<<<<<<<<
+ *             # set the first filtered value to the first found non nan value
+ *             filtered[i] = in_data[i]
+ */
+      __pyx_t_15 = __pyx_v_i;
+      __pyx_v_last_filtered_var = (*__Pyx_BufPtrStrided1d(__pyx_t_7pytesmo_11time_series_7filters_DTYPE_d *, __pyx_pybuffernd_in_data.rcbuffer->pybuffer.buf, __pyx_t_15, __pyx_pybuffernd_in_data.diminfo[0].strides));
+
+      /* "pytesmo/time_series/filters.pyx":99
+ *             last_filtered_var = in_data[i]
+ *             # set the first filtered value to the first found non nan value
+ *             filtered[i] = in_data[i]             # <<<<<<<<<<<<<<
+ *             found_index = i
+ *             break
+ */
+      __pyx_t_16 = __pyx_v_i;
+      __pyx_t_17 = __pyx_v_i;
+      *__Pyx_BufPtrStrided1d(__pyx_t_7pytesmo_11time_series_7filters_DTYPE_f *, __pyx_pybuffernd_filtered.rcbuffer->pybuffer.buf, __pyx_t_17, __pyx_pybuffernd_filtered.diminfo[0].strides) = (*__Pyx_BufPtrStrided1d(__pyx_t_7pytesmo_11time_series_7filters_DTYPE_d *, __pyx_pybuffernd_in_data.rcbuffer->pybuffer.buf, __pyx_t_16, __pyx_pybuffernd_in_data.diminfo[0].strides));
+
+      /* "pytesmo/time_series/filters.pyx":100
+ *             # set the first filtered value to the first found non nan value
+ *             filtered[i] = in_data[i]
+ *             found_index = i             # <<<<<<<<<<<<<<
+ *             break
+ * 
+ */
+      __pyx_v_found_index = __pyx_v_i;
+
+      /* "pytesmo/time_series/filters.pyx":101
+ *             filtered[i] = in_data[i]
+ *             found_index = i
+ *             break             # <<<<<<<<<<<<<<
+ * 
+ *     if found_index > -1:
+ */
+      goto __pyx_L4_break;
+
+      /* "pytesmo/time_series/filters.pyx":95
+ * 
+ *         isnan = (in_data[i] == nan) or npy_isnan(in_data[i])
  *         if not isnan:             # <<<<<<<<<<<<<<
- *             tdiff = in_jd[index] - last_jd_var
- *             ef = exp(-tdiff / ctime)
+ *             last_jd_var = in_jd[i]
+ *             last_filtered_var = in_data[i]
  */
     }
   }
+  __pyx_L4_break:;
 
-  /* "pytesmo/time_series/filters.pyx":104
- *             last_filtered_var = filtered[index]
+  /* "pytesmo/time_series/filters.pyx":103
+ *             break
+ * 
+ *     if found_index > -1:             # <<<<<<<<<<<<<<
+ * 
+ *         for index in range(found_index + 1, in_jd.shape[0]):
+ */
+  __pyx_t_10 = ((__pyx_v_found_index > -1L) != 0);
+  if (__pyx_t_10) {
+
+    /* "pytesmo/time_series/filters.pyx":105
+ *     if found_index > -1:
+ * 
+ *         for index in range(found_index + 1, in_jd.shape[0]):             # <<<<<<<<<<<<<<
+ *             isnan = (in_data[index] == nan) or npy_isnan(in_data[index])
+ *             if not isnan:
+ */
+    __pyx_t_8 = (__pyx_v_in_jd->dimensions[0]);
+    for (__pyx_t_18 = (__pyx_v_found_index + 1); __pyx_t_18 < __pyx_t_8; __pyx_t_18+=1) {
+      __pyx_v_index = __pyx_t_18;
+
+      /* "pytesmo/time_series/filters.pyx":106
+ * 
+ *         for index in range(found_index + 1, in_jd.shape[0]):
+ *             isnan = (in_data[index] == nan) or npy_isnan(in_data[index])             # <<<<<<<<<<<<<<
+ *             if not isnan:
+ *                 tdiff = in_jd[index] - last_jd_var
+ */
+      __pyx_t_19 = __pyx_v_index;
+      __pyx_t_12 = (((*__Pyx_BufPtrStrided1d(__pyx_t_7pytesmo_11time_series_7filters_DTYPE_d *, __pyx_pybuffernd_in_data.rcbuffer->pybuffer.buf, __pyx_t_19, __pyx_pybuffernd_in_data.diminfo[0].strides)) == __pyx_v_nan) != 0);
+      if (!__pyx_t_12) {
+      } else {
+        __pyx_t_10 = __pyx_t_12;
+        goto __pyx_L11_bool_binop_done;
+      }
+      __pyx_t_20 = __pyx_v_index;
+      __pyx_t_12 = (npy_isnan((*__Pyx_BufPtrStrided1d(__pyx_t_7pytesmo_11time_series_7filters_DTYPE_d *, __pyx_pybuffernd_in_data.rcbuffer->pybuffer.buf, __pyx_t_20, __pyx_pybuffernd_in_data.diminfo[0].strides))) != 0);
+      __pyx_t_10 = __pyx_t_12;
+      __pyx_L11_bool_binop_done:;
+      __pyx_v_isnan = __pyx_t_10;
+
+      /* "pytesmo/time_series/filters.pyx":107
+ *         for index in range(found_index + 1, in_jd.shape[0]):
+ *             isnan = (in_data[index] == nan) or npy_isnan(in_data[index])
+ *             if not isnan:             # <<<<<<<<<<<<<<
+ *                 tdiff = in_jd[index] - last_jd_var
+ *                 ef = exp(-tdiff / ctime)
+ */
+      __pyx_t_10 = ((!(__pyx_v_isnan != 0)) != 0);
+      if (__pyx_t_10) {
+
+        /* "pytesmo/time_series/filters.pyx":108
+ *             isnan = (in_data[index] == nan) or npy_isnan(in_data[index])
+ *             if not isnan:
+ *                 tdiff = in_jd[index] - last_jd_var             # <<<<<<<<<<<<<<
+ *                 ef = exp(-tdiff / ctime)
+ *                 gain = gain / (gain + ef)
+ */
+        __pyx_t_21 = __pyx_v_index;
+        __pyx_v_tdiff = ((*__Pyx_BufPtrStrided1d(__pyx_t_7pytesmo_11time_series_7filters_DTYPE_d *, __pyx_pybuffernd_in_jd.rcbuffer->pybuffer.buf, __pyx_t_21, __pyx_pybuffernd_in_jd.diminfo[0].strides)) - __pyx_v_last_jd_var);
+
+        /* "pytesmo/time_series/filters.pyx":109
+ *             if not isnan:
+ *                 tdiff = in_jd[index] - last_jd_var
+ *                 ef = exp(-tdiff / ctime)             # <<<<<<<<<<<<<<
+ *                 gain = gain / (gain + ef)
+ *                 filtered[index] = last_filtered_var + gain * (in_data[index] - last_filtered_var)
+ */
+        __pyx_v_ef = exp(((-__pyx_v_tdiff) / __pyx_v_ctime));
+
+        /* "pytesmo/time_series/filters.pyx":110
+ *                 tdiff = in_jd[index] - last_jd_var
+ *                 ef = exp(-tdiff / ctime)
+ *                 gain = gain / (gain + ef)             # <<<<<<<<<<<<<<
+ *                 filtered[index] = last_filtered_var + gain * (in_data[index] - last_filtered_var)
+ *                 last_jd_var = in_jd[index]
+ */
+        __pyx_v_gain = (__pyx_v_gain / (__pyx_v_gain + __pyx_v_ef));
+
+        /* "pytesmo/time_series/filters.pyx":111
+ *                 ef = exp(-tdiff / ctime)
+ *                 gain = gain / (gain + ef)
+ *                 filtered[index] = last_filtered_var + gain * (in_data[index] - last_filtered_var)             # <<<<<<<<<<<<<<
+ *                 last_jd_var = in_jd[index]
+ *                 last_filtered_var = filtered[index]
+ */
+        __pyx_t_22 = __pyx_v_index;
+        __pyx_t_23 = __pyx_v_index;
+        *__Pyx_BufPtrStrided1d(__pyx_t_7pytesmo_11time_series_7filters_DTYPE_f *, __pyx_pybuffernd_filtered.rcbuffer->pybuffer.buf, __pyx_t_23, __pyx_pybuffernd_filtered.diminfo[0].strides) = (__pyx_v_last_filtered_var + (__pyx_v_gain * ((*__Pyx_BufPtrStrided1d(__pyx_t_7pytesmo_11time_series_7filters_DTYPE_d *, __pyx_pybuffernd_in_data.rcbuffer->pybuffer.buf, __pyx_t_22, __pyx_pybuffernd_in_data.diminfo[0].strides)) - __pyx_v_last_filtered_var)));
+
+        /* "pytesmo/time_series/filters.pyx":112
+ *                 gain = gain / (gain + ef)
+ *                 filtered[index] = last_filtered_var + gain * (in_data[index] - last_filtered_var)
+ *                 last_jd_var = in_jd[index]             # <<<<<<<<<<<<<<
+ *                 last_filtered_var = filtered[index]
+ * 
+ */
+        __pyx_t_24 = __pyx_v_index;
+        __pyx_v_last_jd_var = (*__Pyx_BufPtrStrided1d(__pyx_t_7pytesmo_11time_series_7filters_DTYPE_d *, __pyx_pybuffernd_in_jd.rcbuffer->pybuffer.buf, __pyx_t_24, __pyx_pybuffernd_in_jd.diminfo[0].strides));
+
+        /* "pytesmo/time_series/filters.pyx":113
+ *                 filtered[index] = last_filtered_var + gain * (in_data[index] - last_filtered_var)
+ *                 last_jd_var = in_jd[index]
+ *                 last_filtered_var = filtered[index]             # <<<<<<<<<<<<<<
+ * 
+ *     return filtered
+ */
+        __pyx_t_25 = __pyx_v_index;
+        __pyx_v_last_filtered_var = (*__Pyx_BufPtrStrided1d(__pyx_t_7pytesmo_11time_series_7filters_DTYPE_f *, __pyx_pybuffernd_filtered.rcbuffer->pybuffer.buf, __pyx_t_25, __pyx_pybuffernd_filtered.diminfo[0].strides));
+
+        /* "pytesmo/time_series/filters.pyx":107
+ *         for index in range(found_index + 1, in_jd.shape[0]):
+ *             isnan = (in_data[index] == nan) or npy_isnan(in_data[index])
+ *             if not isnan:             # <<<<<<<<<<<<<<
+ *                 tdiff = in_jd[index] - last_jd_var
+ *                 ef = exp(-tdiff / ctime)
+ */
+      }
+    }
+
+    /* "pytesmo/time_series/filters.pyx":103
+ *             break
+ * 
+ *     if found_index > -1:             # <<<<<<<<<<<<<<
+ * 
+ *         for index in range(found_index + 1, in_jd.shape[0]):
+ */
+  }
+
+  /* "pytesmo/time_series/filters.pyx":115
+ *                 last_filtered_var = filtered[index]
  * 
  *     return filtered             # <<<<<<<<<<<<<<
  * 
@@ -2223,7 +2318,7 @@ static PyObject *__pyx_pf_7pytesmo_11time_series_7filters_exp_filter(CYTHON_UNUS
   return __pyx_r;
 }
 
-/* "pytesmo/time_series/filters.pyx":110
+/* "pytesmo/time_series/filters.pyx":121
  * @cython.wraparound(False)
  * @cython.cdivision(True)
  * def boxcar_filter(np.ndarray[DTYPE_d, ndim=1] in_data,             # <<<<<<<<<<<<<<
@@ -2270,7 +2365,7 @@ static PyObject *__pyx_pw_7pytesmo_11time_series_7filters_3boxcar_filter(PyObjec
         case  1:
         if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_in_jd)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("boxcar_filter", 0, 2, 4, 1); __PYX_ERR(0, 110, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("boxcar_filter", 0, 2, 4, 1); __PYX_ERR(0, 121, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
@@ -2286,7 +2381,7 @@ static PyObject *__pyx_pw_7pytesmo_11time_series_7filters_3boxcar_filter(PyObjec
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "boxcar_filter") < 0)) __PYX_ERR(0, 110, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "boxcar_filter") < 0)) __PYX_ERR(0, 121, __pyx_L3_error)
       }
     } else {
       switch (PyTuple_GET_SIZE(__pyx_args)) {
@@ -2303,26 +2398,26 @@ static PyObject *__pyx_pw_7pytesmo_11time_series_7filters_3boxcar_filter(PyObjec
     __pyx_v_in_data = ((PyArrayObject *)values[0]);
     __pyx_v_in_jd = ((PyArrayObject *)values[1]);
     if (values[2]) {
-      __pyx_v_window = __pyx_PyFloat_AsFloat(values[2]); if (unlikely((__pyx_v_window == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 112, __pyx_L3_error)
+      __pyx_v_window = __pyx_PyFloat_AsFloat(values[2]); if (unlikely((__pyx_v_window == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 123, __pyx_L3_error)
     } else {
       __pyx_v_window = ((float)1.0);
     }
     if (values[3]) {
-      __pyx_v_nan = __pyx_PyFloat_AsDouble(values[3]); if (unlikely((__pyx_v_nan == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 112, __pyx_L3_error)
+      __pyx_v_nan = __pyx_PyFloat_AsDouble(values[3]); if (unlikely((__pyx_v_nan == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 123, __pyx_L3_error)
     } else {
       __pyx_v_nan = ((double)-999999.0);
     }
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("boxcar_filter", 0, 2, 4, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 110, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("boxcar_filter", 0, 2, 4, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 121, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("pytesmo.time_series.filters.boxcar_filter", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_in_data), __pyx_ptype_5numpy_ndarray, 1, "in_data", 0))) __PYX_ERR(0, 110, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_in_jd), __pyx_ptype_5numpy_ndarray, 1, "in_jd", 0))) __PYX_ERR(0, 111, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_in_data), __pyx_ptype_5numpy_ndarray, 1, "in_data", 0))) __PYX_ERR(0, 121, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_in_jd), __pyx_ptype_5numpy_ndarray, 1, "in_jd", 0))) __PYX_ERR(0, 122, __pyx_L1_error)
   __pyx_r = __pyx_pf_7pytesmo_11time_series_7filters_2boxcar_filter(__pyx_self, __pyx_v_in_data, __pyx_v_in_jd, __pyx_v_window, __pyx_v_nan);
 
   /* function exit code */
@@ -2392,29 +2487,29 @@ static PyObject *__pyx_pf_7pytesmo_11time_series_7filters_2boxcar_filter(CYTHON_
   __pyx_pybuffernd_in_jd.rcbuffer = &__pyx_pybuffer_in_jd;
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_in_data.rcbuffer->pybuffer, (PyObject*)__pyx_v_in_data, &__Pyx_TypeInfo_nn___pyx_t_7pytesmo_11time_series_7filters_DTYPE_d, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 110, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_in_data.rcbuffer->pybuffer, (PyObject*)__pyx_v_in_data, &__Pyx_TypeInfo_nn___pyx_t_7pytesmo_11time_series_7filters_DTYPE_d, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 121, __pyx_L1_error)
   }
   __pyx_pybuffernd_in_data.diminfo[0].strides = __pyx_pybuffernd_in_data.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_in_data.diminfo[0].shape = __pyx_pybuffernd_in_data.rcbuffer->pybuffer.shape[0];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_in_jd.rcbuffer->pybuffer, (PyObject*)__pyx_v_in_jd, &__Pyx_TypeInfo_nn___pyx_t_7pytesmo_11time_series_7filters_DTYPE_d, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 110, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_in_jd.rcbuffer->pybuffer, (PyObject*)__pyx_v_in_jd, &__Pyx_TypeInfo_nn___pyx_t_7pytesmo_11time_series_7filters_DTYPE_d, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 121, __pyx_L1_error)
   }
   __pyx_pybuffernd_in_jd.diminfo[0].strides = __pyx_pybuffernd_in_jd.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_in_jd.diminfo[0].shape = __pyx_pybuffernd_in_jd.rcbuffer->pybuffer.shape[0];
 
-  /* "pytesmo/time_series/filters.pyx":129
+  /* "pytesmo/time_series/filters.pyx":140
  *         nan values to exclude from calculation
  *     """
  *     cdef np.ndarray[DTYPE_f, ndim = 1] filtered = np.empty(len(in_data))             # <<<<<<<<<<<<<<
  *     cdef double tdiff
  *     cdef unsigned int i
  */
-  __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 129, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 140, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_empty); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 129, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_empty); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 140, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_4 = PyObject_Length(((PyObject *)__pyx_v_in_data)); if (unlikely(__pyx_t_4 == ((Py_ssize_t)-1))) __PYX_ERR(0, 129, __pyx_L1_error)
-  __pyx_t_2 = PyInt_FromSsize_t(__pyx_t_4); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 129, __pyx_L1_error)
+  __pyx_t_4 = PyObject_Length(((PyObject *)__pyx_v_in_data)); if (unlikely(__pyx_t_4 == ((Py_ssize_t)-1))) __PYX_ERR(0, 140, __pyx_L1_error)
+  __pyx_t_2 = PyInt_FromSsize_t(__pyx_t_4); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 140, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_t_5 = NULL;
   if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_3))) {
@@ -2427,14 +2522,14 @@ static PyObject *__pyx_pf_7pytesmo_11time_series_7filters_2boxcar_filter(CYTHON_
     }
   }
   if (!__pyx_t_5) {
-    __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_t_3, __pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 129, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_t_3, __pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 140, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     __Pyx_GOTREF(__pyx_t_1);
   } else {
     #if CYTHON_FAST_PYCALL
     if (PyFunction_Check(__pyx_t_3)) {
       PyObject *__pyx_temp[2] = {__pyx_t_5, __pyx_t_2};
-      __pyx_t_1 = __Pyx_PyFunction_FastCall(__pyx_t_3, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 129, __pyx_L1_error)
+      __pyx_t_1 = __Pyx_PyFunction_FastCall(__pyx_t_3, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 140, __pyx_L1_error)
       __Pyx_XDECREF(__pyx_t_5); __pyx_t_5 = 0;
       __Pyx_GOTREF(__pyx_t_1);
       __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
@@ -2443,32 +2538,32 @@ static PyObject *__pyx_pf_7pytesmo_11time_series_7filters_2boxcar_filter(CYTHON_
     #if CYTHON_FAST_PYCCALL
     if (__Pyx_PyFastCFunction_Check(__pyx_t_3)) {
       PyObject *__pyx_temp[2] = {__pyx_t_5, __pyx_t_2};
-      __pyx_t_1 = __Pyx_PyCFunction_FastCall(__pyx_t_3, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 129, __pyx_L1_error)
+      __pyx_t_1 = __Pyx_PyCFunction_FastCall(__pyx_t_3, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 140, __pyx_L1_error)
       __Pyx_XDECREF(__pyx_t_5); __pyx_t_5 = 0;
       __Pyx_GOTREF(__pyx_t_1);
       __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     } else
     #endif
     {
-      __pyx_t_6 = PyTuple_New(1+1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 129, __pyx_L1_error)
+      __pyx_t_6 = PyTuple_New(1+1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 140, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_6);
       __Pyx_GIVEREF(__pyx_t_5); PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_t_5); __pyx_t_5 = NULL;
       __Pyx_GIVEREF(__pyx_t_2);
       PyTuple_SET_ITEM(__pyx_t_6, 0+1, __pyx_t_2);
       __pyx_t_2 = 0;
-      __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_6, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 129, __pyx_L1_error)
+      __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_6, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 140, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_1);
       __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     }
   }
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 129, __pyx_L1_error)
+  if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 140, __pyx_L1_error)
   __pyx_t_7 = ((PyArrayObject *)__pyx_t_1);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
     if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_filtered.rcbuffer->pybuffer, (PyObject*)__pyx_t_7, &__Pyx_TypeInfo_nn___pyx_t_7pytesmo_11time_series_7filters_DTYPE_f, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 1, 0, __pyx_stack) == -1)) {
       __pyx_v_filtered = ((PyArrayObject *)Py_None); __Pyx_INCREF(Py_None); __pyx_pybuffernd_filtered.rcbuffer->pybuffer.buf = NULL;
-      __PYX_ERR(0, 129, __pyx_L1_error)
+      __PYX_ERR(0, 140, __pyx_L1_error)
     } else {__pyx_pybuffernd_filtered.diminfo[0].strides = __pyx_pybuffernd_filtered.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_filtered.diminfo[0].shape = __pyx_pybuffernd_filtered.rcbuffer->pybuffer.shape[0];
     }
   }
@@ -2476,7 +2571,7 @@ static PyObject *__pyx_pf_7pytesmo_11time_series_7filters_2boxcar_filter(CYTHON_
   __pyx_v_filtered = ((PyArrayObject *)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "pytesmo/time_series/filters.pyx":134
+  /* "pytesmo/time_series/filters.pyx":145
  *     cdef unsigned int j
  *     cdef bint isnan
  *     cdef double sum = 0             # <<<<<<<<<<<<<<
@@ -2485,7 +2580,7 @@ static PyObject *__pyx_pf_7pytesmo_11time_series_7filters_2boxcar_filter(CYTHON_
  */
   __pyx_v_sum = 0.0;
 
-  /* "pytesmo/time_series/filters.pyx":135
+  /* "pytesmo/time_series/filters.pyx":146
  *     cdef bint isnan
  *     cdef double sum = 0
  *     cdef double limit = window / 2.0             # <<<<<<<<<<<<<<
@@ -2494,7 +2589,7 @@ static PyObject *__pyx_pf_7pytesmo_11time_series_7filters_2boxcar_filter(CYTHON_
  */
   __pyx_v_limit = (__pyx_v_window / 2.0);
 
-  /* "pytesmo/time_series/filters.pyx":136
+  /* "pytesmo/time_series/filters.pyx":147
  *     cdef double sum = 0
  *     cdef double limit = window / 2.0
  *     cdef int nobs = 0             # <<<<<<<<<<<<<<
@@ -2503,18 +2598,18 @@ static PyObject *__pyx_pf_7pytesmo_11time_series_7filters_2boxcar_filter(CYTHON_
  */
   __pyx_v_nobs = 0;
 
-  /* "pytesmo/time_series/filters.pyx":138
+  /* "pytesmo/time_series/filters.pyx":149
  *     cdef int nobs = 0
  * 
  *     filtered.fill(np.nan)             # <<<<<<<<<<<<<<
  * 
  *     for i in range(in_jd.shape[0]):
  */
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_filtered), __pyx_n_s_fill); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 138, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_filtered), __pyx_n_s_fill); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 149, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_6 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 138, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 149, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_n_s_nan); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 138, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_n_s_nan); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 149, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
   __pyx_t_6 = NULL;
@@ -2528,14 +2623,14 @@ static PyObject *__pyx_pf_7pytesmo_11time_series_7filters_2boxcar_filter(CYTHON_
     }
   }
   if (!__pyx_t_6) {
-    __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_t_3, __pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 138, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_t_3, __pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 149, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     __Pyx_GOTREF(__pyx_t_1);
   } else {
     #if CYTHON_FAST_PYCALL
     if (PyFunction_Check(__pyx_t_3)) {
       PyObject *__pyx_temp[2] = {__pyx_t_6, __pyx_t_2};
-      __pyx_t_1 = __Pyx_PyFunction_FastCall(__pyx_t_3, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 138, __pyx_L1_error)
+      __pyx_t_1 = __Pyx_PyFunction_FastCall(__pyx_t_3, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 149, __pyx_L1_error)
       __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
       __Pyx_GOTREF(__pyx_t_1);
       __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
@@ -2544,20 +2639,20 @@ static PyObject *__pyx_pf_7pytesmo_11time_series_7filters_2boxcar_filter(CYTHON_
     #if CYTHON_FAST_PYCCALL
     if (__Pyx_PyFastCFunction_Check(__pyx_t_3)) {
       PyObject *__pyx_temp[2] = {__pyx_t_6, __pyx_t_2};
-      __pyx_t_1 = __Pyx_PyCFunction_FastCall(__pyx_t_3, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 138, __pyx_L1_error)
+      __pyx_t_1 = __Pyx_PyCFunction_FastCall(__pyx_t_3, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 149, __pyx_L1_error)
       __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
       __Pyx_GOTREF(__pyx_t_1);
       __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     } else
     #endif
     {
-      __pyx_t_5 = PyTuple_New(1+1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 138, __pyx_L1_error)
+      __pyx_t_5 = PyTuple_New(1+1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 149, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_5);
       __Pyx_GIVEREF(__pyx_t_6); PyTuple_SET_ITEM(__pyx_t_5, 0, __pyx_t_6); __pyx_t_6 = NULL;
       __Pyx_GIVEREF(__pyx_t_2);
       PyTuple_SET_ITEM(__pyx_t_5, 0+1, __pyx_t_2);
       __pyx_t_2 = 0;
-      __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_5, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 138, __pyx_L1_error)
+      __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_5, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 149, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_1);
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     }
@@ -2565,7 +2660,7 @@ static PyObject *__pyx_pf_7pytesmo_11time_series_7filters_2boxcar_filter(CYTHON_
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "pytesmo/time_series/filters.pyx":140
+  /* "pytesmo/time_series/filters.pyx":151
  *     filtered.fill(np.nan)
  * 
  *     for i in range(in_jd.shape[0]):             # <<<<<<<<<<<<<<
@@ -2576,7 +2671,7 @@ static PyObject *__pyx_pf_7pytesmo_11time_series_7filters_2boxcar_filter(CYTHON_
   for (__pyx_t_9 = 0; __pyx_t_9 < __pyx_t_8; __pyx_t_9+=1) {
     __pyx_v_i = __pyx_t_9;
 
-    /* "pytesmo/time_series/filters.pyx":141
+    /* "pytesmo/time_series/filters.pyx":152
  * 
  *     for i in range(in_jd.shape[0]):
  *         isnan = (in_data[i] == nan) or npy_isnan(in_data[i])             # <<<<<<<<<<<<<<
@@ -2596,7 +2691,7 @@ static PyObject *__pyx_pf_7pytesmo_11time_series_7filters_2boxcar_filter(CYTHON_
     __pyx_L5_bool_binop_done:;
     __pyx_v_isnan = __pyx_t_10;
 
-    /* "pytesmo/time_series/filters.pyx":142
+    /* "pytesmo/time_series/filters.pyx":153
  *     for i in range(in_jd.shape[0]):
  *         isnan = (in_data[i] == nan) or npy_isnan(in_data[i])
  *         if not isnan:             # <<<<<<<<<<<<<<
@@ -2606,7 +2701,7 @@ static PyObject *__pyx_pf_7pytesmo_11time_series_7filters_2boxcar_filter(CYTHON_
     __pyx_t_10 = ((!(__pyx_v_isnan != 0)) != 0);
     if (__pyx_t_10) {
 
-      /* "pytesmo/time_series/filters.pyx":143
+      /* "pytesmo/time_series/filters.pyx":154
  *         isnan = (in_data[i] == nan) or npy_isnan(in_data[i])
  *         if not isnan:
  *             sum = 0             # <<<<<<<<<<<<<<
@@ -2615,7 +2710,7 @@ static PyObject *__pyx_pf_7pytesmo_11time_series_7filters_2boxcar_filter(CYTHON_
  */
       __pyx_v_sum = 0.0;
 
-      /* "pytesmo/time_series/filters.pyx":144
+      /* "pytesmo/time_series/filters.pyx":155
  *         if not isnan:
  *             sum = 0
  *             nobs = 0             # <<<<<<<<<<<<<<
@@ -2624,7 +2719,7 @@ static PyObject *__pyx_pf_7pytesmo_11time_series_7filters_2boxcar_filter(CYTHON_
  */
       __pyx_v_nobs = 0;
 
-      /* "pytesmo/time_series/filters.pyx":145
+      /* "pytesmo/time_series/filters.pyx":156
  *             sum = 0
  *             nobs = 0
  *             for j in range(i, in_jd.shape[0]):             # <<<<<<<<<<<<<<
@@ -2635,7 +2730,7 @@ static PyObject *__pyx_pf_7pytesmo_11time_series_7filters_2boxcar_filter(CYTHON_
       for (__pyx_t_15 = __pyx_v_i; __pyx_t_15 < __pyx_t_14; __pyx_t_15+=1) {
         __pyx_v_j = __pyx_t_15;
 
-        /* "pytesmo/time_series/filters.pyx":146
+        /* "pytesmo/time_series/filters.pyx":157
  *             nobs = 0
  *             for j in range(i, in_jd.shape[0]):
  *                 isnan = (in_data[j] == nan) or npy_isnan(in_data[j])             # <<<<<<<<<<<<<<
@@ -2655,7 +2750,7 @@ static PyObject *__pyx_pf_7pytesmo_11time_series_7filters_2boxcar_filter(CYTHON_
         __pyx_L10_bool_binop_done:;
         __pyx_v_isnan = __pyx_t_10;
 
-        /* "pytesmo/time_series/filters.pyx":147
+        /* "pytesmo/time_series/filters.pyx":158
  *             for j in range(i, in_jd.shape[0]):
  *                 isnan = (in_data[j] == nan) or npy_isnan(in_data[j])
  *                 if not isnan:             # <<<<<<<<<<<<<<
@@ -2665,7 +2760,7 @@ static PyObject *__pyx_pf_7pytesmo_11time_series_7filters_2boxcar_filter(CYTHON_
         __pyx_t_10 = ((!(__pyx_v_isnan != 0)) != 0);
         if (__pyx_t_10) {
 
-          /* "pytesmo/time_series/filters.pyx":148
+          /* "pytesmo/time_series/filters.pyx":159
  *                 isnan = (in_data[j] == nan) or npy_isnan(in_data[j])
  *                 if not isnan:
  *                     tdiff = in_jd[j] - in_jd[i]             # <<<<<<<<<<<<<<
@@ -2676,7 +2771,7 @@ static PyObject *__pyx_pf_7pytesmo_11time_series_7filters_2boxcar_filter(CYTHON_
           __pyx_t_19 = __pyx_v_i;
           __pyx_v_tdiff = ((*__Pyx_BufPtrStrided1d(__pyx_t_7pytesmo_11time_series_7filters_DTYPE_d *, __pyx_pybuffernd_in_jd.rcbuffer->pybuffer.buf, __pyx_t_18, __pyx_pybuffernd_in_jd.diminfo[0].strides)) - (*__Pyx_BufPtrStrided1d(__pyx_t_7pytesmo_11time_series_7filters_DTYPE_d *, __pyx_pybuffernd_in_jd.rcbuffer->pybuffer.buf, __pyx_t_19, __pyx_pybuffernd_in_jd.diminfo[0].strides)));
 
-          /* "pytesmo/time_series/filters.pyx":149
+          /* "pytesmo/time_series/filters.pyx":160
  *                 if not isnan:
  *                     tdiff = in_jd[j] - in_jd[i]
  *                     if fabs(tdiff) <= limit:             # <<<<<<<<<<<<<<
@@ -2686,7 +2781,7 @@ static PyObject *__pyx_pf_7pytesmo_11time_series_7filters_2boxcar_filter(CYTHON_
           __pyx_t_10 = ((fabs(__pyx_v_tdiff) <= __pyx_v_limit) != 0);
           if (__pyx_t_10) {
 
-            /* "pytesmo/time_series/filters.pyx":150
+            /* "pytesmo/time_series/filters.pyx":161
  *                     tdiff = in_jd[j] - in_jd[i]
  *                     if fabs(tdiff) <= limit:
  *                         sum = sum + in_data[j]             # <<<<<<<<<<<<<<
@@ -2696,7 +2791,7 @@ static PyObject *__pyx_pf_7pytesmo_11time_series_7filters_2boxcar_filter(CYTHON_
             __pyx_t_20 = __pyx_v_j;
             __pyx_v_sum = (__pyx_v_sum + (*__Pyx_BufPtrStrided1d(__pyx_t_7pytesmo_11time_series_7filters_DTYPE_d *, __pyx_pybuffernd_in_data.rcbuffer->pybuffer.buf, __pyx_t_20, __pyx_pybuffernd_in_data.diminfo[0].strides)));
 
-            /* "pytesmo/time_series/filters.pyx":151
+            /* "pytesmo/time_series/filters.pyx":162
  *                     if fabs(tdiff) <= limit:
  *                         sum = sum + in_data[j]
  *                         nobs = nobs + 1             # <<<<<<<<<<<<<<
@@ -2705,7 +2800,7 @@ static PyObject *__pyx_pf_7pytesmo_11time_series_7filters_2boxcar_filter(CYTHON_
  */
             __pyx_v_nobs = (__pyx_v_nobs + 1);
 
-            /* "pytesmo/time_series/filters.pyx":149
+            /* "pytesmo/time_series/filters.pyx":160
  *                 if not isnan:
  *                     tdiff = in_jd[j] - in_jd[i]
  *                     if fabs(tdiff) <= limit:             # <<<<<<<<<<<<<<
@@ -2715,7 +2810,7 @@ static PyObject *__pyx_pf_7pytesmo_11time_series_7filters_2boxcar_filter(CYTHON_
             goto __pyx_L13;
           }
 
-          /* "pytesmo/time_series/filters.pyx":153
+          /* "pytesmo/time_series/filters.pyx":164
  *                         nobs = nobs + 1
  *                     else:
  *                         break             # <<<<<<<<<<<<<<
@@ -2727,7 +2822,7 @@ static PyObject *__pyx_pf_7pytesmo_11time_series_7filters_2boxcar_filter(CYTHON_
           }
           __pyx_L13:;
 
-          /* "pytesmo/time_series/filters.pyx":147
+          /* "pytesmo/time_series/filters.pyx":158
  *             for j in range(i, in_jd.shape[0]):
  *                 isnan = (in_data[j] == nan) or npy_isnan(in_data[j])
  *                 if not isnan:             # <<<<<<<<<<<<<<
@@ -2738,7 +2833,7 @@ static PyObject *__pyx_pf_7pytesmo_11time_series_7filters_2boxcar_filter(CYTHON_
       }
       __pyx_L9_break:;
 
-      /* "pytesmo/time_series/filters.pyx":155
+      /* "pytesmo/time_series/filters.pyx":166
  *                         break
  * 
  *             for j in range(i, -1, -1):             # <<<<<<<<<<<<<<
@@ -2748,7 +2843,7 @@ static PyObject *__pyx_pf_7pytesmo_11time_series_7filters_2boxcar_filter(CYTHON_
       for (__pyx_t_15 = __pyx_v_i + 1; __pyx_t_15 > -1L + 1; ) { __pyx_t_15-=1;
         __pyx_v_j = __pyx_t_15;
 
-        /* "pytesmo/time_series/filters.pyx":156
+        /* "pytesmo/time_series/filters.pyx":167
  * 
  *             for j in range(i, -1, -1):
  *                 if i != j:             # <<<<<<<<<<<<<<
@@ -2758,7 +2853,7 @@ static PyObject *__pyx_pf_7pytesmo_11time_series_7filters_2boxcar_filter(CYTHON_
         __pyx_t_10 = ((__pyx_v_i != __pyx_v_j) != 0);
         if (__pyx_t_10) {
 
-          /* "pytesmo/time_series/filters.pyx":157
+          /* "pytesmo/time_series/filters.pyx":168
  *             for j in range(i, -1, -1):
  *                 if i != j:
  *                     isnan = (in_data[j] == nan) or npy_isnan(in_data[j])             # <<<<<<<<<<<<<<
@@ -2778,7 +2873,7 @@ static PyObject *__pyx_pf_7pytesmo_11time_series_7filters_2boxcar_filter(CYTHON_
           __pyx_L17_bool_binop_done:;
           __pyx_v_isnan = __pyx_t_10;
 
-          /* "pytesmo/time_series/filters.pyx":158
+          /* "pytesmo/time_series/filters.pyx":169
  *                 if i != j:
  *                     isnan = (in_data[j] == nan) or npy_isnan(in_data[j])
  *                     if not isnan:             # <<<<<<<<<<<<<<
@@ -2788,7 +2883,7 @@ static PyObject *__pyx_pf_7pytesmo_11time_series_7filters_2boxcar_filter(CYTHON_
           __pyx_t_10 = ((!(__pyx_v_isnan != 0)) != 0);
           if (__pyx_t_10) {
 
-            /* "pytesmo/time_series/filters.pyx":159
+            /* "pytesmo/time_series/filters.pyx":170
  *                     isnan = (in_data[j] == nan) or npy_isnan(in_data[j])
  *                     if not isnan:
  *                         tdiff = in_jd[j] - in_jd[i]             # <<<<<<<<<<<<<<
@@ -2799,7 +2894,7 @@ static PyObject *__pyx_pf_7pytesmo_11time_series_7filters_2boxcar_filter(CYTHON_
             __pyx_t_24 = __pyx_v_i;
             __pyx_v_tdiff = ((*__Pyx_BufPtrStrided1d(__pyx_t_7pytesmo_11time_series_7filters_DTYPE_d *, __pyx_pybuffernd_in_jd.rcbuffer->pybuffer.buf, __pyx_t_23, __pyx_pybuffernd_in_jd.diminfo[0].strides)) - (*__Pyx_BufPtrStrided1d(__pyx_t_7pytesmo_11time_series_7filters_DTYPE_d *, __pyx_pybuffernd_in_jd.rcbuffer->pybuffer.buf, __pyx_t_24, __pyx_pybuffernd_in_jd.diminfo[0].strides)));
 
-            /* "pytesmo/time_series/filters.pyx":160
+            /* "pytesmo/time_series/filters.pyx":171
  *                     if not isnan:
  *                         tdiff = in_jd[j] - in_jd[i]
  *                         if fabs(tdiff) <= limit:             # <<<<<<<<<<<<<<
@@ -2809,7 +2904,7 @@ static PyObject *__pyx_pf_7pytesmo_11time_series_7filters_2boxcar_filter(CYTHON_
             __pyx_t_10 = ((fabs(__pyx_v_tdiff) <= __pyx_v_limit) != 0);
             if (__pyx_t_10) {
 
-              /* "pytesmo/time_series/filters.pyx":161
+              /* "pytesmo/time_series/filters.pyx":172
  *                         tdiff = in_jd[j] - in_jd[i]
  *                         if fabs(tdiff) <= limit:
  *                             sum = sum + in_data[j]             # <<<<<<<<<<<<<<
@@ -2819,7 +2914,7 @@ static PyObject *__pyx_pf_7pytesmo_11time_series_7filters_2boxcar_filter(CYTHON_
               __pyx_t_25 = __pyx_v_j;
               __pyx_v_sum = (__pyx_v_sum + (*__Pyx_BufPtrStrided1d(__pyx_t_7pytesmo_11time_series_7filters_DTYPE_d *, __pyx_pybuffernd_in_data.rcbuffer->pybuffer.buf, __pyx_t_25, __pyx_pybuffernd_in_data.diminfo[0].strides)));
 
-              /* "pytesmo/time_series/filters.pyx":162
+              /* "pytesmo/time_series/filters.pyx":173
  *                         if fabs(tdiff) <= limit:
  *                             sum = sum + in_data[j]
  *                             nobs = nobs + 1             # <<<<<<<<<<<<<<
@@ -2828,7 +2923,7 @@ static PyObject *__pyx_pf_7pytesmo_11time_series_7filters_2boxcar_filter(CYTHON_
  */
               __pyx_v_nobs = (__pyx_v_nobs + 1);
 
-              /* "pytesmo/time_series/filters.pyx":160
+              /* "pytesmo/time_series/filters.pyx":171
  *                     if not isnan:
  *                         tdiff = in_jd[j] - in_jd[i]
  *                         if fabs(tdiff) <= limit:             # <<<<<<<<<<<<<<
@@ -2838,7 +2933,7 @@ static PyObject *__pyx_pf_7pytesmo_11time_series_7filters_2boxcar_filter(CYTHON_
               goto __pyx_L20;
             }
 
-            /* "pytesmo/time_series/filters.pyx":164
+            /* "pytesmo/time_series/filters.pyx":175
  *                             nobs = nobs + 1
  *                         else:
  *                             break             # <<<<<<<<<<<<<<
@@ -2850,7 +2945,7 @@ static PyObject *__pyx_pf_7pytesmo_11time_series_7filters_2boxcar_filter(CYTHON_
             }
             __pyx_L20:;
 
-            /* "pytesmo/time_series/filters.pyx":158
+            /* "pytesmo/time_series/filters.pyx":169
  *                 if i != j:
  *                     isnan = (in_data[j] == nan) or npy_isnan(in_data[j])
  *                     if not isnan:             # <<<<<<<<<<<<<<
@@ -2859,7 +2954,7 @@ static PyObject *__pyx_pf_7pytesmo_11time_series_7filters_2boxcar_filter(CYTHON_
  */
           }
 
-          /* "pytesmo/time_series/filters.pyx":156
+          /* "pytesmo/time_series/filters.pyx":167
  * 
  *             for j in range(i, -1, -1):
  *                 if i != j:             # <<<<<<<<<<<<<<
@@ -2870,7 +2965,7 @@ static PyObject *__pyx_pf_7pytesmo_11time_series_7filters_2boxcar_filter(CYTHON_
       }
       __pyx_L15_break:;
 
-      /* "pytesmo/time_series/filters.pyx":166
+      /* "pytesmo/time_series/filters.pyx":177
  *                             break
  * 
  *             filtered[i] = sum / nobs             # <<<<<<<<<<<<<<
@@ -2880,7 +2975,7 @@ static PyObject *__pyx_pf_7pytesmo_11time_series_7filters_2boxcar_filter(CYTHON_
       __pyx_t_26 = __pyx_v_i;
       *__Pyx_BufPtrStrided1d(__pyx_t_7pytesmo_11time_series_7filters_DTYPE_f *, __pyx_pybuffernd_filtered.rcbuffer->pybuffer.buf, __pyx_t_26, __pyx_pybuffernd_filtered.diminfo[0].strides) = (__pyx_v_sum / __pyx_v_nobs);
 
-      /* "pytesmo/time_series/filters.pyx":142
+      /* "pytesmo/time_series/filters.pyx":153
  *     for i in range(in_jd.shape[0]):
  *         isnan = (in_data[i] == nan) or npy_isnan(in_data[i])
  *         if not isnan:             # <<<<<<<<<<<<<<
@@ -2890,7 +2985,7 @@ static PyObject *__pyx_pf_7pytesmo_11time_series_7filters_2boxcar_filter(CYTHON_
     }
   }
 
-  /* "pytesmo/time_series/filters.pyx":168
+  /* "pytesmo/time_series/filters.pyx":179
  *             filtered[i] = sum / nobs
  * 
  *     return filtered             # <<<<<<<<<<<<<<
@@ -2900,7 +2995,7 @@ static PyObject *__pyx_pf_7pytesmo_11time_series_7filters_2boxcar_filter(CYTHON_
   __pyx_r = ((PyObject *)__pyx_v_filtered);
   goto __pyx_L0;
 
-  /* "pytesmo/time_series/filters.pyx":110
+  /* "pytesmo/time_series/filters.pyx":121
  * @cython.wraparound(False)
  * @cython.cdivision(True)
  * def boxcar_filter(np.ndarray[DTYPE_d, ndim=1] in_data,             # <<<<<<<<<<<<<<
@@ -5572,6 +5667,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_fill, __pyx_k_fill, sizeof(__pyx_k_fill), 0, 0, 1, 1},
   {&__pyx_n_s_filtered, __pyx_k_filtered, sizeof(__pyx_k_filtered), 0, 0, 1, 1},
   {&__pyx_n_s_float, __pyx_k_float, sizeof(__pyx_k_float), 0, 0, 1, 1},
+  {&__pyx_n_s_found_index, __pyx_k_found_index, sizeof(__pyx_k_found_index), 0, 0, 1, 1},
   {&__pyx_n_s_gain, __pyx_k_gain, sizeof(__pyx_k_gain), 0, 0, 1, 1},
   {&__pyx_n_s_i, __pyx_k_i, sizeof(__pyx_k_i), 0, 0, 1, 1},
   {&__pyx_n_s_import, __pyx_k_import, sizeof(__pyx_k_import), 0, 0, 1, 1},
@@ -5604,7 +5700,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {0, 0, 0, 0, 0, 0, 0}
 };
 static int __Pyx_InitCachedBuiltins(void) {
-  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 93, __pyx_L1_error)
+  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 92, __pyx_L1_error)
   __pyx_builtin_ValueError = __Pyx_GetBuiltinName(__pyx_n_s_ValueError); if (!__pyx_builtin_ValueError) __PYX_ERR(1, 235, __pyx_L1_error)
   __pyx_builtin_RuntimeError = __Pyx_GetBuiltinName(__pyx_n_s_RuntimeError); if (!__pyx_builtin_RuntimeError) __PYX_ERR(1, 823, __pyx_L1_error)
   __pyx_builtin_ImportError = __Pyx_GetBuiltinName(__pyx_n_s_ImportError); if (!__pyx_builtin_ImportError) __PYX_ERR(1, 1013, __pyx_L1_error)
@@ -5721,22 +5817,22 @@ static int __Pyx_InitCachedConstants(void) {
  *                np.ndarray[DTYPE_d, ndim=1] in_jd,
  *                int ctime=10,
  */
-  __pyx_tuple__10 = PyTuple_Pack(13, __pyx_n_s_in_data, __pyx_n_s_in_jd, __pyx_n_s_ctime, __pyx_n_s_nan, __pyx_n_s_filtered, __pyx_n_s_tdiff, __pyx_n_s_ef, __pyx_n_s_gain, __pyx_n_s_isnan, __pyx_n_s_last_jd_var, __pyx_n_s_last_filtered_var, __pyx_n_s_i, __pyx_n_s_index); if (unlikely(!__pyx_tuple__10)) __PYX_ERR(0, 58, __pyx_L1_error)
+  __pyx_tuple__10 = PyTuple_Pack(14, __pyx_n_s_in_data, __pyx_n_s_in_jd, __pyx_n_s_ctime, __pyx_n_s_nan, __pyx_n_s_filtered, __pyx_n_s_tdiff, __pyx_n_s_ef, __pyx_n_s_gain, __pyx_n_s_isnan, __pyx_n_s_last_jd_var, __pyx_n_s_last_filtered_var, __pyx_n_s_i, __pyx_n_s_found_index, __pyx_n_s_index); if (unlikely(!__pyx_tuple__10)) __PYX_ERR(0, 58, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__10);
   __Pyx_GIVEREF(__pyx_tuple__10);
-  __pyx_codeobj__11 = (PyObject*)__Pyx_PyCode_New(4, 0, 13, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__10, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_pytesmo_time_series_filters_pyx, __pyx_n_s_exp_filter, 58, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__11)) __PYX_ERR(0, 58, __pyx_L1_error)
+  __pyx_codeobj__11 = (PyObject*)__Pyx_PyCode_New(4, 0, 14, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__10, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_pytesmo_time_series_filters_pyx, __pyx_n_s_exp_filter, 58, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__11)) __PYX_ERR(0, 58, __pyx_L1_error)
 
-  /* "pytesmo/time_series/filters.pyx":110
+  /* "pytesmo/time_series/filters.pyx":121
  * @cython.wraparound(False)
  * @cython.cdivision(True)
  * def boxcar_filter(np.ndarray[DTYPE_d, ndim=1] in_data,             # <<<<<<<<<<<<<<
  *                   np.ndarray[DTYPE_d, ndim=1] in_jd,
  *                   float window=1, double nan=-999999.0):
  */
-  __pyx_tuple__12 = PyTuple_Pack(12, __pyx_n_s_in_data, __pyx_n_s_in_jd, __pyx_n_s_window, __pyx_n_s_nan, __pyx_n_s_filtered, __pyx_n_s_tdiff, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_isnan, __pyx_n_s_sum, __pyx_n_s_limit, __pyx_n_s_nobs); if (unlikely(!__pyx_tuple__12)) __PYX_ERR(0, 110, __pyx_L1_error)
+  __pyx_tuple__12 = PyTuple_Pack(12, __pyx_n_s_in_data, __pyx_n_s_in_jd, __pyx_n_s_window, __pyx_n_s_nan, __pyx_n_s_filtered, __pyx_n_s_tdiff, __pyx_n_s_i, __pyx_n_s_j, __pyx_n_s_isnan, __pyx_n_s_sum, __pyx_n_s_limit, __pyx_n_s_nobs); if (unlikely(!__pyx_tuple__12)) __PYX_ERR(0, 121, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__12);
   __Pyx_GIVEREF(__pyx_tuple__12);
-  __pyx_codeobj__13 = (PyObject*)__Pyx_PyCode_New(4, 0, 12, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__12, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_pytesmo_time_series_filters_pyx, __pyx_n_s_boxcar_filter, 110, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__13)) __PYX_ERR(0, 110, __pyx_L1_error)
+  __pyx_codeobj__13 = (PyObject*)__Pyx_PyCode_New(4, 0, 12, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__12, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_pytesmo_time_series_filters_pyx, __pyx_n_s_boxcar_filter, 121, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__13)) __PYX_ERR(0, 121, __pyx_L1_error)
   __Pyx_RefNannyFinishContext();
   return 0;
   __pyx_L1_error:;
@@ -5960,16 +6056,16 @@ static int __pyx_pymod_exec_filters(PyObject *__pyx_pyinit_module)
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_exp_filter, __pyx_t_2) < 0) __PYX_ERR(0, 58, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "pytesmo/time_series/filters.pyx":110
+  /* "pytesmo/time_series/filters.pyx":121
  * @cython.wraparound(False)
  * @cython.cdivision(True)
  * def boxcar_filter(np.ndarray[DTYPE_d, ndim=1] in_data,             # <<<<<<<<<<<<<<
  *                   np.ndarray[DTYPE_d, ndim=1] in_jd,
  *                   float window=1, double nan=-999999.0):
  */
-  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_7pytesmo_11time_series_7filters_3boxcar_filter, NULL, __pyx_n_s_pytesmo_time_series_filters); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 110, __pyx_L1_error)
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_7pytesmo_11time_series_7filters_3boxcar_filter, NULL, __pyx_n_s_pytesmo_time_series_filters); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 121, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_boxcar_filter, __pyx_t_2) < 0) __PYX_ERR(0, 110, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_boxcar_filter, __pyx_t_2) < 0) __PYX_ERR(0, 121, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
   /* "pytesmo/time_series/filters.pyx":1
@@ -7669,37 +7765,6 @@ static void __Pyx_ReleaseBuffer(Py_buffer *view) {
     }
 
 /* CIntToPy */
-      static CYTHON_INLINE PyObject* __Pyx_PyInt_From_long(long value) {
-    const long neg_one = (long) -1, const_zero = (long) 0;
-    const int is_unsigned = neg_one > const_zero;
-    if (is_unsigned) {
-        if (sizeof(long) < sizeof(long)) {
-            return PyInt_FromLong((long) value);
-        } else if (sizeof(long) <= sizeof(unsigned long)) {
-            return PyLong_FromUnsignedLong((unsigned long) value);
-#ifdef HAVE_LONG_LONG
-        } else if (sizeof(long) <= sizeof(unsigned PY_LONG_LONG)) {
-            return PyLong_FromUnsignedLongLong((unsigned PY_LONG_LONG) value);
-#endif
-        }
-    } else {
-        if (sizeof(long) <= sizeof(long)) {
-            return PyInt_FromLong((long) value);
-#ifdef HAVE_LONG_LONG
-        } else if (sizeof(long) <= sizeof(PY_LONG_LONG)) {
-            return PyLong_FromLongLong((PY_LONG_LONG) value);
-#endif
-        }
-    }
-    {
-        int one = 1; int little = (int)*(unsigned char *)&one;
-        unsigned char *bytes = (unsigned char *)&value;
-        return _PyLong_FromByteArray(bytes, sizeof(long),
-                                     little, !is_unsigned);
-    }
-}
-
-/* CIntToPy */
       static CYTHON_INLINE PyObject* __Pyx_PyInt_From_Py_intptr_t(Py_intptr_t value) {
     const Py_intptr_t neg_one = (Py_intptr_t) -1, const_zero = (Py_intptr_t) 0;
     const int is_unsigned = neg_one > const_zero;
@@ -7726,6 +7791,37 @@ static void __Pyx_ReleaseBuffer(Py_buffer *view) {
         int one = 1; int little = (int)*(unsigned char *)&one;
         unsigned char *bytes = (unsigned char *)&value;
         return _PyLong_FromByteArray(bytes, sizeof(Py_intptr_t),
+                                     little, !is_unsigned);
+    }
+}
+
+/* CIntToPy */
+      static CYTHON_INLINE PyObject* __Pyx_PyInt_From_long(long value) {
+    const long neg_one = (long) -1, const_zero = (long) 0;
+    const int is_unsigned = neg_one > const_zero;
+    if (is_unsigned) {
+        if (sizeof(long) < sizeof(long)) {
+            return PyInt_FromLong((long) value);
+        } else if (sizeof(long) <= sizeof(unsigned long)) {
+            return PyLong_FromUnsignedLong((unsigned long) value);
+#ifdef HAVE_LONG_LONG
+        } else if (sizeof(long) <= sizeof(unsigned PY_LONG_LONG)) {
+            return PyLong_FromUnsignedLongLong((unsigned PY_LONG_LONG) value);
+#endif
+        }
+    } else {
+        if (sizeof(long) <= sizeof(long)) {
+            return PyInt_FromLong((long) value);
+#ifdef HAVE_LONG_LONG
+        } else if (sizeof(long) <= sizeof(PY_LONG_LONG)) {
+            return PyLong_FromLongLong((PY_LONG_LONG) value);
+#endif
+        }
+    }
+    {
+        int one = 1; int little = (int)*(unsigned char *)&one;
+        unsigned char *bytes = (unsigned char *)&value;
+        return _PyLong_FromByteArray(bytes, sizeof(long),
                                      little, !is_unsigned);
     }
 }
