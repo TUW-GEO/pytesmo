@@ -83,23 +83,34 @@ def exp_filter(np.ndarray[DTYPE_d, ndim=1] in_data,
     cdef double last_jd_var
     cdef double last_filtered_var
     cdef unsigned int i
+    cdef int found_index = -1
 
     filtered.fill(np.nan)
-    filtered[0] = in_data[0]
 
-    last_jd_var = in_jd[0]
-    last_filtered_var = filtered[0]
+    # find the first non nan value in the time series
 
-    for i in range(in_jd.shape[0] - 1):
-        index = i + 1
-        isnan = (in_data[index] == nan) or npy_isnan(in_data[index])
+    for i in range(in_jd.shape[0]):
+
+        isnan = (in_data[i] == nan) or npy_isnan(in_data[i])
         if not isnan:
-            tdiff = in_jd[index] - last_jd_var
-            ef = exp(-tdiff / ctime)
-            gain = gain / (gain + ef)
-            filtered[index] = last_filtered_var + gain * (in_data[index] - last_filtered_var)
-            last_jd_var = in_jd[index]
-            last_filtered_var = filtered[index]
+            last_jd_var = in_jd[i]
+            last_filtered_var = in_data[i]
+            # set the first filtered value to the first found non nan value
+            filtered[i] = in_data[i]
+            found_index = i
+            break
+
+    if found_index > -1:
+
+        for index in range(found_index + 1, in_jd.shape[0]):
+            isnan = (in_data[index] == nan) or npy_isnan(in_data[index])
+            if not isnan:
+                tdiff = in_jd[index] - last_jd_var
+                ef = exp(-tdiff / ctime)
+                gain = gain / (gain + ef)
+                filtered[index] = last_filtered_var + gain * (in_data[index] - last_filtered_var)
+                last_jd_var = in_jd[index]
+                last_filtered_var = filtered[index]
 
     return filtered
 
