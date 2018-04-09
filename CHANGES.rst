@@ -1,7 +1,8 @@
-v0.XX, 2018-03-21
-=================
+v0.6.10, 2018-04-09
+===================
 
 - Update readme
+- Fix bug in exponential filter when first value is a NaN value
 
 v0.6.9, 2018-02-06
 ==================
