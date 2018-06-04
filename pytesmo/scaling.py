@@ -172,8 +172,10 @@ def linreg(src, ref):
         dataset scaled using linear regression
     """
 
+    df = pd.DataFrame(data={'src': src, 'ref': ref}).dropna()
+
     slope, intercept, r_value, p_value, std_err = stats.linregress(
-        src, ref)
+        df.src, df.ref)
 
     return np.abs(slope) * src + intercept
 
