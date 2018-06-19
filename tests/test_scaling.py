@@ -153,13 +153,15 @@ def test_linreg_with_nan():
 
     x[0:10] = np.nan
 
-    df = pd.DataFrame({'x': x, 'y': y}, columns=['x', 'y'])
-    df_scaled = scaling.scale(df,
-                              method='linreg',
-                              reference_index=0)
+    df = pd.DataFrame(data={'x': x, 'y': y})
 
-    nptest.assert_almost_equal(df_scaled.loc[10:, 'x'].values,
-                               df_scaled.loc[10:, 'y'].values)
+    slope, inter = scaling.linreg_params(df.dropna()['x'].values, df.dropna()['y'].values)
+    df['x'] = scaling.linreg_stored_params(df['x'].values, slope, inter)
+
+    nptest.assert_almost_equal(df.loc[10:, 'x'].values,
+                               df.loc[10:, 'y'].values)
+
+    assert(df.index.size == n)
 
 
 def test_single_percentile_data():
