@@ -34,21 +34,17 @@ Created on Aug 8, 2013
 @author: Christoph Paulik Christoph.Paulik@geo.tuwien.ac.at
 '''
 
-
 import pytesmo.io.ismn.interface as ismn
-import os
 import matplotlib.pyplot as plt
 import random
 
 # path unzipped file downloaded from the ISMN web portal
 # on windows the first string has to be your drive letter
 # like 'C:\\'
-path_to_ismn_data = os.path.join('path', 'to', 'ISMN_data',
-                                 'from', 'ISMN website')
+#path_to_ismn_data = os.path.join('path', 'to', 'ISMN_data',
+                                 #'from', 'ISMN website')
 
-path_to_ismn_data = os.path.join('/media', 'sf_D', 'small_projects',
-                                 'cpa_2013_07_ISMN_userformat_reader',
-                                 'ceop_sep_parser_test')
+path_to_ismn_data = '/pytesmo/testdata/ismn/format_ceop_sep/SMOSMANIA'
 
 # initialize interface, this can take up to a few minutes the first
 # time, since all metadata has to be collected
