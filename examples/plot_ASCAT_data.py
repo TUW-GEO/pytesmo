@@ -36,7 +36,9 @@ Created on Aug 8, 2013
 '''
 
 
-import pytesmo.io.sat.ascat as ascat
+from ascat.tuw import Ascat_SWI
+from ascat.tuw import Ascat_SSM
+from ascat.cgls import SWI_TS
 import os
 import matplotlib.pyplot as plt
 
@@ -44,27 +46,28 @@ import matplotlib.pyplot as plt
 #path to ASCAT SSM zip files from FTP server
 #on windows the first string has to be your drive letter
 #like 'C:\\'
-path_to_ascat_ssm_data = os.path.join('path','to','SSM_data',
-                                      'from','FTP Server') 
 
-path_to_ascat_swi_data = os.path.join('path','to','SSM_data',
-                                      'from','FTP Server') 
+testdata_folder = '/pytesmo/testdata'
+
+path_to_ascat_ssm_data = os.path.join(testdata_folder,'sat/ascat/SSM') 
+
+path_to_ascat_swi_data = os.path.join(testdata_folder,'sat/ascat/SWI') 
+
+path_to_ascat_swi_ts_data = os.path.join(testdata_folder,'sat/cglops/swi_ts') 
 
 
 #path to grid definition file, default name TUW_W54_01_lonlat-ld-land.txt
-path_to_grid_definition = os.path.join('path','to','grid_definition',
-                                       'from','FTP Server')  
+path_to_grid_definition = os.path.join(testdata_folder,'sat/ascat/grid')  
 
 #path to advisory flags from FTP Server
-path_to_adv_flags = os.path.join('path','to','advisory_flags',
-                                 'from','FTP Server')   
+path_to_adv_flags = os.path.join(testdata_folder,'sat/ascat/advisory_flags')   
 
 #init the ASCAT_SSM reader with the paths
-ascat_SSM_reader = ascat.Ascat_SSM(path_to_ascat_ssm_data,path_to_grid_definition,
+ascat_SSM_reader = Ascat_SSM(path_to_ascat_ssm_data,path_to_grid_definition,
                                    advisory_flags_path = path_to_adv_flags)
 
-
-lon, lat = 16, 48
+#lon, lat = 14.284130, 45.698074
+lon, lat = 14.284, 45.699
 
 #reads ssm data nearest to this lon,lat coordinates
 ssm_data_raw = ascat_SSM_reader.read_ssm(lon,lat)
@@ -80,7 +83,7 @@ ssm_data_masked = ascat_SSM_reader.read_ssm(lon,lat,mask_ssf=True,mask_frozen_pr
 
 #plot the data using pandas builtin plot functionality
 #this time using a subplot for each variable in the DataFrame
-ssm_data_masked.plot(subplots=True)
+ssm_data_masked.plot(subplots=False)
 plt.show()
 
 #plot raw and masked SSM data in one plot to compare them
@@ -91,8 +94,18 @@ plt.legend()
 plt.show()
 
 
-ascat_SWI_reader = ascat.Ascat_SWI(path_to_ascat_swi_data,path_to_grid_definition,
-                                   advisory_flags_path = path_to_adv_flags)
+#read SWI data using the SWI_TS reader
+ascat_SWI_reader=SWI_TS(path_to_ascat_swi_ts_data)
+swi_data_raw = ascat_SWI_reader.read_ts(3002621)
+
+#plot the data using pandas builtin plot functionality
+swi_data_raw.plot()
+plt.show()
+
+
+
+#read SWI data using the Ascat_SWI reader
+ascat_SWI_reader = Ascat_SWI(path_to_ascat_swi_data,path_to_grid_definition,advisory_flags_path = path_to_adv_flags)
 
 
 #reads swi data nearest to this lon,lat coordinates
@@ -119,7 +132,6 @@ swi_data_T_20.data = swi_data_T_20.data[swi_data_T_20.data['frozen_prob'] < 10]
 
 swi_data_T_20.plot(subplots=True)
 plt.show()
-
 
 
 
