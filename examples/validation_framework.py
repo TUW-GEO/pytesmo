@@ -59,7 +59,7 @@
 # 7. Put all the metrics into a dictionary by dataset combination and return them.
 # 
 # ## Masking datasets
-# Masking datasets can be used if the the datasets that are compared do not contain the necessary information to mask
+# Masking datasets can be used if the datasets that are compared do not contain the necessary information to mask
 #  them. For example we might want to use modelled soil temperature data to mask our soil moisture observations
 # before comparing them. To be able to do that we just need a Dataset that returns a pandas.DataFrame with one column
 #  of boolean data type. Everywhere where the masking dataset is `True` the data will be masked.
@@ -135,7 +135,9 @@ ids = ismn_reader.get_dataset_ids(variable='soil moisture', min_depth=0, max_dep
 for idx in ids:
     metadata = ismn_reader.metadata[idx]
     jobs.append((idx, metadata['longitude'], metadata['latitude']))
-print jobs
+
+print("Jobs (gpi, lon, lat)")
+print(jobs)
 
 
 # For this small test dataset it is only one job
@@ -146,7 +148,8 @@ print jobs
 # In[5]:
 
 data = ismn_reader.read_ts(ids[0])
-print data.head()
+print('ISMN data example')
+print(data.head())
 
 
 # ## Initialize the Validation class
@@ -196,7 +199,7 @@ process = Validation(
 
 # During the initialization of the Validation class we can also tell it other things that it needs to know. In this
 # case it uses the datasets we have specified earlier. The spatial reference is the `'ISMN'` dataset which is the
-# second argument. The third argument looks a little bit strange so let's look at it in more detail.
+# second argument. The 'metrics_calculators' argument looks a little bit strange so let's look at it in more detail.
 # 
 # It is a dictionary with a tuple as the key and a function as the value. The key tuple `(n, k)` has the following
 # meaning: `n` datasets are temporally matched together and then given in sets of `k` columns to the metric
@@ -218,8 +221,8 @@ process = Validation(
 
 # In[10]:
 
-save_path = tempfile.mkdtemp()
-
+#save_path = tempfile.mkdtemp()
+save_path = output_folder
 
 # In[22]:
 
