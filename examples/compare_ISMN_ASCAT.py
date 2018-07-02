@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright (c) 2013,Vienna University of Technology, Department of Geodesy and Geoinformation
 # All rights reserved.
 
@@ -26,8 +27,9 @@
 
 '''
 This example program loops through all insitu stations that measure soil moisture with a depth between 0 and 0.1m
-it then finds the nearest ASCAT grid point and reads the ASCAT data. After temporal matching and scaling using linear CDF matching it computes
-several metrics, like the correlation coefficients(Pearson's, Spearman's and Kendall's), Bias, RMSD as well as the Nash–Sutcliffe model efficiency coefficient.
+it then finds the nearest ASCAT grid point and reads the ASCAT data. After temporal matching and scaling using linear
+CDF matching it computes several metrics, like the correlation coefficients(Pearson's, Spearman's and Kendall's), Bias,
+RMSD as well as the Nash–Sutcliffe model efficiency coefficient.
 
 
 Created on Aug 8, 2013
@@ -36,7 +38,7 @@ Created on Aug 8, 2013
 '''
 
 import pytesmo.io.ismn.interface as ismn
-import pytesmo.io.sat.ascat as ascat
+import ascat
 import pytesmo.temporal_matching as temp_match
 import pytesmo.scaling as scaling
 import pytesmo.df_metrics as df_metrics
@@ -45,22 +47,29 @@ import pytesmo.metrics as metrics
 import os
 import matplotlib.pyplot as plt
 
+testdata_folder = '/pytesmo/testdata'
 
-ascat_folder = os.path.join('R:\\', 'Datapool_processed', 'WARP', 'WARP5.5',
-                                         'ASCAT_WARP5.5_R1.2', '080_ssm', 'netcdf')
-ascat_grid_folder = os.path.join('R:\\', 'Datapool_processed', 'WARP', 'ancillary', 'warp5_grid')
-# init the ASCAT_SSM reader with the paths
+ascat_data_folder = os.path.join(testdata_folder,
+                                 'sat/ascat/netcdf/55R22')
+ascat_grid_folder = os.path.join(testdata_folder,
+                                 'sat/ascat/netcdf/grid')
+static_layers_folder = os.path.join(testdata_folder,
+                                    'sat/h_saf/static_layer')
 
-# let's not include the orbit direction since it is saved as 'A'
-# or 'D' it can not be plotted
-ascat_SSM_reader = ascat.AscatH25_SSM(ascat_folder, ascat_grid_folder,
-                                      include_in_df=['sm', 'sm_noise', 'ssf', 'proc_flag'])
+# init the ASCAT SSM reader with the paths
+ascat_SSM_reader = ascat.AscatSsmCdr(ascat_data_folder, ascat_grid_folder,
+                                     grid_filename='TUW_WARP5_grid_info_2_1.nc',
+                                     static_layer_path=static_layers_folder)
+ascat_SSM_reader.read_bulk = True
 
 
 # set path to ISMN data
-path_to_ismn_data = os.path.join('D:\\', 'small_projects', 'cpa_2013_07_ISMN_userformat_reader', 'header_values_parser_test')
+ismn_data_folder = os.path.join(testdata_folder,
+                                 'ismn/multinetwork/header_values')
+
 # Initialize reader
-ISMN_reader = ismn.ISMN_Interface(path_to_ismn_data)
+ISMN_reader = ismn.ISMN_Interface(ismn_data_folder)
+
 
 i = 0
 
@@ -73,17 +82,19 @@ for station in ISMN_reader.stations_that_measure('soil moisture'):
     # this loops through all time series of this station that measure soil moisture
     # between 0 and 0.1 meters
     for ISMN_time_series in station.data_for_variable('soil moisture', min_depth=0, max_depth=0.1):
-        
-        ascat_time_series = ascat_SSM_reader.read_ssm(ISMN_time_series.longitude,
-                                                      ISMN_time_series.latitude,
-                                                      mask_ssf=True,
-                                                      mask_frozen_prob=5,
-                                                      mask_snow_prob=5)
-        
+
+        ascat_time_series = ascat_SSM_reader.read(ISMN_time_series.longitude,
+                                                  ISMN_time_series.latitude,
+                                                  mask_ssf=True,
+                                                  mask_frozen_prob=80,
+                                                  mask_snow_prob=80)
+
+        # focus only on the relevant variable
+        ascat_time_series.data = ascat_time_series.data[label_ascat]
 
         # drop nan values before doing any matching
         ascat_time_series.data = ascat_time_series.data.dropna()
-        
+
         ISMN_time_series.data = ISMN_time_series.data.dropna()
         
         # rename the soil moisture column in ISMN_time_series.data to insitu_sm
@@ -140,10 +151,10 @@ for station in ISMN_reader.stations_that_measure('soil moisture'):
         
         
     i += 1
-    
+
     # only show the first 2 stations, otherwise this program would run a long time
     # and produce a lot of plots
     if i >= 2:
-        break    
+        break
 
 
