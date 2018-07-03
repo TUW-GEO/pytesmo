@@ -9,7 +9,7 @@ import pytesmo.time_series.anomaly as ts_anomaly
 import os
 import matplotlib.pyplot as plt
 
-testdata_folder = '/space/projects/qa4sm/pytesmo/testdata'
+testdata_folder = '/pytesmo/testdata'
 
 # <codecell>
 

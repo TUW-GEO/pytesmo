@@ -44,7 +44,7 @@ import random
 #path_to_ismn_data = os.path.join('path', 'to', 'ISMN_data',
                                  #'from', 'ISMN website')
 
-path_to_ismn_data = '/space/projects/qa4sm/pytesmo/testdata/ismn/format_ceop_sep/SMOSMANIA'
+path_to_ismn_data = '/pytesmo/testdata/ismn/format_ceop_sep/SMOSMANIA'
 
 # initialize interface, this can take up to a few minutes the first
 # time, since all metadata has to be collected
