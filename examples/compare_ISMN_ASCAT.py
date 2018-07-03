@@ -47,7 +47,7 @@ import pytesmo.metrics as metrics
 import os
 import matplotlib.pyplot as plt
 
-testdata_folder = '/pytesmo/testdata'
+testdata_folder = '/space/projects/qa4sm/pytesmo/testdata'
 
 ascat_data_folder = os.path.join(testdata_folder,
                                  'sat/ascat/netcdf/55R22')

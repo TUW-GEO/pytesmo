@@ -73,7 +73,6 @@
 # In[1]:
 
 import os
-import tempfile
 
 import pytesmo.validation_framework.metric_calculators as metrics_calculators
 
@@ -86,12 +85,12 @@ from pytesmo.validation_framework.results_manager import netcdf_results_manager
 
 # You need the test data from https://github.com/TUW-GEO/pytesmo-test-data for this example
 
-testdata_folder = '/pytesmo/testdata'
-output_folder = '/pytesmo/code/examples/output'
+testdata_folder = '/space/projects/qa4sm/pytesmo/testdata'
+output_folder = '/space/projects/qa4sm/pytesmo/code/examples/output'
 
 # First we initialize the data readers that we want to use. In this case the ASCAT soil moisture time series and in
 # situ data from the ISMN.
-# 
+#
 # Initialize ASCAT reader
 
 # In[2]:
@@ -106,9 +105,7 @@ static_layers_folder = os.path.join(testdata_folder,
 ascat_reader = AscatSsmCdr(ascat_data_folder, ascat_grid_folder,
                            grid_filename='TUW_WARP5_grid_info_2_1.nc',
                            static_layer_path=static_layers_folder)
-
 ascat_reader.read_bulk = True
-
 
 # Initialize ISMN reader
 
@@ -124,7 +121,7 @@ ismn_reader = ISMN_Interface(ismn_data_folder)
 # point index, its latitude and longitude. In the case of the ISMN we can use the `dataset_ids` that identify every
 # time series in the downloaded ISMN data as our grid point index. We can then get longitude and latitude from the
 # metadata of the dataset.
-# 
+#
 # **DO NOT CHANGE** the name ***jobs*** because it will be searched during the parallel processing!
 
 # In[4]:
@@ -136,24 +133,24 @@ for idx in ids:
     metadata = ismn_reader.metadata[idx]
     jobs.append((idx, metadata['longitude'], metadata['latitude']))
 
-print("Jobs (gpi, lon, lat)")
+print("Jobs (gpi, lon, lat):")
 print(jobs)
 
 
 # For this small test dataset it is only one job
-# 
+#
 # It is important here that the ISMN reader has a read_ts function that works by just using the `dataset_id`. In this
 #  way the validation framework can go through the jobs and read the correct time series.
 
 # In[5]:
 
 data = ismn_reader.read_ts(ids[0])
-print('ISMN data example')
+print('ISMN data example:')
 print(data.head())
 
 
 # ## Initialize the Validation class
-# 
+#
 # The Validation class is the heart of the validation framwork. It contains the information about which datasets to
 # read using which arguments or keywords and if they are spatially compatible. It also contains the settings about
 # which metric calculators to use and how to perform the scaling into the reference data space. It is initialized in
@@ -200,22 +197,22 @@ process = Validation(
 # During the initialization of the Validation class we can also tell it other things that it needs to know. In this
 # case it uses the datasets we have specified earlier. The spatial reference is the `'ISMN'` dataset which is the
 # second argument. The 'metrics_calculators' argument looks a little bit strange so let's look at it in more detail.
-# 
+#
 # It is a dictionary with a tuple as the key and a function as the value. The key tuple `(n, k)` has the following
 # meaning: `n` datasets are temporally matched together and then given in sets of `k` columns to the metric
 # calculator. The metric calculator then gets a DataFrame with the columns ['ref', 'k1', 'k2' ...] and so on
 # depending on the value of k. The value of `(2, 2)` makes sense here since we only have two datasets and all our
 # metrics also take two inputs.
-# 
+#
 # This can be used in more complex scenarios to e.g. have three input datasets that are all temporally matched
 # together and then combinations of two input datasets are given to one metric calculator while all three datasets
 # are given to another metric calculator. This could look like this:
-# 
+#
 # ```python
 # { (3 ,2): metric_calc,
 #   (3, 3): triple_collocation}
 # ```
-
+#
 # Create the variable ***save_path*** which is a string representing the path where the results will be saved.
 # **DO NOT CHANGE** the name ***save_path*** because it will be searched during the parallel processing!
 
@@ -239,7 +236,7 @@ for job in jobs:
 # and columns that were used for the calculation of the metrics. The metrics itself are a dictionary of `metric-name:
 #  numpy.ndarray` which also include information about the gpi, lon and lat. Since all the information contained in
 # the job is given to the metric calculator they can be stored in the results.
-# 
+#
 # Storing of the results to disk is at the moment supported by the `netcdf_results_manager` which creates a netCDF
 # file for each dataset combination and stores each metric as a variable. We can inspect the stored netCDF file which
 #  is named after the dictionary key:
@@ -255,7 +252,7 @@ with netCDF4.Dataset(results_fname) as ds:
 
 
 # ## Parallel processing
-# 
+#
 # The same code can be executed in parallel by defining the following `start_processing` function.
 
 # In[25]:
@@ -270,34 +267,34 @@ def start_processing(job):
 # `pytesmo.validation_framework.start_validation` can then be used to run your validation in parallel.
 # Your setup code can look like this Ipython notebook without the loop over the jobs. Otherwise the validation would
 # be done twice. Save it into a `.py` file e.g. `my_validation.py`.
-# 
+#
 # After [starting the ipyparallel cluster](http://ipyparallel.readthedocs.org/en/latest/process.html) you can then
 # execute the following code:
 
 # ```python
 # from pytesmo.validation_framework import start_validation
-# 
+#
 # # Note that before starting the validation you must start a controller
 # # and engines, for example by using: ipcluster start -n 4
 # # This command will launch a controller and 4 engines on the local machine.
 # # Also, do not forget to change the setup_code path to your current setup.
-# 
+#
 # setup_code = "my_validation.py"
 # start_validation(setup_code)
 # ```
 
 # ## Masking datasets
-# 
+#
 # Masking datasets are datasets that return a pandas DataFrame with boolean values. `True` means that the observation
 #  should be masked, `False` means it should be kept. All masking datasets are temporally matched in pairs to the
 # temporal reference dataset. Only observations for which all masking datasets have a value of `False` are kept for
 # further validation.
-# 
+#
 # The masking datasets have the same format as the dataset dictionary and can be specified in the Validation class
 # with the `masking_datasets` keyword.
-# 
+#
 # ### Masking adapter
-# 
+#
 # To easily transform an existing dataset into a masking dataset `pytesmo` offers a adapter class that calls the
 # `read_ts` method of an existing dataset and performs the masking based on an operator and a given threshold.
 

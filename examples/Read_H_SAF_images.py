@@ -23,7 +23,7 @@ import numpy as np
 #set the paths to the image files
 #I'm using the test images included in the pytesmo package
 
-testdata_folder = '/pytesmo/testdata'
+testdata_folder = '/space/projects/qa4sm/pytesmo/testdata'
 
 h_saf_path = os.path.join(testdata_folder, 'sat/h_saf')
 h07_path = os.path.join(h_saf_path, 'h07')

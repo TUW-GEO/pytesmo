@@ -41,7 +41,7 @@ import os
 
 # See also: https://github.com/TUW-GEO/ascat/blob/master/docs/read_tuw_ascat.rst
 
-testdata_folder = '/pytesmo/testdata'
+testdata_folder = '/space/projects/qa4sm/pytesmo/testdata'
 
 ascat_data_folder = os.path.join(testdata_folder,
                                  'sat/ascat/SSM')
