@@ -146,6 +146,23 @@ def test_add_scale(method):
     nptest.assert_almost_equal(df_scaled['x'].values,
                                df_scaled['y_scaled_' + method].values)
 
+def test_linreg_with_nan():
+    n = 1000
+    x = np.arange(float(n))
+    y = np.arange(float(n)) * 0.5
+
+    x[0:10] = np.nan
+
+    df = pd.DataFrame(data={'x': x, 'y': y})
+
+    slope, inter = scaling.linreg_params(df.dropna()['x'].values, df.dropna()['y'].values)
+    df['x'] = scaling.linreg_stored_params(df['x'].values, slope, inter)
+
+    nptest.assert_almost_equal(df.loc[10:, 'x'].values,
+                               df.loc[10:, 'y'].values)
+
+    assert(df.index.size == n)
+
 
 def test_single_percentile_data():
 

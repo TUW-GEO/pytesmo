@@ -155,6 +155,54 @@ def min_max(src, ref):
             (np.max(ref) - np.min(ref)) + np.min(ref))
 
 
+def linreg_stored_params(src, slope, intercept):
+    '''
+    Scale the input data with passed correction values
+
+    Parameters
+    ----------
+    src : numpy.array
+        Candidate values, that are scaled
+    slope : float
+        Multiplicative correction value
+    intercept : float
+        Additive correction value
+
+    Returns
+    -------
+    src_scaled : numpy.array
+        The scaled input values
+    '''
+
+    return np.abs(slope) * src + intercept
+
+
+def linreg_params(src, ref):
+    '''
+    Calculate additive and multiplicative correction parameters
+    based on linear regression models.
+
+    Parameters
+    ----------
+    src: numpy.array
+        Candidate data (to which the corrections apply)
+    ref : numpy.array
+        Reference data (which candidate is scaled to)
+
+    Returns
+    -------
+    slope : float
+        Multiplicative correction value
+    intercept : float
+        Additive correction value
+    '''
+
+    slope, intercept, r_value, p_value, std_err = stats.linregress(src, ref)
+
+    return slope, intercept
+
+
+
 def linreg(src, ref):
     """
     scales the input datasets using linear regression
@@ -172,10 +220,8 @@ def linreg(src, ref):
         dataset scaled using linear regression
     """
 
-    slope, intercept, r_value, p_value, std_err = stats.linregress(
-        src, ref)
-
-    return np.abs(slope) * src + intercept
+    slope, intercept = linreg_params(src, ref)
+    return linreg_stored_params(src, slope, intercept)
 
 
 def mean_std(src, ref):

@@ -1,3 +1,8 @@
+unreleased 
+===================
+
+- Split linreg scaling function to determine and apply corrections separately
+
 v0.6.10, 2018-04-09
 ===================
 
@@ -10,7 +15,6 @@ v0.6.9, 2018-02-06
 - Add extendent collocation metric
 - Fix initial value for exponential filter
 - Fix #123
-
 
 v0.6.8, 2017-08-29
 ==================
