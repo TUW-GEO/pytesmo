@@ -117,8 +117,7 @@ class SelfMaskingAdapter(object):
 
     def __mask(self, data):
         mask = self.operator(data[self.column_name], self.threshold)
-        data = data[mask]
-        return data
+        return data[mask]
 
     def read_ts(self, *args, **kwargs):
         data = self.cls.read_ts(*args, **kwargs)
