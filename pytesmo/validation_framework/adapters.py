@@ -54,23 +54,30 @@ class MaskingAdapter(object):
 
     """
 
-    def __init__(self, cls, op, threshold):
+    def __init__(self, cls, op, threshold, column_name = None):
         self.cls = cls
 
         self.op_lookup = {'<': operator.lt,
                           '<=': operator.le,
                           '==': operator.eq,
+                          '!=': operator.ne,
                           '>=': operator.ge,
                           '>': operator.gt}
         self.operator = self.op_lookup[op]
         self.threshold = threshold
 
+        self.column_name = column_name
+
     def read_ts(self, *args, **kwargs):
         data = self.cls.read_ts(*args, **kwargs)
+        if self.column_name is not None:
+            data = data.loc[:, [self.column_name]]
         return self.operator(data, self.threshold)
 
     def read(self, *args, **kwargs):
         data = self.cls.read(*args, **kwargs)
+        if self.column_name is not None:
+            data = data.loc[:, [self.column_name]]
         return self.operator(data, self.threshold)
 
 
