@@ -116,7 +116,6 @@ class SelfMaskingAdapter(object):
         self.column_name = column_name
 
     def __mask(self, data):
-#         data = data[data['frozen_prob'] < mask_frozen_prob]
         mask = self.operator(data[self.column_name], self.threshold)
         data = data[mask]
         return data
