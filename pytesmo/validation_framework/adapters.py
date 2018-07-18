@@ -39,19 +39,20 @@ from pytesmo.time_series.anomaly import calc_climatology
 class MaskingAdapter(object):
     """
     Transform the given class to return a boolean dataset given the operator
-    and threshold. This class calls the callse the read_ts and read methods
+    and threshold. This class calls the read_ts and read methods
     of the given instance and applies boolean masking to the returned data
     using the given operator and threshold.
 
     Parameters
     ----------
     cls: object
-        has to have read_ts method
+        has to have a read_ts or read method
     operator: string
-        one of '<', '<=', '==', '>=', '>'
-    threshold: float
+        one of '<', '<=', '==', '>=', '>', '!='
+    threshold:
         value to use as the threshold combined with the operator
-
+    column_name: string, optional
+        name of the column to cut the read masking dataset to
     """
 
     def __init__(self, cls, op, threshold, column_name = None):
@@ -68,18 +69,65 @@ class MaskingAdapter(object):
 
         self.column_name = column_name
 
-    def read_ts(self, *args, **kwargs):
-        data = self.cls.read_ts(*args, **kwargs)
+    def __mask(self, data):
         if self.column_name is not None:
             data = data.loc[:, [self.column_name]]
         return self.operator(data, self.threshold)
+
+    def read_ts(self, *args, **kwargs):
+        data = self.cls.read_ts(*args, **kwargs)
+        return self.__mask(data)
 
     def read(self, *args, **kwargs):
         data = self.cls.read(*args, **kwargs)
-        if self.column_name is not None:
-            data = data.loc[:, [self.column_name]]
-        return self.operator(data, self.threshold)
+        return self.__mask(data)
 
+class SelfMaskingAdapter(object):
+    """
+    Transform the given (reader) class to return a dataset that is masked based 
+    on the given column, operator, and threshold. This class calls the read_ts 
+    or read method of the given reader instance, applies the operator/threshold
+    to the specified column, and masks the whole dataframe with the result.
+
+    Parameters
+    ----------
+    cls: object
+        has to have a read_ts or read method
+    operator: string
+        one of '<', '<=', '==', '>=', '>', '!='
+    threshold:
+        value to use as the threshold combined with the operator
+    column_name: string
+        name of the column to cut the read masking dataset to
+    """
+
+    def __init__(self, cls, op, threshold, column_name):
+        self.cls = cls
+
+        self.op_lookup = {'<': operator.lt,
+                          '<=': operator.le,
+                          '==': operator.eq,
+                          '!=': operator.ne,
+                          '>=': operator.ge,
+                          '>': operator.gt}
+
+        self.operator = self.op_lookup[op]
+        self.threshold = threshold
+        self.column_name = column_name
+
+    def __mask(self, data):
+#         data = data[data['frozen_prob'] < mask_frozen_prob]
+        mask = self.operator(data[self.column_name], self.threshold)
+        data = data[mask]
+        return data
+
+    def read_ts(self, *args, **kwargs):
+        data = self.cls.read_ts(*args, **kwargs)
+        return self.__mask(data)
+
+    def read(self, *args, **kwargs):
+        data = self.cls.read(*args, **kwargs)
+        return self.__mask(data)
 
 class AnomalyAdapter(object):
     """
