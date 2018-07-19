@@ -267,7 +267,8 @@ class Validation(object):
 
                 # at this stage we can drop the column multiindex and just use
                 # the dataset name
-                data.columns = data.columns.droplevel(level=1)
+#                 data.columns = data.columns.droplevel(level=1)
+                data = data.rename(columns=lambda x: x[0])
 
                 if self.scaling is not None:
                     # get scaling index by finding the column in the
