@@ -98,7 +98,7 @@ class SelfMaskingAdapter(object):
     threshold:
         value to use as the threshold combined with the operator
     column_name: string
-        name of the column to cut the read masking dataset to
+        name of the column to apply the threshold to
     """
 
     def __init__(self, cls, op, threshold, column_name):
