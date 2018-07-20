@@ -35,7 +35,7 @@ import itertools
 import pytesmo.temporal_matching as temp_match
 
 import pandas as pd
-
+from distutils.version import LooseVersion
 
 class BasicTemporalMatching(object):
     """
@@ -67,8 +67,11 @@ class BasicTemporalMatching(object):
         matched_data = pd.DataFrame(reference)
 
         for match in matched_datasets:
-#             match = match.drop(('index', ''), axis=1)
-            match = match.drop('index', axis=1)
+            if LooseVersion(pd.__version__) < LooseVersion('0.23'):
+                match = match.drop(('index', ''), axis=1)
+            else:
+                match = match.drop('index', axis=1)
+                
             match = match.drop('distance', axis=1)
             matched_data = matched_data.join(match)
 
