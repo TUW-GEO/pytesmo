@@ -65,15 +65,16 @@
 #  of boolean data type. Everywhere where the masking dataset is `True` the data will be masked.
 # 
 # Let's look at a first example.
-
+# 
 # ## Example soil moisture validation: ASCAT - ISMN
-
+# 
 # This example shows how to setup the pytesmo validation framework to perform a comparison between ASCAT and ISMN data. 
+# 
 
 # In[1]:
 
+
 import os
-import tempfile
 
 import pytesmo.validation_framework.metric_calculators as metrics_calculators
 
@@ -86,15 +87,20 @@ from pytesmo.validation_framework.results_manager import netcdf_results_manager
 
 # You need the test data from https://github.com/TUW-GEO/pytesmo-test-data for this example
 
+# In[2]:
+
+
 testdata_folder = '/pytesmo/testdata'
 output_folder = '/pytesmo/code/examples/output'
+
 
 # First we initialize the data readers that we want to use. In this case the ASCAT soil moisture time series and in
 # situ data from the ISMN.
 # 
 # Initialize ASCAT reader
 
-# In[2]:
+# In[3]:
+
 
 ascat_data_folder = os.path.join(testdata_folder,
                                  'sat/ascat/netcdf/55R22')
@@ -106,13 +112,13 @@ static_layers_folder = os.path.join(testdata_folder,
 ascat_reader = AscatSsmCdr(ascat_data_folder, ascat_grid_folder,
                            grid_filename='TUW_WARP5_grid_info_2_1.nc',
                            static_layer_path=static_layers_folder)
-
 ascat_reader.read_bulk = True
 
 
 # Initialize ISMN reader
 
-# In[3]:
+# In[4]:
+
 
 ismn_data_folder = os.path.join(testdata_folder,
                                  'ismn/multinetwork/header_values')
@@ -127,7 +133,8 @@ ismn_reader = ISMN_Interface(ismn_data_folder)
 # 
 # **DO NOT CHANGE** the name ***jobs*** because it will be searched during the parallel processing!
 
-# In[4]:
+# In[5]:
+
 
 jobs = []
 
@@ -136,7 +143,7 @@ for idx in ids:
     metadata = ismn_reader.metadata[idx]
     jobs.append((idx, metadata['longitude'], metadata['latitude']))
 
-print("Jobs (gpi, lon, lat)")
+print("Jobs (gpi, lon, lat):")
 print(jobs)
 
 
@@ -145,10 +152,11 @@ print(jobs)
 # It is important here that the ISMN reader has a read_ts function that works by just using the `dataset_id`. In this
 #  way the validation framework can go through the jobs and read the correct time series.
 
-# In[5]:
+# In[6]:
+
 
 data = ismn_reader.read_ts(ids[0])
-print('ISMN data example')
+print('ISMN data example:')
 print(data.head())
 
 
@@ -159,7 +167,7 @@ print(data.head())
 # which metric calculators to use and how to perform the scaling into the reference data space. It is initialized in
 # the following way:
 
-# In[11]:
+# In[7]:
 
 datasets = {
     'ISMN': {
@@ -174,7 +182,6 @@ datasets = {
                    'mask_ssf': True}
     }}
 
-
 # The datasets dictionary contains all the information about the datasets to read. The `class` is the dataset class
 # to use which we have already initialized. The `columns` key describes which columns of the dataset interest us for
 # validation. This a mandatory field telling the framework which other columns to ignore. In this case the columns
@@ -183,7 +190,8 @@ datasets = {
 # ASCAT reader to mask the ASCAT soil moisture using the included frozen and snow probabilities as well as the SSF.
 # There are also other keys that can be used here. Please see the documentation for explanations.
 
-# In[13]:
+# In[8]:
+
 
 period = [datetime(2007, 1, 1), datetime(2014, 12, 31)]
 basic_metrics = metrics_calculators.BasicMetrics(other_name='k1')
@@ -215,16 +223,12 @@ process = Validation(
 # { (3 ,2): metric_calc,
 #   (3, 3): triple_collocation}
 # ```
-
+# 
 # Create the variable ***save_path*** which is a string representing the path where the results will be saved.
 # **DO NOT CHANGE** the name ***save_path*** because it will be searched during the parallel processing!
+# In[9]:
 
-# In[10]:
-
-#save_path = tempfile.mkdtemp()
 save_path = output_folder
-
-# In[22]:
 
 import pprint
 for job in jobs:
@@ -244,7 +248,8 @@ for job in jobs:
 # file for each dataset combination and stores each metric as a variable. We can inspect the stored netCDF file which
 #  is named after the dictionary key:
 
-# In[23]:
+# In[10]:
+
 
 import netCDF4
 results_fname = os.path.join(save_path, 'ASCAT.sm_with_ISMN.soil moisture.nc')
@@ -258,7 +263,8 @@ with netCDF4.Dataset(results_fname) as ds:
 # 
 # The same code can be executed in parallel by defining the following `start_processing` function.
 
-# In[25]:
+# In[11]:
+
 
 def start_processing(job):
     try:
@@ -273,7 +279,7 @@ def start_processing(job):
 # 
 # After [starting the ipyparallel cluster](http://ipyparallel.readthedocs.org/en/latest/process.html) you can then
 # execute the following code:
-
+# 
 # ```python
 # from pytesmo.validation_framework import start_validation
 # 
@@ -285,7 +291,7 @@ def start_processing(job):
 # setup_code = "my_validation.py"
 # start_validation(setup_code)
 # ```
-
+# 
 # ## Masking datasets
 # 
 # Masking datasets are datasets that return a pandas DataFrame with boolean values. `True` means that the observation
@@ -299,12 +305,25 @@ def start_processing(job):
 # ### Masking adapter
 # 
 # To easily transform an existing dataset into a masking dataset `pytesmo` offers a adapter class that calls the
-# `read_ts` method of an existing dataset and performs the masking based on an operator and a given threshold.
+# `read_ts` method of an existing dataset and creates a masking dataset based on an operator, a given threshold, and (optionally) a column name.
 
 # In[12]:
 
+
 from pytesmo.validation_framework.adapters import MaskingAdapter
 
-ds_mask = MaskingAdapter(ismn_reader, '<', 0.2)
-print ds_mask.read_ts(ids[0])['soil moisture'].head()
+ds_mask = MaskingAdapter(ismn_reader, '<', 0.2, 'soil moisture')
+print ds_mask.read_ts(ids[0]).head()
+
+
+# ### Self-masking adapter
+# `pytesmo` also has a class that masks a dataset "on-the-fly", based on one of the columns it contains and an operator and a threshold. In contrast to the masking adapter mentioned above, the output of the self-masking adapter is the masked data, not the the mask. The self-masking adapter wraps a data reader, which must have a `read_ts` or `read` method. Calling its `read_ts`/`read` method will return the masked data - more precisely a DataFrame with only rows where the masking condition is true.
+
+# In[13]:
+
+
+from pytesmo.validation_framework.adapters import SelfMaskingAdapter
+
+ds_mask = SelfMaskingAdapter(ismn_reader, '<', 0.2, 'soil moisture')
+print ds_mask.read_ts(ids[0]).head()
 
