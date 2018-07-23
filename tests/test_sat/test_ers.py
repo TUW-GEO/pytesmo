@@ -68,14 +68,14 @@ class TestERSNetCDF(unittest.TestCase):
         np.testing.assert_approx_equal(
             result.latitude, 45.698074, significant=4)
 
-        assert list(result.data.columns.values) == ['orbit_dir', 'proc_flag',
-                                                    'sm', 'sm_noise',
-                                                    'snow_prob',
-                                                    'frozen_prob',
-                                                    'abs_sm_gldas',
-                                                    'abs_sm_noise_gldas',
-                                                    'abs_sm_hwsd',
-                                                    'abs_sm_noise_hwsd']
+        assert sorted(list(result.data.columns.values)) == sorted(['orbit_dir', 'proc_flag',
+                                                                   'sm', 'sm_noise',
+                                                                   'snow_prob',
+                                                                   'frozen_prob',
+                                                                   'abs_sm_gldas',
+                                                                   'abs_sm_noise_gldas',
+                                                                   'abs_sm_hwsd',
+                                                                   'abs_sm_noise_hwsd'])
         assert len(result.data) == 478
         assert result.data.ix[15].name == datetime(1992, 1, 27, 21, 11, 42, 55)
         assert result.data.ix[15]['sm'] == 57
