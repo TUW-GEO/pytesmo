@@ -3,45 +3,55 @@
 
 # <codecell>
 
-import pytesmo.io.sat.ascat as ascat
-import pytesmo.time_series as ts
+import ascat.timeseries as ascat
+import pytesmo.time_series.anomaly as ts_anomaly
 
 import os
 import matplotlib.pyplot as plt
 
+testdata_folder = '/pytesmo/testdata'
+
 # <codecell>
 
-ascat_folder = os.path.join('R:\\','Datapool_processed','WARP','WARP5.5',
-                                         'ASCAT_WARP5.5_R1.2','080_ssm','netcdf')
-ascat_grid_folder = os.path.join('R:\\','Datapool_processed','WARP','ancillary','warp5_grid')
+ascat_data_folder = os.path.join(testdata_folder,
+                                 'sat/ascat/netcdf/55R22')
+ascat_grid_folder = os.path.join(testdata_folder,
+                                 'sat/ascat/netcdf/grid')
+static_layers_folder = os.path.join(testdata_folder,
+                                    'sat/h_saf/static_layer')
+
 #init the ASCAT_SSM reader with the paths
-
-ascat_SSM_reader = ascat.AscatH25_SSM(ascat_folder,ascat_grid_folder)
+ascat_SSM_reader = ascat.AscatSsmCdr(ascat_data_folder, ascat_grid_folder,
+                                     grid_filename='TUW_WARP5_grid_info_2_1.nc',
+                                     static_layer_path=static_layers_folder)
 
 # <codecell>
 
-ascat_ts = ascat_SSM_reader.read_ssm(45,0)
+# Read data for location in northern Italy
+ascat_ts = ascat_SSM_reader.read(11, 45)
 #plot soil moisture
-ascat_ts.data['sm'].plot()
+ascat_ts.data['sm'].plot(title='SSM data')
+plt.show()
 
 # <codecell>
 
 #calculate anomaly based on moving +- 17 day window
-anomaly = ts.anomaly.calc_anomaly(ascat_ts.data['sm'], window_size=35)
-anomaly.plot()
+anom = ts_anomaly.calc_anomaly(ascat_ts.data['sm'], window_size=35)
+anom.plot(title='Anomaly (35-day window)')
+plt.show()
 
 # <codecell>
 
 #calculate climatology
-climatology = ts.anomaly.calc_climatology(ascat_ts.data['sm'])
-climatology.plot()
+climatology = ts_anomaly.calc_climatology(ascat_ts.data['sm'])
+climatology.plot(title='Climatology')
+plt.show()
 
 # <codecell>
 
 #calculate anomaly based on climatology
-anomaly_clim = ts.anomaly.calc_anomaly(ascat_ts.data['sm'], climatology=climatology)
-anomaly_clim.plot()
+anomaly_clim = ts_anomaly.calc_anomaly(ascat_ts.data['sm'], climatology=climatology)
+anomaly_clim.plot(title='Anomaly (climatology)')
+plt.show()
 
 # <codecell>
-
-

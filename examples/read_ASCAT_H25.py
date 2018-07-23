@@ -36,19 +36,27 @@ Created on Nov 8, 2013
 '''
 
 import matplotlib.pyplot as plt
-import pytesmo.io.sat.ascat as ascat
+import ascat.tuw as tuw
 import os
-ascat_folder = os.path.join('R:\\', 'Datapool_processed', 'WARP', 'WARP5.5',
-                                         'ASCAT_WARP5.5_R1.2', '080_ssm', 'netcdf')
-ascat_grid_folder = os.path.join('R:\\', 'Datapool_processed', 'WARP', 'ancillary', 'warp5_grid')
-# init the ASCAT_SSM reader with the paths
 
-# let's not include the orbit direction since it is saved as 'A'
-# or 'D' it can not be plotted
-ascat_SSM_reader = ascat.AscatH25_SSM(ascat_folder, ascat_grid_folder,
-                                      include_in_df=['sm', 'sm_noise', 'ssf', 'proc_flag'])
+# See also: https://github.com/TUW-GEO/ascat/blob/master/docs/read_tuw_ascat.rst
+
+testdata_folder = '/pytesmo/testdata'
+
+ascat_data_folder = os.path.join(testdata_folder,
+                                 'sat/ascat/SSM')
+ascat_grid_folder = os.path.join(testdata_folder,
+                                 'sat/ascat/grid')
+advisory_flags_folder = os.path.join(testdata_folder,
+                                 'sat/ascat/advisory_flags')
+
+# # init the ASCAT_SSM reader with the paths
+
+ascat_SSM_reader = tuw.Ascat_SSM(ascat_data_folder, ascat_grid_folder,
+                                 advisory_flags_path=advisory_flags_folder)
 
 gpi = 2329253
+
 ascat_ts = ascat_SSM_reader.read_ssm(gpi)
 
 ascat_ts.plot()
@@ -67,13 +75,12 @@ ascat_ts_absolute = ascat_SSM_reader.read_ssm(gpi, absolute_values=True)
 # this introduces 4 new columns in the returned data
 # scaled sm and sm_noise with porosity_gldas
 # scaled sm and sm_noise with porosity_hwsd
-print ascat_ts_absolute.data
+#print ascat_ts_absolute.data
 
 # select relevant columns and plot
-ascat_ts_absolute.data = ascat_ts_absolute.data[['sm_por_gldas', 'sm_por_hwsd']]
+# ascat_ts_absolute.data = ascat_ts_absolute.data[['sm_por_gldas', 'sm_por_hwsd']]
 ascat_ts_absolute.plot()
 plt.show()
-
 
 # We can also automatically mask the data during reading
 # In this example all measurements where the Surface State Flag
@@ -85,6 +92,3 @@ ascat_ts = ascat_SSM_reader.read_ssm(gpi, mask_ssf=True,
 
 ascat_ts.plot()
 plt.show()
-
-
-

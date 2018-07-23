@@ -7,11 +7,11 @@
 
 # <rawcell>
 
-# In this Example we will read and plot images of the H-SAF products H07, H08 and H14.
+# In this Example we will read and plot images of the H-SAF (soil moisture) products H07, H08 and H14.
 
 # <codecell>
 
-import pytesmo.io.sat.h_saf as h_saf
+import ascat.h_saf as h_saf
 import os
 import datetime
 import matplotlib.pyplot as plt
@@ -23,10 +23,12 @@ import numpy as np
 #set the paths to the image files
 #I'm using the test images included in the pytesmo package
 
-test_data_path = os.path.join(os.sep+'home','cp', 'workspace', 'pytesmo','tests','test_sat','test_data','h_saf')
-h07_path = os.path.join(test_data_path, 'h07')
-h08_path = os.path.join(test_data_path, 'h08')
-h14_path = os.path.join(test_data_path, 'h14')
+testdata_folder = '/pytesmo/testdata'
+
+h_saf_path = os.path.join(testdata_folder, 'sat/h_saf')
+h07_path = os.path.join(h_saf_path, 'h07')
+h08_path = os.path.join(h_saf_path, 'h08')
+h14_path = os.path.join(h_saf_path, 'h14')
 
 #initialize the readers with the path
 h07_reader = h_saf.H07img(h07_path)
@@ -45,7 +47,7 @@ h14_reader = h_saf.H14img(h14_path)
 # <codecell>
 
 #the reader returns not only the data but also metadata and the longitudes and latitudes
-h07_data, metadata, timestamp, lons, lats, time_var = h07_reader.read_img(datetime.datetime(2010,5,1,8,33,1))
+h07_data, metadata, timestamp, lons, lats, time_var = h07_reader.read(datetime.datetime(2010,5,1,8,33,1))
 
 # <rawcell>
 
@@ -63,7 +65,7 @@ print "The following variables are in this image", h07_data.keys()
 
 # <codecell>
 
-print h07_data['ssm'].shape
+print h07_data['Surface Soil Moisture (Ms)'].shape
 # it is only a 1D array to plot the data we also need latitude and logitude information
 print lons.shape
 print lats.shape
@@ -95,7 +97,7 @@ m = Basemap(llcrnrlon=-25.0,llcrnrlat=25.0,urcrnrlon=45.0,urcrnrlat=75.0,\
             lat_ts=50.,ax=ax)
 
 # make a pseudocolor plot using the ASCAT SWI colormap
-im = m.pcolormesh(lons_grid, lats_grid, resampled_data['ssm'], latlon=True,
+im = m.pcolormesh(lons_grid, lats_grid, resampled_data['Surface Soil Moisture (Ms)'], latlon=True,
          cmap=smcolormaps.load('SWI_ASCAT'))
 
 m.drawcoastlines()
@@ -125,7 +127,8 @@ del lons
 
 # H08 data has a much higher resolution and comes on a 0.00416 degree grid.
 # The sample data included in pytesmo was observed on the same time as the included H07 product.
-# Instead of read_img you can also use the daily_images iterator. You just specify a day and it will read all the images that are in your folder for this day. This also works for the other H07 and H14 reader.
+# Instead of read_img you can also use the daily_images iterator. You just specify a day and it will read all the
+# images that are in your folder for this day. This also works for the other H07 and H14 reader.
 
 # <codecell>
 
@@ -191,13 +194,14 @@ del lats
 
 # <rawcell>
 
-# H08 has a very high resolution, so most people will only want to read it for their area of interest. This can be done using the lat_lon_bbox keyword
+# H08 has a very high resolution, so most people will only want to read it for their area of interest. This can be
+# done using the lat_lon_bbox keyword
 
 # <codecell>
 
 #the reader returns not only the data but also metadata and the longitudes and latitudes
-h08_roi, metadata, timestamp, lons, lats, time_var = h08_reader.read_img(datetime.datetime(2010,5,1,8,33,1),
-                                                                         lat_lon_bbox=[60,70,15,25])
+h08_roi, metadata, timestamp, lons, lats, time_var = h08_reader.read(datetime.datetime(2010,5,1,8,33,1),
+                                                                     lat_lon_bbox=[60,70,15,25])
 
 # %matplotlib inline
 fig = plt.figure(figsize=(10,10))
@@ -246,7 +250,7 @@ del lons
 # <codecell>
 
 #the reader returns not only the data but also metadata and the longitudes and latitudes
-h14_data, metadata, timestamp, lons, lats, time_var = h14_reader.read_img(datetime.datetime(2014, 5, 15))
+h14_data, metadata, timestamp, lons, lats, time_var = h14_reader.read(datetime.datetime(2014, 5, 15))
 
 # <codecell>
 
@@ -262,13 +266,15 @@ print lats.shape
 
 # <rawcell>
 
-# The data comes as a 2D array. If the keyword expand_grid is set to False during reader initialization then only 1D arrays would be returned. This can be good for working with the data but for plotting the expanded grid is easier to handle.
+# The data comes as a 2D array. If the keyword expand_grid is set to False during reader initialization then only 1D
+# arrays would be returned. This can be good for working with the data but for plotting the expanded grid is easier
+# to handle.
 
 # <codecell>
 
 h14_reader_1d = h_saf.H14img(h14_path, expand_grid=False)
 #the reader returns not only the data but also metadata and the longitudes and latitudes
-h14_data_1d, metadata, timestamp, lons_1d, lats_1d, time_var = h14_reader_1d.read_img(datetime.datetime(2014, 5, 15))
+h14_data_1d, metadata, timestamp, lons_1d, lats_1d, time_var = h14_reader_1d.read(datetime.datetime(2014, 5, 15))
 print h14_data_1d['SM_layer1_0-7cm'].shape
 print lons_1d.shape
 print lats_1d.shape
@@ -308,5 +314,3 @@ for layer in h14_data:
     plt.show()
 
 # <codecell>
-
-
