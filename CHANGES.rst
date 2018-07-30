@@ -1,6 +1,7 @@
 unreleased 
 ===================
 
+- Rename arguments for metrics functions to be more general
 - Split linreg scaling function to determine and apply corrections separately
 
 v0.6.10, 2018-04-09
