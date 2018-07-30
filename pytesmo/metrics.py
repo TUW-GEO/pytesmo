@@ -59,9 +59,9 @@ def aad(x, y):
     Parameters
     ----------
     x : numpy.ndarray
-        First set of values.
+        First input vector.
     y : numpy.ndarray
-        Second set of values.
+        Second input vector.
 
     Returns
     -------
@@ -78,9 +78,9 @@ def mad(x, y):
     Parameters
     ----------
     x : numpy.ndarray
-        First set of values.
+        First input vector.
     y : numpy.ndarray
-        Second set of values.
+        Second input vector.
 
     Returns
     -------
@@ -103,9 +103,9 @@ def rmsd(x, y, ddof=0):
     Parameters
     ----------
     x : numpy.ndarray
-        First set of values.
+        First input vector.
     y : numpy.ndarray
-        Second set of values.
+        Second input vector.
     ddof : int, optional
         Delta degree of freedom.The divisor used in calculations is N - ddof,
         where N represents the number of elements. By default ddof is zero.
@@ -125,9 +125,9 @@ def nrmsd(x, y, ddof=0):
     Parameters
     ----------
     x : numpy.ndarray
-        First set of values.
+        First input vector.
     y : numpy.ndarray
-        Second set of values.
+        Second input vector.
     ddof : int, optional
         Delta degree of freedom.The divisor used in calculations is N - ddof,
         where N represents the number of elements. By default ddof is zero.
@@ -147,9 +147,9 @@ def ubrmsd(x, y, ddof=0):
     Parameters
     ----------
     x : numpy.ndarray
-        First set of values.
+        First input vector.
     y : numpy.ndarray
-        Second set of values.
+        Second input vector.
     ddof : int, optional
         Delta degree of freedom.The divisor used in calculations is N - ddof,
         where N represents the number of elements. By default ddof is zero.
@@ -180,9 +180,9 @@ def mse(x, y, ddof=0):
     Parameters
     ----------
     x : numpy.ndarray
-        First set of values.
+        First input vector.
     y : numpy.ndarray
-        Second set of values.
+        Second input vector.
     ddof : int, optional
         Delta degree of freedom.The divisor used in calculations is N - ddof,
         where N represents the number of elements. By default ddof is zero.
@@ -729,9 +729,9 @@ def pearsonr(x, y):
     Parameters
     ----------
     x : numpy.ndarray
-        First set of values.
+        First input vector.
     y : numpy.ndarray
-        Second set of values.
+        Second input vector.
 
     Returns
     -------
@@ -849,9 +849,9 @@ def spearmanr(x, y):
     Parameters
     ----------
     x : numpy.ndarray
-        First set of values.
+        First input vector.
     y : numpy.ndarray
-        Second set of values.
+        Second input vector.
 
     Returns
     -------
@@ -875,9 +875,9 @@ def kendalltau(x, y):
     Parameters
     ----------
     x : numpy.ndarray
-        First set of values.
+        First input vector.
     y : numpy.ndarray
-        Second set of values.
+        Second input vector.
 
     Returns
     -------
