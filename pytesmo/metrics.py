@@ -35,19 +35,20 @@ from itertools import permutations,combinations
 def bias(x, y):
     """
     Difference of the mean values.
-    Sign depends on the order of the parameters, we calculate mean(x) - mean(y)
+    Sign of output depends on argument order.
+    We calculate mean(x) - mean(y).
 
     Parameters
     ----------
     x : numpy.ndarray
-        First set of values (minuend).
+        First input vector.
     y : numpy.ndarray
-        Second set of values (subtrahend, "reference").
+        Second input vector.
 
     Returns
     -------
     bias : float
-        Bias between observations and predictions.
+        Bias between x and y.
     """
     return np.mean(x) - np.mean(y)
 
