@@ -35,13 +35,13 @@ def start_validation(setup_code):
     try:
         jobs = dv['jobs'][0]
     except parallel.CompositeError:
-        print "Variable 'jobs' is not defined!"
+        print("Variable 'jobs' is not defined!")
 
     save_path = None
     try:
         save_path = dv['save_path'][0]
     except parallel.CompositeError:
-        print "Variable 'save_path' is not defined!"
+        print("Variable 'save_path' is not defined!")
 
     to_write = len(jobs)
     if (jobs is not None) and (save_path is not None):
@@ -51,7 +51,7 @@ def start_validation(setup_code):
             for result, job in results:
                 netcdf_results_manager(result, save_path)
                 to_write -= 1
-                print 'job = ' + str(job), 'remaining jobs = ' + str(to_write)
+                print('job = ' + str(job), 'remaining jobs = ' + str(to_write))
 
     c[:].clear()
 
@@ -59,7 +59,7 @@ def start_validation(setup_code):
 if __name__ == '__main__':
 
     start = datetime.now()
-    print 'Start Validation'
+    print('Start Validation')
 
     # Note that before starting the validation you must start a controller
     # and engines, for example by using: ipcluster start -n 4
@@ -68,4 +68,4 @@ if __name__ == '__main__':
     setup_code = "/media/sf_H/swdvlp/github/pytesmo/examples/setup_validation_ASCAT_ISMN.py"
     start_validation(setup_code)
 
-    print 'Elapsed time:', datetime.now() - start
+    print('Elapsed time:', datetime.now() - start)

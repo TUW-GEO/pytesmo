@@ -55,9 +55,9 @@ h07_data, metadata, timestamp, lons, lats, time_var = h07_reader.read(datetime.d
 
 # <codecell>
 
-print type(h07_data)
+print(type(h07_data))
 # the data is a dictionary, each dictionary key contains the array of one variable
-print "The following variables are in this image", h07_data.keys()
+print("The following variables are in this image", h07_data.keys())
 
 # <rawcell>
 
@@ -65,10 +65,10 @@ print "The following variables are in this image", h07_data.keys()
 
 # <codecell>
 
-print h07_data['Surface Soil Moisture (Ms)'].shape
+print(h07_data['Surface Soil Moisture (Ms)'].shape)
 # it is only a 1D array to plot the data we also need latitude and logitude information
-print lons.shape
-print lats.shape
+print(lons.shape)
+print(lats.shape)
 
 # <rawcell>
 
@@ -135,14 +135,14 @@ del lons
 #the reader returns not only the data but also metadata and the longitudes and latitudes
 for h08_data, metadata, timestamp, lons, lats, time_var in h08_reader.daily_images(datetime.datetime(2010,5,1)):
     # this tells you the exact timestamp of the read image
-    print timestamp.isoformat()
+    print(timestamp.isoformat())
 
-    print type(h08_data)
+    print(type(h08_data))
     # the data is a dictionary, each dictionary key contains the array of one variable
-    print "The following variables are in this image", h08_data.keys()
-    print h08_data['ssm'].shape
-    print lons.shape
-    print lats.shape
+    print("The following variables are in this image", h08_data.keys())
+    print(h08_data['ssm'].shape)
+    print(lons.shape)
+    print(lats.shape)
 
 # <rawcell>
 
@@ -254,15 +254,15 @@ h14_data, metadata, timestamp, lons, lats, time_var = h14_reader.read(datetime.d
 
 # <codecell>
 
-print type(h14_data)
+print(type(h14_data))
 # the data is a dictionary, each dictionary key contains the array of one variable
-print "The following variables are in this image", h14_data.keys()
+print("The following variables are in this image", h14_data.keys())
 
 # <codecell>
 
-print h14_data['SM_layer1_0-7cm'].shape
-print lons.shape
-print lats.shape
+print(h14_data['SM_layer1_0-7cm'].shape)
+print(lons.shape)
+print(lats.shape)
 
 # <rawcell>
 
@@ -275,9 +275,9 @@ print lats.shape
 h14_reader_1d = h_saf.H14img(h14_path, expand_grid=False)
 #the reader returns not only the data but also metadata and the longitudes and latitudes
 h14_data_1d, metadata, timestamp, lons_1d, lats_1d, time_var = h14_reader_1d.read(datetime.datetime(2014, 5, 15))
-print h14_data_1d['SM_layer1_0-7cm'].shape
-print lons_1d.shape
-print lats_1d.shape
+print(h14_data_1d['SM_layer1_0-7cm'].shape)
+print(lons_1d.shape)
+print(lats_1d.shape)
 
 # <rawcell>
 
