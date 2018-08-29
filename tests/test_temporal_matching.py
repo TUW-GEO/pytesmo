@@ -37,6 +37,31 @@ import pandas as pd
 from datetime import datetime
 import numpy as np
 import numpy.testing as nptest
+import pytz
+
+def test_timezone_handling():
+    """
+    Reference dataframes with indices that have timezone information can be
+    problematic.
+
+    See issue #150
+    """
+    data = np.arange(5.0)
+    data[3] = np.nan
+
+    match_df = pd.DataFrame({"data": data}, index=pd.date_range(datetime(2007, 1, 1, 0),
+                                                              "2007-01-05", freq="D", tz="UTC"))
+    timezone = pytz.timezone("UTC")
+    ref_df = pd.DataFrame({"matched_data": np.arange(5)},
+                            index=[timezone.localize(datetime(2007, 1, 1, 9)),
+                                   timezone.localize(datetime(2007, 1, 2, 9)),
+                                   timezone.localize(datetime(2007, 1, 3, 9)),
+                                   timezone.localize(datetime(2007, 1, 4, 9)),
+                                   timezone.localize(datetime(2007, 1, 5, 9))])
+    matched = tmatching.matching(ref_df, match_df)
+
+    nptest.assert_allclose(np.array([0, 1, 2, 4]), matched.matched_data)
+    assert len(matched) == 4
 
 
 def test_df_match_borders():
