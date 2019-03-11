@@ -518,3 +518,447 @@ class HSAF_Metrics(object):
                     ubRMSD
 
         return dataset
+
+
+class QA4SM_Intercomparison_Metrics(BasicMetrics):
+    """
+    Compare Basic Metrics of multiple satellite data sets to one reference data set.
+
+
+    Pearson's R
+    Spearman's rho
+    optionally Kendall's tau
+    RMSD
+    BIAS
+
+    it also stores information about gpi, lat, lon
+    and number of observations
+
+    Parameters
+    ----------
+    other_name: iterable, optional (default: ['k1', 'k2'])
+        Name of the column of the non-reference / other dataset in the
+        pandas DataFrame
+    calc_tau: boolean, optional
+        if True then also tau is calculated. This is set to False by default
+        since the calculation of Kendalls tau is rather slow and can significantly
+        impact performance of e.g. global validation studies
+    """
+    def __init__(self, other_names=['k1', 'k2', 'k3'],
+                 calc_tau=False, dataset_names=None):
+
+        super(QA4SM_Intercomparison_Metrics, self).__init__(other_name=other_names,
+                                                            calc_tau=calc_tau)
+
+        self.df_columns = ['ref'] + self.other_name
+
+
+        if dataset_names is None:
+            self.ds_names = self.df_columns
+        else:
+            self.ds_names = dataset_names
+
+        self.ds_names_lut = {}
+        for name, col in zip(self.ds_names, self.df_columns):
+            self.ds_names_lut[col] = name
+
+        self.tds_names = []
+        for combi in itertools.combinations(self.df_columns, 2):
+            if combi[0] != 'ref': continue # todo: only between ref and sat data cols?
+            self.tds_names.append("{:}_and_{:}".format(*combi))
+
+        metrics_common = {'n_obs': np.int32([0])}
+
+        metrics_tds = {'R': np.float32([np.nan]),
+                       'p_R': np.float32([np.nan]),
+                       'rho': np.float32([np.nan]),
+                       'p_rho': np.float32([np.nan]),
+                       'bias': np.float32([np.nan]),
+                       'tau': np.float32([np.nan]),
+                       'p_tau': np.float32([np.nan]),
+                       'rmsd': np.float32([np.nan]),
+                       'mse': np.float32([np.nan]),
+                       'mse_corr': np.float32([np.nan]),
+                       'mse_bias': np.float32([np.nan]),
+                       'ubRMSD': np.float32([np.nan]),
+                       'mse_var': np.float32([np.nan])}
+
+
+        self.result_template = {'gpi': np.int32([-1]),
+                                'lon': np.float32([np.nan]),
+                                'lat': np.float32([np.nan])}
+
+        for metric in metrics_common.keys():
+            key = "{:}".format(metric)
+            self.result_template[key] = metrics_common[metric].copy()
+
+        for tds_name in self.tds_names:
+            split_tds_name = tds_name.split('_and_')
+            tds_name_key = "{:}_{:}".format(self.ds_names_lut[
+                                                split_tds_name[0]],
+                                            self.ds_names_lut[
+                                                split_tds_name[1]])
+            for metric in metrics_tds.keys():
+                key = "{:}_{:}".format(tds_name_key, metric)
+                self.result_template[key] = metrics_tds[metric].copy()
+
+    def calc_metrics(self, data, gpi_info):
+        """
+        calculates the desired statistics
+
+        Parameters
+        ----------
+        data : pandas.DataFrame
+            with >2 columns, the first column is the reference dataset
+            named 'ref'
+            other columns are the datasets to compare against named 'other_i'
+        gpi_info : tuple
+            of (gpi, lon, lat)
+
+        Notes
+        -----
+        Kendall tau is calculation is optional at the moment
+        because the scipy implementation is very slow which is problematic for
+        global comparisons
+        """
+
+        dataset = copy.deepcopy(self.result_template)
+
+        dataset['gpi'][0] = gpi_info[0]
+        dataset['lon'][0] = gpi_info[1]
+        dataset['lat'][0] = gpi_info[2]
+
+        # number of observations
+        subset = np.ones(len(data), dtype=bool)
+
+        n_obs = subset.sum()
+        if n_obs < 10:
+            return dataset
+
+        dataset['n_obs'][0] = n_obs
+
+
+        # calculate Pearson correlation
+        pearson_R, pearson_p = df_metrics.pearsonr(data)
+        pearson_R = pearson_R._asdict()
+        pearson_p = pearson_p._asdict()
+
+        # calculate Spearman correlation
+        spea_rho, spea_p = df_metrics.pearsonr(data)
+        spea_rho = spea_rho._asdict()
+        spea_p = spea_p._asdict()
+
+        # calculate bias
+        bias_nT = df_metrics.bias(data)
+        bias_dict = bias_nT._asdict()
+
+        # calculate RMSD
+        rmsd = df_metrics.rmsd(data)
+        rmsd_dict = rmsd._asdict()
+
+        # calculate MSE
+        mse, mse_corr, mse_bias, mse_var = df_metrics.mse(data)
+        mse_dict = mse._asdict()
+        mse_corr_dict = mse_corr._asdict()
+        mse_bias_dict = mse_bias._asdict()
+        mse_var_dict = mse_var._asdict()
+
+        # calulcate tau
+        if self.calc_tau:
+            tau, p_tau = df_metrics.kendalltau(data)
+            tau_dict = tau._asdict()
+            p_tau_dict = p_tau._asdict()
+        else:
+            tau = p_tau = p_tau_dict = tau_dict = None
+
+        # always scale for ubRMSD with mean std
+        # todo: should the data be scaled before calculating the ubRMSD?
+        #data_scaled = scale(data, method='mean_std')
+        # calculate ubRMSD
+        ubRMSD_nT = df_metrics.ubrmsd(data)
+        ubRMSD_dict = ubRMSD_nT._asdict()
+
+        for tds_name in self.tds_names:
+            R = pearson_R[tds_name]
+            p_R = pearson_p[tds_name]
+            rho = spea_rho[tds_name]
+            p_rho = spea_p[tds_name]
+            bias = bias_dict[tds_name]
+            mse = mse_dict[tds_name]
+            mse_corr = mse_corr_dict[tds_name]
+            mse_bias = mse_bias_dict[tds_name]
+            mse_var = mse_var_dict[tds_name]
+            rmsd = rmsd_dict[tds_name]
+            ubRMSD = ubRMSD_dict[tds_name]
+            if tau_dict and p_tau_dict:
+                tau = tau_dict[tds_name]
+                p_tau = p_tau_dict[tds_name]
+
+
+            split_tds_name = tds_name.split('_and_')
+            tds_name_key = "{:}_{:}".format(self.ds_names_lut[
+                split_tds_name[0]],
+                self.ds_names_lut[
+                split_tds_name[1]])
+
+            dataset['{:}_R'.format(tds_name_key)][0] = R
+            dataset['{:}_p_R'.format(tds_name_key)][0] = p_R
+            dataset['{:}_rho'.format(tds_name_key)][0] = rho
+            dataset['{:}_p_rho'.format(tds_name_key)][0] = p_rho
+            dataset['{:}_bias'.format(tds_name_key)][0] = bias
+            dataset['{:}_mse'.format(tds_name_key)][0] = mse
+            dataset['{:}_mse_corr'.format(tds_name_key)][0] = mse_corr
+            dataset['{:}_mse_bias'.format(tds_name_key)][0] = mse_bias
+            dataset['{:}_mse_var'.format(tds_name_key)][0] = mse_var
+            dataset['{:}_rmsd'.format(tds_name_key)][0] = rmsd
+            dataset['{:}_ubRMSD'.format(tds_name_key)][0] = ubRMSD
+
+            if self.calc_tau:
+                dataset['{:}_tau'.format(tds_name_key)][0] = tau
+                dataset['{:}_p_tau'.format(tds_name_key)][0] = p_tau
+
+        return dataset
+
+
+
+class QA4SM_TC_Intercomparison_Metrics(object):
+    """
+    This class computes triple collocation metrics as defined in the QA4SM
+    project. It uses 2 satellite and 1 reference data sets as inputs.
+    """
+
+    def __init__(self, other_name1='k1', other_name2='k2',
+                 calc_tau=False, dataset_names=None):
+        '''
+        Initialize the QA4SM metrics
+
+        Parameters
+        ----------
+        other_name1 : str, optional (default: 'k1')
+            Name that the first satellite dataset will have as a placeholder in
+            the data frame
+        other_name2 : str, optional (default: 'k2')
+            Name that the second satellite dataset will have as a placeholder in
+            the data frame
+        calc_tau : bool, optional (default: False)
+            Calculate Kendalls Tau (slow)
+        dataset_names : list, optional (default: None)
+            List that maps the names of the satellite dataset columns to their
+            real name that will be used in the results file.
+        '''
+
+        self.result_template = {'R': np.float32([np.nan]),
+                                'p_R': np.float32([np.nan]),
+                                'rho': np.float32([np.nan]),
+                                'p_rho': np.float32([np.nan]),
+                                'tau': np.float32([np.nan]),
+                                'p_tau': np.float32([np.nan]),
+                                'RMSD': np.float32([np.nan]),
+                                'BIAS': np.float32([np.nan]),
+                                'n_obs': np.int32([0]),
+                                'gpi': np.int32([-1]),
+                                'lon': np.float64([np.nan]),
+                                'lat': np.float64([np.nan])}
+
+        self.other_name1, self.other_name2 = other_name1, other_name2
+        self.calc_tau = calc_tau
+        self.df_columns = ['ref', self.other_name1, self.other_name2]
+
+
+        if dataset_names is None:
+            self.ds_names = self.df_columns
+        else:
+            self.ds_names = dataset_names
+
+        self.ds_names_lut = {}
+        for name, col in zip(self.ds_names, self.df_columns):
+            self.ds_names_lut[col] = name
+
+        self.tds_names = []
+        for combi in itertools.combinations(self.df_columns, 2):
+            if combi[0] != 'ref': continue # only between ref and sat
+            self.tds_names.append("{:}_and_{:}".format(*combi))
+
+
+        metrics_common = {'n_obs': np.int32([0])}
+
+        metrics_sds = {'snr': np.float32([np.nan]),
+                       'err_var': np.float32([np.nan]),
+                       'beta': np.float32([np.nan])}
+
+        metrics_tds = {'R': np.float32([np.nan]),
+                       'p_R': np.float32([np.nan]),
+                       'rho': np.float32([np.nan]),
+                       'p_rho': np.float32([np.nan]),
+                       'bias': np.float32([np.nan]),
+                       'tau': np.float32([np.nan]),
+                       'p_tau': np.float32([np.nan]),
+                       'rmsd': np.float32([np.nan]),
+                       'mse': np.float32([np.nan]),
+                       'mse_corr': np.float32([np.nan]),
+                       'mse_bias': np.float32([np.nan]),
+                       'ubRMSD': np.float32([np.nan]),
+                       'mse_var': np.float32([np.nan])}
+
+
+        self.result_template = {'gpi': np.int32([-1]),
+                                'lon': np.float32([np.nan]),
+                                'lat': np.float32([np.nan])}
+
+        for metric in metrics_common.keys():
+            key = "{:}".format(metric)
+            self.result_template[key] = metrics_common[metric].copy()
+
+
+        # get template for single-dataset metric
+        for name in self.ds_names:
+            for metric in metrics_sds.keys():
+                key = "{:}_{:}".format(name, metric)
+                self.result_template[key] = metrics_sds[metric].copy()
+
+
+        for tds_name in self.tds_names:
+            split_tds_name = tds_name.split('_and_')
+            tds_name_key = "{:}_{:}".format(self.ds_names_lut[
+                                                split_tds_name[0]],
+                                            self.ds_names_lut[
+                                                split_tds_name[1]])
+            for metric in metrics_tds.keys():
+                key = "{:}_{:}".format(tds_name_key, metric)
+                self.result_template[key] = metrics_tds[metric].copy()
+
+
+    def calc_metrics(self, data, gpi_info):
+        """
+        calculates the desired statistics
+
+        Parameters
+        ----------
+        data : pandas.DataFrame
+            with >2 columns, the first column is the reference dataset
+            named 'ref'
+            other columns are the datasets to compare against named 'other_i'
+        gpi_info : tuple
+            of (gpi, lon, lat)
+
+        Notes
+        -----
+        Kendall tau is calculation is optional at the moment
+        because the scipy implementation is very slow which is problematic for
+        global comparisons
+        """
+
+        dataset = copy.deepcopy(self.result_template)
+
+        dataset['gpi'][0] = gpi_info[0]
+        dataset['lon'][0] = gpi_info[1]
+        dataset['lat'][0] = gpi_info[2]
+
+        # number of observations
+        subset = np.ones(len(data), dtype=bool)
+
+        n_obs = subset.sum()
+        if n_obs < 10:
+            return dataset
+
+        dataset['n_obs'][0] = n_obs
+
+
+        # calculate Pearson correlation
+        pearson_R, pearson_p = df_metrics.pearsonr(data)
+        pearson_R = pearson_R._asdict()
+        pearson_p = pearson_p._asdict()
+
+        # calculate Spearman correlation
+        spea_rho, spea_p = df_metrics.pearsonr(data)
+        spea_rho = spea_rho._asdict()
+        spea_p = spea_p._asdict()
+
+        # calculate bias
+        bias_nT = df_metrics.bias(data)
+        bias_dict = bias_nT._asdict()
+
+        # calculate RMSD
+        rmsd = df_metrics.rmsd(data)
+        rmsd_dict = rmsd._asdict()
+
+        # calculate MSE
+        mse, mse_corr, mse_bias, mse_var = df_metrics.mse(data)
+        mse_dict = mse._asdict()
+        mse_corr_dict = mse_corr._asdict()
+        mse_bias_dict = mse_bias._asdict()
+        mse_var_dict = mse_var._asdict()
+
+        # calulcate tau
+        if self.calc_tau:
+            tau, p_tau = df_metrics.kendalltau(data)
+            tau_dict = tau._asdict()
+            p_tau_dict = p_tau._asdict()
+        else:
+            tau = p_tau = p_tau_dict = tau_dict = None
+
+        # todo: should the data be scaled before calculating the ubRMSD?
+        #data_scaled = scale(data, method='mean_std')
+        # calculate ubRMSD
+        ubRMSD_nT = df_metrics.ubrmsd(data)
+        ubRMSD_dict = ubRMSD_nT._asdict()
+
+        # get single dataset metrics
+        # calculate SNR
+        x = data[self.df_columns[0]].values[subset]
+        y = data[self.df_columns[1]].values[subset]
+        z = data[self.df_columns[2]].values[subset]
+
+        snr, err, beta = metrics.tcol_snr(x, y, z)
+
+        for i, name in enumerate(self.ds_names):
+            dataset['{:}_snr'.format(name)][0] = snr[i]
+            dataset['{:}_err_var'.format(name)][0] = err[i]
+            dataset['{:}_beta'.format(name)][0] = beta[i]
+
+
+        for tds_name in self.tds_names:
+            R = pearson_R[tds_name]
+            p_R = pearson_p[tds_name]
+            rho = spea_rho[tds_name]
+            p_rho = spea_p[tds_name]
+            bias = bias_dict[tds_name]
+            mse = mse_dict[tds_name]
+            mse_corr = mse_corr_dict[tds_name]
+            mse_bias = mse_bias_dict[tds_name]
+            mse_var = mse_var_dict[tds_name]
+            rmsd = rmsd_dict[tds_name]
+            ubRMSD = ubRMSD_dict[tds_name]
+            if tau_dict and p_tau_dict:
+                tau = tau_dict[tds_name]
+                p_tau = p_tau_dict[tds_name]
+
+
+            split_tds_name = tds_name.split('_and_')
+            tds_name_key = "{:}_{:}".format(self.ds_names_lut[
+                split_tds_name[0]],
+                self.ds_names_lut[
+                split_tds_name[1]])
+
+            dataset['{:}_R'.format(tds_name_key)][0] = R
+            dataset['{:}_p_R'.format(tds_name_key)][0] = p_R
+            dataset['{:}_rho'.format(tds_name_key)][0] = rho
+            dataset['{:}_p_rho'.format(tds_name_key)][0] = p_rho
+            dataset['{:}_bias'.format(tds_name_key)][0] = bias
+            dataset['{:}_mse'.format(tds_name_key)][0] = mse
+            dataset['{:}_mse_corr'.format(tds_name_key)][0] = mse_corr
+            dataset['{:}_mse_bias'.format(tds_name_key)][0] = mse_bias
+            dataset['{:}_mse_var'.format(tds_name_key)][0] = mse_var
+            dataset['{:}_rmsd'.format(tds_name_key)][0] = rmsd
+            dataset['{:}_ubRMSD'.format(tds_name_key)][0] = ubRMSD
+
+            if self.calc_tau:
+                dataset['{:}_tau'.format(tds_name_key)][0] = tau
+                dataset['{:}_p_tau'.format(tds_name_key)][0] = p_tau
+
+        return dataset
+
+
+
+if __name__  == '__main__':
+    pass
