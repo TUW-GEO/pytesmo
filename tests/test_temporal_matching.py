@@ -158,8 +158,3 @@ def test_matching_series():
 
     nptest.assert_allclose(np.array([0, 1, 2, 4]), matched.matched_data)
     assert len(matched) == 4
-
-
-
-if __name__ == '__main__':
-    test_df_match_match_on_window_border()
