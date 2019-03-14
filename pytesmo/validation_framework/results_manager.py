@@ -9,6 +9,17 @@ import netCDF4
 from datetime import datetime
 
 
+def build_filename(key):
+    ''' Create a filename that does not exceed the max number of characters (144)?'''
+    ds_names = ['.'.join(ds) for ds in key]
+    fname = '_with_'.join(ds_names) + '.nc'
+    if len(fname) > 144:
+        ds_names = [str(ds[0]) for ds in key]
+        fname = '_with_'.join(ds_names) + '.nc'
+    if len(fname) > 144:
+        fname = 'validation.nc'
+    return fname
+
 def netcdf_results_manager(results, save_path):
     """
     Function for writing the results of the validation process as NetCDF file.
@@ -22,9 +33,7 @@ def netcdf_results_manager(results, save_path):
         Path where the file/files will be saved.
     """
     for key in results.keys():
-        ds_names = ['.'.join(ds) for ds in key]
-        fname = '_with_'.join(ds_names) + '.nc'
-
+        fname = build_filename(key)
         filename = os.path.join(save_path, fname)
         if not os.path.exists(filename):
             ncfile = netCDF4.Dataset(filename, 'w')
