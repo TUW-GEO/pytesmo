@@ -242,7 +242,7 @@ class FTMetrics(object):
         return dataset
 
 
-def get_dataset_names(ref_key, datasets):
+def get_dataset_names(ref_key, datasets, n=3):
     """
     Get dataset names in correct order as used in the validation framework
         -) reference dataset = ref
@@ -268,7 +268,7 @@ def get_dataset_names(ref_key, datasets):
     ds_dict = {}
     for ds in datasets.keys():
         ds_dict[ds] = datasets[ds]['columns']
-    ds_names = get_result_names(ds_dict, ref_key, n=3)
+    ds_names = get_result_names(ds_dict, ref_key, n)
     dataset_names = []
     for name in ds_names[0]:
         dataset_names.append(name[0])
@@ -479,7 +479,7 @@ class HSAF_Metrics(object):
             pearson_p = pearson_p._asdict()
 
             # calculate Spearman correlation
-            spea_rho, spea_p = df_metrics.pearsonr(data)
+            spea_rho, spea_p = df_metrics.spearmanr(data)
             spea_rho = spea_rho._asdict()
             spea_p = spea_p._asdict()
 
@@ -520,7 +520,7 @@ class HSAF_Metrics(object):
         return dataset
 
 
-class QA4SM_Intercomparison_Metrics(BasicMetrics):
+class IntercomparisonMetrics(BasicMetrics):
     """
     Compare Basic Metrics of multiple satellite data sets to one reference data set.
 
@@ -547,8 +547,8 @@ class QA4SM_Intercomparison_Metrics(BasicMetrics):
     def __init__(self, other_names=['k1', 'k2', 'k3'],
                  calc_tau=False, dataset_names=None):
 
-        super(QA4SM_Intercomparison_Metrics, self).__init__(other_name=other_names,
-                                                            calc_tau=calc_tau)
+        super(IntercomparisonMetrics, self).__init__(other_name=other_names,
+                                                     calc_tau=calc_tau)
 
         self.df_columns = ['ref'] + self.other_name
 
@@ -644,7 +644,7 @@ class QA4SM_Intercomparison_Metrics(BasicMetrics):
         pearson_p = pearson_p._asdict()
 
         # calculate Spearman correlation
-        spea_rho, spea_p = df_metrics.pearsonr(data)
+        spea_rho, spea_p = df_metrics.spearmanr(data)
         spea_rho = spea_rho._asdict()
         spea_p = spea_p._asdict()
 
@@ -870,7 +870,7 @@ class QA4SM_TC_Intercomparison_Metrics(object):
         pearson_p = pearson_p._asdict()
 
         # calculate Spearman correlation
-        spea_rho, spea_p = df_metrics.pearsonr(data)
+        spea_rho, spea_p = df_metrics.spearmanr(data)
         spea_rho = spea_rho._asdict()
         spea_p = spea_p._asdict()
 
