@@ -957,8 +957,3 @@ class QA4SM_TC_Intercomparison_Metrics(object):
                 dataset['{:}_p_tau'.format(tds_name_key)][0] = p_tau
 
         return dataset
-
-
-
-if __name__  == '__main__':
-    pass
