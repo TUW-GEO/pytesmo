@@ -242,40 +242,6 @@ class FTMetrics(object):
         return dataset
 
 
-def get_dataset_names(ref_key, datasets, n=3):
-    """
-    Get dataset names in correct order as used in the validation framework
-        -) reference dataset = ref
-        -) first other dataset = k1
-        -) second other dataset = k2
-    This is important to correctly iterate through the H-SAF metrics and to
-    save each metric with the name of the used datasets
-
-    Parameters
-    ----------
-    ref_key: basestring
-        Name of the reference dataset
-    datasets: dict
-        Dictionary of dictionaries as provided to the validation framework
-        in order to perform the validation process.
-
-    Returns
-    -------
-    dataset_names: list
-        List of the dataset names in correct order
-
-    """
-    ds_dict = {}
-    for ds in datasets.keys():
-        ds_dict[ds] = datasets[ds]['columns']
-    ds_names = get_result_names(ds_dict, ref_key, n)
-    dataset_names = []
-    for name in ds_names[0]:
-        dataset_names.append(name[0])
-
-    return dataset_names
-
-
 class BasicSeasonalMetrics(object):
     """
     This class just computes basic metrics on a seasonal basis. It also stores information about
@@ -523,26 +489,27 @@ class HSAF_Metrics(object):
 class IntercomparisonMetrics(BasicMetrics):
     """
     Compare Basic Metrics of multiple satellite data sets to one reference data set.
-
-
-    Pearson's R
-    Spearman's rho
+    Pearson's R and p
+    Spearman's rho and p
     optionally Kendall's tau
     RMSD
     BIAS
-
-    it also stores information about gpi, lat, lon
-    and number of observations
+    ubRMSD
+    mse
 
     Parameters
     ----------
-    other_name: iterable, optional (default: ['k1', 'k2'])
-        Name of the column of the non-reference / other dataset in the
+    other_names: iterable, optional (default: ['k1', 'k2', 'k3])
+        Name of the column of the non-reference / other datasets in the
         pandas DataFrame
     calc_tau: boolean, optional
         if True then also tau is calculated. This is set to False by default
         since the calculation of Kendalls tau is rather slow and can significantly
         impact performance of e.g. global validation studies
+    dataset_names : list
+        Names of the original datasets, that are used to find the lookup table
+        for the df cols.
+
     """
     def __init__(self, other_names=['k1', 'k2', 'k3'],
                  calc_tau=False, dataset_names=None):
@@ -564,7 +531,7 @@ class IntercomparisonMetrics(BasicMetrics):
 
         self.tds_names = []
         for combi in itertools.combinations(self.df_columns, 2):
-            if combi[0] != 'ref': continue # todo: only between ref and sat data cols?
+            if combi[0] != 'ref': continue # does not validate between non-reference data sets.
             self.tds_names.append("{:}_and_{:}".format(*combi))
 
         metrics_common = {'n_obs': np.int32([0])}
@@ -599,7 +566,7 @@ class IntercomparisonMetrics(BasicMetrics):
                                             self.ds_names_lut[
                                                 split_tds_name[1]])
             for metric in metrics_tds.keys():
-                key = "{:}_{:}".format(tds_name_key, metric)
+                key = "{:}_between_{:}".format(metric, tds_name_key)
                 self.result_template[key] = metrics_tds[metric].copy()
 
     def calc_metrics(self, data, gpi_info):
@@ -671,8 +638,8 @@ class IntercomparisonMetrics(BasicMetrics):
         else:
             tau = p_tau = p_tau_dict = tau_dict = None
 
+        # No extra scaling is performed here.
         # always scale for ubRMSD with mean std
-        # todo: should the data be scaled before calculating the ubRMSD?
         #data_scaled = scale(data, method='mean_std')
         # calculate ubRMSD
         ubRMSD_nT = df_metrics.ubrmsd(data)
@@ -696,35 +663,35 @@ class IntercomparisonMetrics(BasicMetrics):
 
 
             split_tds_name = tds_name.split('_and_')
-            tds_name_key = "{:}_{:}".format(self.ds_names_lut[
-                split_tds_name[0]],
-                self.ds_names_lut[
-                split_tds_name[1]])
+            tds_name_key = "{:}_{:}".format(self.ds_names_lut[split_tds_name[0]],
+                                            self.ds_names_lut[split_tds_name[1]])
 
-            dataset['{:}_R'.format(tds_name_key)][0] = R
-            dataset['{:}_p_R'.format(tds_name_key)][0] = p_R
-            dataset['{:}_rho'.format(tds_name_key)][0] = rho
-            dataset['{:}_p_rho'.format(tds_name_key)][0] = p_rho
-            dataset['{:}_bias'.format(tds_name_key)][0] = bias
-            dataset['{:}_mse'.format(tds_name_key)][0] = mse
-            dataset['{:}_mse_corr'.format(tds_name_key)][0] = mse_corr
-            dataset['{:}_mse_bias'.format(tds_name_key)][0] = mse_bias
-            dataset['{:}_mse_var'.format(tds_name_key)][0] = mse_var
-            dataset['{:}_rmsd'.format(tds_name_key)][0] = rmsd
-            dataset['{:}_ubRMSD'.format(tds_name_key)][0] = ubRMSD
+            dataset['R_between_{:}'.format(tds_name_key)][0] = R
+            dataset['p_R_between_{:}'.format(tds_name_key)][0] = p_R
+            dataset['rho_between_{:}'.format(tds_name_key)][0] = rho
+            dataset['p_rho_between_{:}'.format(tds_name_key)][0] = p_rho
+            dataset['bias_between_{:}'.format(tds_name_key)][0] = bias
+            dataset['mse_between_{:}'.format(tds_name_key)][0] = mse
+            dataset['mse_corr_between_{:}'.format(tds_name_key)][0] = mse_corr
+            dataset['mse_bias_between_{:}'.format(tds_name_key)][0] = mse_bias
+            dataset['mse_var_between_{:}'.format(tds_name_key)][0] = mse_var
+            dataset['rmsd_between_{:}'.format(tds_name_key)][0] = rmsd
+            dataset['ubRMSD_between_{:}'.format(tds_name_key)][0] = ubRMSD
 
             if self.calc_tau:
-                dataset['{:}_tau'.format(tds_name_key)][0] = tau
-                dataset['{:}_p_tau'.format(tds_name_key)][0] = p_tau
+                dataset['tau_between_{:}'.format(tds_name_key)][0] = tau
+                dataset['p_tau_between_{:}'.format(tds_name_key)][0] = p_tau
 
         return dataset
 
 
 
-class QA4SM_TC_Intercomparison_Metrics(object):
+class TCMetrics(object):
     """
     This class computes triple collocation metrics as defined in the QA4SM
-    project. It uses 2 satellite and 1 reference data sets as inputs.
+    project. It uses 2 satellite and 1 reference data sets as inputs only.
+    It can be extended to perform intercomparison between possible triples
+    of more than 3 datasets.
     """
 
     def __init__(self, other_name1='k1', other_name2='k2',
@@ -824,7 +791,7 @@ class QA4SM_TC_Intercomparison_Metrics(object):
                                             self.ds_names_lut[
                                                 split_tds_name[1]])
             for metric in metrics_tds.keys():
-                key = "{:}_{:}".format(tds_name_key, metric)
+                key = "{:}_between_{:}".format(metric, tds_name_key)
                 self.result_template[key] = metrics_tds[metric].copy()
 
 
@@ -837,7 +804,7 @@ class QA4SM_TC_Intercomparison_Metrics(object):
         data : pandas.DataFrame
             with >2 columns, the first column is the reference dataset
             named 'ref'
-            other columns are the datasets to compare against named 'other_i'
+            other columns are the data sets to compare against named 'other_i'
         gpi_info : tuple
             of (gpi, lon, lat)
 
@@ -897,7 +864,6 @@ class QA4SM_TC_Intercomparison_Metrics(object):
         else:
             tau = p_tau = p_tau_dict = tau_dict = None
 
-        # todo: should the data be scaled before calculating the ubRMSD?
         #data_scaled = scale(data, method='mean_std')
         # calculate ubRMSD
         ubRMSD_nT = df_metrics.ubrmsd(data)
@@ -940,20 +906,54 @@ class QA4SM_TC_Intercomparison_Metrics(object):
                 self.ds_names_lut[
                 split_tds_name[1]])
 
-            dataset['{:}_R'.format(tds_name_key)][0] = R
-            dataset['{:}_p_R'.format(tds_name_key)][0] = p_R
-            dataset['{:}_rho'.format(tds_name_key)][0] = rho
-            dataset['{:}_p_rho'.format(tds_name_key)][0] = p_rho
-            dataset['{:}_bias'.format(tds_name_key)][0] = bias
-            dataset['{:}_mse'.format(tds_name_key)][0] = mse
-            dataset['{:}_mse_corr'.format(tds_name_key)][0] = mse_corr
-            dataset['{:}_mse_bias'.format(tds_name_key)][0] = mse_bias
-            dataset['{:}_mse_var'.format(tds_name_key)][0] = mse_var
-            dataset['{:}_rmsd'.format(tds_name_key)][0] = rmsd
-            dataset['{:}_ubRMSD'.format(tds_name_key)][0] = ubRMSD
+            dataset['R_between_{:}'.format(tds_name_key)][0] = R
+            dataset['p_R_between_{:}'.format(tds_name_key)][0] = p_R
+            dataset['rho_between_{:}'.format(tds_name_key)][0] = rho
+            dataset['p_rho_between_{:}'.format(tds_name_key)][0] = p_rho
+            dataset['bias_between_{:}'.format(tds_name_key)][0] = bias
+            dataset['mse_between_{:}'.format(tds_name_key)][0] = mse
+            dataset['mse_corr_between_{:}'.format(tds_name_key)][0] = mse_corr
+            dataset['mse_bias_between_{:}'.format(tds_name_key)][0] = mse_bias
+            dataset['mse_var_between_{:}'.format(tds_name_key)][0] = mse_var
+            dataset['rmsd_between_{:}'.format(tds_name_key)][0] = rmsd
+            dataset['ubRMSD_between_{:}'.format(tds_name_key)][0] = ubRMSD
 
             if self.calc_tau:
-                dataset['{:}_tau'.format(tds_name_key)][0] = tau
-                dataset['{:}_p_tau'.format(tds_name_key)][0] = p_tau
+                dataset['tau_between_{:}'.format(tds_name_key)][0] = tau
+                dataset['p_tau_between_{:}'.format(tds_name_key)][0] = p_tau
 
         return dataset
+
+
+def get_dataset_names(ref_key, datasets, n=3):
+    """
+    Get dataset names in correct order as used in the validation framework
+        -) reference dataset = ref
+        -) first other dataset = k1
+        -) second other dataset = k2
+    This is important to correctly iterate through the H-SAF metrics and to
+    save each metric with the name of the used datasets
+
+    Parameters
+    ----------
+    ref_key: basestring
+        Name of the reference dataset
+    datasets: dict
+        Dictionary of dictionaries as provided to the validation framework
+        in order to perform the validation process.
+
+    Returns
+    -------
+    dataset_names: list
+        List of the dataset names in correct order
+
+    """
+    ds_dict = {}
+    for ds in datasets.keys():
+        ds_dict[ds] = datasets[ds]['columns']
+    ds_names = get_result_names(ds_dict, ref_key, n)
+    dataset_names = []
+    for name in ds_names[0]:
+        dataset_names.append(name[0])
+
+    return dataset_names
