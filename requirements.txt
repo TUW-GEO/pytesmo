@@ -6,3 +6,6 @@ netCDF4>=1.0.1
 pygeogrids
 pygeobase>=0.3.15
 pynetcf>=0.1.17
+ascat>=1.0
+ismn>=0.3
+configparser
