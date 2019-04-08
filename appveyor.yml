@@ -65,7 +65,6 @@ install:
   - "conda config --add channels https://conda.anaconda.org/ioos"
   - "conda create -q --yes -n test -c conda-forge python=%PYTHON_VERSION% numpy scipy pandas netCDF4 cython pytest pip matplotlib pyproj cartopy"
   - "activate test"
-  - "pip install --upgrade pip"
   - "pip install pygeogrids"
   - "pip install pygeobase"
   - "pip install pyresample==1.1.6"
