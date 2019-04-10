@@ -34,7 +34,8 @@ from pytesmo.validation_framework.adapters import MaskingAdapter
 from pytesmo.validation_framework.adapters import SelfMaskingAdapter
 from pytesmo.validation_framework.adapters import AnomalyAdapter
 from pytesmo.validation_framework.adapters import AnomalyClimAdapter
-from test_datasets import TestDataset
+
+from tests.test_validation_framwork.test_datasets import TestDataset
 
 import numpy as np
 import numpy.testing as nptest

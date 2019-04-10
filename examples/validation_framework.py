@@ -80,8 +80,8 @@ import pytesmo.validation_framework.metric_calculators as metrics_calculators
 
 from datetime import datetime
 
-from ascat.timeseries import AscatSsmCdr
-from pytesmo.io.ismn.interface import ISMN_Interface
+from ascat.read_native.cdr import AscatSsmCdr
+from ismn.interface import ISMN_Interface
 from pytesmo.validation_framework.validation import Validation
 from pytesmo.validation_framework.results_manager import netcdf_results_manager
 

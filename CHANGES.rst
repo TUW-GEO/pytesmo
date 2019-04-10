@@ -1,6 +1,9 @@
 unreleased 
 ===================
 
+- Add more metrics calculators
+- Remove pytesmo.io.ismn module and move it to the ismn package
+- Update tests for ascat v1.0 package
 - Rename arguments for metrics functions to be more general
 - Split linreg scaling function to determine and apply corrections separately
 

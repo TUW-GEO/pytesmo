@@ -88,24 +88,16 @@ To read the ERS please also install the `ascat package
 Data from the International Soil Moisture Network (ISMN)
 --------------------------------------------------------
 
-ISMN data can be downloaded for free after registration from the `ISMN Website
-<http://ismn.geo.tuwien.ac.at/>`_
+In-situ data from the `International Soil Moisure Network
+<http://ismn.geo.tuwien.ac.at/>`_ can be used via the `ismn package
+<https://github.com/TUW-GEO/ismn>`_.
 
 In case of the ISMN, two different formats are provided:
-
+An example of how to use the dataset in the pytesmo validation framework can be
+found in the :ref:`examples-page`.
 * Variables stored in separate files (CEOP formatted)
 
-	this format is supported 100% and should work with all examples
 
-* Variables stored in separate files (Header+values)
-
-	this format is supported 100% and should work with all examples
-
-If you downloaded ISMN data in one of the supported formats in the past it can
-be that station names are not recognized correctly because they contained the
-'_' character which is supposed to be the separator. If you experience problems
-because of this please download new data from the ISMN since this issue should
-be fixed.
 
 
 Installation
