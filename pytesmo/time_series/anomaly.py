@@ -93,7 +93,8 @@ def calc_climatology(Ser,
                      timespan=None,
                      fill=np.nan,
                      wraparound=False,
-                     respect_leap_years=False):
+                     respect_leap_years=False,
+                     interpolate_leapday=False):
     '''
     Calculates the climatology of a data set.
 
@@ -151,10 +152,15 @@ def calc_climatology(Ser,
     else:
         year, month, day = julian2date(Ser.index.values)[0:3]
 
+
+
+
     if respect_leap_years:
         doys = doy(month, day, year)
+        doy_leap = 366
     else:
         doys = doy(month, day)
+        doy_leap = 60
 
     Ser['doy'] = doys
 
@@ -165,6 +171,11 @@ def calc_climatology(Ser,
 
     clim_ser = pd.Series(clim.values.flatten(),
                          index=clim.index.values)
+
+    if interpolate_leapday and not respect_leap_years:
+        clim_ser[doy_leap] = np.mean((clim_ser[59], clim_ser[61]))
+    elif interpolate_leapday and respect_leap_years:
+        clim_ser[doy_leap] = np.mean((clim_ser[365], clim_ser[1]))
 
     if wraparound:
         index_old = clim_ser.index.copy()
