@@ -38,7 +38,9 @@ from pytesmo.time_series.filters import boxcar_filter
 
 
 def moving_average(Ser,
-                   window_size=1):
+                   window_size=1,
+                   fillna=False,
+                   min_obs=1):
     '''
     Applies a moving average (box) filter on an input time series
 
@@ -50,6 +52,10 @@ def moving_average(Ser,
         The size of the moving_average window [days] that will be applied on the
         input Series
         Default: 1
+    fillna: bool, optional
+        Fill nan values at the center window value
+    min_obs: int
+        The minimum amount of observations necessary for a valid moving average
 
     Returns
     -------
@@ -72,7 +78,7 @@ def moving_average(Ser,
     filtered = boxcar_filter(
         np.atleast_1d(np.squeeze(Ser.values.astype(np.double))),
         jd_index.astype(np.double),
-        window=window_size)
+        window=window_size, fillna=fillna, min_obs=min_obs)
 
     result = pd.Series(filtered, index=Ser.index)
 
