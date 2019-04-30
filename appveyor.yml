@@ -6,20 +6,10 @@ environment:
     CMD_IN_ENV: "cmd /E:ON /V:ON /C .\\appveyor\\run_with_compiler.cmd"
 
   matrix:
-    - PYTHON: "C:\\Python27_32"
-      PYTHON_VERSION: "2.7.8"
-      PYTHON_ARCH: "32"
-      MINICONDA_VERSION: "2"
-
     - PYTHON: "C:\\Python27_64"
       PYTHON_VERSION: "2.7.8"
       PYTHON_ARCH: "64"
       MINICONDA_VERSION: "2"
-
-    - PYTHON: "C:\\Python36_32"
-      PYTHON_VERSION: "3.6"
-      PYTHON_ARCH: "32"
-      MINICONDA_VERSION: "3"
 
     - PYTHON: "C:\\Python36_64"
       PYTHON_VERSION: "3.6"
