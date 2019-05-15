@@ -1,4 +1,4 @@
-unreleased 
+v0.6.11, 2019-05-15 
 ===================
 
 - Add more metrics calculators
@@ -6,6 +6,7 @@ unreleased
 - Update tests for ascat v1.0 package
 - Rename arguments for metrics functions to be more general
 - Split linreg scaling function to determine and apply corrections separately
+- Compatible with Python 3.7 on Windows
 
 v0.6.10, 2018-04-09
 ===================
