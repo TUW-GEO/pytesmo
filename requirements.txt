@@ -10,3 +10,4 @@ ascat>=1.0
 ismn>=0.3
 configparser
 pykdtree
+xarray
