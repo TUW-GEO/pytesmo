@@ -120,7 +120,8 @@ def exp_filter(np.ndarray[DTYPE_d, ndim=1] in_data,
 @cython.cdivision(True)
 def boxcar_filter(np.ndarray[DTYPE_d, ndim=1] in_data,
                   np.ndarray[DTYPE_d, ndim=1] in_jd,
-                  float window=1, double nan=-999999.0):
+                  float window=1, double nan=-999999.0,
+                  bint fillna=0, int min_obs=1):
     """
     Calculates filtered time series using
     a boxcar filter - basically a moving average calculation
@@ -150,7 +151,7 @@ def boxcar_filter(np.ndarray[DTYPE_d, ndim=1] in_data,
 
     for i in range(in_jd.shape[0]):
         isnan = (in_data[i] == nan) or npy_isnan(in_data[i])
-        if not isnan:
+        if (not isnan) or fillna:
             sum = 0
             nobs = 0
             for j in range(i, in_jd.shape[0]):
@@ -174,6 +175,7 @@ def boxcar_filter(np.ndarray[DTYPE_d, ndim=1] in_data,
                         else:
                             break
 
-            filtered[i] = sum / nobs
+            if nobs >= min_obs:
+                filtered[i] = sum / nobs
 
     return filtered

@@ -34,7 +34,7 @@ Created on Aug 8, 2013
 @author: Christoph Paulik Christoph.Paulik@geo.tuwien.ac.at
 '''
 
-import pytesmo.io.ismn.interface as ismn
+import ismn.interface as ismn
 import matplotlib.pyplot as plt
 import random
 

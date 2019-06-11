@@ -33,7 +33,7 @@ Created on Nov 7, 2013
 '''
 import os
 import unittest
-from pytesmo.io.sat import ers
+from pytesmo.inout.sat import ers
 
 from datetime import datetime
 import numpy as np

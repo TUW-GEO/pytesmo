@@ -79,3 +79,37 @@ def test_moving_average_size_1():
     filtered = filtering.moving_average(ser, window_size=5)
 
     np.testing.assert_allclose(filtered.values, [1.])
+
+
+def test_moving_average_fillna():
+    """
+    Test moving average filter with datetimeindex.
+    """
+    test_jd = pd.date_range(start='2000-01-01', periods=12, freq='D')
+    test_data = np.array(
+        [1, 2, 3, 4, np.nan, np.nan, 8, 9, 10, np.nan, np.nan, np.nan], dtype=np.double)
+
+    ser = pd.Series(test_data, index=test_jd)
+
+    filtered = filtering.moving_average(ser, window_size=5, fillna=True)
+
+    np.testing.assert_allclose(filtered.values, [2., 2.5, 2.5, 3.0, 5.0, 7.0, 9.0, 9.0, 9.0, 9.5, 10, np.nan])
+
+
+def test_moving_average_min_observations():
+    """
+    Test moving average filter with datetimeindex.
+    """
+    test_jd = pd.date_range(start='2000-01-01', periods=12, freq='D')
+    test_data = np.array(
+        [1, 2, 3, 4, np.nan, np.nan, 8, 9, 10, np.nan, np.nan, np.nan], dtype=np.double)
+
+    ser = pd.Series(test_data, index=test_jd)
+
+    filtered = filtering.moving_average(ser, window_size=5, fillna=True, min_obs=3)
+
+    np.testing.assert_allclose(filtered.values, [2., 2.5, 2.5, 3.0, 5.0, 7.0, 9.0, 9.0, 9.0, np.nan, np.nan, np.nan])
+
+    filtered = filtering.moving_average(ser, window_size=5, fillna=True, min_obs=4)
+
+    np.testing.assert_allclose(filtered.values, [np.nan, 2.5, 2.5, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan])

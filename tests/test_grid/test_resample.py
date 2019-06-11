@@ -58,6 +58,9 @@ class Test_resample_H07(unittest.TestCase):
     def test_resample_to_zero_dot_one_deg(self):
         data, meta, timestamp, lons, lats, time_var = self.reader.read(
             datetime.datetime(2010, 5, 1, 8, 33, 1))
+
+        data.pop('line_num')  # todo: exclude?
+
         # lets resample to a 0.1 degree grid
         # define the grid points in latitude and longitude
         lats_dim = np.arange(25, 75, 0.1)
@@ -139,4 +142,7 @@ def test_resample_hamming():
 
 if __name__ == "__main__":
     # import sys;sys.argv = ['', 'Test.testName']
-    unittest.main()
+    #unittest.main()
+    ds = Test_resample_H07()
+    ds.setUp()
+    ds.test_resample_to_zero_dot_one_deg()

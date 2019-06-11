@@ -8,6 +8,7 @@
 *.log
 *.pot
 __pycache__/*
+.pytest_cache/*
 .cache/*
 .*.swp
 .*goutput*
@@ -44,3 +45,8 @@ docs/.ipynb_checkpoints/*
 docs/**/Thumbs.db
 cover/*
 MANIFEST
+
+# ignore ISMN metadata files as they are different on win/linux
+*/python_metadata/*
+# ignore local working scripts
+local_scripts/*
