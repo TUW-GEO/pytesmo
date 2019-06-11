@@ -608,6 +608,7 @@ class IntercomparisonMetrics(BasicMetrics):
 
         dataset['n_obs'][0] = n_obs
 
+
         # calculate Pearson correlation
         pearson_R, pearson_p = df_metrics.pearsonr(data)
         pearson_R = pearson_R._asdict()
