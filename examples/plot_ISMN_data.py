@@ -34,7 +34,7 @@ Created on Aug 8, 2013
 @author: Christoph Paulik Christoph.Paulik@geo.tuwien.ac.at
 '''
 
-import pytesmo.io.ismn.interface as ismn
+import ismn.interface as ismn
 import matplotlib.pyplot as plt
 import random
 
@@ -42,7 +42,7 @@ import random
 # on windows the first string has to be your drive letter
 # like 'C:\\'
 #path_to_ismn_data = os.path.join('path', 'to', 'ISMN_data',
-                                 #'from', 'ISMN website')
+#                                 'from', 'ISMN website')
 
 path_to_ismn_data = '/pytesmo/testdata/ismn/format_ceop_sep/SMOSMANIA'
 
@@ -56,20 +56,20 @@ plt.show()
 
 # select random network and station to plot
 networks = ISMN_reader.list_networks()
-print "Available Networks:"
-print networks
+print("Available Networks:")
+print(networks)
 
 network = random.choice(networks)
 stations = ISMN_reader.list_stations(network=network)
-print "Available Stations in Network %s" % network
-print stations
+print("Available Stations in Network %s" % network)
+print(stations)
 
 station = random.choice(stations)
 station_obj = ISMN_reader.get_station(station)
-print "Available Variables at Station %s" % station
+print("Available Variables at Station %s" % station)
 # get the variables that this station measures
 variables = station_obj.get_variables()
-print variables
+print(variables)
 
 # to make sure the selected variable is not measured
 # by different sensors at the same depths
@@ -83,15 +83,15 @@ sensors = station_obj.get_sensors(variables[0], depths_from[0], depths_to[0])
 time_series = station_obj.read_variable(variables[0], depth_from=depths_from[
                                         0], depth_to=depths_to[0], sensor=sensors[0])
 
-# print information about the selected time series
-print "Selected time series is:"
-print time_series
+# print(information about the selected time series)
+print("Selected time series is:")
+print(time_series)
 
 # plot the data
 time_series.plot()
 plt.legend()
 plt.show()
 
-print "the first 40 valid lines of data: "
+print("the first 40 valid lines of data: ")
 # see pandas documentation for more information
-print time_series.data.dropna().head(40)
+print(time_series.data.dropna().head(40))

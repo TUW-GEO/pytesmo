@@ -64,10 +64,10 @@ plt.show()
 
 # the ASCATTimeSeries object also contains metadata
 
-print "Topographic complexity", ascat_ts.topo_complex
-print "Wetland fraction", ascat_ts.wetland_frac
-print "Porosity from GLDAS model", ascat_ts.porosity_gldas
-print "Porosity from Harmonized World Soil Database", ascat_ts.porosity_hwsd
+print("Topographic complexity", ascat_ts.topo_complex)
+print("Wetland fraction", ascat_ts.wetland_frac)
+print("Porosity from GLDAS model", ascat_ts.porosity_gldas)
+print("Porosity from Harmonized World Soil Database", ascat_ts.porosity_hwsd)
 
 # It is also possible to automatically convert the soil moisture to absolute values using
 
@@ -75,7 +75,7 @@ ascat_ts_absolute = ascat_SSM_reader.read_ssm(gpi, absolute_values=True)
 # this introduces 4 new columns in the returned data
 # scaled sm and sm_noise with porosity_gldas
 # scaled sm and sm_noise with porosity_hwsd
-#print ascat_ts_absolute.data
+#print(ascat_ts_absolute.data)
 
 # select relevant columns and plot
 # ascat_ts_absolute.data = ascat_ts_absolute.data[['sm_por_gldas', 'sm_por_hwsd']]

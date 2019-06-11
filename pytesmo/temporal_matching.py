@@ -3,7 +3,7 @@ Provides a temporal matching function
 """
 
 import numpy as np
-from scipy.spatial import cKDTree
+from pykdtree.kdtree import KDTree
 
 import pandas as pd
 
@@ -60,11 +60,11 @@ def df_match(reference, *args, **kwds):
         values = np.arange(comp_step.size)
         # setup kdtree which must get 2D input
         try:
-            tree = cKDTree(np.atleast_2d(comp_step).T, balanced_tree=False)
+            tree = KDTree(np.atleast_2d(comp_step).T, balanced_tree=False)
         except TypeError:
             # scipy before version 0.16 does not have the balanced_tree kw
             # but is fast in this case also without it
-            tree = cKDTree(np.atleast_2d(comp_step).T)
+            tree = KDTree(np.atleast_2d(comp_step).T)
 
         dist, i = tree.query(np.atleast_2d(ref_step).T)
         matched = values[i]

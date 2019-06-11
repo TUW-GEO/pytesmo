@@ -109,3 +109,17 @@ def test_climatology_closed():
     assert clim.size == 366
     # test that the arange was closed during the second moving average
     assert clim.iloc[365] - 187.90 < 0.01
+
+
+def test_climatology_interpolate_leapday():
+    ts = pd.Series(np.arange(365), index=pd.date_range(
+        '2001-01-01', freq='D', periods=365))
+    # remove a part of the time series
+    clim = anomaly.calc_climatology(ts, wraparound=True, respect_leap_years=False, fill=-1)
+    assert clim[60] == -1
+    clim = anomaly.calc_climatology(ts, wraparound=True, respect_leap_years=True, fill=-1)
+    assert clim[366] == -1
+    clim = anomaly.calc_climatology(ts, wraparound=True, respect_leap_years=False, fill=-1, interpolate_leapday=True)
+    assert clim[60] == np.mean((clim[59], clim[61]))
+    clim = anomaly.calc_climatology(ts, wraparound=True, respect_leap_years=True, fill=-1, interpolate_leapday=True)
+    assert clim[366] == np.mean((clim[365], clim[1]))

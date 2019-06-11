@@ -37,7 +37,7 @@ Created on Aug 8, 2013
 @author: Christoph Paulik Christoph.Paulik@geo.tuwien.ac.at
 '''
 
-import pytesmo.io.ismn.interface as ismn
+import ismn.interface as ismn
 import ascat
 import pytesmo.temporal_matching as temp_match
 import pytesmo.scaling as scaling
@@ -133,21 +133,21 @@ for station in ISMN_reader.stations_that_measure('soil moisture'):
         # calculate correlation coefficients, RMSD, bias, Nash Sutcliffe
         x, y = scaled_data[label_ascat].values, scaled_data[label_insitu].values
         
-        print "ISMN time series:", ISMN_time_series
-        print "compared to"
-        print ascat_time_series
-        print "Results:"
+        print("ISMN time series:", ISMN_time_series)
+        print("compared to")
+        print(ascat_time_series)
+        print("Results:")
         
         # df_metrics takes a DataFrame as input and automatically
         # calculates the metric on all combinations of columns
         # returns a named tuple for easy printing
-        print df_metrics.pearsonr(scaled_data)
-        print "Spearman's (rho,p_value)", metrics.spearmanr(x, y)
-        print "Kendalls's (tau,p_value)", metrics.kendalltau(x, y)
-        print df_metrics.kendalltau(scaled_data)
-        print df_metrics.rmsd(scaled_data)
-        print "Bias", metrics.bias(x, y)
-        print "Nash Sutcliffe", metrics.nash_sutcliffe(x, y)
+        print(df_metrics.pearsonr(scaled_data))
+        print("Spearman's (rho,p_value)", metrics.spearmanr(x, y))
+        print("Kendalls's (tau,p_value)", metrics.kendalltau(x, y))
+        print(df_metrics.kendalltau(scaled_data))
+        print(df_metrics.rmsd(scaled_data))
+        print("Bias", metrics.bias(x, y))
+        print("Nash Sutcliffe", metrics.nash_sutcliffe(x, y))
         
         
     i += 1

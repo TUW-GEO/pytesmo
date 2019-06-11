@@ -32,64 +32,66 @@ import numpy as np
 import scipy.stats as sc_stats
 from itertools import permutations,combinations
 
-def bias(o, p):
+def bias(x, y):
     """
     Difference of the mean values.
+    Sign of output depends on argument order.
+    We calculate mean(x) - mean(y).
 
     Parameters
     ----------
-    o : numpy.ndarray
-        Observations.
-    p : numpy.ndarray
-        Predictions.
+    x : numpy.ndarray
+        First input vector.
+    y : numpy.ndarray
+        Second input vector.
 
     Returns
     -------
     bias : float
-        Bias between observations and predictions.
+        Bias between x and y.
     """
-    return np.mean(o) - np.mean(p)
+    return np.mean(x) - np.mean(y)
 
 
-def aad(o, p):
+def aad(x, y):
     """
     Average (=mean) absolute deviation (AAD).
 
     Parameters
     ----------
-    o : numpy.ndarray
-        Observations.
-    p : numpy.ndarray
-        Predicitions.
+    x : numpy.ndarray
+        First input vector.
+    y : numpy.ndarray
+        Second input vector.
 
     Returns
     -------
     d : float
         Mean absolute deviation.
     """
-    return np.mean(np.abs(o - p))
+    return np.mean(np.abs(x - y))
 
 
-def mad(o, p):
+def mad(x, y):
     """
     Median absolute deviation (MAD).
 
     Parameters
     ----------
-    o : numpy.ndarray
-        Observations.
-    p : numpy.ndarray
-        Predicitions.
+    x : numpy.ndarray
+        First input vector.
+    y : numpy.ndarray
+        Second input vector.
 
     Returns
     -------
     d : float
         Median absolute deviation.
     """
-    return np.median(np.abs(o - p))
+    return np.median(np.abs(x - y))
 
 
-def rmsd(o, p, ddof=0):
+def rmsd(x, y, ddof=0):
     """
     Root-mean-square deviation (RMSD). It is implemented for an unbiased
     estimator, which means the RMSD is the square root of the variance, also
@@ -101,10 +103,10 @@ def rmsd(o, p, ddof=0):
 
     Parameters
     ----------
-    o : numpy.ndarray
-        Observations.
-    p : numpy.ndarray
-        Predictions.
+    x : numpy.ndarray
+        First input vector.
+    y : numpy.ndarray
+        Second input vector.
     ddof : int, optional
         Delta degree of freedom.The divisor used in calculations is N - ddof,
         where N represents the number of elements. By default ddof is zero.
@@ -114,19 +116,19 @@ def rmsd(o, p, ddof=0):
     rmsd : float
         Root-mean-square deviation.
     """
-    return np.sqrt(RSS(o, p) / (len(o) - ddof))
+    return np.sqrt(RSS(x, y) / (len(x) - ddof))
 
 
-def nrmsd(o, p, ddof=0):
+def nrmsd(x, y, ddof=0):
     """
     Normalized root-mean-square deviation (nRMSD).
 
     Parameters
     ----------
-    o : numpy.ndarray
-        Observations.
-    p : numpy.ndarray
-        Predictions.
+    x : numpy.ndarray
+        First input vector.
+    y : numpy.ndarray
+        Second input vector.
     ddof : int, optional
         Delta degree of freedom.The divisor used in calculations is N - ddof,
         where N represents the number of elements. By default ddof is zero.
@@ -136,19 +138,19 @@ def nrmsd(o, p, ddof=0):
     nrmsd : float
         Normalized root-mean-square deviation (nRMSD).
     """
-    return rmsd(o, p, ddof) / (np.max([o, p]) - np.min([o, p]))
+    return rmsd(x, y, ddof) / (np.max([x, y]) - np.min([x, y]))
 
 
-def ubrmsd(o, p, ddof=0):
+def ubrmsd(x, y, ddof=0):
     """
     Unbiased root-mean-square deviation (uRMSD).
 
     Parameters
     ----------
-    o : numpy.ndarray
-        Observations.
-    p : numpy.ndarray
-        Predictions.
+    x : numpy.ndarray
+        First input vector.
+    y : numpy.ndarray
+        Second input vector.
     ddof : int, optional
         Delta degree of freedom.The divisor used in calculations is N - ddof,
         where N represents the number of elements. By default ddof is zero.
@@ -158,11 +160,11 @@ def ubrmsd(o, p, ddof=0):
     urmsd : float
         Unbiased root-mean-square deviation (uRMSD).
     """
-    return np.sqrt(np.sum(((o - np.mean(o)) -
-                           (p - np.mean(p))) ** 2) / (len(o) - ddof))
+    return np.sqrt(np.sum(((x - np.mean(x)) -
+                           (y - np.mean(y))) ** 2) / (len(x) - ddof))
 
 
-def mse(o, p, ddof=0):
+def mse(x, y, ddof=0):
     """
     Mean square error (MSE) as a decomposition of the RMSD into individual
     error components. The MSE is the second moment (about the origin) of the
@@ -178,10 +180,10 @@ def mse(o, p, ddof=0):
 
     Parameters
     ----------
-    o : numpy.ndarray
-        Observations.
-    p : numpy.ndarray
-        Predictions.
+    x : numpy.ndarray
+        First input vector.
+    y : numpy.ndarray
+        Second input vector.
     ddof : int, optional
         Delta degree of freedom.The divisor used in calculations is N - ddof,
         where N represents the number of elements. By default ddof is zero.
@@ -197,10 +199,10 @@ def mse(o, p, ddof=0):
     mse_var : float
         Variance component of the MSE.
     """
-    mse_corr = 2 * np.std(o, ddof=ddof) * \
-        np.std(p, ddof=ddof) * (1 - pearsonr(o, p)[0])
-    mse_bias = bias(o, p) ** 2
-    mse_var = (np.std(o, ddof=ddof) - np.std(p, ddof=ddof)) ** 2
+    mse_corr = 2 * np.std(x, ddof=ddof) * \
+        np.std(y, ddof=ddof) * (1 - pearsonr(x, y)[0])
+    mse_bias = bias(x, y) ** 2
+    mse_var = (np.std(x, ddof=ddof) - np.std(y, ddof=ddof)) ** 2
     mse = mse_corr + mse_bias + mse_var
 
     return mse, mse_corr, mse_bias, mse_var
@@ -720,17 +722,17 @@ def RSS(o, p):
     return np.sum((o - p) ** 2)
 
 
-def pearsonr(o, p):
+def pearsonr(x, y):
     """
     Wrapper for scipy.stats.pearsonr. Calculates a Pearson correlation
     coefficient and the p-value for testing non-correlation.
 
     Parameters
     ----------
-    o : numpy.ndarray
-        Observations.
-    p : numpy.ndarray
-        Predictions.
+    x : numpy.ndarray
+        First input vector.
+    y : numpy.ndarray
+        Second input vector.
 
     Returns
     -------
@@ -743,7 +745,7 @@ def pearsonr(o, p):
     --------
     scipy.stats.pearsonr
     """
-    return sc_stats.pearsonr(o, p)
+    return sc_stats.pearsonr(x, y)
 
 
 def pearsonr_recursive(x, y, n_old=0, sum_xi_yi=0,
@@ -839,7 +841,7 @@ def pearson_conf(r, n, c=95):
     return np.tanh(z_lower), np.tanh(z_upper)
 
 
-def spearmanr(o, p):
+def spearmanr(x, y):
     """
     Wrapper for scipy.stats.spearmanr. Calculates a Spearman
     rank-order correlation coefficient and the p-value to
@@ -847,10 +849,10 @@ def spearmanr(o, p):
 
     Parameters
     ----------
-    o : numpy.ndarray
-        Observations.
-    p : numpy.ndarray
-        Predictions.
+    x : numpy.ndarray
+        First input vector.
+    y : numpy.ndarray
+        Second input vector.
 
     Returns
     -------
@@ -864,19 +866,19 @@ def spearmanr(o, p):
     --------
     scipy.stats.spearmenr
     """
-    return sc_stats.spearmanr(o, p)
+    return sc_stats.spearmanr(x, y)
 
 
-def kendalltau(o, p):
+def kendalltau(x, y):
     """
     Wrapper for scipy.stats.kendalltau
 
     Parameters
     ----------
-    o : numpy.array
-        Observations.
-    p : numpy.array
-        Predictions.
+    x : numpy.ndarray
+        First input vector.
+    y : numpy.ndarray
+        Second input vector.
 
     Returns
     -------
@@ -890,7 +892,7 @@ def kendalltau(o, p):
     --------
     scipy.stats.kendalltau
     """
-    return sc_stats.kendalltau(o.tolist(), p.tolist())
+    return sc_stats.kendalltau(x.tolist(), y.tolist())
 
 
 def index_of_agreement(o, p):

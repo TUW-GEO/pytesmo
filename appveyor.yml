@@ -6,33 +6,23 @@ environment:
     CMD_IN_ENV: "cmd /E:ON /V:ON /C .\\appveyor\\run_with_compiler.cmd"
 
   matrix:
-    - PYTHON: "C:\\Python27_32"
-      PYTHON_VERSION: "2.7.8"
-      PYTHON_ARCH: "32"
-      MINICONDA_VERSION: "2"
-
     - PYTHON: "C:\\Python27_64"
       PYTHON_VERSION: "2.7.8"
       PYTHON_ARCH: "64"
       MINICONDA_VERSION: "2"
 
-    - PYTHON: "C:\\Python35_32"
-      PYTHON_VERSION: "3.5"
-      PYTHON_ARCH: "32"
-      MINICONDA_VERSION: "3"
-
-    - PYTHON: "C:\\Python35_64"
-      PYTHON_VERSION: "3.5"
+    - PYTHON: "C:\\Python36_64"
+      PYTHON_VERSION: "3.6"
       PYTHON_ARCH: "64"
       MINICONDA_VERSION: "3"
 
-    - PYTHON: "C:\\Python36_32"
-      PYTHON_VERSION: "3.6"
+    - PYTHON: "C:\\Python37_32"
+      PYTHON_VERSION: "3.7"
       PYTHON_ARCH: "32"
       MINICONDA_VERSION: "3"
 
-    - PYTHON: "C:\\Python36_64"
-      PYTHON_VERSION: "3.6"
+    - PYTHON: "C:\\Python37_64"
+      PYTHON_VERSION: "3.7"
       PYTHON_ARCH: "64"
       MINICONDA_VERSION: "3"
 
@@ -63,12 +53,13 @@ install:
   # target Python version and architecture
   - "conda update --yes conda"
   - "conda config --add channels https://conda.anaconda.org/ioos"
-  - "conda create -q --yes -n test -c conda-forge python=%PYTHON_VERSION% numpy scipy pandas netCDF4=1.2.4 cython pytest pip matplotlib pyproj basemap"
+  - "conda create -q --yes -n test -c conda-forge python=%PYTHON_VERSION% numpy scipy pandas netCDF4 cython pytest pip matplotlib pyproj cartopy"
   - "activate test"
   - "pip install pygeogrids"
   - "pip install pygeobase"
-  - "pip install pyresample==1.1.6"
+  - "pip install pyresample"
   - "pip install ascat"
+  - "pip install ismn"
   - "git status"
   - "python --version"
   - "where python"

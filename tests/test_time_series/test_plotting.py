@@ -50,3 +50,5 @@ def test_anomaly_calc_given_climatology():
                         index=pd.date_range('2000-01-01', periods=366))
     fig, axes = plotting.plot_clim_anom(data, clim=clim)
     return fig
+
+

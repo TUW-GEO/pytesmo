@@ -47,15 +47,16 @@ from pytesmo.validation_framework.data_manager import DataManager
 
 from datetime import datetime
 
-from ascat.timeseries import AscatSsmCdr
-from pytesmo.io.ismn.interface import ISMN_Interface
+from ascat.read_native.cdr import AscatSsmCdr
+from ismn.interface import ISMN_Interface
+
 from pytesmo.validation_framework.validation import Validation
 from pytesmo.validation_framework.validation import args_to_iterable
 
-from test_datasets import setup_TestDatasets
-from test_datasets import setup_two_without_overlap
-from test_datasets import setup_three_with_two_overlapping
-from test_datasets import MaskingTestDataset
+from tests.test_validation_framwork.test_datasets import setup_TestDatasets
+from tests.test_validation_framwork.test_datasets import setup_two_without_overlap
+from tests.test_validation_framwork.test_datasets import setup_three_with_two_overlapping
+from tests.test_validation_framwork.test_datasets import MaskingTestDataset
 
 
 def test_ascat_ismn_validation():
@@ -145,7 +146,7 @@ def test_ascat_ismn_validation():
                             14.57700157, 13.06224251,
                             12.90389824, 14.24668026,
                             21.19682884, 17.3883934], dtype=np.float32)
-    with nc.Dataset(results_fname) as results:
+    with nc.Dataset(results_fname, mode='r') as results:
         assert sorted(results.variables.keys()) == sorted(vars_should)
         assert sorted(results.variables['n_obs'][:].tolist()) == sorted(
             n_obs_should)

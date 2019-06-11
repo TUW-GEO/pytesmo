@@ -29,7 +29,7 @@ Module for reading ERS data from TU Wien
 '''
 
 import os
-from ascat.timeseries import AscatNc
+from ascat.read_native.cdr import AscatNc
 
 
 class ERS_SSM(AscatNc):

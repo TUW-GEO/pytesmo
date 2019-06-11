@@ -1,7 +1,20 @@
-unreleased 
+v0.7.0, 2019-05-15 
 ===================
 
+- Add option for filling no data values to moving average
+- Add option for minimum observations to moving average
+- Default behavior of climatology calculation will now fill no_data values
+  Nothing is changing if there are no no_data values in the time series
+
+v0.6.11, 2019-05-15 
+===================
+
+- Add more metrics calculators
+- Remove pytesmo.io.ismn module and move it to the ismn package
+- Update tests for ascat v1.0 package
+- Rename arguments for metrics functions to be more general
 - Split linreg scaling function to determine and apply corrections separately
+- Compatible with Python 3.7 on Windows
 
 v0.6.10, 2018-04-09
 ===================
