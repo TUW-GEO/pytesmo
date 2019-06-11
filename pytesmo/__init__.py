@@ -1,6 +1,6 @@
 __all__ = ['metrics', 'scaling', 'temporal_matching',
            'timedate', 'time_series',
-           'grid', 'inout', 'colormaps']
+           'grid', 'io', 'colormaps']
 
 import pkg_resources
 

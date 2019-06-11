@@ -1,4 +1,4 @@
-from pytesmo.inout.dataset_base import DatasetImgBase
+from pytesmo.io.dataset_base import DatasetImgBase
 from datetime import datetime
 import numpy as np
 import os
