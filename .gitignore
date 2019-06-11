@@ -48,5 +48,3 @@ MANIFEST
 
 # ignore ISMN metadata files as they are different on win/linux
 */python_metadata/*
-# ignore local working scripts
-local_scripts/*

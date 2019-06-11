@@ -1,7 +1,6 @@
 v0.7.0, 2019-05-15 
 ===================
 
-=======
 - Add option for filling no data values to moving average
 - Add option for minimum observations to moving average
 - Default behavior of climatology calculation will now fill no_data values
