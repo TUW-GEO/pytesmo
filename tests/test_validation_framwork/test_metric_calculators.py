@@ -31,14 +31,15 @@ def test_BasicMetrics_calculator():
     res = metriccalc.calc_metrics(data, gpi_info=(0, 0, 0))
 
     should = dict(n_obs=np.array([366]), RMSD=np.array([0.2], dtype='float32'),
-                  BIAS=np.array([-0.2], dtype='float32'), p_R=np.array([1.], dtype='float32'))
+                  BIAS=np.array([-0.2], dtype='float32'), dtype='float32')
 
     assert res['n_obs'] == should['n_obs']
     assert np.isnan(res['rho'])
     assert res['RMSD'] == should['RMSD']
     assert res['BIAS'] == should['BIAS']
     assert np.isnan(res['R'])
-    assert res['p_R'] == should['p_R']
+    # depends on scipy version changed after v1.2.1
+    assert res['p_R'] == np.array([1.]) or np.isnan(res['R'])
 
 
 def test_IntercompMetrics_calculator():
@@ -65,8 +66,12 @@ def test_IntercompMetrics_calculator():
     assert res['mse_bias_between_ref_and_k1'], np.array([0.04], dtype='float32')
     assert res['mse_bias_between_ref_and_k2'], np.array([0.04], dtype='float32')
 
-    assert res['p_R_between_ref_and_k1'] == np.array([1.], dtype='float32')
-    assert res['p_R_between_ref_and_k2'] == np.array([1.], dtype='float32')
+    # depends on scipy version changed after v1.2.1
+    assert res['p_R_between_ref_and_k1'] == np.array([1.], dtype='float32') or \
+           np.isnan(res['p_R_between_ref_and_k1'])
+    assert res['p_R_between_ref_and_k2'] == np.array([1.], dtype='float32') or \
+           np.isnan(res['p_R_between_ref_and_k2'])
+
 
     assert res['RMSD_between_ref_and_k1'] == np.array([0.2], dtype='float32')
     assert res['RMSD_between_ref_and_k2'] == np.array([0.2], dtype='float32')
@@ -99,8 +104,11 @@ def test_TC_metrics_calculator():
     assert res['bias_between_ref_k1'] == np.array([0.2], dtype='float32')
     assert res['bias_between_ref_k2'] == np.array([-0.2], dtype='float32')
 
-    assert res['p_R_between_ref_k1'] == np.array([1.], dtype='float32')
-    assert res['p_R_between_ref_k2'] == np.array([1.], dtype='float32')
+    # depends on scipy version changed after v1.2.1
+    assert res['p_R_between_ref_k1'] == np.array([1.], dtype='float32') or \
+           np.isnan(res['p_R_between_ref_k1'])
+    assert res['p_R_between_ref_k2'] == np.array([1.], dtype='float32') or \
+           np.isnan(res['p_R_between_ref_k2'])
 
     assert res['mse_bias_between_ref_k1'], np.array([0.04], dtype='float32')
     assert res['mse_bias_between_ref_k2'], np.array([0.04], dtype='float32')
