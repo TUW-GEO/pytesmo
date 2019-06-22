@@ -266,7 +266,7 @@ def resample_to_grid(input_data, src_lon, src_lat, target_lon, target_lat,
                 target_lat.shape, dtype=orig_data.dtype) + fill_value
         else:
             output_array = np.zeros(target_lat.shape, dtype=orig_data.dtype)
-            output_array = np.ma.array(output_array, mask=mask)
+            output_array = np.ma.array(output_array, mask=mask.copy())
         output_array[~mask] = data
 
         output_data[param] = output_array.reshape(output_shape)
