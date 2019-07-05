@@ -157,6 +157,123 @@ def test_ascat_ismn_validation():
                                sorted(results.variables['RMSD'][:]),
                                rtol=1e-4)
 
+def test_ascat_ismn_validation_metadata():
+    """
+    Test processing framework with some ISMN and ASCAT sample data
+    """
+    ascat_data_folder = os.path.join(os.path.dirname(__file__), '..', 'test-data',
+                                     'sat', 'ascat', 'netcdf', '55R22')
+
+    ascat_grid_folder = os.path.join(os.path.dirname(__file__), '..', 'test-data',
+                                     'sat', 'ascat', 'netcdf', 'grid')
+
+    static_layers_folder = os.path.join(os.path.dirname(__file__),
+                                        '..', 'test-data', 'sat',
+                                        'h_saf', 'static_layer')
+
+    ascat_reader = AscatSsmCdr(ascat_data_folder, ascat_grid_folder,
+                               grid_filename='TUW_WARP5_grid_info_2_1.nc',
+                               static_layer_path=static_layers_folder)
+    ascat_reader.read_bulk = True
+
+    # Initialize ISMN reader
+
+    ismn_data_folder = os.path.join(os.path.dirname(__file__), '..', 'test-data',
+                                    'ismn', 'multinetwork', 'header_values')
+    ismn_reader = ISMN_Interface(ismn_data_folder)
+
+    jobs = []
+
+    ids = ismn_reader.get_dataset_ids(
+        variable='soil moisture',
+        min_depth=0,
+        max_depth=0.1)
+
+    metadata_dict_template = {'network' : np.array(['None'], dtype='U256'),
+                              'station' : np.array(['None'], dtype='U256'),
+                              'landcover' : np.float32([np.nan]),
+                              'climate' : np.array(['None'], dtype='U4')}
+
+    for idx in ids:
+        metadata = ismn_reader.metadata[idx]
+        metadata_dict = [{'network' : metadata['network'],
+                          'station' : metadata['station'],
+                          'landcover' : metadata['landcover_2010'],
+                          'climate' : metadata['climate']}]
+        jobs.append((idx, metadata['longitude'], metadata['latitude'], metadata_dict))
+
+    # Create the variable ***save_path*** which is a string representing the
+    # path where the results will be saved. **DO NOT CHANGE** the name
+    # ***save_path*** because it will be searched during the parallel
+    # processing!
+
+    save_path = tempfile.mkdtemp()
+
+    # Create the validation object.
+
+    datasets = {
+        'ISMN': {
+            'class': ismn_reader,
+            'columns': ['soil moisture']
+        },
+        'ASCAT': {
+            'class': ascat_reader,
+            'columns': ['sm'],
+            'kwargs': {'mask_frozen_prob': 80,
+                       'mask_snow_prob': 80,
+                       'mask_ssf': True}
+        }}
+
+    period = [datetime(2007, 1, 1), datetime(2014, 12, 31)]
+
+    process = Validation(
+        datasets, 'ISMN',
+        temporal_ref='ASCAT',
+        scaling='lin_cdf_match',
+        scaling_ref='ASCAT',
+        metrics_calculators={
+            (2, 2): metrics_calculators.BasicMetrics(other_name='k1', metadata_template=metadata_dict_template).calc_metrics},
+        period=period)
+
+    for job in jobs:
+        results = process.calc(*job)
+        netcdf_results_manager(results, save_path)
+
+    results_fname = os.path.join(
+        save_path, 'ASCAT.sm_with_ISMN.soil moisture.nc')
+
+    vars_should = [u'n_obs', u'tau', u'gpi', u'RMSD', u'lon', u'p_tau',
+                   u'BIAS', u'p_rho', u'rho', u'lat', u'R', u'p_R']
+    for key, value in metadata_dict_template.items():
+	    vars_should.append(key)
+
+    n_obs_should = [384,  357,  482,  141,  251, 1927, 1887, 1652]
+    rho_should = np.array([0.70022893, 0.53934574,
+                           0.69356072, 0.84189808,
+                           0.74206454, 0.30299741,
+                           0.53143877, 0.62204134], dtype=np.float32)
+
+    rmsd_should = np.array([7.72966719, 11.58347607,
+                            14.57700157, 13.06224251,
+                            12.90389824, 14.24668026,
+                            21.19682884, 17.3883934], dtype=np.float32)
+
+    network_should = np.array(['MAQU', 'MAQU', 'SCAN', 'SCAN', 'SCAN',
+                               'SOILSCAPE', 'SOILSCAPE', 'SOILSCAPE'], dtype='U256')
+
+    with nc.Dataset(results_fname, mode='r') as results:
+        assert sorted(results.variables.keys()) == sorted(vars_should)
+        assert sorted(results.variables['n_obs'][:].tolist()) == sorted(
+            n_obs_should)
+
+        nptest.assert_allclose(sorted(rho_should),
+                               sorted(results.variables['rho'][:]),
+                               rtol=1e-4)
+        nptest.assert_allclose(sorted(rmsd_should),
+                               sorted(results.variables['RMSD'][:]),
+                               rtol=1e-4)
+        nptest.assert_equal(sorted(network_should),
+                               sorted(results.variables['network'][:]))
 
 def test_validation_n2_k2():
 
