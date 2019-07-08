@@ -28,9 +28,9 @@ def test_MetadataMetrics_calculator():
     df = make_some_data()
     data = df[['ref', 'k1']]
 
-    metriccalc = MetadataMetrics(other_name='k1', calc_tau=False)
+    metriccalc = MetadataMetrics(other_name='k1')
     res = metriccalc.calc_metrics(data, gpi_info=(0, 0, 0))
-    assert list(res.keys()) == ['n_obs', 'gpi', 'lon', 'lat']
+    assert list(res.keys()) == ['gpi', 'lon', 'lat']
 
     metadata_dict_template = {'network' : np.array(['None'], dtype='U256'),
                               'station' : np.array(['None'], dtype='U256'),
@@ -42,7 +42,7 @@ def test_MetadataMetrics_calculator():
                       'landcover' : 110,
                       'climate' : 'Csa'}
 
-    metriccalc = MetadataMetrics(other_name='k1', calc_tau=False, metadata_template=metadata_dict_template)
+    metriccalc = MetadataMetrics(other_name='k1', metadata_template=metadata_dict_template)
     res = metriccalc.calc_metrics(data, gpi_info=(0, 0, 0, metadata_dict))
     for key, value in metadata_dict.items():
 	    assert res[key] == metadata_dict[key]
@@ -93,7 +93,7 @@ def test_BasicMetricsPlusMSE_calculator():
 
     metadata_dict_template = {'network' : np.array(['None'], dtype='U256')}
 
-    metriccalc = BasicMetricsPlusMSE(other_name='k1', calc_tau=False)
+    metriccalc = BasicMetricsPlusMSE(other_name='k1')
     res = metriccalc.calc_metrics(data, gpi_info=(0, 0, 0))
 
     should = dict(network=np.array(['SOILSCAPE'], dtype='U256'),
@@ -114,7 +114,7 @@ def test_BasicMetricsPlusMSE_calculator_metadata():
 
     metadata_dict_template = {'network' : np.array(['None'], dtype='U256')}
 
-    metriccalc = BasicMetricsPlusMSE(other_name='k1', calc_tau=False, metadata_template=metadata_dict_template)
+    metriccalc = BasicMetricsPlusMSE(other_name='k1', metadata_template=metadata_dict_template)
     res = metriccalc.calc_metrics(data, gpi_info=(0, 0, 0, {'network': 'SOILSCAPE'}))
 
     should = dict(network=np.array(['SOILSCAPE'], dtype='U256'),
@@ -270,9 +270,9 @@ def test_BasicSeasonalMetrics():
     metriccalc = BasicSeasonalMetrics(other_name='k1')
     res = metriccalc.calc_metrics(data, gpi_info=(0, 0, 0))
 
-    should = dict(n_obs=np.array([366]), dtype='float32')
+    should = dict(ALL_n_obs=np.array([366]), dtype='float32')
 
-    assert res['n_obs'] == should['n_obs']
+    assert res['ALL_n_obs'] == should['ALL_n_obs']
     assert np.isnan(res['ALL_rho'])
 
 def test_BasicSeasonalMetrics_metadata():

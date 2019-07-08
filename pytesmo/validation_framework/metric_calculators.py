@@ -43,37 +43,62 @@ import numpy as np
 
 
 class MetadataMetrics(object):
+	"""
+	This class sets up the gpi info and metadata (if used) in the results template.
+	This is used as the basis for all other metric calculators.
+
+    Parameters
+    ----------
+    other_name: string, optional
+        Name of the column of the non-reference / other dataset in the
+        pandas DataFrame
+	metadata_template: dictionary, optional
+        A dictionary containing additional fields (and types) of the form
+        dict = {'field': np.float32([np.nan]}. Allows users to specify information in the job tuple,
+        i.e. jobs.append((idx, metadata['longitude'], metadata['latitude'], metadata_dict)) which
+        is then propagated to the end netCDF results file.
+	"""
 
 	def __init__(self, other_name='k1',
-	             calc_tau=False,
 	             metadata_template=None) :
 
-		self.result_template = {'n_obs' : np.int32([0]),
-		                        'gpi' : np.int32([-1]),
+		self.result_template = {'gpi' : np.int32([-1]),
 		                        'lon' : np.float64([np.nan]),
 		                        'lat' : np.float64([np.nan])}
 
 		self.metadata_template = metadata_template
 		if self.metadata_template != None :
-			for key, value in self.metadata_template.items() :
-				self.result_template[key] = value
-				#todo can i change this to update instead?
+			self.result_template.update(metadata_template)
 
 		self.other_name = other_name
-		self.calc_tau = calc_tau
 
 	def calc_metrics(self, data, gpi_info) :
+		"""
+		Adds the gpi info and metadata to the results.
+
+		Parameters
+		----------
+		data : pandas.DataFrame
+		    see individual calculators for more information. not directly used here.
+		gpi_info : tuple
+		    of (gpi, lon, lat)
+		    or, optionally, (gpi, lon, lat, metadata) where metadata is a dictionary
+		"""
 
 		dataset = copy.deepcopy(self.result_template)
 
-		dataset['n_obs'][0] = len(data)
 		dataset['gpi'][0] = gpi_info[0]
 		dataset['lon'][0] = gpi_info[1]
 		dataset['lat'][0] = gpi_info[2]
 
 		if self.metadata_template != None :
 			for key, value in self.metadata_template.items() :
-				dataset[key][0] = gpi_info[3][key]
+				try:
+					dataset[key][0] = gpi_info[3][key]
+				except(IndexError):
+					raise Exception('No metadata has been provided to the job. '
+					                'Should be of form {field: metadata_value} using the metadata_template '
+					                'supplied to init function.')
 
 		return dataset
 
@@ -98,18 +123,12 @@ class BasicMetrics(MetadataMetrics):
         if True then also tau is calculated. This is set to False by default
         since the calculation of Kendalls tau is rather slow and can significantly
         impact performance of e.g. global validation studies
-    metadata_template: dictionary, optional
-        A dictionary containing additional fields (and types) of the form
-        dict = {'field': np.float32([np.nan]}. Allows users to specify information in the job tuple,
-        i.e. jobs.append((idx, metadata['longitude'], metadata['latitude'], metadata_dict)) which
-        is then propagated to the end netCDF results file.
     """
 
     def __init__(self, other_name='k1',
                  calc_tau=False,
                  metadata_template=None):
         super(BasicMetrics, self).__init__(other_name=other_name,
-                                                  calc_tau=calc_tau,
                                               metadata_template=metadata_template)
 
         self.result_template.update({'R': np.float32([np.nan]),
@@ -119,7 +138,10 @@ class BasicMetrics(MetadataMetrics):
                                 'tau': np.float32([np.nan]),
                                 'p_tau': np.float32([np.nan]),
                                 'RMSD': np.float32([np.nan]),
-                                'BIAS': np.float32([np.nan])})
+                                'BIAS': np.float32([np.nan]),
+                                'n_obs' : np.int32([0])})
+
+        self.calc_tau = calc_tau
 
     def calc_metrics(self, data, gpi_info):
         """
@@ -156,6 +178,7 @@ class BasicMetrics(MetadataMetrics):
         dataset['rho'][0], dataset['p_rho'][0] = rho, p_rho
         dataset['RMSD'][0] = RMSD
         dataset['BIAS'][0] = BIAS
+        dataset['n_obs'][0] = len(data)
 
         if self.calc_tau:
             tau, p_tau = metrics.kendalltau(x, y)
@@ -171,11 +194,9 @@ class BasicMetricsPlusMSE(BasicMetrics):
     """
 
     def __init__(self, other_name='k1',
-                 calc_tau=False,
                  metadata_template=None):
 
         super(BasicMetricsPlusMSE, self).__init__(other_name=other_name,
-                                                  calc_tau=calc_tau,
                                                   metadata_template=metadata_template)
         self.result_template.update({'mse': np.float32([np.nan]),
                                      'mse_corr': np.float32([np.nan]),
@@ -210,18 +231,17 @@ class FTMetrics(MetadataMetrics):
 
     def __init__(self, frozen_flag=2,
                  other_name='k1',
-                 calc_tau=False,
                  metadata_template=None):
 
         super(FTMetrics, self).__init__(other_name=other_name,
-	                                       calc_tau=calc_tau,
 	                                       metadata_template=metadata_template)
 
         self.frozen_flag_value = frozen_flag
         self.result_template.update({'ssf_fr_temp_un': np.float32([np.nan]),
                                 'ssf_fr_temp_fr': np.float32([np.nan]),
                                 'ssf_un_temp_fr': np.float32([np.nan]),
-                                'ssf_un_temp_un': np.float32([np.nan])})
+                                'ssf_un_temp_un': np.float32([np.nan]),
+                                'n_obs' : np.int32([0])})
 
 
     def calc_metrics(self, data, gpi_info):
@@ -271,6 +291,8 @@ class FTMetrics(MetadataMetrics):
         dataset['ssf_un_temp_fr'][0] = len(ssf_un_temp_frozen)
         dataset['ssf_un_temp_un'][0] = len(ssf_temp_unfrozen)
 
+        dataset['n_obs'][0] = len(data)
+
         return dataset
 
 
@@ -280,14 +302,13 @@ class BasicSeasonalMetrics(MetadataMetrics):
     gpi, lat, lon and number of observations.
     """
 
-    def __init__(self, result_path=None, other_name='k1', calc_tau=None,
+    def __init__(self, result_path=None, other_name='k1',
                  metadata_template=None):
 
         self.result_path = result_path
         self.other_name = other_name
 
         super(BasicSeasonalMetrics, self).__init__(other_name=other_name,
-                                        calc_tau=calc_tau,
                                         metadata_template=metadata_template)
 
         metrics = {'R': np.float32([np.nan]),
@@ -357,11 +378,9 @@ class HSAF_Metrics(MetadataMetrics):
                  other_name1='k1',
                  other_name2='k2',
                  dataset_names=None,
-                 calc_tau=None,
                  metadata_template=None):
 
         super(HSAF_Metrics, self).__init__(other_name=other_name1,
-	                                               calc_tau=calc_tau,
 	                                               metadata_template=metadata_template)
 
         # prepare validation dataset names as provided
@@ -513,7 +532,7 @@ class HSAF_Metrics(MetadataMetrics):
         return dataset
 
 
-class IntercomparisonMetrics(BasicMetrics):
+class IntercomparisonMetrics(MetadataMetrics):
     """
     Compare Basic Metrics of multiple satellite data sets to one reference data set.
     Pearson's R and p
@@ -543,11 +562,11 @@ class IntercomparisonMetrics(BasicMetrics):
                  metadata_template=None):
 
         super(IntercomparisonMetrics, self).__init__(other_name=other_names,
-                                                     calc_tau=calc_tau,
                                                      metadata_template=metadata_template)
 
         self.df_columns = ['ref'] + self.other_name
 
+        self.calc_tau = calc_tau
 
         if dataset_names is None:
             self.ds_names = self.df_columns
@@ -618,17 +637,8 @@ class IntercomparisonMetrics(BasicMetrics):
         global comparisons
         """
 
-        dataset = copy.deepcopy(self.result_template)
+        dataset = super(IntercomparisonMetrics, self).calc_metrics(data, gpi_info)
 
-        dataset['gpi'][0] = gpi_info[0]
-        dataset['lon'][0] = gpi_info[1]
-        dataset['lat'][0] = gpi_info[2]
-
-        if self.metadata_template != None :
-	        for key, value in self.metadata_template.items() :
-		        dataset[key][0] = gpi_info[3][key]
-
-        # number of observations
         subset = np.ones(len(data), dtype=bool)
 
         n_obs = subset.sum()
@@ -726,7 +736,6 @@ class IntercomparisonMetrics(BasicMetrics):
         return dataset
 
 
-
 class TCMetrics(BasicMetrics):
     """
     This class computes triple collocation metrics as defined in the QA4SM
@@ -757,7 +766,6 @@ class TCMetrics(BasicMetrics):
         '''
 
         super(TCMetrics, self).__init__(other_name=other_name1,
-                                            calc_tau=calc_tau,
                                            metadata_template=metadata_template)
 
         self.other_name1, self.other_name2 = other_name1, other_name2
