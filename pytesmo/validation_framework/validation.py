@@ -22,7 +22,7 @@ class Validation(object):
 
     Parameters
     ----------
-    datasets : dict of dicts, or :py:class:`pytesmo.validation_framwork.data_manager.DataManager`
+    datasets : dict of dicts, or :py:class:`pytesmo.validation_framework.data_manager.DataManager`
         :Keys: string, datasets names
         :Values: dict, containing the following fields
 

@@ -12,13 +12,14 @@ import sys
 import os
 import inspect
 
+
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 if on_rtd:
     os.environ['SPHINX_APIDOC_OPTIONS'] = ','.join(['members',
                                                     'undoc-members',
                                                     'inherited-members',
                                                     'show-inheritance'])
-    from sphinx import apidoc
+    import sphinx.ext.apidoc as apidoc
 
     __location__ = os.path.join(os.getcwd(), os.path.dirname(
         inspect.getfile(inspect.currentframe())))
@@ -28,7 +29,8 @@ if on_rtd:
     cmd_line_template = "sphinx-apidoc -f -o {outputdir} {moduledir}"
     cmd_line = cmd_line_template.format(
         outputdir=output_dir, moduledir=module_dir)
-    apidoc.main(cmd_line.split(" "))
+    print(cmd_line)
+    apidoc.main(cmd_line.split(" ")[1:])
 
 __location__ = os.path.join(os.getcwd(), os.path.dirname(
     inspect.getfile(inspect.currentframe())))
