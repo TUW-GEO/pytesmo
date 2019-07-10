@@ -77,22 +77,22 @@ class TestERSNetCDF(unittest.TestCase):
                                                                    'abs_sm_hwsd',
                                                                    'abs_sm_noise_hwsd'])
         assert len(result.data) == 478
-        assert result.data.ix[15].name == datetime(1992, 1, 27, 21, 11, 42, 55)
-        assert result.data.ix[15]['sm'] == 57
-        assert result.data.ix[15]['sm_noise'] == 7
-        assert result.data.ix[15]['orbit_dir'].decode('utf-8') == 'A'
-        assert result.data.ix[15]['proc_flag'] == 0
+        assert result.data.iloc[15].name == datetime(1992, 1, 27, 21, 11, 42, 55)
+        assert result.data.iloc[15]['sm'] == 57
+        assert result.data.iloc[15]['sm_noise'] == 7
+        assert result.data.iloc[15]['orbit_dir'].decode('utf-8') == 'A'
+        assert result.data.iloc[15]['proc_flag'] == 0
         np.testing.assert_approx_equal(
-            result.data.ix[15]['abs_sm_gldas'], 0.30780001223, significant=6)
+            result.data.iloc[15]['abs_sm_gldas'], 0.30780001223, significant=6)
 
         np.testing.assert_approx_equal(
-            result.data.ix[15]['abs_sm_noise_gldas'], 0.03780000150,
+            result.data.iloc[15]['abs_sm_noise_gldas'], 0.03780000150,
             significant=6)
 
         np.testing.assert_approx_equal(
-            result.data.ix[15]['abs_sm_hwsd'], 0.245100004076, significant=6)
+            result.data.iloc[15]['abs_sm_hwsd'], 0.245100004076, significant=6)
         np.testing.assert_approx_equal(
-            result.data.ix[15]['abs_sm_noise_hwsd'], 0.0301000005006, significant=6)
+            result.data.iloc[15]['abs_sm_noise_hwsd'], 0.0301000005006, significant=6)
         assert result.topo_complex == 14
         assert result.wetland_frac == 0
         np.testing.assert_approx_equal(
