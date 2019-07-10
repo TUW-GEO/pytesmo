@@ -30,12 +30,13 @@
 Test for the adapters.
 '''
 
+import os
 from pytesmo.validation_framework.adapters import MaskingAdapter
 from pytesmo.validation_framework.adapters import SelfMaskingAdapter
 from pytesmo.validation_framework.adapters import AnomalyAdapter
 from pytesmo.validation_framework.adapters import AnomalyClimAdapter
-
 from tests.test_validation_framwork.test_datasets import TestDataset
+from ascat.read_native.cdr import AscatSsmCdr
 
 import numpy as np
 import numpy.testing as nptest
@@ -93,7 +94,6 @@ def test_anomaly_adapter_one_column():
     nptest.assert_almost_equal(data_anom['x'].values[0], -8.5)
     nptest.assert_almost_equal(data_anom['y'].values[0], 0)
 
-
 def test_anomaly_clim_adapter():
     ds = TestDataset('', n=20)
     ds_anom = AnomalyClimAdapter(ds)
@@ -111,3 +111,30 @@ def test_anomaly_clim_adapter_one_column():
     data_anom = ds_anom.read_ts()
     nptest.assert_almost_equal(data_anom['x'].values[4], -5.5)
     nptest.assert_almost_equal(data_anom['y'].values[4], 2)
+
+# the ascat reader gives back an ascat timeseries instead of a dataframe - make sure the adapters can deal with that
+def test_adapters_with_ascat():
+    ascat_data_folder = os.path.join(os.path.dirname(__file__), '..', 'test-data', 'sat', 'ascat', 'netcdf', '55R22')
+    ascat_grid_folder = os.path.join(os.path.dirname(__file__), '..', 'test-data', 'sat', 'ascat', 'netcdf', 'grid')
+
+    ascat_reader = AscatSsmCdr(ascat_data_folder, ascat_grid_folder, grid_filename='TUW_WARP5_grid_info_2_1.nc')
+
+    ascat_anom = AnomalyAdapter(ascat_reader, window_size=35, columns=['sm'])
+    data = ascat_anom.read_ts(12.891455, 45.923004)
+    assert data is not None
+    assert np.any(data['sm'].values != 0)
+
+    ascat_self = SelfMaskingAdapter(ascat_reader, '>', 0, 'sm')
+    data2 = ascat_self.read_ts(12.891455, 45.923004)
+    assert data2 is not None
+    assert np.all(data2['sm'].values > 0)
+
+    ascat_mask = MaskingAdapter(ascat_reader, '>', 0, 'sm')
+    data3 = ascat_mask.read_ts(12.891455, 45.923004)
+    assert data3 is not None
+    assert np.any(data3['sm'].values)
+
+    ascat_clim = AnomalyClimAdapter(ascat_reader, columns=['sm'])
+    data4 = ascat_clim.read_ts(12.891455, 45.923004)
+    assert data4 is not None
+    assert np.any(data['sm'].values != 0)
