@@ -22,9 +22,10 @@ class Validation(object):
 
     Parameters
     ----------
-    datasets : dict of dicts, or pytesmo.validation_framwork.data_manager.DataManager
-        Keys: string, datasets names
-        Values: dict, containing the following fields
+    datasets : dict of dicts, or :py:class:`pytesmo.validation_framwork.data_manager.DataManager`
+        :Keys: string, datasets names
+        :Values: dict, containing the following fields
+
             'class': object
                 Class containing the method read_ts for reading the data.
             'columns': list
@@ -154,7 +155,7 @@ class Validation(object):
 
         Parameters
         ----------
-        gpis : iterable
+        gpis: iterable
             The grid point indices is an identificator by which the
             spatial reference dataset can be read. This is either a list
             or a numpy.ndarray or any other iterable containing this indicator.
@@ -170,9 +171,10 @@ class Validation(object):
         Returns
         -------
         compact_results : dict of dicts
-            Keys: result names, combinations of
+            :Keys: result names, combinations of
                   (referenceDataset.column, otherDataset.column)
-            Values: dict containing the elements returned by metrics_calculator
+            :Values: dict containing the elements returned by metrics_calculator
+
         """
         results = {}
         if len(args) > 0:
