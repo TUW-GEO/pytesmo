@@ -106,7 +106,7 @@ Example soil moisture validation: ASCAT - ISMN
 This example shows how to setup the pytesmo validation framework to
 perform a comparison between ASCAT and ISMN data.
 
-.. code:: ipython2
+.. code:: python
 
     import os
     
@@ -122,7 +122,7 @@ perform a comparison between ASCAT and ISMN data.
 You need the test data from https://github.com/TUW-GEO/pytesmo-test-data
 for this example
 
-.. code:: ipython2
+.. code:: python
 
     testdata_folder = '/pytesmo/testdata'
     output_folder = '/pytesmo/code/examples/output'
@@ -132,7 +132,7 @@ the ASCAT soil moisture time series and in situ data from the ISMN.
 
 Initialize ASCAT reader
 
-.. code:: ipython2
+.. code:: python
 
     ascat_data_folder = os.path.join(testdata_folder,
                                      'sat/ascat/netcdf/55R22')
@@ -147,16 +147,9 @@ Initialize ASCAT reader
     ascat_reader.read_bulk = True
 
 
-.. parsed-literal::
-
-    /space/tools/miniconda3/envs/pytesmo/lib/python2.7/site-packages/ascat/timeseries.py:128: UserWarning: WARNING: valid_range not used since it
-    cannot be safely cast to variable data type
-      land_gp = np.where(grid_nc.variables['land_flag'][:] == 1)[0]
-
-
 Initialize ISMN reader
 
-.. code:: ipython2
+.. code:: python
 
     ismn_data_folder = os.path.join(testdata_folder,
                                      'ismn/multinetwork/header_values')
@@ -173,7 +166,7 @@ dataset.
 **DO NOT CHANGE** the name ***jobs*** because it will be searched during
 the parallel processing!
 
-.. code:: ipython2
+.. code:: python
 
     jobs = []
     
@@ -198,7 +191,7 @@ It is important here that the ISMN reader has a read\_ts function that
 works by just using the ``dataset_id``. In this way the validation
 framework can go through the jobs and read the correct time series.
 
-.. code:: ipython2
+.. code:: python
 
     data = ismn_reader.read_ts(ids[0])
     print('ISMN data example:')
@@ -227,7 +220,7 @@ contains the settings about which metric calculators to use and how to
 perform the scaling into the reference data space. It is initialized in
 the following way:
 
-.. code:: ipython2
+.. code:: python
 
     datasets = {
         'ISMN': {
@@ -255,7 +248,7 @@ included frozen and snow probabilities as well as the SSF. There are
 also other keys that can be used here. Please see the documentation for
 explanations.
 
-.. code:: ipython2
+.. code:: python
 
     period = [datetime(2007, 1, 1), datetime(2014, 12, 31)]
     basic_metrics = metrics_calculators.BasicMetrics(other_name='k1')
@@ -298,7 +291,7 @@ path where the results will be saved. **DO NOT CHANGE** the name
 ***save\_path*** because it will be searched during the parallel
 processing!
 
-.. code:: ipython2
+.. code:: python
 
     save_path = output_folder
     
@@ -308,15 +301,6 @@ processing!
         results = process.calc(*job)
         pprint.pprint(results)
         netcdf_results_manager(results, save_path)
-
-
-.. parsed-literal::
-
-    /space/tools/miniconda3/envs/pytesmo/lib/python2.7/site-packages/pandas/core/reshape/merge.py:558: UserWarning: merging between different levels can give an unintended result (1 levels on the left, 2 on the right)
-      warnings.warn(msg, UserWarning)
-    /space/tools/miniconda3/envs/pytesmo/lib/python2.7/site-packages/pandas/core/reshape/merge.py:558: UserWarning: merging between different levels can give an unintended result (2 levels on the left, 1 on the right)
-      warnings.warn(msg, UserWarning)
-
 
 .. parsed-literal::
 
@@ -432,7 +416,7 @@ Storing of the results to disk is at the moment supported by the
 combination and stores each metric as a variable. We can inspect the
 stored netCDF file which is named after the dictionary key:
 
-.. code:: ipython2
+.. code:: python
 
     import netCDF4
     results_fname = os.path.join(save_path, 'ASCAT.sm_with_ISMN.soil moisture.nc')
@@ -544,7 +528,7 @@ Parallel processing
 The same code can be executed in parallel by defining the following
 ``start_processing`` function.
 
-.. code:: ipython2
+.. code:: python
 
     def start_processing(job):
         try:
@@ -596,7 +580,7 @@ To easily transform an existing dataset into a masking dataset
 an existing dataset and creates a masking dataset based on an operator,
 a given threshold, and (optionally) a column name.
 
-.. code:: ipython2
+.. code:: python
 
     from pytesmo.validation_framework.adapters import MaskingAdapter
     
@@ -627,7 +611,7 @@ or ``read`` method. Calling its ``read_ts``/``read`` method will return
 the masked data - more precisely a DataFrame with only rows where the
 masking condition is true.
 
-.. code:: ipython2
+.. code:: python
 
     from pytesmo.validation_framework.adapters import SelfMaskingAdapter
     
