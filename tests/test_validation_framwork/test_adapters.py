@@ -66,7 +66,7 @@ def test_self_masking_adapter():
     ref_x = np.arange(10)
     ref_y = np.arange(10) * 0.5
     ds = TestDataset('', n=20)
-    
+
     ds_mask = SelfMaskingAdapter(ds, '<', 10, 'x')
     data_masked = ds_mask.read_ts()
     data_masked2 = ds_mask.read()
@@ -123,9 +123,15 @@ def test_adapters_with_ascat():
     data = ascat_anom.read_ts(12.891455, 45.923004)
     assert data is not None
     assert np.any(data['sm'].values != 0)
+    data = ascat_anom.read(12.891455, 45.923004)
+    assert data is not None
+    assert np.any(data['sm'].values != 0)
 
     ascat_self = SelfMaskingAdapter(ascat_reader, '>', 0, 'sm')
     data2 = ascat_self.read_ts(12.891455, 45.923004)
+    assert data2 is not None
+    assert np.all(data2['sm'].values > 0)
+    data2 = ascat_self.read(12.891455, 45.923004)
     assert data2 is not None
     assert np.all(data2['sm'].values > 0)
 
@@ -133,8 +139,14 @@ def test_adapters_with_ascat():
     data3 = ascat_mask.read_ts(12.891455, 45.923004)
     assert data3 is not None
     assert np.any(data3['sm'].values)
+    data3 = ascat_mask.read(12.891455, 45.923004)
+    assert data3 is not None
+    assert np.any(data3['sm'].values)
 
     ascat_clim = AnomalyClimAdapter(ascat_reader, columns=['sm'])
     data4 = ascat_clim.read_ts(12.891455, 45.923004)
+    assert data4 is not None
+    assert np.any(data['sm'].values != 0)
+    data4 = ascat_clim.read(12.891455, 45.923004)
     assert data4 is not None
     assert np.any(data['sm'].values != 0)
