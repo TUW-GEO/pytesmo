@@ -1,5 +1,4 @@
-# Copyright (c) 2015,Vienna University of Technology,
-# Department of Geodesy and Geoinformation
+# Copyright (c) 2019, TU Wien, Department of Geodesy and Geoinformation
 # All rights reserved.
 
 # Redistribution and use in source and binary forms, with or without
@@ -45,19 +44,29 @@ def test_df_match_borders():
 
     See issue #51
     """
+    ref_df = pd.DataFrame(
+        {"data": np.arange(5)}, index=pd.date_range(
+            datetime(2007, 1, 1, 0),
+            "2007-01-05", freq="D"))
 
-    ref_df = pd.DataFrame({"data": np.arange(5)}, index=pd.date_range(datetime(2007, 1, 1, 0),
-                                                                      "2007-01-05", freq="D"))
     match_df = pd.DataFrame({"matched_data": np.arange(5)},
                             index=[datetime(2007, 1, 1, 9),
                                    datetime(2007, 1, 2, 9),
                                    datetime(2007, 1, 3, 9),
                                    datetime(2007, 1, 4, 9),
                                    datetime(2007, 1, 5, 9)])
+
     matched = tmatching.df_match(ref_df, match_df)
 
     nptest.assert_allclose(
         np.array([0.375, 0.375, 0.375, 0.375, 0.375]), matched.distance.values)
+    nptest.assert_allclose(np.arange(5), matched.matched_data)
+
+    matched = tmatching.df_temp_merge(ref_df, match_df, return_distance=True)
+    dist = matched['dist_other_0'].values / np.timedelta64(1, 'D')
+
+    nptest.assert_allclose(
+        np.array([0.375, 0.375, 0.375, 0.375, 0.375]), dist)
     nptest.assert_allclose(np.arange(5), matched.matched_data)
 
 
@@ -66,13 +75,16 @@ def test_df_match_match_on_window_border():
     test matching if a value lies exactly on the window border.
     """
 
-    ref_df = pd.DataFrame({"data": np.arange(5)}, index=pd.date_range(datetime(2007, 1, 1, 0),
-                                                                      "2007-01-05", freq="D"))
+    ref_df = pd.DataFrame(
+        {"data": np.arange(5)}, index=pd.date_range(
+            datetime(2007, 1, 1, 0), "2007-01-05", freq="D"))
+
     match_df = pd.DataFrame({"matched_data": np.arange(4)},
                             index=[datetime(2007, 1, 1, 9),
                                    datetime(2007, 1, 2, 9),
                                    datetime(2007, 1, 3, 12),
                                    datetime(2007, 1, 5, 9)])
+
     matched = tmatching.df_match(ref_df, match_df, window=0.5)
 
     nptest.assert_allclose(
@@ -102,17 +114,27 @@ def test_df_match_borders_unequal_query_points():
     See issue #51
     """
 
-    ref_df = pd.DataFrame({"data": np.arange(5)}, index=pd.date_range(datetime(2007, 1, 1, 0),
-                                                                      "2007-01-05", freq="D"))
+    ref_df = pd.DataFrame({"data": np.arange(5)},
+                          index=pd.date_range(datetime(2007, 1, 1, 0),
+                                              "2007-01-05", freq="D"))
+
     match_df = pd.DataFrame({"matched_data": np.arange(4)},
                             index=[datetime(2007, 1, 1, 9),
                                    datetime(2007, 1, 2, 9),
                                    datetime(2007, 1, 4, 9),
                                    datetime(2007, 1, 5, 9)])
+
     matched = tmatching.df_match(ref_df, match_df)
 
     nptest.assert_allclose(
         np.array([0.375, 0.375, -0.625, 0.375, 0.375]), matched.distance.values)
+    nptest.assert_allclose(np.array([0, 1, 1, 2, 3]), matched.matched_data)
+
+    matched = tmatching.df_temp_merge(ref_df, match_df, return_distance=True)
+    dist = matched['dist_other_0'].values / np.timedelta64(1, 'D')
+
+    nptest.assert_allclose(
+        np.array([0.375, 0.375, -0.625, 0.375, 0.375]), dist)
     nptest.assert_allclose(np.array([0, 1, 1, 2, 3]), matched.matched_data)
 
 
@@ -120,11 +142,12 @@ def test_matching():
     """
     test matching function
     """
-    data = np.arange(5.0)
+    data = np.arange(10.0)
     data[3] = np.nan
 
-    ref_df = pd.DataFrame({"data": data}, index=pd.date_range(datetime(2007, 1, 1, 0),
-                                                              "2007-01-05", freq="D"))
+    ref_df = pd.DataFrame({"data": data}, index=pd.date_range(
+        datetime(2007, 1, 1, 0), "2007-01-10", freq="D"))
+
     match_df = pd.DataFrame({"matched_data": np.arange(5)},
                             index=[datetime(2007, 1, 1, 9),
                                    datetime(2007, 1, 2, 9),
@@ -136,16 +159,29 @@ def test_matching():
     nptest.assert_allclose(np.array([0, 1, 2, 4]), matched.matched_data)
     assert len(matched) == 4
 
+    matched = tmatching.df_temp_merge(ref_df, match_df)
+
+    nptest.assert_allclose(np.array([0, 1, 2, 3, 4, 4, 4, 4, 4, 4]),
+                           matched.matched_data)
+    assert len(matched) == 10
+
+    matched = tmatching.df_temp_merge(ref_df, match_df, duplicate_nan=True)
+
+    nptest.assert_allclose(np.array([0, 1, 2, 3, 4, np.nan, np.nan,
+                                     np.nan, np.nan, np.nan]),
+                           matched.matched_data)
+    assert len(matched) == 10
+
 
 def test_matching_series():
     """
     test matching function with pd.Series as input
     """
-    data = np.arange(5.0)
+    data = np.arange(10.)
     data[3] = np.nan
 
     ref_ser = pd.Series(data, index=pd.date_range(datetime(2007, 1, 1, 0),
-                                                  "2007-01-05", freq="D"))
+                                                  "2007-01-10", freq="D"))
     match_ser = pd.Series(np.arange(5),
                           index=[datetime(2007, 1, 1, 9),
                                  datetime(2007, 1, 2, 9),
@@ -158,3 +194,16 @@ def test_matching_series():
 
     nptest.assert_allclose(np.array([0, 1, 2, 4]), matched.matched_data)
     assert len(matched) == 4
+
+    matched = tmatching.df_temp_merge(ref_ser, match_ser)
+
+    nptest.assert_allclose(np.array([0, 1, 2, 3, 4, 4, 4, 4, 4, 4]),
+                           matched.matched_data)
+    assert len(matched) == 10
+
+    matched = tmatching.df_temp_merge(ref_ser, match_ser, duplicate_nan=True)
+
+    nptest.assert_allclose(np.array([0, 1, 2, 3, 4, np.nan, np.nan,
+                                     np.nan, np.nan, np.nan]),
+                           matched.matched_data)
+    assert len(matched) == 10
