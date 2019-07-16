@@ -69,17 +69,18 @@ def df_temp_merge(df_reference, df_other, return_index=False,
                            right_index=True, direction=direction,
                            tolerance=tolerance)
 
-        df[dist_str] = df[ind_str] - df.index
-        dist_df = df[dist_str].values / np.timedelta64(1, 'D')
+        df[dist_str] = (df[ind_str].values -
+                        df.index.values) / np.timedelta64(1, 'D')
 
         if duplicate_nan:
             unq, unq_idx = np.unique(df[ind_str].values, return_index=True)
             unq_idx = np.concatenate([unq_idx, np.array([len(df)])])
+            dist = df[dist_str].values
 
             no_dup = []
             for j in np.arange(unq_idx.size-1):
                 m = np.argmin(np.abs(
-                    dist_df[unq_idx[j]:unq_idx[j+1]])) + unq_idx[j]
+                    dist[unq_idx[j]:unq_idx[j+1]])) + unq_idx[j]
                 no_dup.append(m)
 
             duplicates = np.ones(len(df), dtype=np.bool)
@@ -153,6 +154,7 @@ def df_match(reference, *args, **kwds):
         if type(arg) is pd.Series:
             arg = pd.DataFrame(arg)
         comp_step = arg.index.values - reference.index.values[0]
+
         values = np.arange(comp_step.size)
         # setup kdtree which must get 2D input
         try:
@@ -264,6 +266,10 @@ def matching(reference, *args, **kwargs):
 
     for match in matched_datasets:
         match = match.drop(['distance', 'index'], axis=1)
+
+        if matched_data.index.tz is not None:
+            match.index = match.index.tz_localize('utc')
+
         matched_data = matched_data.join(match)
 
     return matched_data.dropna()

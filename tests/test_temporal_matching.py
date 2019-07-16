@@ -207,3 +207,40 @@ def test_matching_series():
                                      np.nan, np.nan, np.nan]),
                            matched.matched_data)
     assert len(matched) == 10
+
+
+def test_matching_tz():
+    """
+    test matching function with pd.Series as input and timezone information
+    """
+    ref_tz = 'Europe/London'
+    ref_index = pd.date_range("2007-01-01", "2007-01-10", tz=ref_tz)
+
+    data = np.arange(10.)
+    data[3] = np.nan
+    ref_ser = pd.Series(data, index=ref_index)
+
+    match_tz = 'US/Pacific'
+    match_index = pd.date_range("2007-01-01 09:00:00",
+                                "2007-01-05 09:00:00", tz=match_tz)
+
+    match_ser = pd.Series(np.arange(len(match_index)),
+                          index=match_index, name='matched_data')
+
+    matched = tmatching.matching(ref_ser, match_ser)
+
+    nptest.assert_allclose(np.array([0, 1, 3, 4]), matched.matched_data)
+    assert len(matched) == 4
+
+    matched = tmatching.df_temp_merge(ref_ser, match_ser)
+
+    nptest.assert_allclose(np.array([0, 0, 1, 2, 3, 4, 4, 4, 4, 4]),
+                           matched.matched_data)
+    assert len(matched) == 10
+
+    matched = tmatching.df_temp_merge(ref_ser, match_ser, duplicate_nan=True)
+
+    nptest.assert_allclose(np.array([np.nan, 0, 1, 2, 3, 4, np.nan, np.nan,
+                                     np.nan, np.nan]),
+                           matched.matched_data)
+    assert len(matched) == 10
