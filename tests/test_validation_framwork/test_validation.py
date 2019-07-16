@@ -136,16 +136,17 @@ def test_ascat_ismn_validation():
 
     vars_should = [u'n_obs', u'tau', u'gpi', u'RMSD', u'lon', u'p_tau',
                    u'BIAS', u'p_rho', u'rho', u'lat', u'R', u'p_R']
-    n_obs_should = [384,  357,  482,  141,  251, 1927, 1887, 1652]
-    rho_should = np.array([0.70022893, 0.53934574,
-                           0.69356072, 0.84189808,
-                           0.74206454, 0.30299741,
-                           0.53143877, 0.62204134], dtype=np.float32)
 
-    rmsd_should = np.array([7.72966719, 11.58347607,
-                            14.57700157, 13.06224251,
-                            12.90389824, 14.24668026,
-                            21.19682884, 17.3883934], dtype=np.float32)
+    n_obs_should = [357,  384, 1648, 1879, 1919, 472, 141, 251]
+
+    rho_should = np.array([0.53934574, 0.7002289, 0.62201667,
+                           0.53478557, 0.30375594, 0.68096703,
+                           0.8418981,  0.74206454], dtype=np.float32)
+
+    rmsd_should = np.array([11.583476, 7.729667, 17.430956,
+                            21.136326, 14.277702, 14.318159,
+                            13.0622425, 12.903898], dtype=np.float32)
+
     with nc.Dataset(results_fname, mode='r') as results:
         assert sorted(results.variables.keys()) == sorted(vars_should)
         assert sorted(results.variables['n_obs'][:].tolist()) == sorted(
@@ -600,3 +601,7 @@ def test_args_to_iterable_mixed_strings():
     assert lons_ == lons
     assert lats_ == [lats]
     assert args == [arg1]
+
+
+if __name__ == '__main__':
+    test_ascat_ismn_validation()

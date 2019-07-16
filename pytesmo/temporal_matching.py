@@ -1,6 +1,7 @@
 """
 Provides a temporal matching function
 """
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -39,6 +40,11 @@ def df_temp_merge(df_reference, df_other, return_index=False,
     df_tm : pandas.DataFrame
         Reference time series matched with other time series.
     """
+    if(np.sum(df_reference.index.duplicated()) > 0):
+        warnings.warn('Reference time series contains duplicated indices,'
+                      ' which have been removed')
+        df_reference = df_reference[~df_reference.index.duplicated()]
+
     if not isinstance(df_other, tuple):
         df_other = (df_other, )
 
@@ -145,6 +151,11 @@ def df_match(reference, *args, **kwds):
         asym_window = kwds['asym_window']
     else:
         asym_window = None
+
+    if(np.sum(reference.index.duplicated()) > 0):
+        warnings.warn('Reference time series contains duplicated indices,'
+                      ' which have been removed')
+        reference = reference[~reference.index.duplicated()]
 
     temporal_matched_args = []
     ref_step = reference.index.values - reference.index.values[0]
