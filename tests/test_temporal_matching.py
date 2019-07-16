@@ -63,10 +63,10 @@ def test_df_match_borders():
     nptest.assert_allclose(np.arange(5), matched.matched_data)
 
     matched = tmatching.df_temp_merge(ref_df, match_df, return_distance=True)
-    dist = matched['dist_other_0'].values / np.timedelta64(1, 'D')
 
     nptest.assert_allclose(
-        np.array([0.375, 0.375, 0.375, 0.375, 0.375]), dist)
+        np.array([0.375, 0.375, 0.375, 0.375, 0.375]),
+        matched['dist_other_0'].values)
     nptest.assert_allclose(np.arange(5), matched.matched_data)
 
 
@@ -126,15 +126,15 @@ def test_df_match_borders_unequal_query_points():
 
     matched = tmatching.df_match(ref_df, match_df)
 
-    nptest.assert_allclose(
-        np.array([0.375, 0.375, -0.625, 0.375, 0.375]), matched.distance.values)
+    nptest.assert_allclose(np.array([0.375, 0.375, -0.625, 0.375, 0.375]),
+                           matched.distance.values)
     nptest.assert_allclose(np.array([0, 1, 1, 2, 3]), matched.matched_data)
 
     matched = tmatching.df_temp_merge(ref_df, match_df, return_distance=True)
-    dist = matched['dist_other_0'].values / np.timedelta64(1, 'D')
 
-    nptest.assert_allclose(
-        np.array([0.375, 0.375, -0.625, 0.375, 0.375]), dist)
+    nptest.assert_allclose(np.array([0.375, 0.375, -0.625, 0.375, 0.375]),
+                           matched['dist_other_0'].values)
+
     nptest.assert_allclose(np.array([0, 1, 1, 2, 3]), matched.matched_data)
 
 
