@@ -7,6 +7,14 @@ Examples
    validation_framework.rst
 
 
+Temporal matching of time series
+================================
+The following example explains temporal matching of time series.
+
+.. include::
+   temporal_matching.rst
+
+
 Calculating anomalies and climatologies
 =======================================
 
