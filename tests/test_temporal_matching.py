@@ -31,6 +31,7 @@ Created on Wed Jul  8 19:37:14 2015
 '''
 
 
+import pytz
 import pytesmo.temporal_matching as tmatching
 import pandas as pd
 from datetime import datetime
@@ -244,3 +245,22 @@ def test_matching_tz():
                                      np.nan, np.nan]),
                            matched.matched_data)
     assert len(matched) == 10
+
+
+def test_timezone_handling():
+    data = np.arange(5.0)
+    data[3] = np.nan
+
+    match_df = pd.DataFrame({"data": data}, index=pd.date_range(datetime(2007, 1, 1, 0),
+                                                                "2007-01-05", freq="D", tz="UTC"))
+    timezone = pytz.timezone("UTC")
+    ref_df = pd.DataFrame({"matched_data": np.arange(5)},
+                          index=[timezone.localize(datetime(2007, 1, 1, 9)),
+                                 timezone.localize(datetime(2007, 1, 2, 9)),
+                                 timezone.localize(datetime(2007, 1, 3, 9)),
+                                 timezone.localize(datetime(2007, 1, 4, 9)),
+                                 timezone.localize(datetime(2007, 1, 5, 9))])
+    matched = tmatching.matching(ref_df, match_df)
+
+    nptest.assert_allclose(np.array([0, 1, 2, 4]), matched.matched_data)
+    assert len(matched) == 4
