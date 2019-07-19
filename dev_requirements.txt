@@ -1,4 +1,6 @@
 pytest>=2.6.4
+pytest-cov
+pytest-mpl
 sphinx_rtd_theme>=0.1.6
 sphinx>=1.2
 cython>=0.20

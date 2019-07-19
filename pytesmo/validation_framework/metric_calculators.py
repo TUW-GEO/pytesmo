@@ -165,10 +165,12 @@ class FTMetrics(object):
     """
     This class computes Freeze/Thaw Metrics
     Calculated metrics are:
-        SSF frozen/temp unfrozen
-        SSF unfrozen/temp frozen
-        SSF unfrozen/temp unfrozen
-        SSF frozen/temp frozen
+
+    - SSF frozen/temp unfrozen
+    - SSF unfrozen/temp frozen
+    - SSF unfrozen/temp unfrozen
+    - SSF frozen/temp frozen
+
     it also stores information about gpi, lat, lon
     and number of total observations
     """
@@ -928,9 +930,11 @@ class TCMetrics(object):
 def get_dataset_names(ref_key, datasets, n=3):
     """
     Get dataset names in correct order as used in the validation framework
-        -) reference dataset = ref
-        -) first other dataset = k1
-        -) second other dataset = k2
+
+    - reference dataset = ref
+    - first other dataset = k1
+    - second other dataset = k2
+
     This is important to correctly iterate through the H-SAF metrics and to
     save each metric with the name of the used datasets
 

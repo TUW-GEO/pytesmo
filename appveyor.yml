@@ -7,7 +7,7 @@ environment:
 
   matrix:
     - PYTHON: "C:\\Python27_64"
-      PYTHON_VERSION: "2.7.8"
+      PYTHON_VERSION: "2.7"
       PYTHON_ARCH: "64"
       MINICONDA_VERSION: "2"
 

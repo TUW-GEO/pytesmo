@@ -87,6 +87,4 @@
 .. image:: anomalies_files/anomalies_5_1.png
 
 
-.. code:: python
-
     

@@ -111,7 +111,7 @@ def df_match(reference, *args, **kwds):
             arg_matched = arg_matched.dropna(how='all')
             g = arg_matched.groupby('merge_key')
             min_dists = g.distance.apply(lambda x: x.abs().idxmin())
-            arg_matched = arg_matched.ix[min_dists]
+            arg_matched = arg_matched.loc[min_dists]
 
         temporal_matched_args.append(
             arg_matched.drop(['merge_key', 'ref_index'], axis=1))
