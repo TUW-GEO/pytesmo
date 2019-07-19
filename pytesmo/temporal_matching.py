@@ -8,12 +8,11 @@ import pandas as pd
 from scipy.spatial import cKDTree
 
 
-def df_temp_merge(df_reference, df_other, return_index=False,
-                  return_distance=False, tolerance=None, direction='nearest',
-                  duplicate_nan=False):
+def ts_match(df_reference, df_other, return_index=False,
+             return_distance=False, tolerance=None, direction='nearest',
+             duplicate_nan=False):
     """
-    Merge nearest neighbor between reference and other time series into
-    common dataframe.
+    Temporally match reference and other time series.
 
     Parameters
     ----------
@@ -37,12 +36,12 @@ def df_temp_merge(df_reference, df_other, return_index=False,
 
     Returns
     -------
-    df_tm : pandas.DataFrame
-        Reference time series matched with other time series.
+    tm_other : tuple of pandas.DataFrame
+        Collection of other time series with reference time series time stamps.
     """
     if(np.sum(df_reference.index.duplicated()) > 0):
-        warnings.warn('Reference time series contains duplicated indices,'
-                      ' which have been removed')
+        warnings.warn('Reference time series contains duplicated time stamps,'
+                      ' which have been removed.')
         df_reference = df_reference[~df_reference.index.duplicated()]
 
     if not isinstance(df_other, tuple):
@@ -55,6 +54,8 @@ def df_temp_merge(df_reference, df_other, return_index=False,
             name = df_reference.name
 
         df_reference = df_reference.to_frame(name)
+
+    tm_other = []
 
     for i, other in enumerate(df_other):
 
@@ -104,9 +105,14 @@ def df_temp_merge(df_reference, df_other, return_index=False,
         if fields:
             df.drop(fields, axis=1, inplace=True)
 
-        df_tm = df
+        tm_other.append(df)
 
-    return df_tm
+    if len(df_other) == 1:
+        tm_other = df
+    else:
+        tm_other = tuple(tm_other)
+
+    return tm_other
 
 
 def df_match(reference, *args, **kwds):

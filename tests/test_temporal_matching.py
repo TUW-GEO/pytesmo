@@ -32,11 +32,13 @@ Created on Wed Jul  8 19:37:14 2015
 
 
 import pytz
-import pytesmo.temporal_matching as tmatching
-import pandas as pd
 from datetime import datetime
+
+import pandas as pd
 import numpy as np
 import numpy.testing as nptest
+
+import pytesmo.temporal_matching as tmatching
 
 
 def test_df_match_borders():
@@ -63,7 +65,7 @@ def test_df_match_borders():
         np.array([0.375, 0.375, 0.375, 0.375, 0.375]), matched.distance.values)
     nptest.assert_allclose(np.arange(5), matched.matched_data)
 
-    matched = tmatching.df_temp_merge(ref_df, match_df, return_distance=True)
+    matched = tmatching.ts_match(ref_df, match_df, return_distance=True)
 
     nptest.assert_allclose(
         np.array([0.375, 0.375, 0.375, 0.375, 0.375]),
@@ -131,7 +133,7 @@ def test_df_match_borders_unequal_query_points():
                            matched.distance.values)
     nptest.assert_allclose(np.array([0, 1, 1, 2, 3]), matched.matched_data)
 
-    matched = tmatching.df_temp_merge(ref_df, match_df, return_distance=True)
+    matched = tmatching.ts_match(ref_df, match_df, return_distance=True)
 
     nptest.assert_allclose(np.array([0.375, 0.375, -0.625, 0.375, 0.375]),
                            matched['dist_other_0'].values)
@@ -160,13 +162,13 @@ def test_matching():
     nptest.assert_allclose(np.array([0, 1, 2, 4]), matched.matched_data)
     assert len(matched) == 4
 
-    matched = tmatching.df_temp_merge(ref_df, match_df)
+    matched = tmatching.ts_match(ref_df, match_df)
 
     nptest.assert_allclose(np.array([0, 1, 2, 3, 4, 4, 4, 4, 4, 4]),
                            matched.matched_data)
     assert len(matched) == 10
 
-    matched = tmatching.df_temp_merge(ref_df, match_df, duplicate_nan=True)
+    matched = tmatching.ts_match(ref_df, match_df, duplicate_nan=True)
 
     nptest.assert_allclose(np.array([0, 1, 2, 3, 4, np.nan, np.nan,
                                      np.nan, np.nan, np.nan]),
@@ -196,13 +198,13 @@ def test_matching_series():
     nptest.assert_allclose(np.array([0, 1, 2, 4]), matched.matched_data)
     assert len(matched) == 4
 
-    matched = tmatching.df_temp_merge(ref_ser, match_ser)
+    matched = tmatching.ts_match(ref_ser, match_ser)
 
     nptest.assert_allclose(np.array([0, 1, 2, 3, 4, 4, 4, 4, 4, 4]),
                            matched.matched_data)
     assert len(matched) == 10
 
-    matched = tmatching.df_temp_merge(ref_ser, match_ser, duplicate_nan=True)
+    matched = tmatching.ts_match(ref_ser, match_ser, duplicate_nan=True)
 
     nptest.assert_allclose(np.array([0, 1, 2, 3, 4, np.nan, np.nan,
                                      np.nan, np.nan, np.nan]),
@@ -233,13 +235,13 @@ def test_matching_tz():
     nptest.assert_allclose(np.array([0, 1, 3, 4]), matched.matched_data)
     assert len(matched) == 4
 
-    matched = tmatching.df_temp_merge(ref_ser, match_ser)
+    matched = tmatching.ts_match(ref_ser, match_ser)
 
     nptest.assert_allclose(np.array([0, 0, 1, 2, 3, 4, 4, 4, 4, 4]),
                            matched.matched_data)
     assert len(matched) == 10
 
-    matched = tmatching.df_temp_merge(ref_ser, match_ser, duplicate_nan=True)
+    matched = tmatching.ts_match(ref_ser, match_ser, duplicate_nan=True)
 
     nptest.assert_allclose(np.array([np.nan, 0, 1, 2, 3, 4, np.nan, np.nan,
                                      np.nan, np.nan]),
@@ -248,6 +250,9 @@ def test_matching_tz():
 
 
 def test_timezone_handling():
+    """
+    Test timezone handling.
+    """
     data = np.arange(5.0)
     data[3] = np.nan
 
