@@ -37,6 +37,7 @@ import pytesmo.temporal_matching as temp_match
 import pandas as pd
 from distutils.version import LooseVersion
 
+
 class BasicTemporalMatching(object):
     """
     Temporal matching object
@@ -57,23 +58,9 @@ class BasicTemporalMatching(object):
         in this case the reference dataset for the grid is also the
         temporal reference dataset
         """
-        matched_datasets = temp_match.df_match(reference, *args, dropna=True,
-                                               dropduplicates=True,
-                                               window=self.window)
-
-        if type(matched_datasets) != tuple:
-            matched_datasets = [matched_datasets]
-
-        matched_data = pd.DataFrame(reference)
-
-        for match in matched_datasets:
-            if LooseVersion(pd.__version__) < LooseVersion('0.23'):
-                match = match.drop(('index', ''), axis=1)
-            else:
-                match = match.drop('index', axis=1)
-                
-            match = match.drop('distance', axis=1)
-            matched_data = matched_data.join(match)
+        matched_data = temp_match.df_match(reference, *args, dropna=True,
+                                           dropduplicates=True,
+                                           window=self.window, merge=True)
 
         return matched_data.dropna(how='all')
 
