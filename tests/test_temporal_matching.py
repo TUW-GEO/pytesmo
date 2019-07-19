@@ -59,55 +59,12 @@ def test_df_match_borders():
                                    datetime(2007, 1, 4, 9),
                                    datetime(2007, 1, 5, 9)])
 
-    matched = tmatching.df_match(ref_df, match_df)
-
-    nptest.assert_allclose(
-        np.array([0.375, 0.375, 0.375, 0.375, 0.375]), matched.distance.values)
-    nptest.assert_allclose(np.arange(5), matched.matched_data)
-
-    matched = tmatching.ts_match(ref_df, match_df, return_distance=True)
+    matched = tmatching.df_match(ref_df, match_df, return_distance=True)
 
     nptest.assert_allclose(
         np.array([0.375, 0.375, 0.375, 0.375, 0.375]),
-        matched['dist_other_0'].values)
+        matched['dist_other'].values)
     nptest.assert_allclose(np.arange(5), matched.matched_data)
-
-
-def test_df_match_match_on_window_border():
-    """
-    test matching if a value lies exactly on the window border.
-    """
-
-    ref_df = pd.DataFrame(
-        {"data": np.arange(5)}, index=pd.date_range(
-            datetime(2007, 1, 1, 0), "2007-01-05", freq="D"))
-
-    match_df = pd.DataFrame({"matched_data": np.arange(4)},
-                            index=[datetime(2007, 1, 1, 9),
-                                   datetime(2007, 1, 2, 9),
-                                   datetime(2007, 1, 3, 12),
-                                   datetime(2007, 1, 5, 9)])
-
-    matched = tmatching.df_match(ref_df, match_df, window=0.5)
-
-    nptest.assert_allclose(
-        np.array([0.375, 0.375, 0.5, -0.5, 0.375]), matched.distance.values)
-    nptest.assert_allclose([0, 1, 2, 2, 3], matched.matched_data)
-
-    # test asym_window keyword
-    matched = tmatching.df_match(
-        ref_df, match_df, window=0.5, asym_window="<=")
-
-    nptest.assert_allclose(
-        np.array([0.375, 0.375, 0.5, np.nan, 0.375]), matched.distance.values)
-    nptest.assert_allclose([0, 1, 2, np.nan, 3], matched.matched_data)
-
-    matched = tmatching.df_match(
-        ref_df, match_df, window=0.5, asym_window=">=")
-
-    nptest.assert_allclose(
-        np.array([0.375, 0.375, np.nan, -0.5, 0.375]), matched.distance.values)
-    nptest.assert_allclose([0, 1, np.nan, 2, 3], matched.matched_data)
 
 
 def test_df_match_borders_unequal_query_points():
@@ -127,16 +84,10 @@ def test_df_match_borders_unequal_query_points():
                                    datetime(2007, 1, 4, 9),
                                    datetime(2007, 1, 5, 9)])
 
-    matched = tmatching.df_match(ref_df, match_df)
+    matched = tmatching.df_match(ref_df, match_df, return_distance=True)
 
     nptest.assert_allclose(np.array([0.375, 0.375, -0.625, 0.375, 0.375]),
-                           matched.distance.values)
-    nptest.assert_allclose(np.array([0, 1, 1, 2, 3]), matched.matched_data)
-
-    matched = tmatching.ts_match(ref_df, match_df, return_distance=True)
-
-    nptest.assert_allclose(np.array([0.375, 0.375, -0.625, 0.375, 0.375]),
-                           matched['dist_other_0'].values)
+                           matched['dist_other'].values)
 
     nptest.assert_allclose(np.array([0, 1, 1, 2, 3]), matched.matched_data)
 
@@ -157,23 +108,11 @@ def test_matching():
                                    datetime(2007, 1, 3, 9),
                                    datetime(2007, 1, 4, 9),
                                    datetime(2007, 1, 5, 9)])
+
     matched = tmatching.matching(ref_df, match_df)
 
     nptest.assert_allclose(np.array([0, 1, 2, 4]), matched.matched_data)
     assert len(matched) == 4
-
-    matched = tmatching.ts_match(ref_df, match_df)
-
-    nptest.assert_allclose(np.array([0, 1, 2, 3, 4, 4, 4, 4, 4, 4]),
-                           matched.matched_data)
-    assert len(matched) == 10
-
-    matched = tmatching.ts_match(ref_df, match_df, duplicate_nan=True)
-
-    nptest.assert_allclose(np.array([0, 1, 2, 3, 4, np.nan, np.nan,
-                                     np.nan, np.nan, np.nan]),
-                           matched.matched_data)
-    assert len(matched) == 10
 
 
 def test_matching_series():
@@ -198,18 +137,11 @@ def test_matching_series():
     nptest.assert_allclose(np.array([0, 1, 2, 4]), matched.matched_data)
     assert len(matched) == 4
 
-    matched = tmatching.ts_match(ref_ser, match_ser)
-
-    nptest.assert_allclose(np.array([0, 1, 2, 3, 4, 4, 4, 4, 4, 4]),
-                           matched.matched_data)
-    assert len(matched) == 10
-
-    matched = tmatching.ts_match(ref_ser, match_ser, duplicate_nan=True)
+    matched = tmatching.df_match(ref_ser, match_ser, duplicate_nan=True)
 
     nptest.assert_allclose(np.array([0, 1, 2, 3, 4, np.nan, np.nan,
                                      np.nan, np.nan, np.nan]),
                            matched.matched_data)
-    assert len(matched) == 10
 
 
 def test_matching_tz():
@@ -235,13 +167,13 @@ def test_matching_tz():
     nptest.assert_allclose(np.array([0, 1, 3, 4]), matched.matched_data)
     assert len(matched) == 4
 
-    matched = tmatching.ts_match(ref_ser, match_ser)
+    matched = tmatching.df_match(ref_ser, match_ser)
 
     nptest.assert_allclose(np.array([0, 0, 1, 2, 3, 4, 4, 4, 4, 4]),
                            matched.matched_data)
     assert len(matched) == 10
 
-    matched = tmatching.ts_match(ref_ser, match_ser, duplicate_nan=True)
+    matched = tmatching.df_match(ref_ser, match_ser, duplicate_nan=True)
 
     nptest.assert_allclose(np.array([np.nan, 0, 1, 2, 3, 4, np.nan, np.nan,
                                      np.nan, np.nan]),
