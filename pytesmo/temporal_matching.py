@@ -95,7 +95,8 @@ def df_match(df_reference, df_other, return_index=False,
                         df.index.values) / np.timedelta64(1, 'D')
 
         if duplicate_nan or dropduplicates:
-            unq, unq_idx = np.unique(df[ind_str].values, return_index=True)
+            unq, unq_idx = np.unique(df[ind_str].dropna().values,
+                                     return_index=True)
             unq_idx = np.concatenate([unq_idx, np.array([len(df)])])
             dist = df[dist_str].values
 
@@ -133,10 +134,13 @@ def df_match(df_reference, df_other, return_index=False,
         else:
             tm_other.append(df)
 
-    if len(df_other) <= 1:
+    if merge:
         tm = df
     else:
-        tm = tuple(tm_other)
+        if len(df_other) <= 1:
+            tm = df
+        else:
+            tm = tuple(tm_other)
 
     return tm
 

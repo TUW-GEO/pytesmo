@@ -58,11 +58,11 @@ class BasicTemporalMatching(object):
         in this case the reference dataset for the grid is also the
         temporal reference dataset
         """
-        matched_data = temp_match.df_match(reference, *args, dropna=True,
+        matched_data = temp_match.df_match(reference, args, dropna=True,
                                            dropduplicates=True,
                                            window=self.window, merge=True)
 
-        return matched_data.dropna(how='all')
+        return matched_data
 
     def combinatory_matcher(self, df_dict, refkey, n=2):
         """
@@ -109,8 +109,8 @@ class BasicTemporalMatching(object):
                 match_key.append(key)
 
             matched_key = tuple([refkey] + sorted(match_key))
-            joined = self.match(ref_df,
-                                *match_list)
+
+            joined = self.match(ref_df, *match_list)
 
             if len(joined) != 0:
                 matched[matched_key] = joined
