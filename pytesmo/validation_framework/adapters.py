@@ -40,20 +40,22 @@ from pandas import DataFrame
 
 class BasicAdapter(object):
     """
-    Base class for other adapters that works around the ascat reader not
-    returning a DataFrame. Also removes unnecessary timezone information in data.
+    Base class for other adapters that works around data readers that don't
+    return a DataFrame (e.g. ASCAT). Also removes unnecessary timezone information in data.
     """
-    def __init__(self, cls):
+    def __init__(self, cls, data_property_name='data'):
         self.cls = cls
+        self.data_property_name = data_property_name
 
     def __get_dataframe(self, data):
-        if ((not isinstance(data, DataFrame)) and (hasattr(data, 'data')) and (isinstance(data.data, DataFrame))):
-            data = data.data
+        if ((not isinstance(data, DataFrame)) and (hasattr(data, self.data_property_name)) and
+            (isinstance(getattr(data, self.data_property_name), DataFrame))):
+            data = getattr(data, self.data_property_name)
         return data
 
     def __drop_tz_info(self, data):
         if data.index.tz is not None:
-            warnings.warn('Dropping timezone information for data')
+            warnings.warn('Dropping timezone information ({}) for data from reader {}'.format(data.index.tz, self.cls.__class__.__name__))
             data.index = data.index.tz_convert(None)
         return data
 

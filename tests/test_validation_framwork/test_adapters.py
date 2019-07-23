@@ -40,7 +40,8 @@ from ascat.read_native.cdr import AscatSsmCdr
 
 import numpy as np
 import numpy.testing as nptest
-
+import pandas as pd
+from datetime import datetime
 
 def test_masking_adapter():
     for col in (None, 'x'):
@@ -150,3 +151,28 @@ def test_adapters_with_ascat():
     data4 = ascat_clim.read(12.891455, 45.923004)
     assert data4 is not None
     assert np.any(data['sm'].values != 0)
+
+
+class TestTimezoneReader(object):
+    def read(self, *args, **kwargs):
+        data = np.arange(5.0)
+        data[3] = np.nan
+        return pd.DataFrame({"data": data}, index=pd.date_range(datetime(2007, 1, 1, 0), "2007-01-05", freq="D", tz="UTC"))
+
+    def read_ts(self, *args, **kwargs):
+        return self.read(*args, **kwargs)
+
+def test_timezone_removal():
+    tz_reader = TestTimezoneReader()
+
+    reader_anom = AnomalyAdapter(tz_reader, window_size=35, columns=['data'])
+    assert reader_anom.read_ts(0) is not None
+
+    reader_self = SelfMaskingAdapter(tz_reader, '>', 0, 'data')
+    assert reader_self.read_ts(0) is not None
+
+    reader_mask = MaskingAdapter(tz_reader, '>', 0, 'data')
+    assert reader_mask.read_ts(0) is not None
+
+    reader_clim = AnomalyClimAdapter(tz_reader, columns=['data'])
+    assert reader_clim.read_ts(0) is not None
