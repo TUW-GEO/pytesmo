@@ -42,7 +42,67 @@ import itertools
 import numpy as np
 
 
-class BasicMetrics(object):
+class MetadataMetrics(object):
+	"""
+	This class sets up the gpi info and metadata (if used) in the results template.
+	This is used as the basis for all other metric calculators.
+
+    Parameters
+    ----------
+    other_name: string, optional
+        Name of the column of the non-reference / other dataset in the
+        pandas DataFrame
+	metadata_template: dictionary, optional
+        A dictionary containing additional fields (and types) of the form
+        dict = {'field': np.float32([np.nan]}. Allows users to specify information in the job tuple,
+        i.e. jobs.append((idx, metadata['longitude'], metadata['latitude'], metadata_dict)) which
+        is then propagated to the end netCDF results file.
+	"""
+
+	def __init__(self, other_name='k1',
+	             metadata_template=None) :
+
+		self.result_template = {'gpi' : np.int32([-1]),
+		                        'lon' : np.float64([np.nan]),
+		                        'lat' : np.float64([np.nan])}
+
+		self.metadata_template = metadata_template
+		if self.metadata_template != None :
+			self.result_template.update(metadata_template)
+
+		self.other_name = other_name
+
+	def calc_metrics(self, data, gpi_info) :
+		"""
+		Adds the gpi info and metadata to the results.
+
+		Parameters
+		----------
+		data : pandas.DataFrame
+		    see individual calculators for more information. not directly used here.
+		gpi_info : tuple
+		    of (gpi, lon, lat)
+		    or, optionally, (gpi, lon, lat, metadata) where metadata is a dictionary
+		"""
+
+		dataset = copy.deepcopy(self.result_template)
+
+		dataset['gpi'][0] = gpi_info[0]
+		dataset['lon'][0] = gpi_info[1]
+		dataset['lat'][0] = gpi_info[2]
+
+		if self.metadata_template != None :
+			for key, value in self.metadata_template.items() :
+				try:
+					dataset[key][0] = gpi_info[3][key]
+				except(IndexError):
+					raise Exception('No metadata has been provided to the job. '
+					                'Should be of form {field: metadata_value} using the metadata_template '
+					                'supplied to init function.')
+
+		return dataset
+
+class BasicMetrics(MetadataMetrics):
     """
     This class just computes the basic metrics,
     Pearson's R
@@ -66,9 +126,12 @@ class BasicMetrics(object):
     """
 
     def __init__(self, other_name='k1',
-                 calc_tau=False):
+                 calc_tau=False,
+                 metadata_template=None):
+        super(BasicMetrics, self).__init__(other_name=other_name,
+                                              metadata_template=metadata_template)
 
-        self.result_template = {'R': np.float32([np.nan]),
+        self.result_template.update({'R': np.float32([np.nan]),
                                 'p_R': np.float32([np.nan]),
                                 'rho': np.float32([np.nan]),
                                 'p_rho': np.float32([np.nan]),
@@ -76,12 +139,8 @@ class BasicMetrics(object):
                                 'p_tau': np.float32([np.nan]),
                                 'RMSD': np.float32([np.nan]),
                                 'BIAS': np.float32([np.nan]),
-                                'n_obs': np.int32([0]),
-                                'gpi': np.int32([-1]),
-                                'lon': np.float64([np.nan]),
-                                'lat': np.float64([np.nan])}
+                                'n_obs' : np.int32([0])})
 
-        self.other_name = other_name
         self.calc_tau = calc_tau
 
     def calc_metrics(self, data, gpi_info):
@@ -103,12 +162,8 @@ class BasicMetrics(object):
         because the scipy implementation is very slow which is problematic for
         global comparisons
         """
-        dataset = copy.deepcopy(self.result_template)
 
-        dataset['n_obs'][0] = len(data)
-        dataset['gpi'][0] = gpi_info[0]
-        dataset['lon'][0] = gpi_info[1]
-        dataset['lat'][0] = gpi_info[2]
+        dataset = super(BasicMetrics, self).calc_metrics(data, gpi_info)
 
         if len(data) < 10:
             return dataset
@@ -123,6 +178,7 @@ class BasicMetrics(object):
         dataset['rho'][0], dataset['p_rho'][0] = rho, p_rho
         dataset['RMSD'][0] = RMSD
         dataset['BIAS'][0] = BIAS
+        dataset['n_obs'][0] = len(data)
 
         if self.calc_tau:
             tau, p_tau = metrics.kendalltau(x, y)
@@ -138,10 +194,10 @@ class BasicMetricsPlusMSE(BasicMetrics):
     """
 
     def __init__(self, other_name='k1',
-                 calc_tau=False):
+                 metadata_template=None):
 
         super(BasicMetricsPlusMSE, self).__init__(other_name=other_name,
-                                                  calc_tau=calc_tau)
+                                                  metadata_template=metadata_template)
         self.result_template.update({'mse': np.float32([np.nan]),
                                      'mse_corr': np.float32([np.nan]),
                                      'mse_bias': np.float32([np.nan]),
@@ -161,7 +217,7 @@ class BasicMetricsPlusMSE(BasicMetrics):
         return dataset
 
 
-class FTMetrics(object):
+class FTMetrics(MetadataMetrics):
     """
     This class computes Freeze/Thaw Metrics
     Calculated metrics are:
@@ -174,18 +230,19 @@ class FTMetrics(object):
     """
 
     def __init__(self, frozen_flag=2,
-                 other_name='k1'):
+                 other_name='k1',
+                 metadata_template=None):
+
+        super(FTMetrics, self).__init__(other_name=other_name,
+	                                       metadata_template=metadata_template)
 
         self.frozen_flag_value = frozen_flag
-        self.result_template = {'ssf_fr_temp_un': np.float32([np.nan]),
+        self.result_template.update({'ssf_fr_temp_un': np.float32([np.nan]),
                                 'ssf_fr_temp_fr': np.float32([np.nan]),
                                 'ssf_un_temp_fr': np.float32([np.nan]),
                                 'ssf_un_temp_un': np.float32([np.nan]),
-                                'n_obs': np.int32([0]),
-                                'gpi': np.int32([-1]),
-                                'lon': np.float64([np.nan]),
-                                'lat': np.float64([np.nan])}
-        self.other_name = other_name
+                                'n_obs' : np.int32([0])})
+
 
     def calc_metrics(self, data, gpi_info):
         """
@@ -206,12 +263,7 @@ class FTMetrics(object):
         because the scipy implementation is very slow which is problematic for
         global comparisons
         """
-        dataset = copy.deepcopy(self.result_template)
-
-        dataset['n_obs'][0] = len(data)
-        dataset['gpi'][0] = gpi_info[0]
-        dataset['lon'][0] = gpi_info[1]
-        dataset['lat'][0] = gpi_info[2]
+        dataset = super(FTMetrics, self).calc_metrics(data, gpi_info)
 
         # if len(data) < 10: return dataset
 
@@ -239,29 +291,31 @@ class FTMetrics(object):
         dataset['ssf_un_temp_fr'][0] = len(ssf_un_temp_frozen)
         dataset['ssf_un_temp_un'][0] = len(ssf_temp_unfrozen)
 
+        dataset['n_obs'][0] = len(data)
+
         return dataset
 
 
-class BasicSeasonalMetrics(object):
+class BasicSeasonalMetrics(MetadataMetrics):
     """
     This class just computes basic metrics on a seasonal basis. It also stores information about
     gpi, lat, lon and number of observations.
     """
 
-    def __init__(self, result_path=None, other_name='k1'):
+    def __init__(self, result_path=None, other_name='k1',
+                 metadata_template=None):
 
         self.result_path = result_path
         self.other_name = other_name
+
+        super(BasicSeasonalMetrics, self).__init__(other_name=other_name,
+                                        metadata_template=metadata_template)
 
         metrics = {'R': np.float32([np.nan]),
                    'p_R': np.float32([np.nan]),
                    'rho': np.float32([np.nan]),
                    'p_rho': np.float32([np.nan]),
                    'n_obs': np.int32([0])}
-
-        self.result_template = {'gpi': np.int32([-1]),
-                                'lon': np.float32([np.nan]),
-                                'lat': np.float32([np.nan])}
 
         self.seasons = ['ALL', 'DJF', 'MAM', 'JJA', 'SON']
 
@@ -287,11 +341,7 @@ class BasicSeasonalMetrics(object):
         gpi_info : tuple
             Grid point info (i.e. gpi, lon, lat)
         """
-        dataset = copy.deepcopy(self.result_template)
-
-        dataset['gpi'][0] = gpi_info[0]
-        dataset['lon'][0] = gpi_info[1]
-        dataset['lat'][0] = gpi_info[2]
+        dataset = super(BasicSeasonalMetrics, self).calc_metrics(data, gpi_info)
 
         for season in self.seasons:
 
@@ -317,7 +367,7 @@ class BasicSeasonalMetrics(object):
         return dataset
 
 
-class HSAF_Metrics(object):
+class HSAF_Metrics(MetadataMetrics):
     """
     This class computes metrics as defined by the H-SAF consortium in
     order to prove the operational readiness of a product. It also stores
@@ -327,7 +377,11 @@ class HSAF_Metrics(object):
     def __init__(self,
                  other_name1='k1',
                  other_name2='k2',
-                 dataset_names=None):
+                 dataset_names=None,
+                 metadata_template=None):
+
+        super(HSAF_Metrics, self).__init__(other_name=other_name1,
+	                                               metadata_template=metadata_template)
 
         # prepare validation dataset names as provided
         self.other_name1 = other_name1
@@ -359,10 +413,6 @@ class HSAF_Metrics(object):
                        'p_rho': np.float32([np.nan]),
                        'bias': np.float32([np.nan]),
                        'ubrmsd': np.float32([np.nan])}
-
-        self.result_template = {'gpi': np.int32([-1]),
-                                'lon': np.float32([np.nan]),
-                                'lat': np.float32([np.nan])}
 
         self.seasons = ['ALL', 'DJF', 'MAM', 'JJA', 'SON']
 
@@ -407,11 +457,7 @@ class HSAF_Metrics(object):
         gpi_info : tuple
             Grid point info (i.e. gpi, lon, lat)
         """
-        dataset = copy.deepcopy(self.result_template)
-
-        dataset['gpi'][0] = gpi_info[0]
-        dataset['lon'][0] = gpi_info[1]
-        dataset['lat'][0] = gpi_info[2]
+        dataset = super(HSAF_Metrics, self).calc_metrics(data, gpi_info)
 
         for season in self.seasons:
 
@@ -486,7 +532,7 @@ class HSAF_Metrics(object):
         return dataset
 
 
-class IntercomparisonMetrics(BasicMetrics):
+class IntercomparisonMetrics(MetadataMetrics):
     """
     Compare Basic Metrics of multiple satellite data sets to one reference data set.
     Pearson's R and p
@@ -512,13 +558,15 @@ class IntercomparisonMetrics(BasicMetrics):
 
     """
     def __init__(self, other_names=['k1', 'k2', 'k3'],
-                 calc_tau=False, dataset_names=None):
+                 calc_tau=False, dataset_names=None,
+                 metadata_template=None):
 
         super(IntercomparisonMetrics, self).__init__(other_name=other_names,
-                                                     calc_tau=calc_tau)
+                                                     metadata_template=metadata_template)
 
         self.df_columns = ['ref'] + self.other_name
 
+        self.calc_tau = calc_tau
 
         if dataset_names is None:
             self.ds_names = self.df_columns
@@ -555,10 +603,6 @@ class IntercomparisonMetrics(BasicMetrics):
             self.result_template.pop('tau', None)
             self.result_template.pop('p_tau', None)
 
-        self.result_template = {'gpi': np.int32([-1]),
-                                'lon': np.float32([np.nan]),
-                                'lat': np.float32([np.nan])}
-
         for metric in metrics_common.keys():
             key = "{:}".format(metric)
             self.result_template[key] = metrics_common[metric].copy()
@@ -593,13 +637,8 @@ class IntercomparisonMetrics(BasicMetrics):
         global comparisons
         """
 
-        dataset = copy.deepcopy(self.result_template)
+        dataset = super(IntercomparisonMetrics, self).calc_metrics(data, gpi_info)
 
-        dataset['gpi'][0] = gpi_info[0]
-        dataset['lon'][0] = gpi_info[1]
-        dataset['lat'][0] = gpi_info[2]
-
-        # number of observations
         subset = np.ones(len(data), dtype=bool)
 
         n_obs = subset.sum()
@@ -697,8 +736,7 @@ class IntercomparisonMetrics(BasicMetrics):
         return dataset
 
 
-
-class TCMetrics(object):
+class TCMetrics(BasicMetrics):
     """
     This class computes triple collocation metrics as defined in the QA4SM
     project. It uses 2 satellite and 1 reference data sets as inputs only.
@@ -707,7 +745,8 @@ class TCMetrics(object):
     """
 
     def __init__(self, other_name1='k1', other_name2='k2',
-                 calc_tau=False, dataset_names=None):
+                 calc_tau=False, dataset_names=None,
+                 metadata_template=None):
         '''
         Initialize the QA4SM metrics
 
@@ -726,18 +765,8 @@ class TCMetrics(object):
             real name that will be used in the results file.
         '''
 
-        self.result_template = {'R': np.float32([np.nan]),
-                                'p_R': np.float32([np.nan]),
-                                'rho': np.float32([np.nan]),
-                                'p_rho': np.float32([np.nan]),
-                                'tau': np.float32([np.nan]),
-                                'p_tau': np.float32([np.nan]),
-                                'RMSD': np.float32([np.nan]),
-                                'BIAS': np.float32([np.nan]),
-                                'n_obs': np.int32([0]),
-                                'gpi': np.int32([-1]),
-                                'lon': np.float64([np.nan]),
-                                'lat': np.float64([np.nan])}
+        super(TCMetrics, self).__init__(other_name=other_name1,
+                                           metadata_template=metadata_template)
 
         self.other_name1, self.other_name2 = other_name1, other_name2
         self.calc_tau = calc_tau
@@ -778,11 +807,6 @@ class TCMetrics(object):
                        'mse_bias': np.float32([np.nan]),
                        'ubRMSD': np.float32([np.nan]),
                        'mse_var': np.float32([np.nan])}
-
-
-        self.result_template = {'gpi': np.int32([-1]),
-                                'lon': np.float32([np.nan]),
-                                'lat': np.float32([np.nan])}
 
         for metric in metrics_common.keys():
             key = "{:}".format(metric)
@@ -832,6 +856,10 @@ class TCMetrics(object):
         dataset['gpi'][0] = gpi_info[0]
         dataset['lon'][0] = gpi_info[1]
         dataset['lat'][0] = gpi_info[2]
+
+        if self.metadata_template != None :
+	        for key, value in self.metadata_template.items() :
+		        dataset[key][0] = gpi_info[3][key]
 
         # number of observations
         subset = np.ones(len(data), dtype=bool)
