@@ -36,10 +36,6 @@ install:
   - ECHO "Installed SDKs:"
   - ps: "ls \"C:/Program Files/Microsoft SDKs/Windows\""
 
-  # Install Python (from the official .msi of https://python.org) and pip when
-  # not already installed on the appveyor service.
-  - ps: if (-not(Test-Path($env:PYTHON))) { & appveyor\install.ps1 }
-
   # Upgrade to the latest version of pip to avoid it displaying warnings
   # about it being out of date.
   - cmd: python -m pip install --upgrade pip
