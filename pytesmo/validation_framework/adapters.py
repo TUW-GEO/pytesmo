@@ -1,6 +1,7 @@
 # Copyright (c) 2016,Vienna University of Technology,
 # Department of Geodesy and Geoinformation
 # All rights reserved.
+import warnings
 
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -34,9 +35,41 @@ framework.
 import operator
 from pytesmo.time_series.anomaly import calc_anomaly
 from pytesmo.time_series.anomaly import calc_climatology
+from pandas import DataFrame
 
 
-class MaskingAdapter(object):
+class BasicAdapter(object):
+    """
+    Base class for other adapters that works around data readers that don't
+    return a DataFrame (e.g. ASCAT). Also removes unnecessary timezone information in data.
+    """
+    def __init__(self, cls, data_property_name='data'):
+        self.cls = cls
+        self.data_property_name = data_property_name
+
+    def __get_dataframe(self, data):
+        if ((not isinstance(data, DataFrame)) and (hasattr(data, self.data_property_name)) and
+            (isinstance(getattr(data, self.data_property_name), DataFrame))):
+            data = getattr(data, self.data_property_name)
+        return data
+
+    def __drop_tz_info(self, data):
+        if data.index.tz is not None:
+            warnings.warn('Dropping timezone information ({}) for data from reader {}'.format(data.index.tz, self.cls.__class__.__name__))
+            data.index = data.index.tz_convert(None)
+        return data
+
+    def read_ts(self, *args, **kwargs):
+        data = self.cls.read_ts(*args, **kwargs)
+        data = self.__drop_tz_info(self.__get_dataframe(data))
+        return data
+
+    def read(self, *args, **kwargs):
+        data = self.cls.read(*args, **kwargs)
+        data = self.__drop_tz_info(self.__get_dataframe(data))
+        return data
+
+class MaskingAdapter(BasicAdapter):
     """
     Transform the given class to return a boolean dataset given the operator
     and threshold. This class calls the read_ts and read methods
@@ -56,7 +89,7 @@ class MaskingAdapter(object):
     """
 
     def __init__(self, cls, op, threshold, column_name = None):
-        self.cls = cls
+        super(MaskingAdapter, self).__init__(cls)
 
         self.op_lookup = {'<': operator.lt,
                           '<=': operator.le,
@@ -75,17 +108,17 @@ class MaskingAdapter(object):
         return self.operator(data, self.threshold)
 
     def read_ts(self, *args, **kwargs):
-        data = self.cls.read_ts(*args, **kwargs)
+        data = super(MaskingAdapter, self).read_ts(*args, **kwargs)
         return self.__mask(data)
 
     def read(self, *args, **kwargs):
-        data = self.cls.read(*args, **kwargs)
+        data = super(MaskingAdapter, self).read(*args, **kwargs)
         return self.__mask(data)
 
-class SelfMaskingAdapter(object):
+class SelfMaskingAdapter(BasicAdapter):
     """
-    Transform the given (reader) class to return a dataset that is masked based 
-    on the given column, operator, and threshold. This class calls the read_ts 
+    Transform the given (reader) class to return a dataset that is masked based
+    on the given column, operator, and threshold. This class calls the read_ts
     or read method of the given reader instance, applies the operator/threshold
     to the specified column, and masks the whole dataframe with the result.
 
@@ -102,7 +135,7 @@ class SelfMaskingAdapter(object):
     """
 
     def __init__(self, cls, op, threshold, column_name):
-        self.cls = cls
+        super(SelfMaskingAdapter, self).__init__(cls)
 
         self.op_lookup = {'<': operator.lt,
                           '<=': operator.le,
@@ -120,14 +153,14 @@ class SelfMaskingAdapter(object):
         return data[mask]
 
     def read_ts(self, *args, **kwargs):
-        data = self.cls.read_ts(*args, **kwargs)
+        data = super(SelfMaskingAdapter, self).read_ts(*args, **kwargs)
         return self.__mask(data)
 
     def read(self, *args, **kwargs):
-        data = self.cls.read(*args, **kwargs)
+        data = super(SelfMaskingAdapter, self).read(*args, **kwargs)
         return self.__mask(data)
 
-class AnomalyAdapter(object):
+class AnomalyAdapter(BasicAdapter):
     """
     Takes the pandas DataFrame that the read_ts or read method of the instance
     returns and calculates the anomaly of the time series based on a moving
@@ -143,11 +176,11 @@ class AnomalyAdapter(object):
         anomaly reference (only used if climatology is not provided)
         Default: 35 (days)
     columns: list, optional
-        columns in the dataset for which to calculate anomalies. 
+        columns in the dataset for which to calculate anomalies.
     """
 
     def __init__(self, cls, window_size=35, columns=None):
-        self.cls = cls
+        super(AnomalyAdapter, self).__init__(cls)
         self.window_size = window_size
         self.columns = columns
 
@@ -162,15 +195,15 @@ class AnomalyAdapter(object):
         return data
 
     def read_ts(self, *args, **kwargs):
-        data = self.cls.read_ts(*args, **kwargs)
+        data = super(AnomalyAdapter, self).read_ts(*args, **kwargs)
         return self.calc_anom(data)
 
     def read(self, *args, **kwargs):
-        data = self.cls.read(*args, **kwargs)
+        data = super(AnomalyAdapter, self).read(*args, **kwargs)
         return self.calc_anom(data)
 
 
-class AnomalyClimAdapter(object):
+class AnomalyClimAdapter(BasicAdapter):
     """
     Takes the pandas DataFrame that the read_ts or read method of the instance
     returns and calculates the anomaly of the time series based on a moving
@@ -182,13 +215,13 @@ class AnomalyClimAdapter(object):
     cls : class instance
         Must have a read_ts or read method returning a pandas.DataFrame
     columns: list, optional
-        columns in the dataset for which to calculate anomalies. 
+        columns in the dataset for which to calculate anomalies.
     kwargs:
         Any additional arguments will be given to the calc_climatology function.
     """
 
     def __init__(self, cls, columns=None, **kwargs):
-        self.cls = cls
+        super(AnomalyClimAdapter, self).__init__(cls)
         self.kwargs = kwargs
         self.columns = columns
 
@@ -203,9 +236,9 @@ class AnomalyClimAdapter(object):
         return data
 
     def read_ts(self, *args, **kwargs):
-        data = self.cls.read_ts(*args, **kwargs)
+        data = super(AnomalyClimAdapter, self).read_ts(*args, **kwargs)
         return self.calc_anom(data)
 
     def read(self, *args, **kwargs):
-        data = self.cls.read(*args, **kwargs)
+        data = super(AnomalyClimAdapter, self).read(*args, **kwargs)
         return self.calc_anom(data)
