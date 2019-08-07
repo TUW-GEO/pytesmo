@@ -31,15 +31,15 @@ def test_BasicMetrics_calculator():
     res = metriccalc.calc_metrics(data, gpi_info=(0, 0, 0))
 
     should = dict(n_obs=np.array([366]), RMSD=np.array([0.2], dtype='float32'),
-                  BIAS=np.array([-0.2], dtype='float32'), dtype='float32')
+                  BIAS=np.array([-0.2], dtype='float32'))
 
     assert res['n_obs'] == should['n_obs']
     assert np.isnan(res['rho'])
     assert res['RMSD'] == should['RMSD']
     assert res['BIAS'] == should['BIAS']
     assert np.isnan(res['R'])
-    # depends on scipy version changed after v1.2.1
-    assert res['p_R'] == np.array([1.]) or np.isnan(res['R'])
+    # scipy 1.3.0 is not built for python 2.7 so we allow both for now
+    assert (np.isnan(res['p_R']) or res['p_R'] == 1.0)
 
 
 def test_IntercompMetrics_calculator():
@@ -66,12 +66,9 @@ def test_IntercompMetrics_calculator():
     assert res['mse_bias_between_ref_and_k1'], np.array([0.04], dtype='float32')
     assert res['mse_bias_between_ref_and_k2'], np.array([0.04], dtype='float32')
 
-    # depends on scipy version changed after v1.2.1
-    assert res['p_R_between_ref_and_k1'] == np.array([1.], dtype='float32') or \
-           np.isnan(res['p_R_between_ref_and_k1'])
-    assert res['p_R_between_ref_and_k2'] == np.array([1.], dtype='float32') or \
-           np.isnan(res['p_R_between_ref_and_k2'])
-
+    # scipy 1.3.0 is not built for python 2.7 so we allow both for now
+    assert (np.isnan(res['p_R_between_ref_k1']) or res['p_R_between_ref_k1'] == 1.0)
+    assert (np.isnan(res['p_R_between_ref_k2']) or res['p_R_between_ref_k2'] == 1.0)
 
     assert res['RMSD_between_ref_and_k1'] == np.array([0.2], dtype='float32')
     assert res['RMSD_between_ref_and_k2'] == np.array([0.2], dtype='float32')
@@ -104,11 +101,9 @@ def test_TC_metrics_calculator():
     assert res['bias_between_ref_k1'] == np.array([0.2], dtype='float32')
     assert res['bias_between_ref_k2'] == np.array([-0.2], dtype='float32')
 
-    # depends on scipy version changed after v1.2.1
-    assert res['p_R_between_ref_k1'] == np.array([1.], dtype='float32') or \
-           np.isnan(res['p_R_between_ref_k1'])
-    assert res['p_R_between_ref_k2'] == np.array([1.], dtype='float32') or \
-           np.isnan(res['p_R_between_ref_k2'])
+    # scipy 1.3.0 is not built for python 2.7 so we allow both for now
+    assert (np.isnan(res['p_R_between_ref_k1']) or res['p_R_between_ref_k1'] == 1.0)
+    assert (np.isnan(res['p_R_between_ref_k2']) or res['p_R_between_ref_k1'] == 1.0)
 
     assert res['mse_bias_between_ref_k1'], np.array([0.04], dtype='float32')
     assert res['mse_bias_between_ref_k2'], np.array([0.04], dtype='float32')
@@ -130,4 +125,4 @@ def test_TC_metrics_calculator():
 
 
 if __name__ == '__main__':
-    test_BasicMetrics_calculator()
+    test_TC_metrics_calculator()

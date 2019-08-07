@@ -42,8 +42,9 @@ class DataManager(object):
     Parameters
     ----------
     datasets : dict of dicts
-        Keys: string, datasets names
-        Values: dict, containing the following fields
+        :Keys: string, datasets names
+        :Values: dict, containing the following fields
+
             'class': object
                 Class containing the method read_ts for reading the data.
             'columns': list

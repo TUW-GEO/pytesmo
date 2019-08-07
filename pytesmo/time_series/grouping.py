@@ -79,7 +79,7 @@ def group_by_day_bin(df, bins=[1, 11, 21, 32], start=False,
     dekads = np.digitize(df.index.day, bins)
     if dtindex is None:
         dtindex = grp_to_datetimeindex(dekads, bins, df.index, start=start)
-    grp = pd.DataFrame(df.as_matrix(), columns=df.columns, index=dtindex)
+    grp = pd.DataFrame(df.values, columns=df.columns, index=dtindex)
     return grp.groupby(level=0), dtindex
 
 
