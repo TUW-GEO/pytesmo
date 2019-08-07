@@ -942,7 +942,7 @@ class TCMetrics(object):
 def get_dataset_names(ref_key, datasets, n=3):
     """
     Get dataset names in correct order as used in the validation framework
-    
+
     - reference dataset = ref
     - first other dataset = k1
     - second other dataset = k2
