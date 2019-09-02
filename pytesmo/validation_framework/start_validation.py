@@ -1,4 +1,7 @@
-from IPython import parallel
+try:
+    from IPython import parallel
+except ImportError:
+    pass
 try:
     from itertools import izip as zip
 except ImportError:
