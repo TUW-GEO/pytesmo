@@ -155,8 +155,8 @@ def test_IntercompMetrics_calculator():
     assert res['mse_bias_between_ref_and_k2'], np.array([0.04], dtype='float32')
 
     # scipy 1.3.0 is not built for python 2.7 so we allow both for now
-    assert (np.isnan(res['p_R_between_ref_k1']) or res['p_R_between_ref_k1'] == 1.0)
-    assert (np.isnan(res['p_R_between_ref_k2']) or res['p_R_between_ref_k2'] == 1.0)
+    assert (np.isnan(res['p_R_between_ref_and_k1']) or res['p_R_between_ref_k1'] == 1.0)
+    assert (np.isnan(res['p_R_between_ref_and_k2']) or res['p_R_between_ref_k2'] == 1.0)
 
     assert res['RMSD_between_ref_and_k1'] == np.array([0.2], dtype='float32')
     assert res['RMSD_between_ref_and_k2'] == np.array([0.2], dtype='float32')
@@ -285,18 +285,6 @@ def test_HSAF_Metrics():
     df = make_some_data()
     data = df[['ref', 'k1', 'k2']]
 
-    metriccalc = HSAF_Metrics(other_name1='k1', other_name2='k2')
-    res = metriccalc.calc_metrics(data, gpi_info=(0, 0, 0))
-
-    should = dict(n_obs=np.array([366]), dtype='float32')
-
-    assert res['n_obs'] == should['n_obs']
-    assert np.isnan(res['ALL_rho'])
-
-def test_HSAF_Metrics():
-    df = make_some_data()
-    data = df[['ref', 'k1', 'k2']]
-
     metadata_dict_template = {'network' : np.array(['None'], dtype='U256')}
 
     metriccalc = HSAF_Metrics(other_name1='k1', metadata_template=metadata_dict_template)
@@ -306,4 +294,4 @@ def test_HSAF_Metrics():
 
 
 if __name__ == '__main__':
-    test_TC_metrics_calculator()
+    test_IntercompMetrics_calculator()
