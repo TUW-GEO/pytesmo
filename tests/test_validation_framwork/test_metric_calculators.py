@@ -30,7 +30,7 @@ def test_MetadataMetrics_calculator():
 
     metriccalc = MetadataMetrics(other_name='k1')
     res = metriccalc.calc_metrics(data, gpi_info=(0, 0, 0))
-    assert list(res.keys()) == ['gpi', 'lon', 'lat']
+    assert sorted(list(res.keys())) == ['gpi', 'lon', 'lat']
 
     metadata_dict_template = {'network' : np.array(['None'], dtype='U256'),
                               'station' : np.array(['None'], dtype='U256'),
@@ -45,7 +45,7 @@ def test_MetadataMetrics_calculator():
     metriccalc = MetadataMetrics(other_name='k1', metadata_template=metadata_dict_template)
     res = metriccalc.calc_metrics(data, gpi_info=(0, 0, 0, metadata_dict))
     for key, value in metadata_dict.items():
-	    assert res[key] == metadata_dict[key]
+        assert res[key] == metadata_dict[key]
 
 def test_BasicMetrics_calculator():
     df = make_some_data()
@@ -155,8 +155,8 @@ def test_IntercompMetrics_calculator():
     assert res['mse_bias_between_ref_and_k2'], np.array([0.04], dtype='float32')
 
     # scipy 1.3.0 is not built for python 2.7 so we allow both for now
-    assert (np.isnan(res['p_R_between_ref_and_k1']) or res['p_R_between_ref_k1'] == 1.0)
-    assert (np.isnan(res['p_R_between_ref_and_k2']) or res['p_R_between_ref_k2'] == 1.0)
+    assert (np.isnan(res['p_R_between_ref_and_k1']) or res['p_R_between_ref_and_k1'] == 1.0)
+    assert (np.isnan(res['p_R_between_ref_and_k2']) or res['p_R_between_ref_and_k2'] == 1.0)
 
     assert res['RMSD_between_ref_and_k1'] == np.array([0.2], dtype='float32')
     assert res['RMSD_between_ref_and_k2'] == np.array([0.2], dtype='float32')
