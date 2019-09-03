@@ -1,5 +1,15 @@
-v0.7.0, 2019-05-15 
-===================
+unreleased
+==========
+-
+
+v0.7.1, 2019-09-03
+==================
+- Change naming convention for Intercomparison metrics calculator results
+- Use kdtree from pykdtree instead of scipy (faster)
+- Add MetadataMetrics to metrics calculator
+
+v0.7.0, 2019-05-15
+==================
 
 - Add option for filling no data values to moving average
 - Add option for minimum observations to moving average
