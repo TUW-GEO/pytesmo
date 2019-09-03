@@ -14,9 +14,9 @@ dependencies:
   - pykdtree
   - pyresample
   - cartopy
+  - pybufr-ecmwf
   - pip
   - pip:
-    - pybufr-ecmwf
     - pynetcf
     - pygeogrids
     - pynetcf
