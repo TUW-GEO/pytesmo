@@ -285,13 +285,23 @@ def test_HSAF_Metrics():
     df = make_some_data()
     data = df[['ref', 'k1', 'k2']]
 
+    metriccalc = HSAF_Metrics(other_name1='k1', other_name2='k2')
+    res = metriccalc.calc_metrics(data, gpi_info=(0, 0, 0))
+
+    should = dict(ALL_n_obs=np.array([366]), dtype='float32')
+
+    assert res['ALL_n_obs'] == should['ALL_n_obs']
+    assert np.isnan(res['ref_k1_ALL_rho'])
+    assert np.isnan(res['ref_k2_ALL_rho'])
+
+
+def test_HSAF_Metrics_metadata():
+    df = make_some_data()
+    data = df[['ref', 'k1', 'k2']]
+
     metadata_dict_template = {'network' : np.array(['None'], dtype='U256')}
 
     metriccalc = HSAF_Metrics(other_name1='k1', metadata_template=metadata_dict_template)
     res = metriccalc.calc_metrics(data, gpi_info=(0, 0, 0, {'network': 'SOILSCAPE'}))
 
     assert res['network'] == np.array(['SOILSCAPE'], dtype='U256')
-
-
-if __name__ == '__main__':
-    test_IntercompMetrics_calculator()
