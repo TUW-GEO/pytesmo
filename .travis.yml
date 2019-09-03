@@ -36,13 +36,9 @@ install:
   # Useful for debugging any issues with conda
   - conda info -a
 
-  - conda create -q -n test-environment -c conda-forge python=$TRAVIS_PYTHON_VERSION numpy scipy pandas netCDF4 cython pytest pip matplotlib pykdtree pyresample cartopy xarray
+  - conda create -q -n test-environment -c conda-forge python=$TRAVIS_PYTHON_VERSION
+  - conda env update -n test-environment -f environment.yml
   - source activate test-environment
-  - pip install pybufr-ecmwf
-  - pip install pygeogrids
-  - pip install pygeobase
-  - pip install ascat
-  - pip install ismn
   - python setup.py install
   - pip list
   - which pip
