@@ -311,7 +311,7 @@ def lin_cdf_match_stored_params(src, perc_src, perc_ref,
 
 def cdf_match(src, ref,
               min_val=None, max_val=None,
-              nbins=5):
+              nbins=100):
     '''
     computes cumulative density functions of src and ref at their
     respective bin-edges by 5th order spline interpolation; then matches CDF of
