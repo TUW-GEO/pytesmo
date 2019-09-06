@@ -9,3 +9,4 @@ pynetcf>=0.1.17
 ascat>=1.0
 ismn>=0.3
 configparser
+pykdtree

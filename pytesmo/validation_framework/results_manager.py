@@ -5,22 +5,45 @@ Created on 01.06.2015
 
 import os
 import netCDF4
-
 from datetime import datetime
 
+def build_filename(root, key):
+    """
+    Create savepath/filename that does not exceed 255 characters
 
-def build_filename(key):
-    ''' Create a filename that does not exceed the max number of characters (144)?'''
-    ds_names = ['.'.join(ds) for ds in key]
-    fname = '_with_'.join(ds_names) + '.nc'
-    if len(fname) > 144:
+    Parameters
+    ----------
+    root : str
+        Directory where the file should be stored
+    key : list of tuples
+        The keys are joined to create a filename from them. If the length of the
+        joined keys is too long we shorten it.
+
+    Returns
+    -------
+    fname : str
+        Full path to the netcdf file to store
+    """
+    ds_names = []
+    for ds in key:
+        if isinstance(ds, tuple):
+            ds_names.append('.'.join(ds))
+        else:
+            ds_names.append(ds)
+
+    fname = '_with_'.join(ds_names)
+    ext = 'nc'
+
+    if len(os.path.join(root, '.'.join([fname, ext]))) > 255:
         ds_names = [str(ds[0]) for ds in key]
-        fname = '_with_'.join(ds_names) + '.nc'
-    if len(fname) > 144:
-        fname = 'validation.nc'
-    return fname
+        fname = '_with_'.join(ds_names)
 
-def netcdf_results_manager(results, save_path):
+        if len(os.path.join(root, '.'.join([fname, ext]))) > 255:
+            fname = 'validation'
+
+    return os.path.join(root, '.'.join([fname, ext]))
+
+def netcdf_results_manager(results, save_path, zlib=True):
     """
     Function for writing the results of the validation process as NetCDF file.
 
@@ -33,7 +56,7 @@ def netcdf_results_manager(results, save_path):
         Path where the file/files will be saved.
     """
     for key in results.keys():
-        fname = build_filename(key)
+        fname = build_filename(save_path, key)
         filename = os.path.join(save_path, fname)
         if not os.path.exists(filename):
             ncfile = netCDF4.Dataset(filename, 'w')
@@ -60,6 +83,11 @@ def netcdf_results_manager(results, save_path):
                 if var_type == object:
                     var_type = str
                     kwargs = {}
+
+                if zlib:
+                    kwargs['zlib'] = True,
+                    kwargs['complevel'] = 6
+
                 var = ncfile.createVariable(field, var_type,
                                             'dim', **kwargs)
             var[index:] = results[key][field]

@@ -132,3 +132,5 @@ def test_netcdf_result_manager_n3():
     with netCDF4.Dataset(os.path.join(tempdir, 'DS1.x_with_DS2.y_with_DS3.x.nc')) as ds:
         assert ds.variables['lon'][:] == np.array([4])
         assert ds.variables['n_obs'][:] == np.array([1000])
+
+

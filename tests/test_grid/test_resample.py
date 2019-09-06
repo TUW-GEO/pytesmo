@@ -34,45 +34,41 @@ Created on Jun 11, 2014
 
 import pytesmo.grid.resample as resample
 import numpy as np
-import ascat
-import os
-import sys
 import functools
-import pytest
 import numpy.testing as nptest
-import datetime
 import unittest
 
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Does not work on Windows")
-class Test_resample_H07(unittest.TestCase):
+class Test_resample(unittest.TestCase):
 
     def setUp(self):
-        data_path = os.path.join(os.path.dirname(__file__), '..',
-                                 'test-data', 'sat', 'h_saf', 'h07')
-        self.reader = ascat.H07img(data_path)
+        nlats = 90*2
+        nlons = 180*2
+        self.testdata = dict(valrange=np.arange(0.,nlons*nlats).reshape(nlats,nlons),
+                             ones=np.ones((nlats,nlons)))
+        self.lons, self.lats = np.meshgrid(np.arange(-180., 180., 1.),
+                                           np.arange(-90., 90., 1.))
 
     def tearDown(self):
-        self.reader = None
+        self.testdata = None
 
     def test_resample_to_zero_dot_one_deg(self):
-        data, meta, timestamp, lons, lats, time_var = self.reader.read(
-            datetime.datetime(2010, 5, 1, 8, 33, 1))
-
-        data.pop('line_num')  # todo: exclude?
-
-        # lets resample to a 0.1 degree grid
+        # lets resample to a 0.5 degree grid
         # define the grid points in latitude and longitude
-        lats_dim = np.arange(25, 75, 0.1)
-        lons_dim = np.arange(-25, 45, 0.1)
+        lats_dim = np.arange(0, 0.4, 0.1)
+        lons_dim = np.arange(0, 0.4, 0.1)
         # make 2d grid out the 1D grid spacing
         lons_grid, lats_grid = np.meshgrid(lons_dim, lats_dim)
 
-        resampled_data = resample.resample_to_grid(data, lons, lats,
-                                                   lons_grid, lats_grid)
+        resampled_data = resample.resample_to_grid(self.testdata, self.lons, self.lats,
+                                                   lons_grid, lats_grid, search_rad=60000,
+                                                   neighbours=1,fill_values=np.nan)
 
-        for key in data:
+        for key in self.testdata:
             assert resampled_data[key].shape == lons_grid.shape
+
+        assert np.all(np.all(resampled_data['ones'], 1))
+        assert np.all(resampled_data['valrange'] == self.testdata['valrange'][90, 180])
 
 
 def test_resample_dtypes():
@@ -139,10 +135,3 @@ def test_resample_hamming():
         assert resampled_data[key].shape == lons_grid.shape
         assert resampled_data[key].dtype == data[key].dtype
         nptest.assert_almost_equal(resampled_data[key], resampled_should)
-
-if __name__ == "__main__":
-    # import sys;sys.argv = ['', 'Test.testName']
-    #unittest.main()
-    ds = Test_resample_H07()
-    ds.setUp()
-    ds.test_resample_to_zero_dot_one_deg()
