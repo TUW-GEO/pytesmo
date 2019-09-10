@@ -6,7 +6,7 @@ pytesmo
 
 .. image:: https://coveralls.io/repos/TUW-GEO/pytesmo/badge.png?branch=master
   :target: https://coveralls.io/r/TUW-GEO/pytesmo?branch=master
-
+  
 .. image:: https://badge.fury.io/py/pytesmo.svg
     :target: https://badge.fury.io/py/pytesmo
 
