@@ -611,10 +611,9 @@ class IntercomparisonMetrics(MetadataMetrics):
 
         for tds_name in self.tds_names:
             split_tds_name = tds_name.split('_and_')
-            tds_name_key = "{:}_and_{:}".format(self.ds_names_lut[
-                                                split_tds_name[0]],
-                                            self.ds_names_lut[
-                                                split_tds_name[1]])
+            tds_name_key = "{:}_and_{:}".format(
+                self.ds_names_lut[split_tds_name[0]],
+                self.ds_names_lut[split_tds_name[1]])
             for metric in metrics_tds.keys():
                 key = "{:}_between_{:}".format(metric, tds_name_key)
                 self.result_template[key] = metrics_tds[metric].copy()
@@ -767,13 +766,12 @@ class TCMetrics(BasicMetrics):
             real name that will be used in the results file.
         '''
 
-        super(TCMetrics, self).__init__(other_name=other_name1,
-                                           metadata_template=metadata_template)
+        super(TCMetrics, self).__init__(
+            other_name=other_name1, metadata_template=metadata_template)
 
         self.other_name1, self.other_name2 = other_name1, other_name2
         self.calc_tau = calc_tau
         self.df_columns = ['ref', self.other_name1, self.other_name2]
-
 
         if dataset_names is None:
             self.ds_names = self.df_columns
@@ -784,15 +782,12 @@ class TCMetrics(BasicMetrics):
         for name, col in zip(self.ds_names, self.df_columns):
             self.ds_names_lut[col] = name
 
-        self.tds_names = []
-        for combi in itertools.combinations(self.df_columns, 2):
-            if combi[0] != 'ref': continue # only between ref and sat
-            self.tds_names.append("{:}_and_{:}".format(*combi))
+        self.tds_names, self.thds_names = self._make_names()
 
 
         metrics_common = {'n_obs': np.int32([0])}
 
-        metrics_sds = {'snr': np.float32([np.nan]),
+        metrics_thds = {'snr': np.float32([np.nan]),
                        'err_var': np.float32([np.nan]),
                        'beta': np.float32([np.nan])}
 
@@ -800,42 +795,61 @@ class TCMetrics(BasicMetrics):
                        'p_R': np.float32([np.nan]),
                        'rho': np.float32([np.nan]),
                        'p_rho': np.float32([np.nan]),
-                       'bias': np.float32([np.nan]),
+                       'BIAS': np.float32([np.nan]),
                        'tau': np.float32([np.nan]),
                        'p_tau': np.float32([np.nan]),
-                       'rmsd': np.float32([np.nan]),
+                       'RMSD': np.float32([np.nan]),
                        'mse': np.float32([np.nan]),
+                       'RSS': np.float32([np.nan]),
                        'mse_corr': np.float32([np.nan]),
                        'mse_bias': np.float32([np.nan]),
-                       'ubRMSD': np.float32([np.nan]),
+                       'urmsd': np.float32([np.nan]),
                        'mse_var': np.float32([np.nan])}
+
+        if not calc_tau:
+            self.result_template.pop('tau', None)
+            self.result_template.pop('p_tau', None)
 
         for metric in metrics_common.keys():
             key = "{:}".format(metric)
             self.result_template[key] = metrics_common[metric].copy()
 
-
-        # get template for single-dataset metric
-        for name in self.ds_names:
-            for metric in metrics_sds.keys():
+        # get template for three-dataset metric
+        for thds_name in self.thds_names:
+            split_thds_name = thds_name.split('_and_')
+            for metric in metrics_thds.keys():
+                thds_name_key = "{:}_and_{:}_and_{:}".format(
+                    self.ds_names_lut[split_thds_name[0]],
+                    self.ds_names_lut[split_thds_name[1]],
+                    self.ds_names_lut[split_thds_name[2]])
                 key = "{:}_{:}".format(name, metric)
-                self.result_template[key] = metrics_sds[metric].copy()
-
+                self.result_template[key] = metrics_thds[metric].copy()
 
         for tds_name in self.tds_names:
             split_tds_name = tds_name.split('_and_')
-            tds_name_key = "{:}_{:}".format(self.ds_names_lut[
-                                                split_tds_name[0]],
-                                            self.ds_names_lut[
-                                                split_tds_name[1]])
+            tds_name_key = "{:}_and_{:}".format(
+                self.ds_names_lut[split_tds_name[0]],
+                self.ds_names_lut[split_tds_name[1]])
             for metric in metrics_tds.keys():
                 key = "{:}_between_{:}".format(metric, tds_name_key)
                 self.result_template[key] = metrics_tds[metric].copy()
 
+    def _make_names(self):
+        tds_names = []
+        for combi in itertools.combinations(self.df_columns, 2):
+            if combi[0] != 'ref': continue # only between ref and other
+            tds_names.append("{:}_and_{:}".format(*combi))
+
+        thds_names = []
+        for combi in itertools.combinations(self.df_columns, 3):
+            if combi[0] != 'ref': continue # only between ref and 2 others
+            thds_names.append("{:}_and_{:_and_{:}".format(*combi))
+
+        return tds_names, thds_names
 
     def calc_metrics(self, data, gpi_info):
         """
-        calculates the desired statistics
+        Calculate Triple Collocation metrics
 
         Parameters
         ----------
@@ -860,8 +874,8 @@ class TCMetrics(BasicMetrics):
         dataset['lat'][0] = gpi_info[2]
 
         if self.metadata_template != None :
-	        for key, value in self.metadata_template.items() :
-		        dataset[key][0] = gpi_info[3][key]
+            for key, value in self.metadata_template.items() :
+                dataset[key][0] = gpi_info[3][key]
 
         # number of observations
         subset = np.ones(len(data), dtype=bool)
@@ -898,6 +912,10 @@ class TCMetrics(BasicMetrics):
         mse_bias_dict = mse_bias._asdict()
         mse_var_dict = mse_var._asdict()
 
+        # calculate RSS
+        rss = df_metrics.RSS(data)
+        rss_dict = rss._asdict()
+
         # calulcate tau
         if self.calc_tau:
             tau, p_tau = df_metrics.kendalltau(data)
@@ -906,9 +924,9 @@ class TCMetrics(BasicMetrics):
         else:
             tau = p_tau = p_tau_dict = tau_dict = None
 
-        #data_scaled = scale(data, method='mean_std')
+        data_scaled = scale(data, method='mean_std')
         # calculate ubRMSD
-        ubRMSD_nT = df_metrics.ubrmsd(data)
+        ubRMSD_nT = df_metrics.ubrmsd(data_scaled)
         ubRMSD_dict = ubRMSD_nT._asdict()
 
         # get single dataset metrics
@@ -920,9 +938,9 @@ class TCMetrics(BasicMetrics):
         snr, err, beta = metrics.tcol_snr(x, y, z)
 
         for i, name in enumerate(self.ds_names):
-            dataset['{:}_snr'.format(name)][0] = snr[i]
-            dataset['{:}_err_var'.format(name)][0] = err[i]
-            dataset['{:}_beta'.format(name)][0] = beta[i]
+            dataset['snr_{:}'.format(name)][0] = snr[i]
+            dataset['err_var_{:}'.format(name)][0] = err[i]
+            dataset['beta_{:}'.format(name)][0] = beta[i]
 
 
         for tds_name in self.tds_names:
@@ -937,16 +955,17 @@ class TCMetrics(BasicMetrics):
             mse_var = mse_var_dict[tds_name]
             rmsd = rmsd_dict[tds_name]
             ubRMSD = ubRMSD_dict[tds_name]
+            rss = rss_dict[tds_name]
+
             if tau_dict and p_tau_dict:
                 tau = tau_dict[tds_name]
                 p_tau = p_tau_dict[tds_name]
 
 
             split_tds_name = tds_name.split('_and_')
-            tds_name_key = "{:}_{:}".format(self.ds_names_lut[
-                split_tds_name[0]],
-                self.ds_names_lut[
-                split_tds_name[1]])
+            tds_name_key = "{:}_and_{:}".format(
+                self.ds_names_lut[split_tds_name[0]],
+                self.ds_names_lut[split_tds_name[1]])
 
             dataset['R_between_{:}'.format(tds_name_key)][0] = R
             dataset['p_R_between_{:}'.format(tds_name_key)][0] = p_R
