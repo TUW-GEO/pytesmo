@@ -43,64 +43,65 @@ import numpy as np
 
 
 class MetadataMetrics(object):
-	"""
-	This class sets up the gpi info and metadata (if used) in the results template.
-	This is used as the basis for all other metric calculators.
+    """
+    This class sets up the gpi info and metadata (if used) in the results template.
+    This is used as the basis for all other metric calculators.
 
     Parameters
     ----------
     other_name: string, optional
         Name of the column of the non-reference / other dataset in the
         pandas DataFrame
-	metadata_template: dictionary, optional
+    metadata_template: dictionary, optional
         A dictionary containing additional fields (and types) of the form
         dict = {'field': np.float32([np.nan]}. Allows users to specify information in the job tuple,
         i.e. jobs.append((idx, metadata['longitude'], metadata['latitude'], metadata_dict)) which
         is then propagated to the end netCDF results file.
-	"""
+    """
 
-	def __init__(self, other_name='k1',
-	             metadata_template=None) :
+    def __init__(self, other_name='k1',
+                 metadata_template=None):
 
-		self.result_template = {'gpi' : np.int32([-1]),
-		                        'lon' : np.float64([np.nan]),
-		                        'lat' : np.float64([np.nan])}
+        self.result_template = {'gpi': np.int32([-1]),
+                                'lon': np.float64([np.nan]),
+                                'lat': np.float64([np.nan])}
 
-		self.metadata_template = metadata_template
-		if self.metadata_template != None :
-			self.result_template.update(metadata_template)
+        self.metadata_template = metadata_template
+        if self.metadata_template != None:
+            self.result_template.update(metadata_template)
 
-		self.other_name = other_name
+        self.other_name = other_name
 
-	def calc_metrics(self, data, gpi_info) :
-		"""
-		Adds the gpi info and metadata to the results.
+    def calc_metrics(self, data, gpi_info):
+        """
+        Adds the gpi info and metadata to the results.
 
-		Parameters
-		----------
-		data : pandas.DataFrame
-		    see individual calculators for more information. not directly used here.
-		gpi_info : tuple
-		    of (gpi, lon, lat)
-		    or, optionally, (gpi, lon, lat, metadata) where metadata is a dictionary
-		"""
+        Parameters
+        ----------
+        data : pandas.DataFrame
+            see individual calculators for more information. not directly used here.
+        gpi_info : tuple
+            of (gpi, lon, lat)
+            or, optionally, (gpi, lon, lat, metadata) where metadata is a dictionary
+        """
 
-		dataset = copy.deepcopy(self.result_template)
+        dataset = copy.deepcopy(self.result_template)
 
-		dataset['gpi'][0] = gpi_info[0]
-		dataset['lon'][0] = gpi_info[1]
-		dataset['lat'][0] = gpi_info[2]
+        dataset['gpi'][0] = gpi_info[0]
+        dataset['lon'][0] = gpi_info[1]
+        dataset['lat'][0] = gpi_info[2]
 
-		if self.metadata_template != None :
-			for key, value in self.metadata_template.items() :
-				try:
-					dataset[key][0] = gpi_info[3][key]
-				except(IndexError):
-					raise Exception('No metadata has been provided to the job. '
-					                'Should be of form {field: metadata_value} using the metadata_template '
-					                'supplied to init function.')
+        if self.metadata_template != None:
+            for key, value in self.metadata_template.items():
+                try:
+                    dataset[key][0] = gpi_info[3][key]
+                except(IndexError):
+                    raise Exception('No metadata has been provided to the job. '
+                                    'Should be of form {field: metadata_value} using the metadata_template '
+                                    'supplied to init function.')
 
-		return dataset
+        return dataset
+
 
 class BasicMetrics(MetadataMetrics):
     """
@@ -129,17 +130,17 @@ class BasicMetrics(MetadataMetrics):
                  calc_tau=False,
                  metadata_template=None):
         super(BasicMetrics, self).__init__(other_name=other_name,
-                                              metadata_template=metadata_template)
+                                           metadata_template=metadata_template)
 
         self.result_template.update({'R': np.float32([np.nan]),
-                                'p_R': np.float32([np.nan]),
-                                'rho': np.float32([np.nan]),
-                                'p_rho': np.float32([np.nan]),
-                                'tau': np.float32([np.nan]),
-                                'p_tau': np.float32([np.nan]),
-                                'RMSD': np.float32([np.nan]),
-                                'BIAS': np.float32([np.nan]),
-                                'n_obs' : np.int32([0])})
+                                     'p_R': np.float32([np.nan]),
+                                     'rho': np.float32([np.nan]),
+                                     'p_rho': np.float32([np.nan]),
+                                     'tau': np.float32([np.nan]),
+                                     'p_tau': np.float32([np.nan]),
+                                     'RMSD': np.float32([np.nan]),
+                                     'BIAS': np.float32([np.nan]),
+                                     'n_obs': np.int32([0])})
 
         self.calc_tau = calc_tau
 
@@ -195,7 +196,6 @@ class BasicMetricsPlusMSE(BasicMetrics):
 
     def __init__(self, other_name='k1',
                  metadata_template=None):
-
         super(BasicMetricsPlusMSE, self).__init__(other_name=other_name,
                                                   metadata_template=metadata_template)
         self.result_template.update({'mse': np.float32([np.nan]),
@@ -234,17 +234,15 @@ class FTMetrics(MetadataMetrics):
     def __init__(self, frozen_flag=2,
                  other_name='k1',
                  metadata_template=None):
-
         super(FTMetrics, self).__init__(other_name=other_name,
-	                                       metadata_template=metadata_template)
+                                        metadata_template=metadata_template)
 
         self.frozen_flag_value = frozen_flag
         self.result_template.update({'ssf_fr_temp_un': np.float32([np.nan]),
-                                'ssf_fr_temp_fr': np.float32([np.nan]),
-                                'ssf_un_temp_fr': np.float32([np.nan]),
-                                'ssf_un_temp_un': np.float32([np.nan]),
-                                'n_obs' : np.int32([0])})
-
+                                     'ssf_fr_temp_fr': np.float32([np.nan]),
+                                     'ssf_un_temp_fr': np.float32([np.nan]),
+                                     'ssf_un_temp_un': np.float32([np.nan]),
+                                     'n_obs': np.int32([0])})
 
     def calc_metrics(self, data, gpi_info):
         """
@@ -311,7 +309,7 @@ class BasicSeasonalMetrics(MetadataMetrics):
         self.other_name = other_name
 
         super(BasicSeasonalMetrics, self).__init__(other_name=other_name,
-                                        metadata_template=metadata_template)
+                                                   metadata_template=metadata_template)
 
         metrics = {'R': np.float32([np.nan]),
                    'p_R': np.float32([np.nan]),
@@ -383,7 +381,7 @@ class HSAF_Metrics(MetadataMetrics):
                  metadata_template=None):
 
         super(HSAF_Metrics, self).__init__(other_name=other_name1,
-	                                               metadata_template=metadata_template)
+                                           metadata_template=metadata_template)
 
         # prepare validation dataset names as provided
         self.other_name1 = other_name1
@@ -434,9 +432,9 @@ class HSAF_Metrics(MetadataMetrics):
             for tds_name in self.tds_names:
                 split_tds_name = tds_name.split('_and_')
                 tds_name_key = "{:}_{:}".format(self.ds_names_lut[
-                    split_tds_name[0]],
-                    self.ds_names_lut[
-                    split_tds_name[1]])
+                                                    split_tds_name[0]],
+                                                self.ds_names_lut[
+                                                    split_tds_name[1]])
                 for metric in metrics_tds.keys():
                     key = "{:}_{:}_{:}".format(tds_name_key, season, metric)
                     self.result_template[key] = metrics_tds[metric].copy()
@@ -518,9 +516,9 @@ class HSAF_Metrics(MetadataMetrics):
 
                 split_tds_name = tds_name.split('_and_')
                 tds_name_key = "{:}_{:}".format(self.ds_names_lut[
-                    split_tds_name[0]],
-                    self.ds_names_lut[
-                    split_tds_name[1]])
+                                                    split_tds_name[0]],
+                                                self.ds_names_lut[
+                                                    split_tds_name[1]])
 
                 dataset['{:}_{:}_R'.format(tds_name_key, season)][0] = R
                 dataset['{:}_{:}_p_R'.format(tds_name_key, season)][0] = p_R
@@ -559,6 +557,7 @@ class IntercomparisonMetrics(MetadataMetrics):
         for the df cols.
 
     """
+
     def __init__(self, other_names=['k1', 'k2', 'k3'],
                  calc_tau=False, dataset_names=None,
                  metadata_template=None):
@@ -581,7 +580,7 @@ class IntercomparisonMetrics(MetadataMetrics):
 
         self.tds_names = []
         for combi in itertools.combinations(self.df_columns, 2):
-            if combi[0] != 'ref': continue # does not validate between non-reference data sets.
+            if combi[0] != 'ref': continue  # does not validate between non-reference data sets.
             self.tds_names.append("{:}_and_{:}".format(*combi))
 
         metrics_common = {'n_obs': np.int32([0])}
@@ -648,7 +647,6 @@ class IntercomparisonMetrics(MetadataMetrics):
 
         dataset['n_obs'][0] = n_obs
 
-
         # calculate Pearson correlation
         pearson_R, pearson_p = df_metrics.pearsonr(data)
         pearson_R = pearson_R._asdict()
@@ -677,7 +675,6 @@ class IntercomparisonMetrics(MetadataMetrics):
         # calculate RSS
         rss = df_metrics.RSS(data)
         rss_dict = rss._asdict()
-
 
         # calulcate tau
         if self.calc_tau:
@@ -712,7 +709,6 @@ class IntercomparisonMetrics(MetadataMetrics):
                 tau = tau_dict[tds_name]
                 p_tau = p_tau_dict[tds_name]
 
-
             split_tds_name = tds_name.split('_and_')
             tds_name_key = "{:}_and_{:}".format(
                 self.ds_names_lut[split_tds_name[0]], self.ds_names_lut[split_tds_name[1]])
@@ -745,33 +741,28 @@ class TCMetrics(BasicMetrics):
     of more than 3 datasets.
     """
 
-    def __init__(self, other_name1='k1', other_name2='k2',
+    def __init__(self, other_names=['k1', 'k2'],
                  calc_tau=False, dataset_names=None,
                  metadata_template=None):
-        '''
-        Initialize the QA4SM metrics
+        """
+        Triple Collocation metrics as implemented in the QA4SM project.
 
         Parameters
         ----------
-        other_name1 : str, optional (default: 'k1')
-            Name that the first satellite dataset will have as a placeholder in
-            the data frame
-        other_name2 : str, optional (default: 'k2')
-            Name that the second satellite dataset will have as a placeholder in
-            the data frame
+        other_names : list, optional (default: ['k1', 'k2'])
+            Names of the data sets that are not the reference in the data frame.
         calc_tau : bool, optional (default: False)
-            Calculate Kendalls Tau (slow)
+            Calculate Kendall's Tau (slow)
         dataset_names : list, optional (default: None)
             List that maps the names of the satellite dataset columns to their
             real name that will be used in the results file.
-        '''
+        """
 
         super(TCMetrics, self).__init__(
-            other_name=other_name1, metadata_template=metadata_template)
+            other_name=other_names, metadata_template=metadata_template)
 
-        self.other_name1, self.other_name2 = other_name1, other_name2
         self.calc_tau = calc_tau
-        self.df_columns = ['ref', self.other_name1, self.other_name2]
+        self.df_columns = ['ref'] + self.other_name
 
         if dataset_names is None:
             self.ds_names = self.df_columns
@@ -784,13 +775,15 @@ class TCMetrics(BasicMetrics):
 
         self.tds_names, self.thds_names = self._make_names()
 
-
+        # equal for all datasets
         metrics_common = {'n_obs': np.int32([0])}
 
+        # for triples of ref/other/other
         metrics_thds = {'snr': np.float32([np.nan]),
-                       'err_var': np.float32([np.nan]),
-                       'beta': np.float32([np.nan])}
+                        'err_var': np.float32([np.nan]),
+                        'beta': np.float32([np.nan])}
 
+        # for tuples or ref/other
         metrics_tds = {'R': np.float32([np.nan]),
                        'p_R': np.float32([np.nan]),
                        'rho': np.float32([np.nan]),
@@ -814,7 +807,7 @@ class TCMetrics(BasicMetrics):
             key = "{:}".format(metric)
             self.result_template[key] = metrics_common[metric].copy()
 
-        # get template for three-dataset metric
+        # get template for three-dataset metrics
         for thds_name in self.thds_names:
             split_thds_name = thds_name.split('_and_')
             for metric in metrics_thds.keys():
@@ -822,9 +815,10 @@ class TCMetrics(BasicMetrics):
                     self.ds_names_lut[split_thds_name[0]],
                     self.ds_names_lut[split_thds_name[1]],
                     self.ds_names_lut[split_thds_name[2]])
-                key = "{:}_{:}".format(name, metric)
+                key = "{:}_between_{:}".format(metric, thds_name_key)
                 self.result_template[key] = metrics_thds[metric].copy()
 
+        # get template for the two dataset metrics
         for tds_name in self.tds_names:
             split_tds_name = tds_name.split('_and_')
             tds_name_key = "{:}_and_{:}".format(
@@ -835,15 +829,16 @@ class TCMetrics(BasicMetrics):
                 self.result_template[key] = metrics_tds[metric].copy()
 
     def _make_names(self):
+        # Create the pairs and triples of data sets that the metrics are applied to.
         tds_names = []
         for combi in itertools.combinations(self.df_columns, 2):
-            if combi[0] != 'ref': continue # only between ref and other
+            if combi[0] != 'ref': continue  # only between ref and other
             tds_names.append("{:}_and_{:}".format(*combi))
 
         thds_names = []
         for combi in itertools.combinations(self.df_columns, 3):
-            if combi[0] != 'ref': continue # only between ref and 2 others
-            thds_names.append("{:}_and_{:_and_{:}".format(*combi))
+            if combi[0] != 'ref': continue  # only between ref and 2 others
+            thds_names.append("{:}_and_{:}_and_{:}".format(*combi))
 
         return tds_names, thds_names
 
@@ -854,8 +849,7 @@ class TCMetrics(BasicMetrics):
         Parameters
         ----------
         data : pandas.DataFrame
-            with >2 columns, the first column is the reference dataset
-            named 'ref'
+            with >2 columns, the first column is the reference dataset named 'ref'
             other columns are the data sets to compare against named 'other_i'
         gpi_info : tuple
             of (gpi, lon, lat)
@@ -873,8 +867,8 @@ class TCMetrics(BasicMetrics):
         dataset['lon'][0] = gpi_info[1]
         dataset['lat'][0] = gpi_info[2]
 
-        if self.metadata_template != None :
-            for key, value in self.metadata_template.items() :
+        if self.metadata_template != None:
+            for key, value in self.metadata_template.items():
                 dataset[key][0] = gpi_info[3][key]
 
         # number of observations
@@ -885,7 +879,6 @@ class TCMetrics(BasicMetrics):
             return dataset
 
         dataset['n_obs'][0] = n_obs
-
 
         # calculate Pearson correlation
         pearson_R, pearson_p = df_metrics.pearsonr(data)
@@ -924,6 +917,7 @@ class TCMetrics(BasicMetrics):
         else:
             tau = p_tau = p_tau_dict = tau_dict = None
 
+        # todo: use the TC scaling parameters?
         data_scaled = scale(data, method='mean_std')
         # calculate ubRMSD
         ubRMSD_nT = df_metrics.ubrmsd(data_scaled)
@@ -941,7 +935,6 @@ class TCMetrics(BasicMetrics):
             dataset['snr_{:}'.format(name)][0] = snr[i]
             dataset['err_var_{:}'.format(name)][0] = err[i]
             dataset['beta_{:}'.format(name)][0] = beta[i]
-
 
         for tds_name in self.tds_names:
             R = pearson_R[tds_name]
@@ -961,7 +954,6 @@ class TCMetrics(BasicMetrics):
                 tau = tau_dict[tds_name]
                 p_tau = p_tau_dict[tds_name]
 
-
             split_tds_name = tds_name.split('_and_')
             tds_name_key = "{:}_and_{:}".format(
                 self.ds_names_lut[split_tds_name[0]],
@@ -978,6 +970,7 @@ class TCMetrics(BasicMetrics):
             dataset['mse_var_between_{:}'.format(tds_name_key)][0] = mse_var
             dataset['rmsd_between_{:}'.format(tds_name_key)][0] = rmsd
             dataset['ubRMSD_between_{:}'.format(tds_name_key)][0] = ubRMSD
+            dataset['RSS_between_{:}'.format(tds_name_key)][0] = rss
 
             if self.calc_tau:
                 dataset['tau_between_{:}'.format(tds_name_key)][0] = tau

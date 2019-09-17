@@ -183,7 +183,7 @@ def test_IntercompMetrics_calculator_metadata():
     assert res['network'] == np.array(['SOILSCAPE'], dtype='U256')
 
 def test_TC_metrics_calculator():
-    # todo: choose example data that returns tc variables.
+    # this calculator uses a reference data set that is part of ALL triples.
     df = make_some_data()
     data = df[['ref', 'k1', 'k2']]
 
