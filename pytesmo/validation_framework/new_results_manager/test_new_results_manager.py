@@ -4,7 +4,7 @@
 Module description
 '''
 # TODO:
-#   (+)
+#   (+) 
 #---------
 # NOTES:
 #   -
@@ -16,7 +16,7 @@ import netCDF4
 import shutil
 
 from pytesmo.validation_framework.results_manager import netcdf_results_manager
-from pytesmo.validation_framework.new_results_manager import *
+from local_scripts.new_results_manager import *
 
 
 def test_netcdf_result_manager_new_n2():

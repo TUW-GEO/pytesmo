@@ -221,15 +221,16 @@ def tcol_snr(df, ref_ind=0):
     snr, err, beta = nwise_apply(df, metrics.tcol_snr, comm=True, n=3, ref_ind=ref_ind)
 
     results = {}
-    for var_name, var_vals in {'snr': snr, 'err' : err, 'beta' : beta}.items():
+    for var_name, var_vals in {'snr': snr, 'err_std_dev' : err, 'beta' : beta}.items():
         results[var_name] = []
         for trip, res in var_vals.items():
-            inner_name = '_and_'.join(trip)
+            # inner_name = '_and_'.join(trip)
+            inner_name = var_name
             Inner = namedtuple(inner_name, dict(zip(trip, res)))
             r = Inner(*res)
             results[var_name].append(r)
 
-    return (results['snr'], results['err'], results['beta'])
+    return (results['snr'], results['err_std_dev'], results['beta'])
 
 
 
