@@ -8,6 +8,18 @@ import pytesmo.df_metrics as df_metrics
 import pytesmo.metrics as metrics
 from pprint import pprint
 
+def innerouter():
+    from collections import  namedtuple
+
+    t_inner1=namedtuple('test1', ['t1', 't2'])
+    t_inner2=namedtuple('test2', ['t1', 't2'])
+
+    inner1 = t_inner1(1,2)
+    inner2 = t_inner2(1,2)
+
+    t_outer=namedtuple('OUTER', ['test1', 'test2'])
+    t_outer(inner1, inner2)
+
 def create_testdata(n=3, biases=np.array([0.2, 0.3, 0.4]), seed=12345):
     np.random.seed(seed)
 
@@ -32,7 +44,27 @@ def df_snr(realdata=False, n=3):
         df = read_realdata(n=n).dropna()
     else:
         df = create_testdata(n, np.array(list(range(n))))
-    res = df_metrics.tcol_snr(df, ref_ind=0)
+    snr, err, beta = df_metrics.tcol_snr(df, ref_ind=0)
+    print('snr')
+    pprint(snr)
+    print('err')
+    pprint(err)
+    print('beta')
+    pprint(beta)
+    print('------------------')
+
+    if n == 3:
+        old_snr, old_err, old_beta = \
+            metrics.tcol_snr(df.iloc[:,0].values,
+                             df.iloc[:,1].values,
+                             df.iloc[:,2].values)
+        print('old_snr')
+        pprint(old_snr)
+        print('old_err')
+        pprint(old_err)
+        print('old_beta')
+        pprint(old_beta)
+    print('=================================')
 
 def df_err(realdata=False, n=3):
     if realdata:
@@ -40,12 +72,20 @@ def df_err(realdata=False, n=3):
     else:
         df = create_testdata(n, np.array(list(range(n))))
     err = df_metrics.tcol_error(df)
-    print('new_err')
+    print('err')
     pprint(err)
-    if n == 3:
-        err_old = df_metrics.old_tcol_error(df)
-        print('old_err')
-        pprint(err_old)
+    print('------------------')
+    if n !=3:
+        df = df.iloc[:,:3]
+        old_err_x, old_err_y, old_err_z = df_metrics.old_tcol_error(df)
+        print('old_err_x')
+        pprint(old_err_x)
+        print('old_err_y')
+        pprint(old_err_y)
+        print('old_err_z')
+        pprint(old_err_z)
+    print('=================================')
+
 
 
 def new_pairwise_apply(method=metrics.pearsonr):
@@ -63,10 +103,7 @@ def old_pairwise_apply():
 
 if __name__ == '__main__':
     snr = df_snr(True, n=4)
-
     err = df_err(True, n=4)
 
-
-
-    new_result = new_pairwise_apply()
-    old_result = old_pairwise_apply()
+    #new_result = new_pairwise_apply()
+    #old_result = old_pairwise_apply()

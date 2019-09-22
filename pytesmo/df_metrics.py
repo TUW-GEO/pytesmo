@@ -254,9 +254,9 @@ def old_tcol_error(df):
 
     tcol_result = namedtuple('triple_collocation_error', df.columns)
 
-    return tcol_result._make(metrics.tcol_error(df.ix[:, 0].values,
-                                                df.ix[:, 1].values,
-                                                df.ix[:, 2].values))
+    return tcol_result._make(metrics.tcol_error(df.iloc[:, 0].values,
+                                                df.iloc[:, 1].values,
+                                                df.iloc[:, 2].values))
 
 
 
