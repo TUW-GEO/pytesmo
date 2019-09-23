@@ -305,3 +305,7 @@ def test_HSAF_Metrics_metadata():
     res = metriccalc.calc_metrics(data, gpi_info=(0, 0, 0, {'network': 'SOILSCAPE'}))
 
     assert res['network'] == np.array(['SOILSCAPE'], dtype='U256')
+
+
+if __name__ == '__main__':
+    test_IntercompMetrics_calculator()

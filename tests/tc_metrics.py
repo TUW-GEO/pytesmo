@@ -90,7 +90,7 @@ def df_err(realdata=False, n=3):
 
 def new_pairwise_apply(method=metrics.pearsonr):
     df = create_testdata(3, np.array([1., 2., 3.]))
-    result = df_metrics.nwise_apply(df, method, comm=False, n=2, as_df=False)
+    result = df_metrics.nwise_apply(df, method, 2, comm=False, as_df=False)
     named_tupel = df_metrics._dict_to_namedtuple(result[0], 'R')
     return named_tupel
 
@@ -100,42 +100,6 @@ def old_pairwise_apply():
     result = df_metrics.pairwise_apply(df, method, comm=False)
     named_tupel = df_metrics._to_namedtuple(result[0], 'R')
     return named_tupel
-
-def test_df_tcol_err():
-    n=4
-    df = create_testdata(n, np.array(list(range(n))))
-    err = df_metrics.tcol_error(df)
-
-    assert len(err) == n # each DS has a result
-    # all combinations are in the results
-    assert list(err[0]._asdict().keys()) == ['ds0', 'ds1', 'ds2']
-    assert list(err[1]._asdict().keys()) == ['ds0', 'ds1', 'ds3']
-    assert list(err[2]._asdict().keys()) == ['ds0', 'ds2', 'ds3']
-    assert list(err[3]._asdict().keys()) == ['ds1', 'ds2', 'ds3']
-    # test some values
-    np.testing.assert_almost_equal(err[0].ds0, 1.3824368)
-    np.testing.assert_almost_equal(err[1].ds0, 1.6890983)
-    np.testing.assert_almost_equal(err[2].ds0, 2.3915740)
-    np.testing.assert_almost_equal(err[3].ds3, 1.4190232)
-
-def test_df_snr_err():
-    n = 4
-    df = create_testdata(n, np.array(list(range(n))))
-    snr, err, beta = df_metrics.tcol_snr(df, ref_ind=0)
-
-    assert len(snr) == len(err) == len(beta) == n
-
-    # field names
-    assert snr[0]._fields == err[0]._fields == beta[0]._fields == ('ds0', 'ds1', 'ds2')
-    assert snr[1]._fields == err[1]._fields == beta[1]._fields == ('ds0', 'ds1', 'ds3')
-    assert snr[2]._fields == err[2]._fields == beta[2]._fields == ('ds0', 'ds2', 'ds3')
-    assert snr[3]._fields == err[3]._fields == beta[3]._fields == ('ds1', 'ds2', 'ds3')
-
-    # test some values
-    np.testing.assert_almost_equal(snr[0].ds0, -7.9553239335)
-    np.testing.assert_almost_equal(err[1].ds0, 0.2511626266)
-    np.testing.assert_almost_equal(beta[2].ds0, 1.) # must be 1 as there is no bias
-    np.testing.assert_almost_equal(snr[3].ds3, np.nan)
 
 def test_df_tcol_old_vs_new():
     # compare the results of the old and new implementation
@@ -154,11 +118,78 @@ def test_df_tcol_old_vs_new():
     assert old_err_z == new_err[0].ds2
 
 
+def test_df_tcol_err():
+    # test new implementation with more than 3 data sets.
+    n=4
+    df = create_testdata(n, np.array(list(range(n))))
+    err = df_metrics.tcol_error(df)
 
+    assert len(err) == n # each DS has a result
+    # all combinations are in the results
+    assert list(err[0]._asdict().keys()) == ['ds0', 'ds1', 'ds2']
+    assert list(err[1]._asdict().keys()) == ['ds0', 'ds1', 'ds3']
+    assert list(err[2]._asdict().keys()) == ['ds0', 'ds2', 'ds3']
+    assert list(err[3]._asdict().keys()) == ['ds1', 'ds2', 'ds3']
+    # test some values
+    np.testing.assert_almost_equal(err[0].ds0, 1.3824368)
+    np.testing.assert_almost_equal(err[1].ds0, 1.6890983)
+    np.testing.assert_almost_equal(err[2].ds0, 2.3915740)
+    np.testing.assert_almost_equal(err[3].ds3, 1.4190232)
+
+def test_df_snr_err():
+    # test new implementation with more than 3 data sets.
+    n = 4
+    df = create_testdata(n, np.array(list(range(n))))
+    snr, err, beta = df_metrics.tcol_snr(df, ref_ind=0)
+
+    assert len(snr) == len(err) == len(beta) == n
+
+    # field names
+    assert snr[0]._fields == err[0]._fields == beta[0]._fields == ('ds0', 'ds1', 'ds2')
+    assert snr[1]._fields == err[1]._fields == beta[1]._fields == ('ds0', 'ds1', 'ds3')
+    assert snr[2]._fields == err[2]._fields == beta[2]._fields == ('ds0', 'ds2', 'ds3')
+    assert snr[3]._fields == err[3]._fields == beta[3]._fields == ('ds1', 'ds2', 'ds3')
+
+    # test some values
+    np.testing.assert_almost_equal(snr[0].ds0, -7.9553239335)
+    np.testing.assert_almost_equal(err[1].ds0, 0.2511626266)
+    np.testing.assert_almost_equal(beta[2].ds0, 1.) # must be 1 as there is no bias
+    np.testing.assert_almost_equal(snr[3].ds3, np.nan)
+
+
+def test_df_metrics_old_vs_new_apply():
+    # compare the results of the old and new implementation with 3 data sets.
+    n = 3
+    df = create_testdata(n, np.array(list(range(n))))
+
+    # BIAS, input order does matter --> comm = False
+    old_app = df_metrics.pairwise_apply(df, metrics.bias, comm=False)
+    new_app = df_metrics.nwise_apply(df, metrics.bias, comm=False, as_df=True, n=2)
+
+    print(old_app)
+    print(new_app)
+    np.testing.assert_equal(old_app.values, new_app.values)
+
+    # Pearson R, input order doesn't matter --> comm = True
+    old_app = df_metrics.pairwise_apply(df, metrics.pearsonr, comm=True)
+    new_app = df_metrics.nwise_apply(df, metrics.pearsonr, comm=True, as_df=True, n=2)
+    print(old_app[0], old_app[1])
+    print(new_app[0], new_app[1])
+
+def test_bias_df_bug():
+    df = pd.DataFrame(index=pd.date_range('2000-01-01', '2000-12-31', freq='D'),
+                      data={'ds0':np.repeat(0, 366) , 'ds1':np.repeat(1, 366)})
+
+    print(metrics.bias(df.iloc[:, 0].values, df.iloc[:, 1].values))
+    print(df_metrics.bias_old(df))
+    print(df_metrics.bias(df))
 if __name__ == '__main__':
-    test_df_snr_err()
+    test_bias_df_bug()
+
+    test_df_metrics_old_vs_new_apply()
     test_df_tcol_old_vs_new()
     test_df_tcol_err()
+    test_df_snr_err()
 
 
 
