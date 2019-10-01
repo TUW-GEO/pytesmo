@@ -465,7 +465,7 @@ def nwise_apply(df, method, n=2, comm=False, as_df=False, ds_names=True,
     for comb in combs:
         valid = np.logical_and(*[mask[i] for i in comb]) # where all are True
 
-        lut_comb_cols.update(dict(zip(comb, tuple(cols[[*comb]]))))
+        lut_comb_cols.update(dict(zip(comb, tuple(np.take(cols, comb)))))
 
         if not valid.any():
             continue

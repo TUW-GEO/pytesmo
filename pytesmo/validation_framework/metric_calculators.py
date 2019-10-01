@@ -68,6 +68,8 @@ def _get_metric_template(metr):
     """ return empty dict to fill results into """
     if isinstance(metr, str):
         metr = [metr]
+
+    lut = dict()
     # metrics that are equal for all data sets
     met_comm = {'n_obs': np.int32([0])}
     # metrics that are computed between dataset pairs
@@ -86,7 +88,8 @@ def _get_metric_template(metr):
                'urmsd': np.float32([np.nan]),
                'mse_var': np.float32([np.nan])}
 
-    lut = {**met_comm, **met_tds}
+    lut.update(met_comm)
+    lut.update(met_tds)
 
     in_lut = np.isin(np.array(metr), np.array(list(lut.keys())))
     if not all(in_lut):
