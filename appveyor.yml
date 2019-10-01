@@ -56,11 +56,12 @@ install:
   - conda create -n pytesmo python=%PYTHON_VERSION%
   - cmd: activate pytesmo
   # Install dependencies
-  - conda install -c conda-forge numpy scipy pandas netCDF4 cython pip matplotlib pykdtree pyresample cartopy xarray
-  - pip install pygeogrids
-  - pip install pygeobase
-  - pip install ascat
-  - pip install ismn
+  #- conda install -c conda-forge numpy scipy pandas netCDF4 cython pip matplotlib pykdtree pyresample cartopy xarray
+  #- pip install pygeogrids
+  #- pip install pygeobase
+  #- pip install ascat
+  #- pip install ismn
+  - conda update -f environment.yml -n pytesmo
   - pip install pytest==3.8.2 # While supporting python2 x86
   
   # Print debug infos
