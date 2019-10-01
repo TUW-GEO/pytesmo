@@ -245,7 +245,7 @@ def test_ascat_ismn_validation_metadata():
     vars_should = [u'n_obs', u'tau', u'gpi', u'RMSD', u'lon', u'p_tau',
                    u'BIAS', u'p_rho', u'rho', u'lat', u'R', u'p_R']
     for key, value in metadata_dict_template.items():
-	    vars_should.append(key)
+        vars_should.append(key)
 
     n_obs_should = [384,  357,  482,  141,  251, 1927, 1887, 1652]
     rho_should = np.array([0.70022893, 0.53934574,
