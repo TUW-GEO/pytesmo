@@ -321,4 +321,6 @@ def test_HSAF_Metrics_metadata():
 
 
 if __name__ == '__main__':
+    test_IntercompMetrics_calculator()
+    test_TC_metrics_calculator()
     test_HSAF_Metrics()

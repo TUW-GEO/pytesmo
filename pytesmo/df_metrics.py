@@ -441,17 +441,6 @@ def nwise_apply(df, method, n=2, comm=False, as_df=False, ds_names=True,
     mat = mat.T
     applyf = method
 
-    # find out how many variables the applyf returns
-    result = []
-    # apply the method using the first data set to find out the shape of c,
-    # we add a bias (i) to avoid raining warnings.
-    c = applyf(*[mat[i] for i in range(n)])
-    for index, value in enumerate(np.atleast_1d(c)):
-        result.append(OrderedDict())
-    result = np.array(result)    # array of OrderedDicts
-    # each return value result is a dict that gets filled with dicts that have
-    # the cols and keys and the results as values
-
     mask = np.isfinite(mat)
 
     # create the possible combinations of lines
@@ -460,18 +449,30 @@ def nwise_apply(df, method, n=2, comm=False, as_df=False, ds_names=True,
     perm = True if not comm else False
     combs = n_combinations(counter, n, must_include=must_include, permutations=perm)
 
+    # find out how many variables the applyf returns
+    result = []
+    # apply the method using the first data set to find out the shape of c,
+    # we add a bias (i) to avoid raising warnings.
+    c = applyf(*[mat[i] for i in range(n)])
+    for index, value in enumerate(np.atleast_1d(c)):
+        result.append(OrderedDict([(c, np.nan) for c in combs]))
+    result = np.array(result)    # array of OrderedDicts
+    # each return value result is a dict that gets filled with dicts that have
+    # the cols and keys and the results as values
+
     lut_comb_cols = dict()
 
     for comb in combs:
         valid = np.logical_and(*[mask[i] for i in comb]) # where all are True
+
+        lut_comb_cols.update(dict(zip(comb, tuple(cols[[*comb]]))))
+
         if not valid.any():
             continue
         if not valid.all():
             c = applyf(*[mat[i,:][valid] for i in comb], **method_kwargs)
         else:
             c = applyf(*[mat[i,:] for i in comb], **method_kwargs)
-
-        lut_comb_cols.update(dict(zip(comb, tuple(cols[[*comb]]))))
 
         for index, value in enumerate(np.atleast_1d(c)):
             result[index][comb] = value
