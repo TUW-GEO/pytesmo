@@ -61,7 +61,7 @@ install:
   #- pip install pygeobase
   #- pip install ascat
   #- pip install ismn
-  - conda update -f environment.yml -n pytesmo
+  - conda env update -f environment.yml -n pytesmo
   - pip install pytest==3.8.2 # While supporting python2 x86
   
   # Print debug infos
