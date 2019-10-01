@@ -41,6 +41,7 @@ install:
   - source activate test-environment
   - python setup.py install
   - pip list
+  - conda list
   - which pip
   - which python
 
