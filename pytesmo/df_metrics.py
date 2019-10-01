@@ -39,7 +39,7 @@ Created on Aug 14, 2013
 
 import numpy as np
 import pytesmo.metrics as metrics
-from collections import namedtuple, OrderedDict
+from collections import namedtuple, OrderedDict, Iterable
 import itertools
 import pandas as pd
 import warnings
@@ -50,11 +50,11 @@ def n_combinations(iterable, n, must_include=None, permutations=False):
 
     Parameters
     ---------
-    iterable: iterable
+    iterable: Iterable
         Elements from this iterable are combined.
     n : int
         Number of elements per combination.
-    must_include : list, optional (default: None)
+    must_include : Iterable, optional (default: None)
         One or more element(s) of iterable that MUST be in each combination.
     permutations : bool, optional (default: False)
         Create combinations of n elements, order matters: e.g. AB -> AB, BA
@@ -65,6 +65,10 @@ def n_combinations(iterable, n, must_include=None, permutations=False):
     combs: iterable
         The possible combinations of n elements.
     """
+    if must_include:
+        if (not isinstance(must_include, Iterable)) or isinstance(must_include, str):
+            must_include = [must_include]
+
     if permutations:
         combs = [c for c in itertools.permutations(iterable, n)]
     else:
@@ -90,20 +94,6 @@ def bias(df):
     """
     return _dict_to_namedtuple(nwise_apply(df, metrics.bias, n=2, comm=False),
                                'bias')
-
-def bias_old(df):
-    """Bias
-
-    Returns
-    -------
-    bias : pandas.Dataframe
-        of shape (len(df.columns),len(df.columns))
-    See Also
-    --------
-    pytesmo.metrics.bias
-    """
-    return _to_namedtuple(pairwise_apply(df, metrics.bias, comm=False),
-                               'bias_old')
 
 def rmsd(df):
     """Root-mean-square deviation
@@ -255,34 +245,6 @@ def tcol_snr(df, ref_ind=0):
             results[var_name].append(Inner(*res))
 
     return (results['snr'], results['err_std_dev'], results['beta'])
-
-
-class DataFrameDimensionError(Exception):
-    pass
-
-def old_tcol_error(df):
-    # todo: remove this function
-    """Triple collocation error estimate
-    In this case df has to have exactly 3 columns, since triple wise
-    application of a function is not yet implemented and
-    would probably return a complicated structure
-    Returns
-    -------
-    result : namedtuple
-        with column names of df
-    See Also
-    --------
-    pytesmo.metrics.tcol_error
-    """
-    if len(df.columns) != 3:
-        raise DataFrameDimensionError("DataFrame has to have 3 columns")
-
-    tcol_result = namedtuple('triple_collocation_error', df.columns)
-
-    return tcol_result._make(metrics.tcol_error(df.iloc[:, 0].values,
-                                                df.iloc[:, 1].values,
-                                                df.iloc[:, 2].values))
-
 
 
 def nash_sutcliffe(df):
@@ -586,27 +548,6 @@ def _dict_to_namedtuple(res_dict, name):
     for k, v in res_dict.items():
         names.append('_and_'.join(k))
         values.append(v)
-
-    result = namedtuple(name, names)
-    return result._make(values)
-
-
-def _to_namedtuple(df, name):
-    """
-    Takes the DataFrame as produced by pairwise_apply() or by
-    nwise_apply(..., n=2, as_df=True) and produces named tuple
-    of the non duplicate values for commutative operations(the triangle
-    above the diagonal)
-    """
-    #todo: This mixes up the dataset names for the comm=False metrics, e.g
-    # todo: BIAS in this case
-
-    names = []
-    values = []
-    for i, column in enumerate(df.columns[:-1]):
-        for column_names in df.columns[i + 1:]:
-            names.append('_and_'.join([df.index[i], column_names]))
-        values.extend(df[column].values[i + 1:])
 
     result = namedtuple(name, names)
     return result._make(values)
