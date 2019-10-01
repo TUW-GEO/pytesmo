@@ -196,7 +196,7 @@ def tcol_error(df):
     for trip in trips:
         #inner_name = '_and_'.join(trip)
         res = [err0[trip], err1[trip], err2[trip]]
-        Inner = namedtuple('triple_collocation_error', dict(zip(trip, res)))
+        Inner = namedtuple('triple_collocation_error', OrderedDict(zip(trip, res)))
         errors.append(Inner(*res))
 
     return tuple(errors)
@@ -241,7 +241,7 @@ def tcol_snr(df, ref_ind=0):
     for var_name, var_vals in {'snr': snr, 'err_std_dev' : err, 'beta' : beta}.items():
         results[var_name] = []
         for trip, res in var_vals.items():
-            Inner = namedtuple(var_name, dict(zip(trip, res)))
+            Inner = namedtuple(var_name, OrderedDict(zip(trip, res)))
             results[var_name].append(Inner(*res))
 
     return (results['snr'], results['err_std_dev'], results['beta'])
