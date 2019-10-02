@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
-'''
-Test functions from the df_metrics file.
-'''
+"""
+Test functions from the df_metrics module that applies metrics to combinations
+of columns from a data frame.
+"""
 
 import pytesmo.df_metrics as df_metrics
 from pytesmo.metrics import bias

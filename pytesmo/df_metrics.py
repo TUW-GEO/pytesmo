@@ -31,10 +31,6 @@ Module contains wrappers for methods in pytesmo.metrics which can be given
 pandas.DataFrames instead of single numpy.arrays.
 If the DataFrame has more columns than the function has input parameters
 the function will be applied pairwise, resp. to triples.
-
-Created on Aug 14, 2013
-
-@author: Christoph Paulik Christoph.Paulik@geo.tuwien.ac.at
 """
 
 import numpy as np
@@ -191,10 +187,8 @@ def tcol_error(df):
     trips = list(err0.keys()) # triples in all err are equal
     assert trips == list(err0.keys()) == list(err1.keys()) == list(err2.keys())
 
-    #Tcol_result = namedtuple('triple_collocation_error', ['_and_'.join(trip) for trip in trips])
     errors = []
     for trip in trips:
-        #inner_name = '_and_'.join(trip)
         res = [err0[trip], err1[trip], err2[trip]]
         Inner = namedtuple('triple_collocation_error', OrderedDict(zip(trip, res)))
         errors.append(Inner(*res))
@@ -204,14 +198,14 @@ def tcol_error(df):
 
 def tcol_snr(df, ref_ind=0):
     """
-    Triple Collocation based SNR estimation.
-    The first column in df is the scaling reference.
+    Triple Collocation based SNR estimation, applied to triples of columns of the
+    passed data frame.
 
     Parameters
     ----------
     df : pd.DataFrame
         Contains the input values as time series in the df columns
-    ref_ind : int, optional (default: None)
+    ref_ind : int or None, optional (default: 0)
         The index of the column in df that contains the reference data set.
         If None is passed, we use the first column of each triple as the
         reference, otherwise only triples that contain the reference
@@ -403,23 +397,24 @@ def pairwise_apply(df, method, comm=False):
 def nwise_apply(df, method, n=2, comm=False, as_df=False, ds_names=True,
                 must_include=None, **method_kwargs):
     """
-    Compute given method pairwise for all columns, excluding NA/null values
+    Compute given method for column combinations of a data frame, excluding
+    NA/null values.
 
     Parameters
     ----------
     df : pd.DataFrame
-        input data, method will be applied to each column pair
+        Input data, method will be applied to combinations of columns of this df.
     method : function
         method to apply to each column pair. Has to take 2 input arguments of
         type numpy.array and return one value or tuple of values
     n : int, optional (default: 2)
-        Number of datasets that are combined. The default n=2 is the same as the
-        old pairwise_apply() function.
+        Number of columns that are combined. The default n=2 is the same as the
+        previous pairwise_apply() function.
     comm : bool, optional (default: False)
         Metrics do NOT depend on the order of input values. In these cases we can
         skip unnecessary calculations and simply copy the results if necessary (faster).
     as_df : bool, optional (default: False)
-        Return matrix structure, same as for old pairwise_apply(), only available for
+        Return matrix structure, same as for previous pairwise_apply(), only available for
         n=2. By default, the return value will be a list of ordered dicts.
     ds_names : bool, optional (default: True)
         Use the column names of df to identify the dataset instead of using their
@@ -432,7 +427,7 @@ def nwise_apply(df, method, n=2, comm=False, as_df=False, ds_names=True,
 
     Returns
     -------
-    results : pd.DataFrame
+    results : pd.DataFrame or dict or tuple
     """
 
     numeric_df = df._get_numeric_data()
@@ -504,7 +499,7 @@ def nwise_apply(df, method, n=2, comm=False, as_df=False, ds_names=True,
 def _to_df(result, comm=False, lut_names=None):
     """
     Create a 2d results matrix/dataframe from the result dictionary to reproduce
-    the output structure of the old pairwise_apply() function.
+    the output structure of the previous pairwise_apply() function.
 
     Parameters
     ---------

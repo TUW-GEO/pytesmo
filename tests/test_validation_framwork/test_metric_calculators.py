@@ -241,7 +241,7 @@ def test_TC_metrics_calculator_metadata():
 
     metadata_dict_template = {'network' : np.array(['None'], dtype='U256')}
 
-    metriccalc = TCMetrics(other_names=('k1', 'k2'),calc_tau=True,
+    metriccalc = TCMetrics(other_names=('k1', 'k2'), calc_tau=True,
         dataset_names=['ref', 'k1', 'k2'], metadata_template=metadata_dict_template)
     res = metriccalc.calc_metrics(data, gpi_info=(0, 0, 0, {'network': 'SOILSCAPE'}))
 
@@ -317,11 +317,3 @@ def test_HSAF_Metrics_metadata():
     res = metriccalc.calc_metrics(data, gpi_info=(0, 0, 0, {'network': 'SOILSCAPE'}))
 
     assert res['network'] == np.array(['SOILSCAPE'], dtype='U256')
-
-
-
-if __name__ == '__main__':
-    test_TC_metrics_calculator()
-    test_TC_metrics_calculator_metadata()
-    test_HSAF_Metrics()
-    test_IntercompMetrics_calculator()

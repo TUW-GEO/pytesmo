@@ -1,17 +1,11 @@
 # -*- coding: utf-8 -*-
 
-'''
-Module description
-'''
-
 """
-Created on 01.06.2015
-@author: Andreea Plocon andreea.plocon@geo.tuwien.ac.at
+The results manager stores validation results in netcdf format.
 """
 
 import os
 import netCDF4
-
 from datetime import datetime
 
 def build_filename(root, key):
