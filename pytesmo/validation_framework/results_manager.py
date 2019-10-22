@@ -1,6 +1,7 @@
+# -*- coding: utf-8 -*-
+
 """
-Created on 01.06.2015
-@author: Andreea Plocon andreea.plocon@geo.tuwien.ac.at
+The results manager stores validation results in netcdf format.
 """
 
 import os
