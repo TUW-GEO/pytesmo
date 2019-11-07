@@ -24,13 +24,9 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''
-Created on Sep 24, 2013
-
-Metric calculators useable in together with core
-
-@author: Christoph.Paulik@geo.tuwien.ac.at
-'''
+"""
+Metric calculators implement combinations of metrics and structure the output.
+"""
 
 import pytesmo.metrics as metrics
 import pytesmo.df_metrics as df_metrics
