@@ -131,6 +131,10 @@ def julian2date(julian):
     min_julian = 2299160
     max_julian = 1827933925
 
+    is_single_value = False
+    if type(julian) in (float, int):
+        is_single_value = True
+
     julian = np.atleast_1d(np.array(julian, dtype=float))
 
     if np.min(julian) < min_julian or np.max(julian) > max_julian:
@@ -164,6 +168,11 @@ def julian2date(julian):
     microsecond = ((second - np.int32(second)) * 1e6).astype(np.int32)
     microsecond = microsecond.clip(min=0, max=999999)
     second = second.astype(np.int32)
+
+    if is_single_value:
+        (year, month, day, hour,
+         minute, second, microsecond) = (year.item(), month.item(), day.item(), hour.item(),
+                                         minute.item(), second.item(), microsecond.item())
 
     return year, month, day, hour, minute, second, microsecond
 

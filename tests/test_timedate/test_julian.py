@@ -87,6 +87,7 @@ def test_caldat_array():
 def test_julian2date():
     (year, month, day,
      hour, minute, second, micro) = julian2date(2457533.9306828701)
+    assert type(year) == int
     assert year == 2016
     assert month == 5
     assert day == 25
