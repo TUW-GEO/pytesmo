@@ -22,6 +22,8 @@ dependencies:
     - pygeobase
     - ascat
     - ismn
+    - repurpose
     - pytest
     - configparser
     - more_itertools
+    - repurpose
