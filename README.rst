@@ -85,3 +85,15 @@ If you want to contribute please follow these steps:
 - please include tests for your contributions in one of the test directories
   We use py.test so a simple function called test_my_feature is enough
 - submit a pull request to our master branch
+
+Release
+-------
+
+Windows
+~~~~~~~
+
+In order to make a working release for windows the ``whl`` files for windows
+from appveyor CI have to be uploaded to PyPI. They can be found on the appveyor
+CI run for the created tag under the ``jobs/Artifacts`` tab. All the ``.whl``
+files should be downloaded into a folder. They can then be added to the release
+on PyPI using e.g. ``twine upload pytesmo-0.7.1*whl``
