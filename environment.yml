@@ -26,4 +26,3 @@ dependencies:
     - pytest
     - configparser
     - more_itertools
-    - repurpose
