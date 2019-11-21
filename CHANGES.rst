@@ -2,6 +2,14 @@ unreleased
 ==========
 -
 
+v0.8, 2019-11-21
+================
+- Update Triple Collocation metrics and metrics caluclator
+- Update metrics apply function, use dictionaries instead of dataframe for results
+- Remove io module and grids.grid.py and grids.netcdf.py modules
+- Move resampling module to repurpose package (https://github.com/TUW-GEO/repurpose)
+- Documentation updates
+
 v0.7.1, 2019-09-03
 ==================
 - Change naming convention for Intercomparison metrics calculator results
