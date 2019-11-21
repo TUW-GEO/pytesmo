@@ -46,15 +46,20 @@ Supported Products
 ==================
 
 Soil moisture is observed using different methods and instruments, in this
-version several satellite datasets as well as in situ data are supported:
+version several satellite datasets as well as in situ and reanalysis data are supported:
 
-- ASCAT
+- `ASCAT <https://github.com/TUW-GEO/ascat/>`_
+- `SMAP <https://github.com/TUW-GEO/smap_io/>`_
+- `GLDAS Noah <https://github.com/TUW-GEO/gldas/>`_
+- `ERA5 and ERA5-Land <https://github.com/TUW-GEO/ecmwf_models/>`_
+- `Data from the International Soil Moisture Network (ISMN) <https://github.com/TUW-GEO/ismn/>`_
+- `SMOS <https://github.com/TUW-GEO/smos/>`_
+- `C3S SM <https://github.com/TUW-GEO/c3s_sm/>`_
+- `ESA CCI SM <https://github.com/TUW-GEO/esa_cci_sm/>`_
+- `MERRA <https://github.com/TUW-GEO/merra/>`_
 - H-SAF image products
-- SMAP
-- GLDAS Noah
-- ERA Interim
 - ERS
-- Data from the International Soil Moisture Network (ISMN)
+
 
 For more details visit the Documentation_.
 

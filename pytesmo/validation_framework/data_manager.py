@@ -50,9 +50,9 @@ class DataManager(object):
             'columns': list
                 List of columns which will be used in the validation process.
             'args': list, optional
-                Args for reading the data.
+                Args that are passed to the reading function.
             'kwargs': dict, optional
-                Kwargs for reading the data
+                Kwargs that are passed to the reading function.
             'grids_compatible': boolean, optional
                 If set to True the grid point index is used directly when
                 reading other, if False then lon, lat is used and a nearest
