@@ -24,5 +24,4 @@ dependencies:
     - ismn
     - repurpose
     - pytest
-    - configparser
     - more_itertools
