@@ -32,7 +32,7 @@ class Cythonize(Command):
         # Make sure the compiled Cython files in the distribution are
         # up-to-date
         from Cython.Build import cythonize
-        cythonize(['pytesmo/time_series/filters.pyx'])
+        cythonize(['src/pytesmo/time_series/filters.pyx'])
 
 
 class NumpyBuildExt(_build_ext):
@@ -47,7 +47,7 @@ class NumpyBuildExt(_build_ext):
 
 
 ext_modules = [Extension("pytesmo.time_series.filters",
-                         ["pytesmo/time_series/filters.c"], include_dirs=[]), ]
+                         ["src/pytesmo/time_series/filters.c"], include_dirs=[]), ]
 
 
 try:
