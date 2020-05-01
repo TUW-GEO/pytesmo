@@ -3,15 +3,16 @@
 *.py[cod]
 *.so
 *.cfg
+!.isort.cfg
 !setup.cfg
 *.orig
 *.log
 *.pot
 __pycache__/*
-.pytest_cache/*
 .cache/*
 .*.swp
-.*goutput*
+*/.ipynb_checkpoints/*
+.DS_Store
 
 # Project files
 .ropeproject
@@ -19,13 +20,13 @@ __pycache__/*
 .pydevproject
 .settings
 .idea
-.python-version
+tags
 
 # Package files
 *.egg
+*.eggs/
 .installed.cfg
 *.egg-info
-.eggs/*
 
 # Unittest and coverage
 htmlcov/*
@@ -33,20 +34,17 @@ htmlcov/*
 .tox
 junit.xml
 coverage.xml
+.pytest_cache/
 
 # Build and docs folder/files
 build/*
 dist/*
 sdist/*
+docs/api/*
 docs/_rst/*
 docs/_build/*
-docs/_static/*
-docs/.ipynb_checkpoints/*
-docs/**/Thumbs.db
 cover/*
 MANIFEST
 
-# ignore ISMN metadata files as they are different on win/linux
-*/python_metadata/*
-
-local_scripts/*
+# Per-project virtualenvs
+.venv*/
