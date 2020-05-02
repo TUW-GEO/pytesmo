@@ -53,7 +53,6 @@ install:
   - cmd: activate pytesmo
   # Install dependencies
   - conda env update -f environment.yml -n pytesmo
-  - pip install pytest==3.8.2 # While supporting python2 x86
   
   # Print debug infos
   - git status
