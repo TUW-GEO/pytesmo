@@ -1087,8 +1087,7 @@ class RollingMetrics(MetadataMetrics):
         super(RollingMetrics, self).__init__(
             other_name=other_name, metadata_template=metadata_template)
 
-        self.basic_metrics = ['n_obs', 'R', 'p_R']
-
+        self.basic_metrics = ['R', 'p_R']
         self.result_template.update(_get_metric_template(self.basic_metrics))
 
     def calc_metrics(self, data, gpi_info, window_size='30d', center=True,
@@ -1112,16 +1111,15 @@ class RollingMetrics(MetadataMetrics):
         indexer = CustomIndexer(window_size=pd.Timedelta(window_size),
                                 ts_timestamps=data.index,
                                 ref_timestamps=data.index)
-        data['c'] = range(len(data))
+        data['idx'] = range(len(data))
 
-        dataset['R'] = data['c'].rolling(indexer, center=center).apply(
+        dataset['R'] = data['idx'].rolling(indexer, center=center).apply(
             roll_pearsonr, args=(xy,), kwargs={'min_periods': min_periods},
             raw=True)
 
-        dataset['p_R'] = data['c'].rolling(indexer, center=center).apply(
+        dataset['p_R'] = data['idx'].rolling(indexer, center=center).apply(
             roll_pearsonr, args=(xy,), kwargs={'min_periods': min_periods,
-                                               'index': 1},
-            raw=True)
+                                               'index': 1}, raw=True)
 
         return dataset
 
@@ -1130,6 +1128,7 @@ def roll_pearsonr(subset, xy, min_periods=2, index=0):
     """
     Computation of rolling statistics.
     """
+
     if subset.size == 0 or subset.size < min_periods:
         result = np.nan
     else:
@@ -1172,12 +1171,13 @@ class CustomIndexer(BaseIndexer):
         for i in range(num_values):
             t_diff = self.ts_timestamps - self.ref_timestamps[i]
             if center:
-                inside_window = np.abs(t_diff) < self.window_size
+                inside_window = np.abs(t_diff) <= self.window_size
             else:
-                inside_window = (t_diff >= pd.Timedelta('0 days')) & (
-                    t_diff < self.window_size)
+                inside_window = (t_diff <= pd.Timedelta('0 days')) & (
+                    t_diff > -self.window_size)
 
             start[i], end[i] = np.flatnonzero(inside_window)[[0, -1]]
+            end[i] += 1
 
         return start, end
 

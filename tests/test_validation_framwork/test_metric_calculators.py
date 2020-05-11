@@ -448,24 +448,15 @@ def test_RollingMetrics():
     """
     Test RollingMetrics.
     """
-    startdate = datetime(2000, 1, 1)
-    enddate = datetime(2000, 12, 31)
-    dt_index = pd.date_range(start=startdate, end=enddate, freq='D')
-
-    names = ['ref', 'k1', 'k2', 'k3']
-    # always 0.5
-    df = pd.DataFrame(index=dt_index, data={
-                      name: np.repeat(0.5, dt_index.size) for name in names})
-
+    df = make_some_data()
     df['ref'] += np.random.rand(len(df))
     df['k1'] += np.random.rand(len(df))
-
     data = df[['ref', 'k1']]
 
     metriccalc = RollingMetrics(other_name='k1')
-    res = metriccalc.calc_metrics(data, gpi_info=(0, 0, 0))
-
-    print(res)
+    res = metriccalc.calc_metrics(data, gpi_info=(0, 0, 0), center=False)
+    array_should = df['ref'].rolling('30d').corr(df['k1'])
+    np.testing.assert_almost_equal(res['R'].values, array_should.values)
 
 
 if __name__ == '__main__':
