@@ -1,4 +1,4 @@
-# Copyright (c) 2013,Vienna University of Technology, Department of Geodesy and Geoinformation
+# Copyright (c) 2020, TU Wien, Department of Geodesy and Geoinformation
 # All rights reserved.
 
 # Redistribution and use in source and binary forms, with or without
@@ -28,15 +28,16 @@
 Metric calculators implement combinations of metrics and structure the output.
 """
 
+import copy
+import itertools
+import numpy as np
+
 import pytesmo.metrics as metrics
 import pytesmo.df_metrics as df_metrics
 from pytesmo.scaling import scale
 from pytesmo.validation_framework.data_manager import get_result_names
 from pytesmo.df_metrics import n_combinations
 
-import copy
-import itertools
-import numpy as np
 
 def _get_tc_metric_template(metr, ds_names):
     """ return empty dict to fill TC results into """
