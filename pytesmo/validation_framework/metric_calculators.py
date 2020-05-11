@@ -33,6 +33,7 @@ import itertools
 import pandas as pd
 from pandas.api.indexers import BaseIndexer
 import numpy as np
+from numba import jit
 
 import pytesmo.metrics as metrics
 import pytesmo.df_metrics as df_metrics
@@ -1180,6 +1181,84 @@ class CustomIndexer(BaseIndexer):
             end[i] += 1
 
         return start, end
+
+
+def rolling_pearsonr(data):
+
+    timestamps = data.index.to_numpy()
+    xy = data.to_numpy()
+    window_size = np.timedelta64(30, 'D')
+    center = False
+    min_periods = 2
+
+    result = compute_rolling_pearsonr(timestamps, xy,
+                                      window_size, center, min_periods)
+
+    return result
+
+
+@jit
+def compute_rolling_pearsonr(timestamps, data, window_size,
+                             center, min_periods):
+
+    result = []
+    for i in range(timestamps.size):
+        time_diff = timestamps - timestamps[i]
+
+        if center:
+            inside_window = np.abs(time_diff) <= window_size
+        else:
+            inside_window = (time_diff <= np.timedelta64(0, 'D')) & (
+                time_diff > -window_size)
+
+        start, end = np.flatnonzero(inside_window)[[0, -1]]
+        n_obs = inside_window.sum()
+
+        if n_obs == 0 or n_obs < min_periods:
+            result.append((np.nan, np.nan))
+        else:
+            result.append(metrics.pearsonr(data[start:end+1, 0],
+                                           data[start:end+1, 1]))
+
+    return np.array(result)
+
+
+def rolling_pearsonr2(data):
+
+    timestamps = data.index.to_numpy()
+    xy = data.to_numpy()
+    window_size = np.timedelta64(30, 'D')
+    center = False
+    min_periods = 2
+
+    result = compute_rolling_pearsonr2(timestamps, xy,
+                                       window_size, center, min_periods)
+
+    return result
+
+
+def compute_rolling_pearsonr2(timestamps, data, window_size, center, min_periods):
+
+    result = []
+    for i in range(timestamps.size):
+        time_diff = timestamps - timestamps[i]
+
+        if center:
+            inside_window = np.abs(time_diff) <= window_size
+        else:
+            inside_window = (time_diff <= np.timedelta64(0, 'D')) & (
+                time_diff > -window_size)
+
+        start, end = np.flatnonzero(inside_window)[[0, -1]]
+        n_obs = inside_window.sum()
+
+        if n_obs == 0 or n_obs < min_periods:
+            result.append((np.nan, np.nan))
+        else:
+            result.append(metrics.pearsonr(data[start:end+1, 0],
+                                           data[start:end+1, 1]))
+
+    return np.array(result)
 
 
 def get_dataset_names(ref_key, datasets, n=3):

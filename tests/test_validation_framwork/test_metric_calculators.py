@@ -37,6 +37,7 @@ from pytesmo.validation_framework.metric_calculators import FTMetrics
 from pytesmo.validation_framework.metric_calculators import HSAF_Metrics
 from pytesmo.validation_framework.metric_calculators import BasicSeasonalMetrics
 from pytesmo.validation_framework.metric_calculators import RollingMetrics
+from pytesmo.validation_framework.metric_calculators import rolling_pearsonr, rolling_pearsonr2
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -453,10 +454,29 @@ def test_RollingMetrics():
     df['k1'] += np.random.rand(len(df))
     data = df[['ref', 'k1']]
 
+    from timeit import default_timer as timer
+
+    s = timer()
+    res2 = rolling_pearsonr(data)
+    e = timer()
+    print(e - s)
+
+    s = timer()
+    res3 = rolling_pearsonr2(data)
+    e = timer()
+    print(e - s)
+
     metriccalc = RollingMetrics(other_name='k1')
     res = metriccalc.calc_metrics(data, gpi_info=(0, 0, 0), center=False)
     array_should = df['ref'].rolling('30d').corr(df['k1'])
     np.testing.assert_almost_equal(res['R'].values, array_should.values)
+
+    import matplotlib.pyplot as plt
+    fig, ax = plt.subplots()
+    ax.plot(res['R'].index, res2[:, 0])
+    res['R'].plot(ax=ax)
+    array_should.plot(ax=ax)
+    plt.show()
 
 
 if __name__ == '__main__':
