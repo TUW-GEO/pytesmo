@@ -456,26 +456,42 @@ def test_RollingMetrics():
 
     from timeit import default_timer as timer
 
-    s = timer()
-    res2 = rolling_pearsonr(data)
-    e = timer()
-    print(e - s)
-
-    s = timer()
-    res3 = rolling_pearsonr2(data)
-    e = timer()
-    print(e - s)
-
     metriccalc = RollingMetrics(other_name='k1')
-    res = metriccalc.calc_metrics(data, gpi_info=(0, 0, 0), center=False)
-    array_should = df['ref'].rolling('30d').corr(df['k1'])
-    np.testing.assert_almost_equal(res['R'].values, array_should.values)
+
+    for i in range(10):
+        s = timer()
+        pr1 = metriccalc.calc_metrics(data, gpi_info=(0, 0, 0),
+                                      center=False, method=1)
+        e = timer()
+        print('Method1: {}'.format(e - s))
+
+    for i in range(10):
+        s = timer()
+        pr2 = metriccalc.calc_metrics(data, gpi_info=(0, 0, 0),
+                                      center=False, method=2)
+        e = timer()
+        print('Method2: {}'.format(e - s))
+
+    for i in range(10):
+        s = timer()
+        pr3 = metriccalc.calc_metrics(data, gpi_info=(0, 0, 0),
+                                      center=False, method=3)
+        e = timer()
+        print('Method3: {}'.format(e - s))
+
+    ref_array = df['ref'].rolling('30d').corr(df['k1'])
+
+    np.testing.assert_almost_equal(pr1['R'], ref_array.values)
+    np.testing.assert_almost_equal(pr2['R'], ref_array.values)
+    np.testing.assert_almost_equal(pr3['R'], ref_array.values)
 
     import matplotlib.pyplot as plt
     fig, ax = plt.subplots()
-    ax.plot(res['R'].index, res2[:, 0])
-    res['R'].plot(ax=ax)
-    array_should.plot(ax=ax)
+    ax.plot(ref_array.index, pr1['R'], label='method1')
+    ax.plot(ref_array.index, pr2['R'], label='method2')
+    ax.plot(ref_array.index, pr3['R'], label='method3')
+    ref_array.plot(ax=ax, label='reference')
+    ax.legend()
     plt.show()
 
 
