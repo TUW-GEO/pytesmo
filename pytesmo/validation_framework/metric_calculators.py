@@ -1115,13 +1115,20 @@ class RollingMetrics(MetadataMetrics):
                                     ref_timestamps=data.index)
             data['idx'] = range(len(data))
 
-            dataset['R'] = data['idx'].rolling(indexer, center=center).apply(
+            r = data['idx'].rolling(indexer, center=center).apply(
                 roll_pearsonr, args=(xy,), kwargs={'min_periods': min_periods},
                 raw=True)
 
-            dataset['p_R'] = data['idx'].rolling(indexer, center=center).apply(
+            dataset['time'] = np.array([r.index.to_pydatetime()])
+            dataset['R'] = np.array([r.values])
+
+            p_r = data['idx'].rolling(indexer, center=center).apply(
                 roll_pearsonr, args=(xy,), kwargs={'min_periods': min_periods,
                                                    'index': 1}, raw=True)
+            assert np.all(p_r.index == r.index) # check if all timestamps are the same to drop them safely
+
+            dataset['p_R'] = np.array([p_r.values])
+
         elif method == 2:
             timestamps = data.index.to_julian_date().values
             window_size_jd = pd.Timedelta(
@@ -1129,7 +1136,9 @@ class RollingMetrics(MetadataMetrics):
 
             pr_arr = rolling_pearsonr(timestamps, xy, window_size_jd,
                                       center, min_periods)
-            dataset['R'] = pr_arr[:, 0]
+            dataset['R'] = np.array([pr_arr[:, 0]])
+            dataset['p_R'] = np.array([np.full(dataset['R'].size, np.nan)]) # n pval for this method
+            dataset['time'] = np.array([data.index])
 
         elif method == 3:
             timestamps = data.index.to_julian_date().values
@@ -1139,8 +1148,9 @@ class RollingMetrics(MetadataMetrics):
             pr_arr = rolling_pearsonr2(timestamps, xy, window_size_jd,
                                        center, min_periods)
 
-            dataset['R'] = pr_arr[:, 0]
-            dataset['p_R'] = pr_arr[:, 1]
+            dataset['R'] = np.array([pr_arr[:, 0]])
+            dataset['p_R'] = np.array([pr_arr[:, 1]])
+            dataset['time'] = np.array([data.index])
 
         return dataset
 
@@ -1328,3 +1338,12 @@ def get_dataset_names(ref_key, datasets, n=3):
         dataset_names.append(name[0])
 
     return dataset_names
+
+if __name__ == '__main__':
+    idx = pd.date_range('2000-01-01', '2001-10-31')
+    data = pd.DataFrame(index=idx,
+                        data={'var1': np.random.rand(len(idx)),
+                              'var2': np.random.rand(len(idx))})
+
+    metrics_calc = RollingMetrics()
+    result = metrics_calc.calc_metrics(data, gpi_info=(1,1,1), method=1)
