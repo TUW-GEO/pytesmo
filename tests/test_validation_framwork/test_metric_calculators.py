@@ -481,19 +481,24 @@ def test_RollingMetrics():
 
     ref_array = df['ref'].rolling('30d').corr(df['k1'])
 
-    np.testing.assert_almost_equal(pr1['R'], ref_array.values)
-    np.testing.assert_almost_equal(pr2['R'], ref_array.values)
-    np.testing.assert_almost_equal(pr3['R'], ref_array.values)
+    # each element in the arrays that are returned by the metrics calc should
+    # represent a location, therefore RollingMetrics are arrays of arrays...
+    np.testing.assert_almost_equal(pr1['R'][0], ref_array.values)
+    np.testing.assert_almost_equal(pr2['R'][0], ref_array.values)
+    np.testing.assert_almost_equal(pr3['R'][0], ref_array.values)
 
+    """
     import matplotlib.pyplot as plt
     fig, ax = plt.subplots()
-    ax.plot(ref_array.index, pr1['R'], label='method1')
-    ax.plot(ref_array.index, pr2['R'], label='method2')
-    ax.plot(ref_array.index, pr3['R'], label='method3')
-    ref_array.plot(ax=ax, label='reference')
+    ax.plot(ref_array.values, pr1['R'][0], label='method1')
+    ax.plot(ref_array.values, pr2['R'][0], label='method2')
+    ax.plot(ref_array.values, pr3['R'][0], label='method3')
+    # todo: this raise a Value error because there's a nan in the df?
+    #ref_array.plot(ax=ax, label='reference')
     ax.legend()
     plt.show()
-
+    """
 
 if __name__ == '__main__':
     test_RollingMetrics()
+
