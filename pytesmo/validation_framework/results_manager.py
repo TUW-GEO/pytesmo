@@ -1,13 +1,8 @@
 # -*- coding: utf-8 -*-
 
 """
-Module description
+The results manager stores validation results in netcdf format.
 """
-# TODO:
-#   (+) 
-#---------
-# NOTES:
-#   -
 
 import numpy as np
 import pandas as pd
