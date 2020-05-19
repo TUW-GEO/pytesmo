@@ -1338,12 +1338,3 @@ def get_dataset_names(ref_key, datasets, n=3):
         dataset_names.append(name[0])
 
     return dataset_names
-
-if __name__ == '__main__':
-    idx = pd.date_range('2000-01-01', '2001-10-31')
-    data = pd.DataFrame(index=idx,
-                        data={'var1': np.random.rand(len(idx)),
-                              'var2': np.random.rand(len(idx))})
-
-    metrics_calc = RollingMetrics()
-    result = metrics_calc.calc_metrics(data, gpi_info=(1,1,1), method=1)
