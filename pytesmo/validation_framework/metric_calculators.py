@@ -30,6 +30,8 @@ Metric calculators implement combinations of metrics and structure the output.
 
 import copy
 import itertools
+
+from scipy.special import betainc
 import pandas as pd
 from pandas.api.indexers import BaseIndexer
 import numpy as np
@@ -1125,7 +1127,8 @@ class RollingMetrics(MetadataMetrics):
             p_r = data['idx'].rolling(indexer, center=center).apply(
                 roll_pearsonr, args=(xy,), kwargs={'min_periods': min_periods,
                                                    'index': 1}, raw=True)
-            assert np.all(p_r.index == r.index) # check if all timestamps are the same to drop them safely
+            # check if all timestamps are the same to drop them safely
+            assert np.all(p_r.index == r.index)
 
             dataset['p_R'] = np.array([p_r.values])
 
@@ -1137,7 +1140,8 @@ class RollingMetrics(MetadataMetrics):
             pr_arr = rolling_pearsonr(timestamps, xy, window_size_jd,
                                       center, min_periods)
             dataset['R'] = np.array([pr_arr[:, 0]])
-            dataset['p_R'] = np.array([np.full(dataset['R'].size, np.nan)]) # n pval for this method
+            # n pval for this method
+            dataset['p_R'] = np.array([np.full(dataset['R'].size, np.nan)])
             dataset['time'] = np.array([data.index])
 
         elif method == 3:
@@ -1298,8 +1302,20 @@ def rolling_pearsonr2(timestamps, data, window_size, center, min_periods):
         if n_obs == 0 or n_obs < min_periods:
             pr_arr[i, :] = np.nan
         else:
-            pr_arr[i, :] = metrics.pearsonr(
-                data[idx[0]:idx[-1]+1, 0], data[idx[0]:idx[-1]+1, 1])
+            # pearson r
+            sub1 = data[idx[0]:idx[-1]+1, 0]
+            sub2 = data[idx[0]:idx[-1]+1, 1]
+            pr_arr[i, 0] = np.corrcoef(sub1, sub2)[0, 1]
+
+            # p-value
+            if np.abs(pr_arr[i, 0]) == 1.0:
+                pr_arr[i, 1] = 0.0
+            else:
+                df = n_obs - 2
+                t_squared = pr_arr[i, 0]*pr_arr[i, 0] * \
+                    (df / ((1.0 - pr_arr[i, 0]) * (1.0 + pr_arr[i, 0])))
+                t_squared = np.clip(t_squared, None, 1.0)
+                pr_arr[i, 1] = betainc(0.5*df, 0.5, df / (df + t_squared))
 
     return pr_arr
 
