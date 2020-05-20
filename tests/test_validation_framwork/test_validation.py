@@ -289,68 +289,23 @@ def test_ascat_ismn_validation_metadata():
                             sorted(results.variables['network'][:]))
 
 
-def test_validation_n2_k2():
-
-    tst_results = {
-        (('DS1', 'x'), ('DS3', 'y')): {
-            'n_obs': np.array([1000], dtype=np.int32),
-            'tau': np.array([np.nan], dtype=np.float32),
-            'gpi': np.array([4], dtype=np.int32),
-            'RMSD': np.array([0.], dtype=np.float32),
-            'lon': np.array([4.]),
-            'p_tau': np.array([np.nan], dtype=np.float32),
-            'BIAS': np.array([0.], dtype=np.float32),
-            'p_rho': np.array([0.], dtype=np.float32),
-            'rho': np.array([1.], dtype=np.float32),
-            'lat': np.array([4.]),
-            'R': np.array([1.], dtype=np.float32),
-            'p_R': np.array([0.], dtype=np.float32)},
-        (('DS1', 'x'), ('DS2', 'y')): {
-            'n_obs': np.array([1000], dtype=np.int32),
-            'tau': np.array([np.nan], dtype=np.float32),
-            'gpi': np.array([4], dtype=np.int32),
-            'RMSD': np.array([0.], dtype=np.float32),
-            'lon': np.array([4.]),
-            'p_tau': np.array([np.nan], dtype=np.float32),
-            'BIAS': np.array([0.], dtype=np.float32),
-            'p_rho': np.array([0.], dtype=np.float32),
-            'rho': np.array([1.], dtype=np.float32),
-            'lat': np.array([4.]),
-            'R': np.array([1.], dtype=np.float32),
-            'p_R': np.array([0.], dtype=np.float32)},
-        (('DS1', 'x'), ('DS3', 'x')): {
-            'n_obs': np.array([1000], dtype=np.int32),
-            'tau': np.array([np.nan], dtype=np.float32),
-            'gpi': np.array([4], dtype=np.int32),
-            'RMSD': np.array([0.], dtype=np.float32),
-            'lon': np.array([4.]),
-            'p_tau': np.array([np.nan], dtype=np.float32),
-            'BIAS': np.array([0.], dtype=np.float32),
-            'p_rho': np.array([0.], dtype=np.float32),
-            'rho': np.array([1.], dtype=np.float32),
-            'lat': np.array([4.]),
-            'R': np.array([1.], dtype=np.float32),
-            'p_R': np.array([0.], dtype=np.float32)}}
+def test_validation_error_n2_k2():
 
     datasets = setup_TestDatasets()
 
     dm = DataManager(datasets, 'DS1', read_ts_names={d: 'read' for d in ['DS1', 'DS2', 'DS3']})
 
-    process = Validation(
-        dm, 'DS1',
-        temporal_matcher=temporal_matchers.BasicTemporalMatching(
-            window=1 / 24.0).combinatory_matcher,
-        scaling='lin_cdf_match',
-        metrics_calculators={
-            (2, 2): metrics_calculators.BasicMetrics(other_name='k1').calc_metrics})
+    # n less than number of datasets is no longer allowed
+    with pytest.raises(ValueError):
+        process = Validation(
+            dm, 'DS1',
+            temporal_matcher=temporal_matchers.BasicTemporalMatching(
+                window=1 / 24.0).combinatory_matcher,
+            scaling='lin_cdf_match',
+            metrics_calculators={
+                (2, 2): metrics_calculators.BasicMetrics(other_name='k1').calc_metrics})
 
-    jobs = process.get_processing_jobs()
-    for job in jobs:
-        results = process.calc(*job)
-        assert sorted(list(results)) == sorted(list(tst_results))
-
-
-def test_validation_n2_k2_temporal_matching_no_matches():
+def test_validation_n3_k2_temporal_matching_no_matches():
 
     tst_results = {}
 
@@ -365,7 +320,7 @@ def test_validation_n2_k2_temporal_matching_no_matches():
             window=1 / 24.0).combinatory_matcher,
         scaling='lin_cdf_match',
         metrics_calculators={
-            (2, 2): metrics_calculators.BasicMetrics(other_name='k1').calc_metrics})
+            (3, 2): metrics_calculators.BasicMetrics(other_name='k1').calc_metrics})
 
     jobs = process.get_processing_jobs()
     for job in jobs:
@@ -373,7 +328,7 @@ def test_validation_n2_k2_temporal_matching_no_matches():
         assert sorted(list(results)) == sorted(list(tst_results))
 
 
-def test_validation_n2_k2_data_manager_argument():
+def test_validation_n3_k2_data_manager_argument():
 
     tst_results = {
         (('DS1', 'x'), ('DS3', 'y')): {
@@ -414,7 +369,49 @@ def test_validation_n2_k2_data_manager_argument():
             'rho': np.array([1.], dtype=np.float32),
             'lat': np.array([4.]),
             'R': np.array([1.], dtype=np.float32),
-            'p_R': np.array([0.], dtype=np.float32)}}
+            'p_R': np.array([0.], dtype=np.float32)},
+        (('DS2', 'y'), ('DS3', 'x')): {
+            'gpi': np.array([4], dtype=np.int32),
+            'lon': np.array([4.]),
+            'lat': np.array([4.]),
+            'n_obs': np.array([1000], dtype=np.int32),
+            'R': np.array([1.], dtype=np.float32),
+            'p_R': np.array([0.], dtype=np.float32),
+            'rho': np.array([1.], dtype=np.float32),
+            'p_rho': np.array([0.], dtype=np.float32),
+            'RMSD': np.array([0.], dtype=np.float32),
+            'BIAS': np.array([0.], dtype=np.float32),
+            'tau': np.array([np.nan], dtype=np.float32),
+            'p_tau': np.array([np.nan], dtype=np.float32)},
+        (('DS2', 'y'), ('DS3', 'y')): {
+            'gpi': np.array([4], dtype=np.int32),
+            'lon': np.array([4.]),
+            'lat': np.array([4.]),
+            'n_obs': np.array([1000], dtype=np.int32),
+            'R': np.array([1.], dtype=np.float32),
+            'p_R': np.array([0.], dtype=np.float32),
+            'rho': np.array([1.], dtype=np.float32),
+            'p_rho': np.array([0.], dtype=np.float32),
+            'RMSD': np.array([0.], dtype=np.float32),
+            'BIAS': np.array([0.], dtype=np.float32),
+            'tau': np.array([np.nan], dtype=np.float32),
+            'p_tau': np.array([np.nan], dtype=np.float32)}}
+
+    datasets = setup_TestDatasets()
+    dm = DataManager(datasets, 'DS1', read_ts_names={d: 'read' for d in ['DS1', 'DS2', 'DS3']})
+
+    process = Validation(
+        dm, 'DS1',
+        temporal_matcher=temporal_matchers.BasicTemporalMatching(
+            window=1 / 24.0).combinatory_matcher,
+        scaling='lin_cdf_match',
+        metrics_calculators={
+            (3, 2): metrics_calculators.BasicMetrics(other_name='k1').calc_metrics})
+
+    jobs = process.get_processing_jobs()
+    for job in jobs:
+        results = process.calc(*job)
+        assert sorted(list(results)) == sorted(list(tst_results))
 
     datasets = setup_TestDatasets()
     dm = DataManager(datasets, 'DS1', read_ts_names={d: 'read' for d in ['DS1', 'DS2', 'DS3']})
@@ -424,7 +421,7 @@ def test_validation_n2_k2_data_manager_argument():
                              window=1 / 24.0).combinatory_matcher,
                          scaling='lin_cdf_match',
                          metrics_calculators={
-                             (2, 2): metrics_calculators.BasicMetrics(other_name='k1').calc_metrics})
+                             (3, 2): metrics_calculators.BasicMetrics(other_name='k1').calc_metrics})
 
     jobs = process.get_processing_jobs()
     for job in jobs:
@@ -473,7 +470,33 @@ def test_validation_n3_k2():
             'rho': np.array([1.], dtype=np.float32),
             'lat': np.array([4.]),
             'R': np.array([1.], dtype=np.float32),
-            'p_R': np.array([0.], dtype=np.float32)}}
+            'p_R': np.array([0.], dtype=np.float32)},
+        (('DS2', 'y'), ('DS3', 'x')): {
+            'gpi': np.array([4], dtype=np.int32),
+            'lon': np.array([4.]),
+            'lat': np.array([4.]),
+            'n_obs': np.array([1000], dtype=np.int32),
+            'R': np.array([1.], dtype=np.float32),
+            'p_R': np.array([0.], dtype=np.float32),
+            'rho': np.array([1.], dtype=np.float32),
+            'p_rho': np.array([0.], dtype=np.float32),
+            'RMSD': np.array([0.], dtype=np.float32),
+            'BIAS': np.array([0.], dtype=np.float32),
+            'tau': np.array([np.nan], dtype=np.float32),
+            'p_tau': np.array([np.nan], dtype=np.float32)},
+        (('DS2', 'y'), ('DS3', 'y')): {
+            'gpi': np.array([4], dtype=np.int32),
+            'lon': np.array([4.]),
+            'lat': np.array([4.]),
+            'n_obs': np.array([1000], dtype=np.int32),
+            'R': np.array([1.], dtype=np.float32),
+            'p_R': np.array([0.], dtype=np.float32),
+            'rho': np.array([1.], dtype=np.float32),
+            'p_rho': np.array([0.], dtype=np.float32),
+            'RMSD': np.array([0.], dtype=np.float32),
+            'BIAS': np.array([0.], dtype=np.float32),
+            'tau': np.array([np.nan], dtype=np.float32),
+            'p_tau': np.array([np.nan], dtype=np.float32)}}
 
     datasets = setup_TestDatasets()
     dm = DataManager(datasets, 'DS1', read_ts_names={d: 'read' for d in ['DS1', 'DS2', 'DS3']})
@@ -531,7 +554,7 @@ def test_validation_n3_k2_temporal_matching_no_matches():
             window=1 / 24.0).combinatory_matcher,
         scaling='lin_cdf_match',
         metrics_calculators={
-            (2, 2): metrics_calculators.BasicMetrics(other_name='k1').calc_metrics})
+            (3, 2): metrics_calculators.BasicMetrics(other_name='k1').calc_metrics})
 
     jobs = process.get_processing_jobs()
     for job in jobs:
@@ -606,6 +629,10 @@ def test_validation_n3_k2_masking():
         (('DS1', 'x'), ('DS2', 'y')): {
             'n_obs': np.array([250], dtype=np.int32)},
         (('DS1', 'x'), ('DS3', 'x')): {
+            'n_obs': np.array([250], dtype=np.int32)},
+        (('DS2', 'y'), ('DS3', 'x')): {
+            'n_obs': np.array([250], dtype=np.int32)},
+        (('DS2', 'y'), ('DS3', 'y')): {
             'n_obs': np.array([250], dtype=np.int32)}}
 
     # test result for two gpis in a cell
@@ -615,6 +642,10 @@ def test_validation_n3_k2_masking():
         (('DS1', 'x'), ('DS2', 'y')): {
             'n_obs': np.array([250, 250], dtype=np.int32)},
         (('DS1', 'x'), ('DS3', 'x')): {
+            'n_obs': np.array([250, 250], dtype=np.int32)},
+        (('DS2', 'y'), ('DS3', 'x')): {
+            'n_obs': np.array([250, 250], dtype=np.int32)},
+        (('DS2', 'y'), ('DS3', 'y')): {
             'n_obs': np.array([250, 250], dtype=np.int32)}}
 
     # cell 4 in this example has two gpis so it returns different results.

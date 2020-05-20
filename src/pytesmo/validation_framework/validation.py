@@ -10,6 +10,7 @@ from pygeogrids.grids import CellGrid
 
 from pytesmo.validation_framework.data_manager import DataManager
 from pytesmo.validation_framework.data_manager import get_result_names
+from pytesmo.validation_framework.data_manager import get_result_combinations
 from pytesmo.validation_framework.data_scalers import DefaultScaler
 import pytesmo.validation_framework.temporal_matchers as temporal_matchers
 from pytesmo.utils import ensure_iterable
@@ -51,7 +52,8 @@ class Validation(object):
         ``temporal_ref`` and ``scaling_ref``.
     metrics_calculators : dict of functions
         The keys of the dict are tuples with the following structure: (n, k) with n >= 2
-        and n>=k. n is the number of datasets that should be temporally matched to the
+        and n>=k. n must be equal to the number of datasets now.
+        n is the number of datasets that should be temporally matched to the
         reference dataset and k is how many columns the metric calculator will get at once.
         What this means is that it is e.g. possible to temporally match 3 datasets with
         3 columns in total and then give the combinations of these columns to the metric
@@ -126,6 +128,9 @@ class Validation(object):
             self.temporal_ref = self.data_manager.reference_name
 
         self.metrics_c = metrics_calculators
+        for n, k in self.metrics_c:
+            if n < len(self.data_manager.datasets.keys()):
+                raise ValueError('n must be equal to the number of datasets')
 
         self.masking_dm = None
         if masking_datasets is not None:
@@ -259,9 +264,8 @@ class Validation(object):
             n_matched_data = matched_n[(n, k)]
             if len(n_matched_data) == 0:
                 continue
-            result_names = get_result_names(self.data_manager.ds_dict,
-                                            self.temporal_ref,
-                                            n=k)
+            result_names = get_result_combinations(self.data_manager.ds_dict,
+                                                   n=k)
             for data, result_key in self.k_datasets_from(n_matched_data,
                                                          result_names):
 
@@ -285,6 +289,12 @@ class Validation(object):
                                                   gpi_info)
                     except ValueError:
                         continue
+                    # Drop the scaling reference if it was not in the intended
+                    # results
+                    if self.scaling_ref not in [key[0] for key in result_key]:
+                        data = data.drop(columns=[self.scaling_ref])
+
+
                 # Rename the columns to 'ref', 'k1', 'k2', ...
                 rename_dict = {}
                 f = lambda x: "k{}".format(x) if x > 0 else 'ref'
@@ -326,7 +336,8 @@ class Validation(object):
                                         n=2)
         choose_all = pd.DataFrame(index=ref_df.index)
         for data, result in self.k_datasets_from(matched_masking,
-                                                 result_names):
+                                                 result_names,
+                                                 include_scaling_ref=False):
             if len(data) == 0:
                 continue
 
@@ -398,7 +409,8 @@ class Validation(object):
 
         return matched_n
 
-    def k_datasets_from(self, n_matched_data, result_names):
+    def k_datasets_from(self, n_matched_data, result_names,
+                        include_scaling_ref=True):
         """
         Extract k datasets from n temporally matched ones.
 
@@ -412,6 +424,9 @@ class Validation(object):
             The key is a tuple of the dataset names.
         result_names: list
             result names to extract
+        include_scaling_ref: boolean, optional
+            if set the scaling reference will always be included.
+            Should only be disabled for getting the masking datasets
 
         Yields
         ------
@@ -424,7 +439,15 @@ class Validation(object):
         """
 
         for result in result_names:
-            data = self.get_data_for_result_tuple(n_matched_data, result)
+            result_extract = result
+            if self.scaling is not None and include_scaling_ref:
+                # always make sure the scaling reference is included in the results
+                # otherwise the scaling will fail
+                scaling_ref_column = self.data_manager.datasets[self.scaling_ref]['columns'][0]
+                scaling_result_name = (self.scaling_ref, scaling_ref_column)
+                if scaling_result_name not in result:
+                    result_extract = result + (scaling_result_name,)
+            data = self.get_data_for_result_tuple(n_matched_data, result_extract)
             yield data, result
 
     def get_data_for_result_tuple(self, n_matched_data, result_tuple):
@@ -457,7 +480,13 @@ class Validation(object):
         if len(list(n_matched_data)[0]) == len(dskey):
             # we should have an exact match of datasets and
             # temporal matches
+
             try:
+                # still need to make sure that dskey is in the right order and
+                # contains all the same datasets as the n_matched_data
+                if sorted(dskey) == sorted(list(n_matched_data.keys())[0]):
+                    dskey = list(n_matched_data.keys())[0]
+
                 data = n_matched_data[dskey]
             except KeyError:
                 # if not then temporal matching between two datasets was
@@ -467,14 +496,17 @@ class Validation(object):
             # more datasets were temporally matched than are
             # requested now so we select a temporally matched
             # dataset that has the first key in common with the
-            # requested one ensuring that it was used as a
-            # reference and also has the rest of the requested
-            # datasets in the key
+            # temporal reference.
+
+            # This guarantees that we only select columns from dataframes for
+            # which the temporal reference dataset was included in the temporal
+            # matching
+
             first_match = [
-                key for key in n_matched_data if dskey[0] == key[0]]
+                key for key in n_matched_data if self.temporal_ref == key[0]]
             found_key = None
             for key in first_match:
-                for dsk in dskey[1:]:
+                for dsk in dskey:
                     if dsk not in key:
                         continue
                 found_key = key
