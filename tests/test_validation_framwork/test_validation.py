@@ -746,7 +746,9 @@ def test_ascat_ismn_validation_metadata_rolling():
     nptest.assert_equal(sorted(network_should), sorted(df['network'].values))
     assert np.all(df.gpi.values == np.arange(8))
     assert(reader.read_ts(0).index.size == 357)
-    assert np.all(reader.read_ts(1).columns.values == np.array(['R', 'p_R']))
+    assert np.all(reader.read_ts(1).columns.values ==
+                  np.array(['R', 'p_R', 'RMSD']))
+
 
 def test_args_to_iterable_non_iterables():
 
