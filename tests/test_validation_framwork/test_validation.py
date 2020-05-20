@@ -748,7 +748,7 @@ def test_ascat_ismn_validation_metadata_rolling():
     assert np.all(df.gpi.values == np.arange(8))
     assert(reader.read_ts(0).index.size == 357)
     assert np.all(reader.read_ts(1).columns.values ==
-                  np.array(['R', 'p_R']))
+                  np.array(['R', 'p_R', 'RMSD']))
 
 
 def test_args_to_iterable_non_iterables():
@@ -819,6 +819,7 @@ def test_args_to_iterable_mixed_strings():
     assert lons_ == lons
     assert lats_ == [lats]
     assert args == [arg1]
-    
+
+
 if __name__ == '__main__':
     test_ascat_ismn_validation_metadata_rolling()
