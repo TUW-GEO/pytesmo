@@ -11,3 +11,4 @@ ismn>=0.3
 configparser
 pykdtree
 repurpose>=0.7.1
+numba
