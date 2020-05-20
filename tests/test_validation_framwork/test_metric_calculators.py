@@ -37,7 +37,7 @@ from pytesmo.validation_framework.metric_calculators import FTMetrics
 from pytesmo.validation_framework.metric_calculators import HSAF_Metrics
 from pytesmo.validation_framework.metric_calculators import BasicSeasonalMetrics
 from pytesmo.validation_framework.metric_calculators import RollingMetrics
-from pytesmo.validation_framework.metric_calculators import rolling_pearsonr, rolling_pearsonr2
+import pytesmo.metrics as metrics
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -454,51 +454,23 @@ def test_RollingMetrics():
     df['k1'] += np.random.rand(len(df))
     data = df[['ref', 'k1']]
 
-    from timeit import default_timer as timer
-
     metriccalc = RollingMetrics(other_name='k1')
+    dataset = metriccalc.calc_metrics(data, gpi_info=(0, 0, 0), center=False)
 
-    for i in range(10):
-        s = timer()
-        pr1 = metriccalc.calc_metrics(data, gpi_info=(0, 0, 0),
-                                      center=False, method=1)
-        e = timer()
-        print('Method1: {}'.format(e - s))
-
-    for i in range(10):
-        s = timer()
-        pr2 = metriccalc.calc_metrics(data, gpi_info=(0, 0, 0),
-                                      center=False, method=2)
-        e = timer()
-        print('Method2: {}'.format(e - s))
-
-    for i in range(10):
-        s = timer()
-        pr3 = metriccalc.calc_metrics(data, gpi_info=(0, 0, 0),
-                                      center=False, method=3)
-        e = timer()
-        print('Method3: {}'.format(e - s))
-
+    # test pearson r
     ref_array = df['ref'].rolling('30d').corr(df['k1'])
+    np.testing.assert_almost_equal(dataset['R'][0], ref_array.values)
 
-    # each element in the arrays that are returned by the metrics calc should
-    # represent a location, therefore RollingMetrics are arrays of arrays...
-    np.testing.assert_almost_equal(pr1['R'][0], ref_array.values)
-    np.testing.assert_almost_equal(pr2['R'][0], ref_array.values)
-    np.testing.assert_almost_equal(pr3['R'][0], ref_array.values)
+    # test rmsd
+    indexer = np.arange(30)[None, :] + np.arange(len(df)-30)[:, None]
+    rmsd_arr = []
+    for i in range(indexer.shape[0]):
+        rmsd_arr.append(metrics.rmsd(df['ref'][indexer[i, :]],
+                                     df['k1'][indexer[i, :]]))
 
-    """
-    import matplotlib.pyplot as plt
-    fig, ax = plt.subplots()
-    ax.plot(ref_array.values, pr1['R'][0], label='method1')
-    ax.plot(ref_array.values, pr2['R'][0], label='method2')
-    ax.plot(ref_array.values, pr3['R'][0], label='method3')
-    # todo: this raise a Value error because there's a nan in the df?
-    #ref_array.plot(ax=ax, label='reference')
-    ax.legend()
-    plt.show()
-    """
+    rmsd_arr = np.array(rmsd_arr)
+    np.testing.assert_almost_equal(dataset['RMSD'][0][29:-1], rmsd_arr)
+
 
 if __name__ == '__main__':
     test_RollingMetrics()
-

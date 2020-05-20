@@ -33,7 +33,6 @@ import itertools
 
 from scipy.special import betainc
 import pandas as pd
-from pandas.api.indexers import BaseIndexer
 import numpy as np
 from numba import jit
 
@@ -1068,8 +1067,8 @@ class TCMetrics(MetadataMetrics):
 
 class RollingMetrics(MetadataMetrics):
     """
-    This class computes rolling metrics. It also stores information about
-    gpi, lat, lon and number of observations.
+    This class computes rolling metrics for Pearson R and RMSD. It also stores
+    information about gpi, lat, lon and number of observations.
 
     Parameters
     ----------
@@ -1090,11 +1089,11 @@ class RollingMetrics(MetadataMetrics):
         super(RollingMetrics, self).__init__(
             other_name=other_name, metadata_template=metadata_template)
 
-        self.basic_metrics = ['R', 'p_R']
+        self.basic_metrics = ['R', 'p_R', 'RMSD']
         self.result_template.update(_get_metric_template(self.basic_metrics))
 
     def calc_metrics(self, data, gpi_info, window_size='30d', center=True,
-                     min_periods=2, method=1):
+                     min_periods=2):
         """
         Calculate the desired statistics.
 
@@ -1102,169 +1101,36 @@ class RollingMetrics(MetadataMetrics):
         ----------
         data : pandas.DataFrame
             with 2 columns, the first column is the reference dataset
-            named 'ref'
-            the second column the dataset to compare against named 'other'
+            named 'ref' the second column the dataset to compare
+            against named 'other'
         gpi_info : tuple
             of (gpi, lon, lat)
+        window_size : string
+            Window size defined as string.
+        center : bool, optional
+            Set window at the center.
+        min_periods : int, optional
+            Minimum number of observations in window required for computation.
         """
         dataset = super(RollingMetrics, self).calc_metrics(data, gpi_info)
 
         xy = data.to_numpy()
+        timestamps = data.index.to_julian_date().values
+        window_size_jd = pd.Timedelta(
+            window_size).to_numpy()/np.timedelta64(1, 'D')
+        pr_arr, rmsd_arr = rolling_pr_rmsd(
+            timestamps, xy, window_size_jd, center, min_periods)
 
-        if method == 1:
-            indexer = CustomIndexer(window_size=pd.Timedelta(window_size),
-                                    ts_timestamps=data.index,
-                                    ref_timestamps=data.index)
-            data['idx'] = range(len(data))
-
-            r = data['idx'].rolling(indexer, center=center).apply(
-                roll_pearsonr, args=(xy,), kwargs={'min_periods': min_periods},
-                raw=True)
-
-            dataset['time'] = np.array([r.index.to_pydatetime()])
-            dataset['R'] = np.array([r.values])
-
-            p_r = data['idx'].rolling(indexer, center=center).apply(
-                roll_pearsonr, args=(xy,), kwargs={'min_periods': min_periods,
-                                                   'index': 1}, raw=True)
-            # check if all timestamps are the same to drop them safely
-            assert np.all(p_r.index == r.index)
-
-            dataset['p_R'] = np.array([p_r.values])
-
-        elif method == 2:
-            timestamps = data.index.to_julian_date().values
-            window_size_jd = pd.Timedelta(
-                window_size).to_numpy()/np.timedelta64(1, 'D')
-
-            pr_arr = rolling_pearsonr(timestamps, xy, window_size_jd,
-                                      center, min_periods)
-            dataset['R'] = np.array([pr_arr[:, 0]])
-            # n pval for this method
-            dataset['p_R'] = np.array([np.full(dataset['R'].size, np.nan)])
-            dataset['time'] = np.array([data.index])
-
-        elif method == 3:
-            timestamps = data.index.to_julian_date().values
-            window_size_jd = pd.Timedelta(
-                window_size).to_numpy()/np.timedelta64(1, 'D')
-
-            pr_arr = rolling_pearsonr2(timestamps, xy, window_size_jd,
-                                       center, min_periods)
-
-            dataset['R'] = np.array([pr_arr[:, 0]])
-            dataset['p_R'] = np.array([pr_arr[:, 1]])
-            dataset['time'] = np.array([data.index])
+        dataset['time'] = np.array([data.index])
+        dataset['R'] = np.array([pr_arr[:, 0]])
+        dataset['p_R'] = np.array([pr_arr[:, 1]])
+        dataset['RMSD'] = np.array([rmsd_arr[:]])
 
         return dataset
 
 
-def roll_pearsonr(subset, xy, min_periods=2, index=0):
-    """
-    Computation of rolling statistics.
-    """
-
-    if subset.size == 0 or subset.size < min_periods:
-        result = np.nan
-    else:
-        result = metrics.pearsonr(xy[subset.astype(int), 0],
-                                  xy[subset.astype(int), 1])[index]
-
-    return result
-
-
-class CustomIndexer(BaseIndexer):
-    """
-    Class for creating a custom indexer used in rolling statistics.
-    """
-
-    def get_window_bounds(self, num_values, min_periods, center, closed):
-        """
-        Window bounds calculations.
-
-        Parameters
-        ----------
-        num_values : int
-            Number of values that will be aggregated over.
-        min_periods :
-            Minimum number of observations in window required to have compute
-            a value.
-        center : bool
-            Set window at the center.
-        close : bool
-            Not used.
-
-        Returns
-        -------
-        start, end : numpy.ndarray
-            A tuple of ndarray[int64]s, indicating the boundaries
-            of each window.
-        """
-        start = np.empty(num_values, dtype=np.int64)
-        end = np.empty(num_values, dtype=np.int64)
-
-        for i in range(num_values):
-            t_diff = self.ts_timestamps - self.ref_timestamps[i]
-            if center:
-                inside_window = np.abs(t_diff) <= self.window_size
-            else:
-                inside_window = (t_diff <= pd.Timedelta('0 days')) & (
-                    t_diff > -self.window_size)
-
-            start[i], end[i] = np.flatnonzero(inside_window)[[0, -1]]
-            end[i] += 1
-
-        return start, end
-
-
-@jit(nopython=True, parallel=True)
-def rolling_pearsonr(timestamps, data, window_size, center, min_periods):
-    """
-    Computation of rolling Pearson R (without p-value).
-
-    Parameters
-    ----------
-    timestamps : float64
-        Time stamps as julian dates.
-    data : numpy.ndarray
-        Time series data in 2d array.
-    window_size : float
-        Window size in fraction of days.
-    center : bool
-        Set window at the center.
-    min_periods : int
-        Minimum number of observations in window required for computation.
-
-    Results
-    -------
-    pr_arr : numpy.array
-        Pearson R.
-    """
-    pr_arr = np.empty((timestamps.size, 2), dtype=np.float32)
-
-    for i in range(timestamps.size):
-        time_diff = timestamps - timestamps[i]
-
-        if center:
-            inside_window = np.abs(time_diff) <= window_size
-        else:
-            inside_window = (time_diff <= 0) & (time_diff > -window_size)
-
-        idx = np.nonzero(inside_window)[0]
-        n_obs = inside_window.sum()
-
-        if n_obs == 0 or n_obs < min_periods:
-            pr_arr[i, :] = np.nan
-        else:
-            sub1 = data[idx[0]:idx[-1]+1, 0]
-            sub2 = data[idx[0]:idx[-1]+1, 1]
-            pr_arr[i, 0] = np.corrcoef(sub1, sub2)[0, 1]
-
-    return pr_arr
-
-
 @jit(parallel=True)
-def rolling_pearsonr2(timestamps, data, window_size, center, min_periods):
+def rolling_pr_rmsd(timestamps, data, window_size, center, min_periods):
     """
     Computation of rolling Pearson R.
 
@@ -1287,6 +1153,8 @@ def rolling_pearsonr2(timestamps, data, window_size, center, min_periods):
         Pearson R and p-value.
     """
     pr_arr = np.empty((timestamps.size, 2), dtype=np.float32)
+    rmsd_arr = np.empty(timestamps.size, dtype=np.float32)
+    ddof = 0
 
     for i in range(timestamps.size):
         time_diff = timestamps - timestamps[i]
@@ -1302,9 +1170,10 @@ def rolling_pearsonr2(timestamps, data, window_size, center, min_periods):
         if n_obs == 0 or n_obs < min_periods:
             pr_arr[i, :] = np.nan
         else:
-            # pearson r
             sub1 = data[idx[0]:idx[-1]+1, 0]
             sub2 = data[idx[0]:idx[-1]+1, 1]
+
+            # pearson r
             pr_arr[i, 0] = np.corrcoef(sub1, sub2)[0, 1]
 
             # p-value
@@ -1317,7 +1186,11 @@ def rolling_pearsonr2(timestamps, data, window_size, center, min_periods):
                 t_squared = np.clip(t_squared, None, 1.0)
                 pr_arr[i, 1] = betainc(0.5*df, 0.5, df / (df + t_squared))
 
-    return pr_arr
+            # rmsd
+            rmsd_arr[i] = np.sqrt(
+                np.sum((sub1 - sub2) ** 2) / (sub1.size - ddof))
+
+    return pr_arr, rmsd_arr
 
 
 def get_dataset_names(ref_key, datasets, n=3):
