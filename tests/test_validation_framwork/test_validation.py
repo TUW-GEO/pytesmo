@@ -159,6 +159,7 @@ def test_ascat_ismn_validation():
                                sorted(results.variables['RMSD'][:]),
                                rtol=1e-4)
 
+
 def test_ascat_ismn_validation_metadata():
     """
     Test processing framework with some ISMN and ASCAT sample data
@@ -191,18 +192,19 @@ def test_ascat_ismn_validation_metadata():
         min_depth=0,
         max_depth=0.1)
 
-    metadata_dict_template = {'network' : np.array(['None'], dtype='U256'),
-                              'station' : np.array(['None'], dtype='U256'),
-                              'landcover' : np.float32([np.nan]),
-                              'climate' : np.array(['None'], dtype='U4')}
+    metadata_dict_template = {'network': np.array(['None'], dtype='U256'),
+                              'station': np.array(['None'], dtype='U256'),
+                              'landcover': np.float32([np.nan]),
+                              'climate': np.array(['None'], dtype='U4')}
 
     for idx in ids:
         metadata = ismn_reader.metadata[idx]
-        metadata_dict = [{'network' : metadata['network'],
-                          'station' : metadata['station'],
-                          'landcover' : metadata['landcover_2010'],
-                          'climate' : metadata['climate']}]
-        jobs.append((idx, metadata['longitude'], metadata['latitude'], metadata_dict))
+        metadata_dict = [{'network': metadata['network'],
+                          'station': metadata['station'],
+                          'landcover': metadata['landcover_2010'],
+                          'climate': metadata['climate']}]
+        jobs.append((idx, metadata['longitude'],
+                     metadata['latitude'], metadata_dict))
 
     # Create the variable ***save_path*** which is a string representing the
     # path where the results will be saved. **DO NOT CHANGE** the name
@@ -276,7 +278,8 @@ def test_ascat_ismn_validation_metadata():
                                sorted(results.variables['RMSD'][:]),
                                rtol=1e-4)
         nptest.assert_equal(sorted(network_should),
-                               sorted(results.variables['network'][:]))
+                            sorted(results.variables['network'][:]))
+
 
 def test_validation_n2_k2():
 
@@ -684,18 +687,19 @@ def test_ascat_ismn_validation_metadata_rolling():
         min_depth=0,
         max_depth=0.1)
 
-    metadata_dict_template = {'network' : np.array(['None'], dtype='U256'),
-                              'station' : np.array(['None'], dtype='U256'),
-                              'landcover' : np.float32([np.nan]),
-                              'climate' : np.array(['None'], dtype='U4')}
+    metadata_dict_template = {'network': np.array(['None'], dtype='U256'),
+                              'station': np.array(['None'], dtype='U256'),
+                              'landcover': np.float32([np.nan]),
+                              'climate': np.array(['None'], dtype='U4')}
 
     for idx in ids:
         metadata = ismn_reader.metadata[idx]
-        metadata_dict = [{'network' : metadata['network'],
-                          'station' : metadata['station'],
-                          'landcover' : metadata['landcover_2010'],
-                          'climate' : metadata['climate']}]
-        jobs.append((idx, metadata['longitude'], metadata['latitude'], metadata_dict))
+        metadata_dict = [{'network': metadata['network'],
+                          'station': metadata['station'],
+                          'landcover': metadata['landcover_2010'],
+                          'climate': metadata['climate']}]
+        jobs.append((idx, metadata['longitude'],
+                     metadata['latitude'], metadata_dict))
 
     save_path = tempfile.mkdtemp()
 
