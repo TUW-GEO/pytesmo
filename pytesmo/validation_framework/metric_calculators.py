@@ -137,7 +137,7 @@ class MonthsMetricsAdapter(object):
                 if k in self.non_seas_metrics:
                     subset_metrics[f"{k}"] = v
                 else:
-                    subset_metrics[f"{k}_{name}"] = v
+                    subset_metrics[f"{name}_{k}"] = v
 
         self.result_template = subset_metrics
 
