@@ -102,7 +102,7 @@ def _get_metric_template(metr):
 
 class MonthsMetricsAdapter(object):
     """ Adapt MetricCalculators to calculate metrics for groups across months """
-    def __init__(self, calculator, sets=None, include_full=True):
+    def __init__(self, calculator, sets=None):
         """
         Add functionality to a metric calculator to calculate validation metrics
         for subsets of certain months in a time series (e.g. seasonal).
@@ -114,11 +114,7 @@ class MonthsMetricsAdapter(object):
             name as a suffix) and the list of months that belong to that set.
             If None is passed, we use 4 (seasonal) sets named after the fist
             letter of each month used.
-        include_full : bool, optinoal (default: True)
-            Include the original metric that uses ALL months (without suffix in
-            name)
         """
-        self.include_full = include_full
         self.cls = calculator
         if sets is None:
             sets = {'DJF': [12, 1, 2], 'MAM': [3, 4, 5],
