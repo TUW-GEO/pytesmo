@@ -727,7 +727,7 @@ def test_ascat_ismn_validation_metadata_rolling():
 
     for job in jobs:
         results = process.calc(*job)
-        netcdf_results_manager(results, save_path, ts_vars=['R', 'p_R'])
+        netcdf_results_manager(results, save_path, ts_vars=['R', 'p_R', 'RMSD'])
 
     results_fname = os.path.join(
         save_path, 'ASCAT.sm_with_ISMN.soil moisture.nc')
