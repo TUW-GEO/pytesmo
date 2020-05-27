@@ -100,6 +100,106 @@ def _get_metric_template(metr):
 
     return {m: lut[m] for m in metr}
 
+class MonthsMetricsAdapter(object):
+    """ Adapt MetricCalculators to calculate metrics for groups across months """
+    def __init__(self, calculator, sets=None):
+        """
+        Add functionality to a metric calculator to calculate validation metrics
+        for subsets of certain months in a time series (e.g. seasonal).
+        Parameters
+        ----------
+        calculator : MetadataMetrics or any child of it
+        sets : dict, optional (default: None)
+            A dictionary consisting of a set name (which is added to the metric
+            name as a suffix) and the list of months that belong to that set.
+            If None is passed, we use 4 (seasonal) sets named after the fist
+            letter of each month used.
+        """
+        self.cls = calculator
+        if sets is None:
+            sets = {'DJF': [12, 1, 2], 'MAM': [3, 4, 5],
+                    'JJA': [6, 7, 8], 'SON': [9, 10, 11],
+                    'ALL': list(range(1,13))}
+
+        self.sets = sets
+
+        # metadata metrics and lon, lat, gpi are excluded from applying seasonally
+        self.non_seas_metrics = ['gpi', 'lon', 'lat']
+        if self.cls.metadata_template is not None:
+            self.non_seas_metrics += list(self.cls.metadata_template.keys())
+
+        all_metrics = calculator.result_template
+        subset_metrics = {}
+
+        # for each subset create a copy of the metric template
+        for name in sets.keys():
+            for k, v in all_metrics.items():
+                if k in self.non_seas_metrics:
+                    subset_metrics[f"{k}"] = v
+                else:
+                    subset_metrics[f"{name}_{k}"] = v
+
+        self.result_template = subset_metrics
+
+    @staticmethod
+    def filter_months(df, months, dropna=False):
+        """
+        Select only entries of a time series that are within certain month(s)
+
+        Parameters
+        ----------
+        df : pd.DataFrame
+            Time series (index.month must exist) that is filtered
+        months : list
+            Months for which data is kept, e.g. [12,1,2] to keep data for winter
+        dropna : bool, optional (default: False)
+            Drop lines for months that are not to be kept, if this is false, the
+            original index is not changed, but filtered values are replaced with nan.
+
+        Returns
+        -------
+        df_filtered : pd.DataFrame
+            The filtered series
+        """
+        dat = df.copy(True)
+        dat['__index_month'] = dat.index.month
+        cond = ['__index_month == {}'.format(m) for m in months]
+        selection = dat.query(' | '.join(cond)).index
+        dat.drop('__index_month', axis=1, inplace=True)
+
+        if dropna:
+            return dat.loc[selection]
+        else:
+            dat.loc[dat.index.difference(selection)] = np.nan
+            return dat
+
+    def calc_metrics(self, data, gpi_info):
+        """
+        Calculates the desired statistics, for each set that was defined.
+
+        Parameters
+        ----------
+        data : pandas.DataFrame
+            with 2 columns, the first column is the reference dataset
+            named 'ref'
+            the second column the dataset to compare against named 'other'
+        gpi_info : tuple
+            Grid point info (i.e. gpi, lon, lat)
+        """
+        dataset = self.result_template.copy()
+
+        for setname, months in self.sets.items():
+            df = self.filter_months(data, months=months, dropna=True)
+            ds = self.cls.calc_metrics(df, gpi_info=gpi_info)
+            for metric, res in ds.items():
+                if metric in self.non_seas_metrics:
+                    k = f"{metric}"
+                else:
+                    k = f"{setname}_{metric}"
+                dataset[k] = res
+
+        return dataset
+                
 
 class MetadataMetrics(object):
     """
@@ -352,79 +452,6 @@ class FTMetrics(MetadataMetrics):
 
         return dataset
 
-
-class BasicSeasonalMetrics(MetadataMetrics):
-    """
-    This class just computes basic metrics on a seasonal basis. It also stores information about
-    gpi, lat, lon and number of observations.
-    """
-
-    def __init__(self, result_path=None, other_name='k1',
-                 metadata_template=None):
-
-        self.result_path = result_path
-        self.other_name = other_name
-
-        super(BasicSeasonalMetrics, self).__init__(other_name=other_name,
-                                                   metadata_template=metadata_template)
-
-        metrics = {'R': np.float32([np.nan]),
-                   'p_R': np.float32([np.nan]),
-                   'rho': np.float32([np.nan]),
-                   'p_rho': np.float32([np.nan]),
-                   'n_obs': np.int32([0])}
-
-        self.seasons = ['ALL', 'DJF', 'MAM', 'JJA', 'SON']
-
-        for season in self.seasons:
-            for metric in metrics.keys():
-                key = "{:}_{:}".format(season, metric)
-                self.result_template[key] = metrics[metric].copy()
-
-        self.month_to_season = np.array(['', 'DJF', 'DJF', 'MAM', 'MAM',
-                                         'MAM', 'JJA', 'JJA', 'JJA', 'SON',
-                                         'SON', 'SON', 'DJF'])
-
-    def calc_metrics(self, data, gpi_info):
-        """
-        calculates the desired statistics
-
-        Parameters
-        ----------
-        data : pandas.DataFrame
-            with 2 columns, the first column is the reference dataset
-            named 'ref'
-            the second column the dataset to compare against named 'other'
-        gpi_info : tuple
-            Grid point info (i.e. gpi, lon, lat)
-        """
-        dataset = super(BasicSeasonalMetrics,
-                        self).calc_metrics(data, gpi_info)
-
-        for season in self.seasons:
-
-            if season != 'ALL':
-                subset = self.month_to_season[data.index.month] == season
-            else:
-                subset = np.ones(len(data), dtype=bool)
-
-            if subset.sum() < 10:
-                continue
-
-            x = data['ref'].values[subset]
-            y = data[self.other_name].values[subset]
-            R, p_R = metrics.pearsonr(x, y)
-            rho, p_rho = metrics.spearmanr(x, y)
-
-            dataset['{:}_n_obs'.format(season)][0] = subset.sum()
-            dataset['{:}_R'.format(season)][0] = R
-            dataset['{:}_p_R'.format(season)][0] = p_R
-            dataset['{:}_rho'.format(season)][0] = rho
-            dataset['{:}_p_rho'.format(season)][0] = p_rho
-
-        return dataset
-
-
 class HSAF_Metrics(MetadataMetrics):
     """
     This class computes metrics as defined by the H-SAF consortium in
@@ -613,9 +640,11 @@ class IntercomparisonMetrics(MetadataMetrics):
         if True then also tau is calculated. This is set to False by default
         since the calculation of Kendalls tau is rather slow and can significantly
         impact performance of e.g. global validation studies
-    dataset_names : list
+    dataset_names : list, optional (default: None)
         Names of the original datasets, that are used to find the lookup table
         for the df cols.
+    metadata_template: dict, optional (default: None)
+        See MetadataMetrics
     """
 
     def __init__(self, other_names=('k1', 'k2', 'k3'), calc_tau=False,
@@ -1227,3 +1256,20 @@ def get_dataset_names(ref_key, datasets, n=3):
         dataset_names.append(name[0])
 
     return dataset_names
+
+if __name__ == '__main__':
+    calc = IntercomparisonMetrics(other_names=('k1', 'k2', 'k3'),
+                                  calc_tau=False,
+                                  metadata_template=dict(meta1=np.array(['TBD']),
+                                                         meta2=np.float32([np.nan])))
+
+    adapted = MonthsMetricsAdapter(calc)
+
+    idx = pd.date_range('2000-01-01', '2010-07-21', freq='D')
+    df = pd.DataFrame(index=idx,
+                      data={'ref': np.random.rand(idx.size),
+                            'k1': np.random.rand(idx.size),
+                            'k2': np.random.rand(idx.size),
+                            'k3': np.random.rand(idx.size)})
+
+    adapted.calc_metrics(df, (0,1,2,{'meta1':'meta', 'meta2':12}))

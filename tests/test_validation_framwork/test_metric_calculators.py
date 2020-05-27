@@ -35,8 +35,8 @@ from pytesmo.validation_framework.metric_calculators import IntercomparisonMetri
 from pytesmo.validation_framework.metric_calculators import TCMetrics
 from pytesmo.validation_framework.metric_calculators import FTMetrics
 from pytesmo.validation_framework.metric_calculators import HSAF_Metrics
-from pytesmo.validation_framework.metric_calculators import BasicSeasonalMetrics
 from pytesmo.validation_framework.metric_calculators import RollingMetrics
+from pytesmo.validation_framework.metric_calculators import MonthsMetricsAdapter
 import pytesmo.metrics as metrics
 
 import warnings
@@ -385,7 +385,7 @@ def test_BasicSeasonalMetrics():
     df = make_some_data()
     data = df[['ref', 'k1']]
 
-    metriccalc = BasicSeasonalMetrics(other_name='k1')
+    metriccalc = MonthsMetricsAdapter(BasicMetrics(other_name='k1'))
     res = metriccalc.calc_metrics(data, gpi_info=(0, 0, 0))
 
     should = dict(ALL_n_obs=np.array([366]), dtype='float32')
@@ -403,8 +403,9 @@ def test_BasicSeasonalMetrics_metadata():
 
     metadata_dict_template = {'network': np.array(['None'], dtype='U256')}
 
-    metriccalc = BasicSeasonalMetrics(
-        other_name='k1', metadata_template=metadata_dict_template)
+
+    metriccalc = MonthsMetricsAdapter(BasicMetrics(
+        other_name='k1', metadata_template=metadata_dict_template))
     res = metriccalc.calc_metrics(
         data, gpi_info=(0, 0, 0, {'network': 'SOILSCAPE'}))
 
@@ -470,7 +471,3 @@ def test_RollingMetrics():
 
     rmsd_arr = np.array(rmsd_arr)
     np.testing.assert_almost_equal(dataset['RMSD'][0][29:-1], rmsd_arr)
-
-
-if __name__ == '__main__':
-    test_RollingMetrics()
