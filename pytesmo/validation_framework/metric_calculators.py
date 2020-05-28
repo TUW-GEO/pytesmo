@@ -1129,7 +1129,7 @@ class RollingMetrics(MetadataMetrics):
         return dataset
 
 
-@jit(parallel=True)
+# @jit(parallel=True)
 def rolling_pr_rmsd(timestamps, data, window_size, center, min_periods):
     """
     Computation of rolling Pearson R.
