@@ -1183,8 +1183,8 @@ def rolling_pr_rmsd(timestamps, data, window_size, center, min_periods):
                 df = n_obs - 2
                 t_squared = pr_arr[i, 0]*pr_arr[i, 0] * \
                     (df / ((1.0 - pr_arr[i, 0]) * (1.0 + pr_arr[i, 0])))
-                pr_arr[i, 1] = betainc(0.5*df, 0.5, np.clip(
-                    df / (df + t_squared), None, 1.0))
+                x = np.clip(df / (df + t_squared), None, 1.0)
+                pr_arr[i, 1] = betainc(0.5*df, 0.5, x)
 
             # rmsd
             rmsd_arr[i] = np.sqrt(
