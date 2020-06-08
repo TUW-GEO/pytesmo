@@ -3,14 +3,6 @@ build: false
 environment:
   matrix:
     - PYTHON_ARCH: 64
-      PYTHON_VERSION: "2.7"
-      PYTHON: "C:\\Python27-x64"
-      MINICONDA: "C:\\Miniconda-x64" # use preinstalled conda
-    - PYTHON_ARCH: 32
-      PYTHON_VERSION: "2.7"
-      PYTHON: "C:\\Python27"
-      MINICONDA: "C:\\Miniconda"
-    - PYTHON_ARCH: 64
       PYTHON: "C:\\Python36-x64"
       PYTHON_VERSION: "3.6"
       MINICONDA: "C:\\Miniconda36-x64"
@@ -21,7 +13,7 @@ environment:
     - PYTHON_ARCH: 64
       PYTHON: "C:\\Python38-x64"
       PYTHON_VERSION: "3.8"
-      MINICONDA: "C:\\Miniconda37-x64"
+      MINICONDA: "C:\\Miniconda38-x64"
 
 
 install:
@@ -61,8 +53,7 @@ install:
   - cmd: activate pytesmo
   # Install dependencies
   - conda env update -f environment.yml -n pytesmo
-  - pip install pytest==3.8.2 # While supporting python2 x86
-  
+
   # Print debug infos
   - git status
   - conda info -a
