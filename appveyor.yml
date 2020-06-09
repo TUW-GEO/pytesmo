@@ -1,7 +1,5 @@
 build: false
 
-image:
-  - Visual Studio 2019
 environment:
   matrix:
     - PYTHON_ARCH: 64
@@ -30,9 +28,6 @@ install:
         throw "There are newer queued builds for this pull request, failing early." }
   - ECHO "Filesystem root:"
   - ps: "ls \"C:/\""
-
-  - ECHO "Installed SDKs:"
-  - ps: "ls \"C:/Program Files/Microsoft SDKs/Windows\""
 
   # Upgrade to the latest version of pip to avoid it displaying warnings
   # about it being out of date.
