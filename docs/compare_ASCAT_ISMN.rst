@@ -1,7 +1,7 @@
 
 .. code:: python
 
-    import pytesmo.io.ismn.interface as ismn
+    import ismn.interface as ismn # install the ISMN package first https://github.com/TUW-GEO/ismn
     import ascat
     import pytesmo.temporal_matching as temp_match
     import pytesmo.scaling as scaling
