@@ -36,6 +36,7 @@ import tempfile
 import netCDF4 as nc
 import numpy as np
 import numpy.testing as nptest
+import pytest
 
 import pygeogrids.grids as grids
 from pygeobase.io_base import GriddedTsBase
@@ -59,7 +60,7 @@ from tests.test_validation_framwork.test_datasets import setup_two_without_overl
 from tests.test_validation_framwork.test_datasets import setup_three_with_two_overlapping
 from tests.test_validation_framwork.test_datasets import MaskingTestDataset
 
-
+@pytest.mark.full_framework
 def test_ascat_ismn_validation():
     """
     Test processing framework with some ISMN and ASCAT sample data
@@ -159,7 +160,7 @@ def test_ascat_ismn_validation():
                                sorted(results.variables['RMSD'][:]),
                                rtol=1e-4)
 
-
+@pytest.mark.full_framework
 def test_ascat_ismn_validation_metadata():
     """
     Test processing framework with some ISMN and ASCAT sample data
@@ -654,7 +655,7 @@ def test_validation_n3_k2_masking():
             nptest.assert_almost_equal(results[key]['n_obs'],
                                        tst[tst_key]['n_obs'])
 
-
+@pytest.mark.full_framework
 def test_ascat_ismn_validation_metadata_rolling():
     """
     Test processing framework with some ISMN and ASCAT sample data
@@ -726,7 +727,8 @@ def test_ascat_ismn_validation_metadata_rolling():
         scaling='lin_cdf_match',
         scaling_ref='ASCAT',
         metrics_calculators={
-            (2, 2): metrics_calculators.RollingMetrics(other_name='k1', metadata_template=metadata_dict_template).calc_metrics},
+            (2, 2): metrics_calculators.RollingMetrics(other_name='k1',
+                                                       metadata_template=metadata_dict_template).calc_metrics},
         period=period)
 
     for job in jobs:
@@ -753,7 +755,6 @@ def test_ascat_ismn_validation_metadata_rolling():
     assert(reader.read_ts(0).index.size == 357)
     assert np.all(reader.read_ts(1).columns.values ==
                   np.array(['R', 'p_R', 'RMSD']))
-
 
 def test_args_to_iterable_non_iterables():
 
