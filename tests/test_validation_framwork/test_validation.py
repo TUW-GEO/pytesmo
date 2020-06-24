@@ -36,6 +36,7 @@ import tempfile
 import netCDF4 as nc
 import numpy as np
 import numpy.testing as nptest
+import pytest
 
 import pygeogrids.grids as grids
 from pygeobase.io_base import GriddedTsBase
@@ -59,7 +60,7 @@ from tests.test_validation_framwork.test_datasets import setup_two_without_overl
 from tests.test_validation_framwork.test_datasets import setup_three_with_two_overlapping
 from tests.test_validation_framwork.test_datasets import MaskingTestDataset
 
-
+@pytest.mark.full_framework
 def test_ascat_ismn_validation():
     """
     Test processing framework with some ISMN and ASCAT sample data
@@ -159,7 +160,7 @@ def test_ascat_ismn_validation():
                                sorted(results.variables['RMSD'][:]),
                                rtol=1e-4)
 
-
+@pytest.mark.full_framework
 def test_ascat_ismn_validation_metadata():
     """
     Test processing framework with some ISMN and ASCAT sample data
@@ -654,106 +655,106 @@ def test_validation_n3_k2_masking():
             nptest.assert_almost_equal(results[key]['n_obs'],
                                        tst[tst_key]['n_obs'])
 
+@pytest.mark.full_framework
+def test_ascat_ismn_validation_metadata_rolling():
+    """
+    Test processing framework with some ISMN and ASCAT sample data
+    """
+    ascat_data_folder = os.path.join(os.path.dirname(__file__), '..', 'test-data',
+                                     'sat', 'ascat', 'netcdf', '55R22')
 
-# def test_ascat_ismn_validation_metadata_rolling():
-#     """
-#     Test processing framework with some ISMN and ASCAT sample data
-#     """
-#     ascat_data_folder = os.path.join(os.path.dirname(__file__), '..', 'test-data',
-#                                      'sat', 'ascat', 'netcdf', '55R22')
+    ascat_grid_folder = os.path.join(os.path.dirname(__file__), '..', 'test-data',
+                                     'sat', 'ascat', 'netcdf', 'grid')
 
-#     ascat_grid_folder = os.path.join(os.path.dirname(__file__), '..', 'test-data',
-#                                      'sat', 'ascat', 'netcdf', 'grid')
+    static_layers_folder = os.path.join(os.path.dirname(__file__),
+                                        '..', 'test-data', 'sat',
+                                        'h_saf', 'static_layer')
 
-#     static_layers_folder = os.path.join(os.path.dirname(__file__),
-#                                         '..', 'test-data', 'sat',
-#                                         'h_saf', 'static_layer')
+    ascat_reader = AscatSsmCdr(ascat_data_folder, ascat_grid_folder,
+                               grid_filename='TUW_WARP5_grid_info_2_1.nc',
+                               static_layer_path=static_layers_folder)
+    ascat_reader.read_bulk = True
 
-#     ascat_reader = AscatSsmCdr(ascat_data_folder, ascat_grid_folder,
-#                                grid_filename='TUW_WARP5_grid_info_2_1.nc',
-#                                static_layer_path=static_layers_folder)
-#     ascat_reader.read_bulk = True
+    # Initialize ISMN reader
 
-#     # Initialize ISMN reader
+    ismn_data_folder = os.path.join(os.path.dirname(__file__), '..', 'test-data',
+                                    'ismn', 'multinetwork', 'header_values')
+    ismn_reader = ISMN_Interface(ismn_data_folder)
 
-#     ismn_data_folder = os.path.join(os.path.dirname(__file__), '..', 'test-data',
-#                                     'ismn', 'multinetwork', 'header_values')
-#     ismn_reader = ISMN_Interface(ismn_data_folder)
+    jobs = []
 
-#     jobs = []
+    ids = ismn_reader.get_dataset_ids(
+        variable='soil moisture',
+        min_depth=0,
+        max_depth=0.1)
 
-#     ids = ismn_reader.get_dataset_ids(
-#         variable='soil moisture',
-#         min_depth=0,
-#         max_depth=0.1)
+    metadata_dict_template = {'network': np.array(['None'], dtype='U256'),
+                              'station': np.array(['None'], dtype='U256'),
+                              'landcover': np.float32([np.nan]),
+                              'climate': np.array(['None'], dtype='U4')}
 
-#     metadata_dict_template = {'network': np.array(['None'], dtype='U256'),
-#                               'station': np.array(['None'], dtype='U256'),
-#                               'landcover': np.float32([np.nan]),
-#                               'climate': np.array(['None'], dtype='U4')}
+    for idx in ids:
+        metadata = ismn_reader.metadata[idx]
+        metadata_dict = [{'network': metadata['network'],
+                          'station': metadata['station'],
+                          'landcover': metadata['landcover_2010'],
+                          'climate': metadata['climate']}]
+        jobs.append((idx, metadata['longitude'],
+                     metadata['latitude'], metadata_dict))
 
-#     for idx in ids:
-#         metadata = ismn_reader.metadata[idx]
-#         metadata_dict = [{'network': metadata['network'],
-#                           'station': metadata['station'],
-#                           'landcover': metadata['landcover_2010'],
-#                           'climate': metadata['climate']}]
-#         jobs.append((idx, metadata['longitude'],
-#                      metadata['latitude'], metadata_dict))
+    save_path = tempfile.mkdtemp()
 
-#     save_path = tempfile.mkdtemp()
+    # Create the validation object.
 
-#     # Create the validation object.
+    datasets = {
+        'ISMN': {
+            'class': ismn_reader,
+            'columns': ['soil moisture']
+        },
+        'ASCAT': {
+            'class': ascat_reader,
+            'columns': ['sm'],
+            'kwargs': {'mask_frozen_prob': 80,
+                       'mask_snow_prob': 80,
+                       'mask_ssf': True}
+        }}
 
-#     datasets = {
-#         'ISMN': {
-#             'class': ismn_reader,
-#             'columns': ['soil moisture']
-#         },
-#         'ASCAT': {
-#             'class': ascat_reader,
-#             'columns': ['sm'],
-#             'kwargs': {'mask_frozen_prob': 80,
-#                        'mask_snow_prob': 80,
-#                        'mask_ssf': True}
-#         }}
+    period = [datetime(2007, 1, 1), datetime(2014, 12, 31)]
 
-#     period = [datetime(2007, 1, 1), datetime(2014, 12, 31)]
+    process = Validation(
+        datasets, 'ISMN',
+        temporal_ref='ASCAT',
+        scaling='lin_cdf_match',
+        scaling_ref='ASCAT',
+        metrics_calculators={
+            (2, 2): metrics_calculators.RollingMetrics(other_name='k1',
+                                                       metadata_template=metadata_dict_template).calc_metrics},
+        period=period)
 
-#     process = Validation(
-#         datasets, 'ISMN',
-#         temporal_ref='ASCAT',
-#         scaling='lin_cdf_match',
-#         scaling_ref='ASCAT',
-#         metrics_calculators={
-#             (2, 2): metrics_calculators.RollingMetrics(other_name='k1', metadata_template=metadata_dict_template).calc_metrics},
-#         period=period)
+    for job in jobs:
+        results = process.calc(*job)
+        netcdf_results_manager(results, save_path, ts_vars=[
+                               'R', 'p_R', 'RMSD'])
 
-#     for job in jobs:
-#         results = process.calc(*job)
-#         netcdf_results_manager(results, save_path, ts_vars=[
-#                                'R', 'p_R', 'RMSD'])
+    results_fname = os.path.join(
+        save_path, 'ASCAT.sm_with_ISMN.soil moisture.nc')
 
-#     results_fname = os.path.join(
-#         save_path, 'ASCAT.sm_with_ISMN.soil moisture.nc')
+    vars_should = [u'gpi', u'lon',  u'lat', u'R', u'p_R', u'time',
+                   u'idx', u'_row_size']
 
-#     vars_should = [u'gpi', u'lon',  u'lat', u'R', u'p_R', u'time',
-#                    u'idx', u'_row_size']
+    for key, value in metadata_dict_template.items():
+        vars_should.append(key)
 
-#     for key, value in metadata_dict_template.items():
-#         vars_should.append(key)
+    network_should = np.array(['MAQU', 'MAQU', 'SCAN', 'SCAN', 'SCAN',
+                               'SOILSCAPE', 'SOILSCAPE', 'SOILSCAPE'], dtype='U256')
 
-#     network_should = np.array(['MAQU', 'MAQU', 'SCAN', 'SCAN', 'SCAN',
-#                                'SOILSCAPE', 'SOILSCAPE', 'SOILSCAPE'], dtype='U256')
-
-#     reader = PointDataResults(results_fname, read_only=True)
-#     df = reader.read_loc(None)
-#     nptest.assert_equal(sorted(network_should), sorted(df['network'].values))
-#     assert np.all(df.gpi.values == np.arange(8))
-#     assert(reader.read_ts(0).index.size == 357)
-#     assert np.all(reader.read_ts(1).columns.values ==
-#                   np.array(['R', 'p_R', 'RMSD']))
-
+    reader = PointDataResults(results_fname, read_only=True)
+    df = reader.read_loc(None)
+    nptest.assert_equal(sorted(network_should), sorted(df['network'].values))
+    assert np.all(df.gpi.values == np.arange(8))
+    assert(reader.read_ts(0).index.size == 357)
+    assert np.all(reader.read_ts(1).columns.values ==
+                  np.array(['R', 'p_R', 'RMSD']))
 
 def test_args_to_iterable_non_iterables():
 

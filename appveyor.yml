@@ -3,25 +3,20 @@ build: false
 environment:
   matrix:
     - PYTHON_ARCH: 64
-      PYTHON_VERSION: "2.7"
-      PYTHON: "C:\\Python27-x64"
-      MINICONDA: "C:\\Miniconda-x64" # use preinstalled conda
-    - PYTHON_ARCH: 32
-      PYTHON_VERSION: "2.7"
-      PYTHON: "C:\\Python27"
-      MINICONDA: "C:\\Miniconda"
-    - PYTHON_ARCH: 64
       PYTHON: "C:\\Python36-x64"
       PYTHON_VERSION: "3.6"
       MINICONDA: "C:\\Miniconda36-x64"
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
     - PYTHON_ARCH: 64
       PYTHON: "C:\\Python37-x64"
       PYTHON_VERSION: "3.7"
       MINICONDA: "C:\\Miniconda37-x64"
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
     - PYTHON_ARCH: 64
       PYTHON: "C:\\Python38-x64"
       PYTHON_VERSION: "3.8"
-      MINICONDA: "C:\\Miniconda37-x64"
+      MINICONDA: "C:\\Miniconda38-x64"
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
 
 
 install:
@@ -36,9 +31,6 @@ install:
         throw "There are newer queued builds for this pull request, failing early." }
   - ECHO "Filesystem root:"
   - ps: "ls \"C:/\""
-
-  - ECHO "Installed SDKs:"
-  - ps: "ls \"C:/Program Files/Microsoft SDKs/Windows\""
 
   # Upgrade to the latest version of pip to avoid it displaying warnings
   # about it being out of date.
@@ -61,8 +53,7 @@ install:
   - cmd: activate pytesmo
   # Install dependencies
   - conda env update -f environment.yml -n pytesmo
-  - pip install pytest==3.8.2 # While supporting python2 x86
-  
+
   # Print debug infos
   - git status
   - conda info -a

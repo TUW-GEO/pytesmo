@@ -42,7 +42,8 @@ install:
   - which python
 
 script:
-  - python setup.py test
+  - python setup.py test --addopts "--cache-clear -m 'not full_framework'"
+  - python setup.py test --addopts "--cache-clear -m 'full_framework'"
 after_success:
   # report coverage results to coveralls.io
   - pip install coveralls
