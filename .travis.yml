@@ -4,7 +4,6 @@ os:
 services:
   - xvfb
 language: python
-sudo: false
 addons:
   apt:
     packages:
