@@ -102,3 +102,9 @@ from appveyor CI have to be uploaded to PyPI. They can be found on the appveyor
 CI run for the created tag under the ``jobs/Artifacts`` tab. All the ``.whl``
 files should be downloaded into a folder. They can then be added to the release
 on PyPI using e.g. ``twine upload pytesmo-0.7.1*whl``
+
+Note
+====
+
+This project has been set up using PyScaffold 3.2.3. For details and usage
+information on PyScaffold see https://pyscaffold.org/.

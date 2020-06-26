@@ -1,5 +1,6 @@
-==========
-Developers
-==========
+============
+Contributors
+============
 
-* Christoph Paulik <christoph.paulik@geo.tuwien.ac.at>
+* Christoph Paulik <cpaulik@vandersat.com>
+* Sebastian Hahn <sebastian.hahn@geo.tuwien.ac.at>

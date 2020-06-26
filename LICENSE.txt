@@ -1,4 +1,4 @@
-#Copyright (c) 2013,Vienna University of Technology, Department of Geodesy and Geoinformation
+#Copyright (c) 2020, TU Wien, Department of Geodesy and Geoinformation
 #All rights reserved.
 
 #Redistribution and use in source and binary forms, with or without
@@ -8,7 +8,7 @@
 #    * Redistributions in binary form must reproduce the above copyright
 #      notice, this list of conditions and the following disclaimer in the
 #      documentation and/or other materials provided with the distribution.
-#    * Neither the name of the Vienna University of Technology, Department of Geodesy and Geoinformation nor the
+#    * Neither the name of the TU Wien, Department of Geodesy and Geoinformation nor the
 #      names of its contributors may be used to endorse or promote products
 #      derived from this software without specific prior written permission.
 
