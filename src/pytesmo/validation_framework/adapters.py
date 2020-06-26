@@ -54,7 +54,7 @@ class BasicAdapter(object):
         return data
 
     def __drop_tz_info(self, data):
-        if data.index.tz is not None:
+        if (hasattr(data.index, 'tz') and (data.index.tz is not None)):
             warnings.warn('Dropping timezone information ({}) for data from reader {}'.format(data.index.tz, self.cls.__class__.__name__))
             data.index = data.index.tz_convert(None)
         return data
@@ -158,6 +158,68 @@ class SelfMaskingAdapter(BasicAdapter):
 
     def read(self, *args, **kwargs):
         data = super(SelfMaskingAdapter, self).read(*args, **kwargs)
+        return self.__mask(data)
+
+
+class AdvancedMaskingAdapter(BasicAdapter):
+    """
+    Transform the given (reader) class to return a dataset that is masked based
+    on the given list of filters. A filter is a 3-tuple of column_name, operator, and threshold.
+    This class calls the read_ts or read method of the given reader instance, applies all filters
+    separately, ANDs all filters together, and masks the whole dataframe with the result.
+
+    Parameters
+    ----------
+    cls: object
+        has to have a read_ts or read method
+    filter_list: list of 3-tuples: column_name, operator, and threshold.
+        'column_name': string
+            name of the column to apply the operator to
+        'operator': callable or string;
+            callable needs to accept two parameters (e.g. my_mask(a,b);
+            the threshold will be passed to the second parameter
+            string needs to be one of '<', '<=', '==', '>=', '>', '!='
+        'threshold':
+            value to use as the threshold combined with the operator;
+    """
+
+    def __init__(self, cls, filter_list):
+        super(AdvancedMaskingAdapter, self).__init__(cls)
+
+        self.op_lookup = {'<': operator.lt,
+                          '<=': operator.le,
+                          '==': operator.eq,
+                          '!=': operator.ne,
+                          '>=': operator.ge,
+                          '>': operator.gt}
+
+        self.filter_list = filter_list
+
+    def __mask(self, data):
+        mask = None
+        for column_name, op, threshold in self.filter_list:
+            if callable(op):
+                operator = op
+            elif op in self.op_lookup:
+                operator = self.op_lookup[op]
+            else:
+                raise ValueError('"{}" is not a valid operator'.format(op))
+
+            new_mask = operator(data[column_name], threshold)
+
+            if mask is not None:
+                mask = mask & new_mask
+            else:
+                mask = new_mask
+
+        return data[mask]
+
+    def read_ts(self, *args, **kwargs):
+        data = super(AdvancedMaskingAdapter, self).read_ts(*args, **kwargs)
+        return self.__mask(data)
+
+    def read(self, *args, **kwargs):
+        data = super(AdvancedMaskingAdapter, self).read(*args, **kwargs)
         return self.__mask(data)
 
 class AnomalyAdapter(BasicAdapter):

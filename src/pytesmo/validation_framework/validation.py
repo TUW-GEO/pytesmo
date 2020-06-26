@@ -205,6 +205,7 @@ class Validation(object):
                 results[r] = results[r] + result[r]
 
         compact_results = {}
+
         for key in results.keys():
             compact_results[key] = {}
             for field_name in results[key][0].keys():

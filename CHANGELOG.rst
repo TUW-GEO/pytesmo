@@ -6,6 +6,9 @@ Version 0.9.0
 =============
 
 - Update pyscaffold v3.2.3
+- Rolling Prearson's R and RMSD metrics calculator
+- New results manager to handle rolling metrics
+- Add deprecation warning for colormaps module
 
 Version 0.8, 2019-11-21
 =======================

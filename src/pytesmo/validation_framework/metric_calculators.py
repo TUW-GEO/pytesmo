@@ -1,16 +1,16 @@
-# Copyright (c) 2013,Vienna University of Technology, Department of Geodesy and Geoinformation
+# Copyright (c) 2020, TU Wien, Department of Geodesy and Geoinformation.
 # All rights reserved.
 
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
 #   * Redistributions of source code must retain the above copyright
 #     notice, this list of conditions and the following disclaimer.
-#    * Redistributions in binary form must reproduce the above copyright
-#      notice, this list of conditions and the following disclaimer in the
-#      documentation and/or other materials provided with the distribution.
-#    * Neither the name of the Vienna University of Technology, Department of Geodesy and Geoinformation nor the
-#      names of its contributors may be used to endorse or promote products
-#      derived from this software without specific prior written permission.
+#   * Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#   * Neither the name of TU Wien, Department of Geodesy and Geoinformation nor
+#     the names of its contributors may be used to endorse or promote products
+#     derived from this software without specific prior written permission.
 
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 # ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -28,15 +28,20 @@
 Metric calculators implement combinations of metrics and structure the output.
 """
 
+import copy
+import itertools
+
+from scipy.special import betainc
+import pandas as pd
+import numpy as np
+from numba import jit
+
 import pytesmo.metrics as metrics
 import pytesmo.df_metrics as df_metrics
 from pytesmo.scaling import scale
 from pytesmo.validation_framework.data_manager import get_result_names
 from pytesmo.df_metrics import n_combinations
 
-import copy
-import itertools
-import numpy as np
 
 def _get_tc_metric_template(metr, ds_names):
     """ return empty dict to fill TC results into """
@@ -59,6 +64,7 @@ def _get_tc_metric_template(metr, ds_names):
             met_thds[(m, d)] = met_thds_template[m]
 
     return met_thds
+
 
 def _get_metric_template(metr):
     """ return empty dict to fill results into """
@@ -94,6 +100,106 @@ def _get_metric_template(metr):
 
     return {m: lut[m] for m in metr}
 
+class MonthsMetricsAdapter(object):
+    """ Adapt MetricCalculators to calculate metrics for groups across months """
+    def __init__(self, calculator, sets=None):
+        """
+        Add functionality to a metric calculator to calculate validation metrics
+        for subsets of certain months in a time series (e.g. seasonal).
+        Parameters
+        ----------
+        calculator : MetadataMetrics or any child of it
+        sets : dict, optional (default: None)
+            A dictionary consisting of a set name (which is added to the metric
+            name as a suffix) and the list of months that belong to that set.
+            If None is passed, we use 4 (seasonal) sets named after the fist
+            letter of each month used.
+        """
+        self.cls = calculator
+        if sets is None:
+            sets = {'DJF': [12, 1, 2], 'MAM': [3, 4, 5],
+                    'JJA': [6, 7, 8], 'SON': [9, 10, 11],
+                    'ALL': list(range(1,13))}
+
+        self.sets = sets
+
+        # metadata metrics and lon, lat, gpi are excluded from applying seasonally
+        self.non_seas_metrics = ['gpi', 'lon', 'lat']
+        if self.cls.metadata_template is not None:
+            self.non_seas_metrics += list(self.cls.metadata_template.keys())
+
+        all_metrics = calculator.result_template
+        subset_metrics = {}
+
+        # for each subset create a copy of the metric template
+        for name in sets.keys():
+            for k, v in all_metrics.items():
+                if k in self.non_seas_metrics:
+                    subset_metrics[f"{k}"] = v
+                else:
+                    subset_metrics[f"{name}_{k}"] = v
+
+        self.result_template = subset_metrics
+
+    @staticmethod
+    def filter_months(df, months, dropna=False):
+        """
+        Select only entries of a time series that are within certain month(s)
+
+        Parameters
+        ----------
+        df : pd.DataFrame
+            Time series (index.month must exist) that is filtered
+        months : list
+            Months for which data is kept, e.g. [12,1,2] to keep data for winter
+        dropna : bool, optional (default: False)
+            Drop lines for months that are not to be kept, if this is false, the
+            original index is not changed, but filtered values are replaced with nan.
+
+        Returns
+        -------
+        df_filtered : pd.DataFrame
+            The filtered series
+        """
+        dat = df.copy(True)
+        dat['__index_month'] = dat.index.month
+        cond = ['__index_month == {}'.format(m) for m in months]
+        selection = dat.query(' | '.join(cond)).index
+        dat.drop('__index_month', axis=1, inplace=True)
+
+        if dropna:
+            return dat.loc[selection]
+        else:
+            dat.loc[dat.index.difference(selection)] = np.nan
+            return dat
+
+    def calc_metrics(self, data, gpi_info):
+        """
+        Calculates the desired statistics, for each set that was defined.
+
+        Parameters
+        ----------
+        data : pandas.DataFrame
+            with 2 columns, the first column is the reference dataset
+            named 'ref'
+            the second column the dataset to compare against named 'other'
+        gpi_info : tuple
+            Grid point info (i.e. gpi, lon, lat)
+        """
+        dataset = self.result_template.copy()
+
+        for setname, months in self.sets.items():
+            df = self.filter_months(data, months=months, dropna=True)
+            ds = self.cls.calc_metrics(df, gpi_info=gpi_info)
+            for metric, res in ds.items():
+                if metric in self.non_seas_metrics:
+                    k = f"{metric}"
+                else:
+                    k = f"{setname}_{metric}"
+                dataset[k] = res
+
+        return dataset
+                
 
 class MetadataMetrics(object):
     """
@@ -180,7 +286,8 @@ class BasicMetrics(MetadataMetrics):
         A dictionary containing additional fields (and types) of the form
         dict = {'field': np.float32([np.nan]}. Allows users to specify
         information in the job tuple,
-        i.e. jobs.append((idx, metadata['longitude'], metadata['latitude'], metadata_dict))
+        i.e. jobs.append(
+            (idx, metadata['longitude'], metadata['latitude'], metadata_dict))
         which is then propagated to the end netCDF results file.
     """
 
@@ -345,79 +452,6 @@ class FTMetrics(MetadataMetrics):
 
         return dataset
 
-
-class BasicSeasonalMetrics(MetadataMetrics):
-    """
-    This class just computes basic metrics on a seasonal basis. It also stores information about
-    gpi, lat, lon and number of observations.
-    """
-
-    def __init__(self, result_path=None, other_name='k1',
-                 metadata_template=None):
-
-        self.result_path = result_path
-        self.other_name = other_name
-
-        super(BasicSeasonalMetrics, self).__init__(other_name=other_name,
-                                                   metadata_template=metadata_template)
-
-        metrics = {'R': np.float32([np.nan]),
-                   'p_R': np.float32([np.nan]),
-                   'rho': np.float32([np.nan]),
-                   'p_rho': np.float32([np.nan]),
-                   'n_obs': np.int32([0])}
-
-
-        self.seasons = ['ALL', 'DJF', 'MAM', 'JJA', 'SON']
-
-        for season in self.seasons:
-            for metric in metrics.keys():
-                key = "{:}_{:}".format(season, metric)
-                self.result_template[key] = metrics[metric].copy()
-
-        self.month_to_season = np.array(['', 'DJF', 'DJF', 'MAM', 'MAM',
-                                         'MAM', 'JJA', 'JJA', 'JJA', 'SON',
-                                         'SON', 'SON', 'DJF'])
-
-    def calc_metrics(self, data, gpi_info):
-        """
-        calculates the desired statistics
-
-        Parameters
-        ----------
-        data : pandas.DataFrame
-            with 2 columns, the first column is the reference dataset
-            named 'ref'
-            the second column the dataset to compare against named 'other'
-        gpi_info : tuple
-            Grid point info (i.e. gpi, lon, lat)
-        """
-        dataset = super(BasicSeasonalMetrics, self).calc_metrics(data, gpi_info)
-
-        for season in self.seasons:
-
-            if season != 'ALL':
-                subset = self.month_to_season[data.index.month] == season
-            else:
-                subset = np.ones(len(data), dtype=bool)
-
-            if subset.sum() < 10:
-                continue
-
-            x = data['ref'].values[subset]
-            y = data[self.other_name].values[subset]
-            R, p_R = metrics.pearsonr(x, y)
-            rho, p_rho = metrics.spearmanr(x, y)
-
-            dataset['{:}_n_obs'.format(season)][0] = subset.sum()
-            dataset['{:}_R'.format(season)][0] = R
-            dataset['{:}_p_R'.format(season)][0] = p_R
-            dataset['{:}_rho'.format(season)][0] = rho
-            dataset['{:}_p_rho'.format(season)][0] = p_rho
-
-        return dataset
-
-
 class HSAF_Metrics(MetadataMetrics):
     """
     This class computes metrics as defined by the H-SAF consortium in
@@ -483,9 +517,9 @@ class HSAF_Metrics(MetadataMetrics):
             for tds_name in self.tds_names:
                 split_tds_name = tds_name.split('_and_')
                 tds_name_key = "{:}_{:}".format(self.ds_names_lut[
-                                                    split_tds_name[0]],
-                                                self.ds_names_lut[
-                                                    split_tds_name[1]])
+                    split_tds_name[0]],
+                    self.ds_names_lut[
+                    split_tds_name[1]])
                 for metric in metrics_tds.keys():
                     key = "{:}_{:}_{:}".format(tds_name_key, season, metric)
                     self.result_template[key] = metrics_tds[metric].copy()
@@ -567,9 +601,9 @@ class HSAF_Metrics(MetadataMetrics):
 
                 split_tds_name = tds_name.split('_and_')
                 tds_name_key = "{:}_{:}".format(self.ds_names_lut[
-                                                    split_tds_name[0]],
-                                                self.ds_names_lut[
-                                                    split_tds_name[1]])
+                    split_tds_name[0]],
+                    self.ds_names_lut[
+                    split_tds_name[1]])
 
                 dataset['{:}_{:}_R'.format(tds_name_key, season)][0] = R
                 dataset['{:}_{:}_p_R'.format(tds_name_key, season)][0] = p_R
@@ -606,9 +640,11 @@ class IntercomparisonMetrics(MetadataMetrics):
         if True then also tau is calculated. This is set to False by default
         since the calculation of Kendalls tau is rather slow and can significantly
         impact performance of e.g. global validation studies
-    dataset_names : list
+    dataset_names : list, optional (default: None)
         Names of the original datasets, that are used to find the lookup table
         for the df cols.
+    metadata_template: dict, optional (default: None)
+        See MetadataMetrics
     """
 
     def __init__(self, other_names=('k1', 'k2', 'k3'), calc_tau=False,
@@ -638,7 +674,8 @@ class IntercomparisonMetrics(MetadataMetrics):
         combis = n_combinations(self.df_columns, 2, must_include='ref')
         self.tds_names = []
         for combi in combis:
-            self.tds_names.append("{1}{0}{2}".format(self.ds_names_split, *combi))
+            self.tds_names.append("{1}{0}{2}".format(
+                self.ds_names_split, *combi))
 
         # metrics that are equal for all datasets
         metrics_common = ['n_obs']
@@ -656,7 +693,7 @@ class IntercomparisonMetrics(MetadataMetrics):
             split_tds_name = tds_name.split(self.ds_names_split)
             tds_name_key = \
                 self.ds_names_split.join([self.ds_names_lut[split_tds_name[0]],
-                                     self.ds_names_lut[split_tds_name[1]]])
+                                          self.ds_names_lut[split_tds_name[1]]])
             for metric in metrics_tds.keys():
                 key = self.metric_ds_split.join([metric, tds_name_key])
                 self.result_template[key] = metrics_tds[metric].copy()
@@ -685,7 +722,8 @@ class IntercomparisonMetrics(MetadataMetrics):
         global comparisons
         """
 
-        dataset = super(IntercomparisonMetrics, self).calc_metrics(data, gpi_info)
+        dataset = super(IntercomparisonMetrics,
+                        self).calc_metrics(data, gpi_info)
 
         subset = np.ones(len(data), dtype=bool)
 
@@ -757,19 +795,28 @@ class IntercomparisonMetrics(MetadataMetrics):
             dataset[self.metric_ds_split.join(['R', tds_name_key])][0] = R
             dataset[self.metric_ds_split.join(['p_R', tds_name_key])][0] = p_R
             dataset[self.metric_ds_split.join(['rho', tds_name_key])][0] = rho
-            dataset[self.metric_ds_split.join(['p_rho', tds_name_key])][0] = p_rho
-            dataset[self.metric_ds_split.join(['BIAS', tds_name_key])][0] = bias
+            dataset[self.metric_ds_split.join(
+                ['p_rho', tds_name_key])][0] = p_rho
+            dataset[self.metric_ds_split.join(
+                ['BIAS', tds_name_key])][0] = bias
             dataset[self.metric_ds_split.join(['mse', tds_name_key])][0] = mse
-            dataset[self.metric_ds_split.join(['mse_corr', tds_name_key])][0] = mse_corr
-            dataset[self.metric_ds_split.join(['mse_bias', tds_name_key])][0] = mse_bias
-            dataset[self.metric_ds_split.join(['mse_var', tds_name_key])][0] = mse_var
-            dataset[self.metric_ds_split.join(['RMSD', tds_name_key])][0] = rmsd
-            dataset[self.metric_ds_split.join(['urmsd', tds_name_key])][0] = ubRMSD
+            dataset[self.metric_ds_split.join(
+                ['mse_corr', tds_name_key])][0] = mse_corr
+            dataset[self.metric_ds_split.join(
+                ['mse_bias', tds_name_key])][0] = mse_bias
+            dataset[self.metric_ds_split.join(
+                ['mse_var', tds_name_key])][0] = mse_var
+            dataset[self.metric_ds_split.join(
+                ['RMSD', tds_name_key])][0] = rmsd
+            dataset[self.metric_ds_split.join(
+                ['urmsd', tds_name_key])][0] = ubRMSD
             dataset[self.metric_ds_split.join(['RSS', tds_name_key])][0] = rss
 
             if self.calc_tau:
-                dataset[self.metric_ds_split.join(['tau', tds_name_key])][0] = tau
-                dataset[self.metric_ds_split.join(['p_tau', tds_name_key])][0] = p_tau
+                dataset[self.metric_ds_split.join(
+                    ['tau', tds_name_key])][0] = tau
+                dataset[self.metric_ds_split.join(
+                    ['p_tau', tds_name_key])][0] = p_tau
 
         return dataset
 
@@ -800,7 +847,8 @@ class TCMetrics(MetadataMetrics):
             A dictionary containing additional fields (and types) of the form
             dict = {'field': np.float32([np.nan]}. Allows users to specify
             information in the job tuple,
-            i.e. jobs.append((idx, metadata['longitude'], metadata['latitude'], metadata_dict))
+            i.e. jobs.append(
+                (idx, metadata['longitude'], metadata['latitude'], metadata_dict))
             which is then propagated to the end netCDF results file.
         """
         self.ref_name = 'ref'
@@ -837,7 +885,7 @@ class TCMetrics(MetadataMetrics):
         metrics_common = _get_metric_template(metrics_common)
         metrics_tds = _get_metric_template(metrics_tds)
         metrics_thds = _get_tc_metric_template(metrics_thds,
-            [self.ds_names_lut[n] for n in self.df_columns if n != self.ref_name])
+                                               [self.ds_names_lut[n] for n in self.df_columns if n != self.ref_name])
 
         for metric in metrics_common.keys():
             self.result_template[metric] = metrics_common[metric].copy()
@@ -846,7 +894,7 @@ class TCMetrics(MetadataMetrics):
             split_tds_name = tds_name.split(self.ds_names_split)
             tds_name_key = \
                 self.ds_names_split.join([self.ds_names_lut[split_tds_name[0]],
-                                     self.ds_names_lut[split_tds_name[1]]])
+                                          self.ds_names_lut[split_tds_name[1]]])
             for metric in metrics_tds.keys():
                 key = self.metric_ds_split.join([metric, tds_name_key])
                 self.result_template[key] = metrics_tds[metric].copy()
@@ -858,7 +906,7 @@ class TCMetrics(MetadataMetrics):
                                           self.ds_names_lut[split_tds_name[1]],
                                           self.ds_names_lut[split_tds_name[2]]])
             for metric, ds in metrics_thds.keys():
-                if not any([self.ds_names_lut[other_ds]==ds
+                if not any([self.ds_names_lut[other_ds] == ds
                             for other_ds in thds_name.split(self.ds_names_split)]):
                     continue
                 full_name = '_'.join([metric, ds])
@@ -871,14 +919,17 @@ class TCMetrics(MetadataMetrics):
 
     def _make_names(self):
         tds_names, thds_names = [], []
-        combis_2 = n_combinations(self.df_columns, 2, must_include=[self.ref_name])
-        combis_3 = n_combinations(self.df_columns, 3, must_include=[self.ref_name])
+        combis_2 = n_combinations(
+            self.df_columns, 2, must_include=[self.ref_name])
+        combis_3 = n_combinations(
+            self.df_columns, 3, must_include=[self.ref_name])
 
         for combi in combis_2:
             tds_names.append(self.ds_names_split.join(combi))
 
         for combi in combis_3:
-            thds_names.append("{1}{0}{2}{0}{3}".format(self.ds_names_split, *combi))
+            thds_names.append("{1}{0}{2}{0}{3}".format(
+                self.ds_names_split, *combi))
 
         return tds_names, thds_names
 
@@ -895,7 +946,6 @@ class TCMetrics(MetadataMetrics):
             res_dict[ds] = dict(zip(list(r_d.keys()), list(r_d.values())))
 
         return res_dict
-
 
     def calc_metrics(self, data, gpi_info):
         """
@@ -989,7 +1039,8 @@ class TCMetrics(MetadataMetrics):
             for metr, res in dict(snr=snr, err_std=err_std, beta=beta).items():
                 for ds, ds_res in res.items():
                     m_ds = "{}_{}".format(metr, self.ds_names_lut[ds])
-                    n = '{}{}{}'.format(m_ds, self.metric_ds_split, thds_name_key)
+                    n = '{}{}{}'.format(
+                        m_ds, self.metric_ds_split, thds_name_key)
                     if n in dataset.keys():
                         dataset[n][0] = ds_res
 
@@ -1017,21 +1068,159 @@ class TCMetrics(MetadataMetrics):
             dataset[self.metric_ds_split.join(['R', tds_name_key])][0] = R
             dataset[self.metric_ds_split.join(['p_R', tds_name_key])][0] = p_R
             dataset[self.metric_ds_split.join(['rho', tds_name_key])][0] = rho
-            dataset[self.metric_ds_split.join(['p_rho', tds_name_key])][0] = p_rho
-            dataset[self.metric_ds_split.join(['BIAS', tds_name_key])][0] = bias
+            dataset[self.metric_ds_split.join(
+                ['p_rho', tds_name_key])][0] = p_rho
+            dataset[self.metric_ds_split.join(
+                ['BIAS', tds_name_key])][0] = bias
             dataset[self.metric_ds_split.join(['mse', tds_name_key])][0] = mse
-            dataset[self.metric_ds_split.join(['mse_corr', tds_name_key])][0] = mse_corr
-            dataset[self.metric_ds_split.join(['mse_bias', tds_name_key])][0] = mse_bias
-            dataset[self.metric_ds_split.join(['mse_var', tds_name_key])][0] = mse_var
-            dataset[self.metric_ds_split.join(['RMSD', tds_name_key])][0] = rmsd
-            dataset[self.metric_ds_split.join(['urmsd', tds_name_key])][0] = ubRMSD
+            dataset[self.metric_ds_split.join(
+                ['mse_corr', tds_name_key])][0] = mse_corr
+            dataset[self.metric_ds_split.join(
+                ['mse_bias', tds_name_key])][0] = mse_bias
+            dataset[self.metric_ds_split.join(
+                ['mse_var', tds_name_key])][0] = mse_var
+            dataset[self.metric_ds_split.join(
+                ['RMSD', tds_name_key])][0] = rmsd
+            dataset[self.metric_ds_split.join(
+                ['urmsd', tds_name_key])][0] = ubRMSD
             dataset[self.metric_ds_split.join(['RSS', tds_name_key])][0] = rss
 
             if self.calc_tau:
-                dataset[self.metric_ds_split.join(['tau', tds_name_key])][0] = tau
-                dataset[self.metric_ds_split.join(['p_tau', tds_name_key])][0] = p_tau
+                dataset[self.metric_ds_split.join(
+                    ['tau', tds_name_key])][0] = tau
+                dataset[self.metric_ds_split.join(
+                    ['p_tau', tds_name_key])][0] = p_tau
 
         return dataset
+
+
+class RollingMetrics(MetadataMetrics):
+    """
+    This class computes rolling metrics for Pearson R and RMSD. It also stores
+    information about gpi, lat, lon and number of observations.
+
+    Parameters
+    ----------
+    other_name: string or tuple, optional
+        Name of the column of the non-reference / other dataset in the
+        pandas DataFrame
+    metadata_template: dictionary, optional
+        A dictionary containing additional fields (and types) of the form
+        dict = {'field': np.float32([np.nan]}. Allows users to specify
+        information in the job tuple,
+        i.e. jobs.append(
+            (idx, metadata['longitude'], metadata['latitude'], metadata_dict))
+        which is then propagated to the end netCDF results file.
+    """
+
+    def __init__(self, other_name='k1', metadata_template=None):
+
+        super(RollingMetrics, self).__init__(
+            other_name=other_name, metadata_template=metadata_template)
+
+        self.basic_metrics = ['R', 'p_R', 'RMSD']
+        self.result_template.update(_get_metric_template(self.basic_metrics))
+
+    def calc_metrics(self, data, gpi_info, window_size='30d', center=True,
+                     min_periods=2):
+        """
+        Calculate the desired statistics.
+
+        Parameters
+        ----------
+        data : pandas.DataFrame
+            with 2 columns, the first column is the reference dataset
+            named 'ref' the second column the dataset to compare
+            against named 'other'
+        gpi_info : tuple
+            of (gpi, lon, lat)
+        window_size : string
+            Window size defined as string.
+        center : bool, optional
+            Set window at the center.
+        min_periods : int, optional
+            Minimum number of observations in window required for computation.
+        """
+        dataset = super(RollingMetrics, self).calc_metrics(data, gpi_info)
+
+        xy = data.to_numpy()
+        timestamps = data.index.to_julian_date().values
+        window_size_jd = pd.Timedelta(
+            window_size).to_numpy()/np.timedelta64(1, 'D')
+        pr_arr, rmsd_arr = rolling_pr_rmsd(
+            timestamps, xy, window_size_jd, center, min_periods)
+
+        dataset['time'] = np.array([data.index])
+        dataset['R'] = np.array([pr_arr[:, 0]])
+        dataset['p_R'] = np.array([pr_arr[:, 1]])
+        dataset['RMSD'] = np.array([rmsd_arr[:]])
+
+        return dataset
+
+
+@jit
+def rolling_pr_rmsd(timestamps, data, window_size, center, min_periods):
+    """
+    Computation of rolling Pearson R.
+
+    Parameters
+    ----------
+    timestamps : float64
+        Time stamps as julian dates.
+    data : numpy.ndarray
+        Time series data in 2d array.
+    window_size : float
+        Window size in fraction of days.
+    center : bool
+        Set window at the center.
+    min_periods : int
+        Minimum number of observations in window required for computation.
+
+    Results
+    -------
+    pr_arr : numpy.array
+        Pearson R and p-value.
+    """
+    pr_arr = np.empty((timestamps.size, 2), dtype=np.float32)
+    rmsd_arr = np.empty(timestamps.size, dtype=np.float32)
+    ddof = 0
+
+    for i in range(timestamps.size):
+        time_diff = timestamps - timestamps[i]
+
+        if center:
+            inside_window = np.abs(time_diff) <= window_size
+        else:
+            inside_window = (time_diff <= 0) & (time_diff > -window_size)
+
+        idx = np.nonzero(inside_window)[0]
+        n_obs = inside_window.sum()
+
+        if n_obs == 0 or n_obs < min_periods:
+            pr_arr[i, :] = np.nan
+        else:
+            sub1 = data[idx[0]:idx[-1]+1, 0]
+            sub2 = data[idx[0]:idx[-1]+1, 1]
+
+            # pearson r
+            pr_arr[i, 0] = np.corrcoef(sub1, sub2)[0, 1]
+
+            # p-value
+            if np.abs(pr_arr[i, 0]) == 1.0:
+                pr_arr[i, 1] = 0.0
+            else:
+                df = n_obs - 2.
+                t_squared = pr_arr[i, 0]*pr_arr[i, 0] * \
+                    (df / ((1.0 - pr_arr[i, 0]) * (1.0 + pr_arr[i, 0])))
+                x = df / (df + t_squared)
+                x = np.ma.where(x < 1.0, x, 1.0)
+                pr_arr[i, 1] = betainc(0.5*df, 0.5, x)
+
+            # rmsd
+            rmsd_arr[i] = np.sqrt(
+                np.sum((sub1 - sub2) ** 2) / (sub1.size - ddof))
+
+    return pr_arr, rmsd_arr
 
 
 def get_dataset_names(ref_key, datasets, n=3):
@@ -1068,3 +1257,20 @@ def get_dataset_names(ref_key, datasets, n=3):
         dataset_names.append(name[0])
 
     return dataset_names
+
+if __name__ == '__main__':
+    calc = IntercomparisonMetrics(other_names=('k1', 'k2', 'k3'),
+                                  calc_tau=False,
+                                  metadata_template=dict(meta1=np.array(['TBD']),
+                                                         meta2=np.float32([np.nan])))
+
+    adapted = MonthsMetricsAdapter(calc)
+
+    idx = pd.date_range('2000-01-01', '2010-07-21', freq='D')
+    df = pd.DataFrame(index=idx,
+                      data={'ref': np.random.rand(idx.size),
+                            'k1': np.random.rand(idx.size),
+                            'k2': np.random.rand(idx.size),
+                            'k3': np.random.rand(idx.size)})
+
+    adapted.calc_metrics(df, (0,1,2,{'meta1':'meta', 'meta2':12}))
