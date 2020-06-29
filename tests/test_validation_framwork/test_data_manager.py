@@ -30,7 +30,7 @@
 Test for the data manager
 '''
 
-import pandas.util.testing as pdtest
+import pandas.testing as pdtest
 import pytest
 import numpy as np
 
@@ -46,6 +46,7 @@ from tests.test_validation_framwork.test_datasets import setup_TestDatasets
 
 class TestDatasetRuntimeError(object):
     """Test dataset that acts as a fake object for the base classes."""
+    __test__ = False # prevent pytest from collecting this class during testing
 
     def __init__(self, filename, mode='r', message="No such file or directory"):
         self.filename = filename
@@ -206,7 +207,7 @@ def test_DataManager_dataset_names():
 def test_DataManager_get_data():
 
     datasets = setup_TestDatasets()
-    dm = DataManager(datasets, 'DS1')
+    dm = DataManager(datasets, 'DS1', read_ts_names={f'DS{i}': 'read' for i in range(1,4)})
     data = dm.get_data(1, 1, 1)
     assert sorted(list(data)) == ['DS1', 'DS2', 'DS3']
 

@@ -1,20 +1,29 @@
+"""
+Module to load color maps from json files.
+This module is deprecated and will be removed soon.
+Please use the colorella package instead:
+Website: https://github.com/TUW-GEO/colorella
+To install colorella, run 'pip install colorella'
+"""
+
 import matplotlib.cm as cm
 import matplotlib.colors as colors
 import os
 import json
 import glob
+from pytesmo.utils import deprecated
 
-
+@deprecated
 def colormaps_path():
     """Returns application's default path for storing user-defined colormaps"""
     return os.path.dirname(__file__)
 
-
+@deprecated
 def get_system_colormaps():
     """Returns the list of colormaps that ship with matplotlib"""
     return [m for m in cm.datad]
 
-
+@deprecated
 def get_user_colormaps(cmap_fldr=colormaps_path()):
     """Returns a list of user-defined colormaps in the specified folder (defaults to
     standard colormaps folder if not specified)."""
@@ -27,7 +36,7 @@ def get_user_colormaps(cmap_fldr=colormaps_path()):
                 user_colormaps.append(cmap_dict.get('name', name))
     return user_colormaps
 
-
+@deprecated
 def load_colormap(json_file):
     """Generates and returns a matplotlib colormap from the specified JSON file,
     or None if the file was invalid."""
@@ -45,7 +54,7 @@ def load_colormap(json_file):
             colormap = colors.ListedColormap(name=colormap_name, colors=cmap_dict['colors'])
     return colormap
 
-
+@deprecated
 def load(cmap_name, cmap_folder=colormaps_path()):
     """Returns the matplotlib colormap of the specified name -
     if not found in the predefined

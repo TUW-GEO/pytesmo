@@ -33,7 +33,7 @@ Created on Oct 16, 2013
 import pandas as pd
 import numpy as np
 
-from pytesmo.timedate.julian import julday
+from cadati.jd_date import julday
 from pytesmo.time_series.filters import boxcar_filter
 
 

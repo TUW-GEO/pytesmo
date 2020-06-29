@@ -40,6 +40,7 @@ from pygeobase.io_base import GriddedTsBase
 
 class TestDataset(object):
     """Test dataset that acts as a fake object for the base classes."""
+    __test__ = False # prevent pytest from collecting this class during testing
 
     def __init__(self, filename, mode='r', n=1000):
         self.filename = filename
@@ -101,7 +102,7 @@ def test_masking_testdataset():
     nptest.assert_almost_equal(data['x'].values, data_should)
 
 
-def setup_TestDatasets():
+def setup_TestDatasets() -> dict:
     grid = grids.CellGrid(np.array([1, 2, 3, 4]), np.array([1, 2, 3, 4]),
                           np.array([4, 4, 2, 1]), gpis=np.array([1, 2, 3, 4]))
 
@@ -133,6 +134,7 @@ def setup_TestDatasets():
             'grids_compatible': True
         }
     }
+
     return datasets
 
 

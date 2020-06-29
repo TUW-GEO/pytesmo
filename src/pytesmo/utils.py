@@ -33,7 +33,20 @@ import numpy as np
 import scipy.interpolate as sc_int
 import scipy.optimize as sc_opt
 import scipy.special as sc_special
+import warnings
+import functools
 
+def deprecated(func):
+    # mark func as deprecated (warn when used)
+    @functools.wraps(func)
+    def new_func(*args, **kwargs):
+        warnings.simplefilter('always', DeprecationWarning)
+        warnings.warn(f"Pytesmo function {func.__name__} is deprecated and will be removed soon",
+                      category=DeprecationWarning,
+                      stacklevel=2)
+        warnings.simplefilter('default', DeprecationWarning)  # reset filter
+        return func(*args, **kwargs)
+    return new_func
 
 def ml_percentile(in_data, percentiles):
     """

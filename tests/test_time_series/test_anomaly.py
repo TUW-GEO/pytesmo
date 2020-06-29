@@ -31,7 +31,7 @@ Test for climatology and anomaly calculation.
 '''
 
 import pandas as pd
-import pandas.util.testing as pdt
+import pandas.testing as pdt
 import numpy as np
 
 import pytesmo.time_series.anomaly as anomaly

@@ -12,3 +12,4 @@ configparser
 pykdtree
 repurpose>=0.7.1
 numba
+cadati>=0.0.2

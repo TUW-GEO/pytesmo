@@ -60,6 +60,8 @@ from tests.test_validation_framwork.test_datasets import setup_two_without_overl
 from tests.test_validation_framwork.test_datasets import setup_three_with_two_overlapping
 from tests.test_validation_framwork.test_datasets import MaskingTestDataset
 
+import warnings
+
 @pytest.mark.full_framework
 def test_ascat_ismn_validation():
     """
@@ -118,7 +120,10 @@ def test_ascat_ismn_validation():
                        'mask_ssf': True}
         }}
 
+    read_ts_names = {'ASCAT': 'read', 'ISMN': 'read_ts'}
     period = [datetime(2007, 1, 1), datetime(2014, 12, 31)]
+
+    datasets = DataManager(datasets, 'ISMN', period, read_ts_names=read_ts_names)
 
     process = Validation(
         datasets, 'ISMN',
@@ -219,18 +224,20 @@ def test_ascat_ismn_validation_metadata():
     datasets = {
         'ISMN': {
             'class': ismn_reader,
-            'columns': ['soil moisture']
+            'columns': ['soil moisture'],
         },
         'ASCAT': {
             'class': ascat_reader,
             'columns': ['sm'],
             'kwargs': {'mask_frozen_prob': 80,
                        'mask_snow_prob': 80,
-                       'mask_ssf': True}
+                       'mask_ssf': True},
         }}
 
+    read_ts_names = {'ASCAT': 'read', 'ISMN': 'read_ts'}
     period = [datetime(2007, 1, 1), datetime(2014, 12, 31)]
 
+    datasets = DataManager(datasets, 'ISMN', period, read_ts_names=read_ts_names)
     process = Validation(
         datasets, 'ISMN',
         temporal_ref='ASCAT',
@@ -327,8 +334,10 @@ def test_validation_n2_k2():
 
     datasets = setup_TestDatasets()
 
+    dm = DataManager(datasets, 'DS1', read_ts_names={d: 'read' for d in ['DS1', 'DS2', 'DS3']})
+
     process = Validation(
-        datasets, 'DS1',
+        dm, 'DS1',
         temporal_matcher=temporal_matchers.BasicTemporalMatching(
             window=1 / 24.0).combinatory_matcher,
         scaling='lin_cdf_match',
@@ -347,8 +356,11 @@ def test_validation_n2_k2_temporal_matching_no_matches():
 
     datasets = setup_two_without_overlap()
 
+    dm = DataManager(datasets, 'DS1', read_ts_names={d: 'read' for d in ['DS1', 'DS2', 'DS3']})
+
+
     process = Validation(
-        datasets, 'DS1',
+        dm, 'DS1',
         temporal_matcher=temporal_matchers.BasicTemporalMatching(
             window=1 / 24.0).combinatory_matcher,
         scaling='lin_cdf_match',
@@ -405,7 +417,7 @@ def test_validation_n2_k2_data_manager_argument():
             'p_R': np.array([0.], dtype=np.float32)}}
 
     datasets = setup_TestDatasets()
-    dm = DataManager(datasets, 'DS1')
+    dm = DataManager(datasets, 'DS1', read_ts_names={d: 'read' for d in ['DS1', 'DS2', 'DS3']})
 
     process = Validation(dm, 'DS1',
                          temporal_matcher=temporal_matchers.BasicTemporalMatching(
@@ -464,9 +476,10 @@ def test_validation_n3_k2():
             'p_R': np.array([0.], dtype=np.float32)}}
 
     datasets = setup_TestDatasets()
+    dm = DataManager(datasets, 'DS1', read_ts_names={d: 'read' for d in ['DS1', 'DS2', 'DS3']})
 
     process = Validation(
-        datasets, 'DS1',
+        dm, 'DS1',
         temporal_matcher=temporal_matchers.BasicTemporalMatching(
             window=1 / 24.0).combinatory_matcher,
         scaling='lin_cdf_match',
@@ -510,9 +523,10 @@ def test_validation_n3_k2_temporal_matching_no_matches():
             'p_R': np.array([0.], dtype=np.float32)}}
 
     datasets = setup_three_with_two_overlapping()
+    dm = DataManager(datasets, 'DS1', read_ts_names={d: 'read' for d in ['DS1', 'DS2', 'DS3']})
 
     process = Validation(
-        datasets, 'DS1',
+        dm, 'DS1',
         temporal_matcher=temporal_matchers.BasicTemporalMatching(
             window=1 / 24.0).combinatory_matcher,
         scaling='lin_cdf_match',
@@ -564,13 +578,17 @@ def test_validation_n3_k2_masking_no_data_remains():
         masking_datasets=mds)
 
     gpi_info = (1, 1, 1)
-    ref_df = datasets['DS1']['class'].read_ts(1)
-    new_ref_df = process.mask_dataset(ref_df, gpi_info)
+    ref_df = datasets['DS1']['class'].read(1)
+    with warnings.catch_warnings():
+        warnings.filterwarnings('ignore', category=DeprecationWarning)
+        new_ref_df = process.mask_dataset(ref_df, gpi_info)
     assert len(new_ref_df) == 0
     nptest.assert_allclose(new_ref_df.x.values, np.arange(1000, 1000))
     jobs = process.get_processing_jobs()
     for job in jobs:
-        results = process.calc(*job)
+        with warnings.catch_warnings():
+            warnings.filterwarnings('ignore', category=DeprecationWarning)
+            results = process.calc(*job)
         tst = []
         assert sorted(list(results)) == sorted(list(tst))
         for key, tst_key in zip(sorted(results),
@@ -631,6 +649,7 @@ def test_validation_n3_k2_masking():
             'grids_compatible': True}
     }
 
+
     process = Validation(
         datasets, 'DS1',
         temporal_matcher=temporal_matchers.BasicTemporalMatching(
@@ -641,13 +660,21 @@ def test_validation_n3_k2_masking():
         masking_datasets=mds)
 
     gpi_info = (1, 1, 1)
-    ref_df = datasets['DS1']['class'].read_ts(1)
-    new_ref_df = process.mask_dataset(ref_df, gpi_info)
+    ref_df = datasets['DS1']['class'].read(1)
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', category=DeprecationWarning) # read_ts is hard coded when using mask_data
+        new_ref_df = process.mask_dataset(ref_df, gpi_info)
     assert len(new_ref_df) == 250
     nptest.assert_allclose(new_ref_df.x.values, np.arange(750, 1000))
     jobs = process.get_processing_jobs()
     for job in jobs:
-        results = process.calc(*job)
+
+        with warnings.catch_warnings():
+            # most warnings here are caused by the read_ts function that cannot
+            # be changed when using a masking data set
+            warnings.simplefilter('ignore', category=DeprecationWarning)
+            results = process.calc(*job)
+
         tst = tst_results[len(job[0])]
         assert sorted(list(results)) == sorted(list(tst))
         for key, tst_key in zip(sorted(results),
@@ -719,7 +746,10 @@ def test_ascat_ismn_validation_metadata_rolling():
                        'mask_ssf': True}
         }}
 
+    read_ts_names = {'ASCAT': 'read', 'ISMN': 'read_ts'}
     period = [datetime(2007, 1, 1), datetime(2014, 12, 31)]
+
+    datasets = DataManager(datasets, 'ISMN', period, read_ts_names=read_ts_names)
 
     process = Validation(
         datasets, 'ISMN',
@@ -824,7 +854,3 @@ def test_args_to_iterable_mixed_strings():
     assert lons_ == lons
     assert lats_ == [lats]
     assert args == [arg1]
-
-
-if __name__ == '__main__':
-    test_ascat_ismn_validation_metadata_rolling()

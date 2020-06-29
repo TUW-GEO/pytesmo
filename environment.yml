@@ -9,6 +9,7 @@ dependencies:
   - scipy
   - pandas
   - netCDF4
+  - pygrib
   - cython
   - matplotlib
   - pykdtree
@@ -26,3 +27,4 @@ dependencies:
     - repurpose
     - pytest
     - more_itertools
+    - cadati
