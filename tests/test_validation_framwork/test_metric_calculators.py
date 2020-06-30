@@ -40,8 +40,7 @@ from pytesmo.validation_framework.metric_calculators import MonthsMetricsAdapter
 import pytesmo.metrics as metrics
 
 import warnings
-warnings.filterwarnings("ignore")
-
+# warnings.filterwarnings("ignore")
 
 def make_some_data():
     """
@@ -70,8 +69,12 @@ def test_MetadataMetrics_calculator():
     df = make_some_data()
     data = df[['ref', 'k1']]
 
-    metriccalc = MetadataMetrics(other_name='k1')
-    res = metriccalc.calc_metrics(data, gpi_info=(0, 0, 0))
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore") # many warnings due to test data
+
+        metriccalc = MetadataMetrics(other_name='k1')
+        res = metriccalc.calc_metrics(data, gpi_info=(0, 0, 0))
+
     assert sorted(list(res.keys())) == sorted(['gpi', 'lon', 'lat'])
 
     metadata_dict_template = {'network': np.array(['None'], dtype='U256'),
@@ -98,8 +101,11 @@ def test_BasicMetrics_calculator():
     df = make_some_data()
     data = df[['ref', 'k1']]
 
-    metriccalc = BasicMetrics(other_name='k1', calc_tau=False)
-    res = metriccalc.calc_metrics(data, gpi_info=(0, 0, 0))
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore") # many warnings due to test data
+
+        metriccalc = BasicMetrics(other_name='k1', calc_tau=False)
+        res = metriccalc.calc_metrics(data, gpi_info=(0, 0, 0))
 
     should = dict(n_obs=np.array([366]), RMSD=np.array([0.2], dtype='float32'),
                   BIAS=np.array([-0.2], dtype='float32'))
@@ -123,11 +129,14 @@ def test_BasicMetrics_calculator_metadata():
 
     metadata_dict_template = {'network': np.array(['None'], dtype='U256')}
 
-    metriccalc = BasicMetrics(other_name='k1', calc_tau=False,
-                              metadata_template=metadata_dict_template)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore") # many warnings due to test data
 
-    res = metriccalc.calc_metrics(
-        data, gpi_info=(0, 0, 0, {'network': 'SOILSCAPE'}))
+        metriccalc = BasicMetrics(other_name='k1', calc_tau=False,
+                                  metadata_template=metadata_dict_template)
+
+        res = metriccalc.calc_metrics(
+            data, gpi_info=(0, 0, 0, {'network': 'SOILSCAPE'}))
 
     should = dict(network=np.array(['SOILSCAPE'], dtype='U256'),
                   n_obs=np.array([366]), RMSD=np.array([0.2], dtype='float32'),
@@ -150,8 +159,11 @@ def test_BasicMetricsPlusMSE_calculator():
     df = make_some_data()
     data = df[['ref', 'k1']]
 
-    metriccalc = BasicMetricsPlusMSE(other_name='k1')
-    res = metriccalc.calc_metrics(data, gpi_info=(0, 0, 0))
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore") # many warnings due to test data
+
+        metriccalc = BasicMetricsPlusMSE(other_name='k1')
+        res = metriccalc.calc_metrics(data, gpi_info=(0, 0, 0))
 
     should = dict(network=np.array(['SOILSCAPE'], dtype='U256'),
                   n_obs=np.array([366]), RMSD=np.array([0.2], dtype='float32'),
@@ -174,11 +186,13 @@ def test_BasicMetricsPlusMSE_calculator_metadata():
     data = df[['ref', 'k1']]
 
     metadata_dict_template = {'network': np.array(['None'], dtype='U256')}
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore") # many warnings due to test data
 
-    metriccalc = BasicMetricsPlusMSE(
-        other_name='k1', metadata_template=metadata_dict_template)
-    res = metriccalc.calc_metrics(
-        data, gpi_info=(0, 0, 0, {'network': 'SOILSCAPE'}))
+        metriccalc = BasicMetricsPlusMSE(
+            other_name='k1', metadata_template=metadata_dict_template)
+        res = metriccalc.calc_metrics(
+            data, gpi_info=(0, 0, 0, {'network': 'SOILSCAPE'}))
 
     should = dict(network=np.array(['SOILSCAPE'], dtype='U256'),
                   n_obs=np.array([366]), RMSD=np.array([0.2], dtype='float32'),
@@ -193,7 +207,6 @@ def test_BasicMetricsPlusMSE_calculator_metadata():
     # depends on scipy version changed after v1.2.1
     assert res['p_R'] == np.array([1.]) or np.isnan(res['R'])
 
-
 def test_IntercompMetrics_calculator():
     """
     Test IntercompMetrics.
@@ -201,9 +214,13 @@ def test_IntercompMetrics_calculator():
     df = make_some_data()
     data = df[['ref', 'k1', 'k2']]
 
-    metriccalc = IntercomparisonMetrics(
-        other_names=('k1', 'k2'), calc_tau=True)
-    res = metriccalc.calc_metrics(data, gpi_info=(0, 0, 0))
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore") # many warnings due to test data
+
+        metriccalc = IntercomparisonMetrics(
+            other_names=('k1', 'k2'), calc_tau=True)
+
+        res = metriccalc.calc_metrics(data, gpi_info=(0, 0, 0))
 
     assert res['n_obs'] == np.array([366])
 
@@ -254,10 +271,13 @@ def test_IntercompMetrics_calculator_metadata():
 
     metadata_dict_template = {'network': np.array(['None'], dtype='U256')}
 
-    metriccalc = IntercomparisonMetrics(other_names=('k1', 'k2'), calc_tau=True,
-                                        metadata_template=metadata_dict_template)
-    res = metriccalc.calc_metrics(
-        data, gpi_info=(0, 0, 0, {'network': 'SOILSCAPE'}))
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore") # many warnings due to test data
+
+        metriccalc = IntercomparisonMetrics(other_names=('k1', 'k2'), calc_tau=True,
+                                            metadata_template=metadata_dict_template)
+        res = metriccalc.calc_metrics(
+            data, gpi_info=(0, 0, 0, {'network': 'SOILSCAPE'}))
 
     assert res['network'] == np.array(['SOILSCAPE'], dtype='U256')
 
@@ -270,10 +290,13 @@ def test_TC_metrics_calculator():
     df = make_some_data()
     data = df[['ref', 'k1', 'k2', 'k3']]
 
-    metriccalc = TCMetrics(other_names=('k1', 'k2', 'k3'), calc_tau=True,
-                           dataset_names=('ref', 'k1', 'k2', 'k3'))
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore") # many warnings due to test data
 
-    res = metriccalc.calc_metrics(data, gpi_info=(0, 0, 0))
+        metriccalc = TCMetrics(other_names=('k1', 'k2', 'k3'), calc_tau=True,
+                               dataset_names=('ref', 'k1', 'k2', 'k3'))
+
+        res = metriccalc.calc_metrics(data, gpi_info=(0, 0, 0))
 
     assert res['n_obs'] == np.array([366])
 
@@ -336,10 +359,13 @@ def test_TC_metrics_calculator_metadata():
 
     metadata_dict_template = {'network': np.array(['None'], dtype='U256')}
 
-    metriccalc = TCMetrics(other_names=('k1', 'k2'), calc_tau=True,
-                           dataset_names=['ref', 'k1', 'k2'], metadata_template=metadata_dict_template)
-    res = metriccalc.calc_metrics(
-        data, gpi_info=(0, 0, 0, {'network': 'SOILSCAPE'}))
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore") # many warnings due to test data
+
+        metriccalc = TCMetrics(other_names=('k1', 'k2'), calc_tau=True,
+                               dataset_names=['ref', 'k1', 'k2'], metadata_template=metadata_dict_template)
+        res = metriccalc.calc_metrics(
+            data, gpi_info=(0, 0, 0, {'network': 'SOILSCAPE'}))
 
     assert res['network'] == np.array(['SOILSCAPE'], dtype='U256')
 
@@ -351,8 +377,11 @@ def test_FTMetrics():
     df = make_some_data()
     data = df[['ref', 'k1']]
 
-    metriccalc = FTMetrics(frozen_flag=2, other_name='k1')
-    res = metriccalc.calc_metrics(data, gpi_info=(0, 0, 0))
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore") # many warnings due to test data
+
+        metriccalc = FTMetrics(frozen_flag=2, other_name='k1')
+        res = metriccalc.calc_metrics(data, gpi_info=(0, 0, 0))
 
     should = dict(n_obs=np.array([366]), ssf_fr_temp_un=np.array(
         [0.0], dtype='float32'), dtype='float32')
@@ -370,10 +399,12 @@ def test_FTMetrics_metadata():
 
     metadata_dict_template = {'network': np.array(['None'], dtype='U256')}
 
-    metriccalc = FTMetrics(frozen_flag=2, other_name='k1',
-                           metadata_template=metadata_dict_template)
-    res = metriccalc.calc_metrics(
-        data, gpi_info=(0, 0, 0, {'network': 'SOILSCAPE'}))
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore") # many warnings due to test data
+        metriccalc = FTMetrics(frozen_flag=2, other_name='k1',
+                               metadata_template=metadata_dict_template)
+        res = metriccalc.calc_metrics(
+            data, gpi_info=(0, 0, 0, {'network': 'SOILSCAPE'}))
 
     assert res['network'] == np.array(['SOILSCAPE'], dtype='U256')
 
@@ -385,8 +416,11 @@ def test_BasicSeasonalMetrics():
     df = make_some_data()
     data = df[['ref', 'k1']]
 
-    metriccalc = MonthsMetricsAdapter(BasicMetrics(other_name='k1'))
-    res = metriccalc.calc_metrics(data, gpi_info=(0, 0, 0))
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore") # many warnings due to test data
+
+        metriccalc = MonthsMetricsAdapter(BasicMetrics(other_name='k1'))
+        res = metriccalc.calc_metrics(data, gpi_info=(0, 0, 0))
 
     should = dict(ALL_n_obs=np.array([366]), dtype='float32')
 
@@ -403,11 +437,13 @@ def test_BasicSeasonalMetrics_metadata():
 
     metadata_dict_template = {'network': np.array(['None'], dtype='U256')}
 
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore") # many warnings due to test data
 
-    metriccalc = MonthsMetricsAdapter(BasicMetrics(
-        other_name='k1', metadata_template=metadata_dict_template))
-    res = metriccalc.calc_metrics(
-        data, gpi_info=(0, 0, 0, {'network': 'SOILSCAPE'}))
+        metriccalc = MonthsMetricsAdapter(BasicMetrics(
+            other_name='k1', metadata_template=metadata_dict_template))
+        res = metriccalc.calc_metrics(
+            data, gpi_info=(0, 0, 0, {'network': 'SOILSCAPE'}))
 
     assert res['network'] == np.array(['SOILSCAPE'], dtype='U256')
 
@@ -419,8 +455,11 @@ def test_HSAF_Metrics():
     df = make_some_data()
     data = df[['ref', 'k1', 'k2']]
 
-    metriccalc = HSAF_Metrics(other_name1='k1', other_name2='k2')
-    res = metriccalc.calc_metrics(data, gpi_info=(0, 0, 0))
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore") # many warnings due to test data
+
+        metriccalc = HSAF_Metrics(other_name1='k1', other_name2='k2')
+        res = metriccalc.calc_metrics(data, gpi_info=(0, 0, 0))
 
     should = dict(ALL_n_obs=np.array([366]), dtype='float32')
 
@@ -438,10 +477,13 @@ def test_HSAF_Metrics_metadata():
 
     metadata_dict_template = {'network': np.array(['None'], dtype='U256')}
 
-    metriccalc = HSAF_Metrics(
-        other_name1='k1', metadata_template=metadata_dict_template)
-    res = metriccalc.calc_metrics(
-        data, gpi_info=(0, 0, 0, {'network': 'SOILSCAPE'}))
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore") # many warnings due to test data
+
+        metriccalc = HSAF_Metrics(
+            other_name1='k1', metadata_template=metadata_dict_template)
+        res = metriccalc.calc_metrics(
+            data, gpi_info=(0, 0, 0, {'network': 'SOILSCAPE'}))
 
     assert res['network'] == np.array(['SOILSCAPE'], dtype='U256')
 
@@ -455,8 +497,11 @@ def test_RollingMetrics():
     df['k1'] += np.random.rand(len(df))
     data = df[['ref', 'k1']]
 
-    metriccalc = RollingMetrics(other_name='k1')
-    dataset = metriccalc.calc_metrics(data, gpi_info=(0, 0, 0), center=False)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore") # many warnings due to test data
+
+        metriccalc = RollingMetrics(other_name='k1')
+        dataset = metriccalc.calc_metrics(data, gpi_info=(0, 0, 0), center=False)
 
     # test pearson r
     ref_array = df['ref'].rolling('30d').corr(df['k1'])

@@ -35,7 +35,8 @@ the function will be applied pairwise, resp. to triples.
 
 import numpy as np
 import pytesmo.metrics as metrics
-from collections import namedtuple, OrderedDict, Iterable
+from collections import namedtuple, OrderedDict
+from collections.abc import Iterable
 import itertools
 import pandas as pd
 import warnings

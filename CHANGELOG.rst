@@ -2,13 +2,21 @@
 Changelog
 =========
 
-Version 0.9.0
-=============
+Unreleased
+==========
+
+-
+
+
+Version 0.9.0, 2020-06-30
+=========================
 
 - Update pyscaffold v3.2.3
 - Rolling Prearson's R and RMSD metrics calculator
 - New results manager to handle rolling metrics
 - Add deprecation warning for colormaps module
+- Move timedate module to cadati, import from there
+- Filter warnings in places where they are safe to ignore and not caused by pytesmo
 
 Version 0.8, 2019-11-21
 =======================

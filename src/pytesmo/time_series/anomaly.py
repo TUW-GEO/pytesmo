@@ -4,7 +4,8 @@ Created on June 20, 2013
 
 import pandas as pd
 import numpy as np
-from pytesmo.timedate.julian import doy, julian2date
+from pytesmo.timedate.julian import doy
+from cadati.jd_date import julian2date
 from pytesmo.time_series.filtering import moving_average
 
 

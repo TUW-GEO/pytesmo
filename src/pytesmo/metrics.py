@@ -207,7 +207,6 @@ def mse(x, y, ddof=0):
 
     return mse, mse_corr, mse_bias, mse_var
 
-
 def tcol_error(x, y, z):
     """
     Triple collocation error estimate of three calibrated/scaled
@@ -257,7 +256,7 @@ def tcol_error(x, y, z):
 
     return e_x, e_y, e_z
 
-
+@np.errstate(invalid='ignore')
 def tcol_snr(x, y, z, ref_ind=0):
     """
     triple collocation based estimation of signal-to-noise ratio, absolute errors,
@@ -593,7 +592,7 @@ def pearsonr(x, y):
     """
     return sc_stats.pearsonr(x, y)
 
-
+@np.errstate(invalid='ignore')
 def pearsonr_recursive(x, y, n_old=0, sum_xi_yi=0,
                        sum_xi=0, sum_yi=0, sum_x2=0,
                        sum_y2=0):
