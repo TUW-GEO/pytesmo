@@ -114,7 +114,7 @@ perform a comparison between ASCAT and ISMN data.
     
     from datetime import datetime
     
-    from ascat.timeseries import AscatSsmCdr # install ascat: 'pip install ascat==0.10'
+    from ascat.timeseries import AscatSsmCdr # install ascat: 'pip install ascat'
     from ismn.interface import ISMN_Interface # install ismn: 'pip install ismn'
     from pytesmo.validation_framework.validation import Validation
     from pytesmo.validation_framework.results_manager import netcdf_results_manager
