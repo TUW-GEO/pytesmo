@@ -42,7 +42,7 @@ Read a point in Northern Italy:
     ascat_ts = ascat_reader.read(2302069, mask_ssf=True, mask_frozen_prob=80, mask_snow_prob=20)
     ascat_ts.plot()
 
-.. image:: output_1_1.png
+.. image:: /_static/images/swi_calculation/output_1_1.png
 
 Apply the exponential filter to calculate SWI from SM:
 
@@ -64,4 +64,4 @@ Apply the exponential filter to calculate SWI from SM:
     ascat_sm_ts['swi_t50'].plot(ax=ax, lw=2,label='SWI T=50')
     plt.legend()
 
-.. image:: output_2_1.png
+.. image:: /_static/images/swi_calculation/output_2_1.png

@@ -8,7 +8,7 @@ Unreleased
 -
 
 
-Version 0.9, 2020-07-01
+Version 0.9, 2020-07-02
 =======================
 
 - Update pyscaffold v3.2.3
