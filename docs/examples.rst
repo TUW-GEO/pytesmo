@@ -2,10 +2,18 @@
 
 Examples
 ********
+All here shown examples are also available as ipython notebooks in ``pytesmo/docs/examples/``.
+
+Within the following examples we use two reader packages that should be installed
+first:
+
+.. code-block:: bash
+
+    pip install ascat
+    pip install ismn
 
 .. include::
-   validation_framework.rst
-
+   examples/validation_framework/validation_framework.rst
 
 Calculating anomalies and climatologies
 =======================================
@@ -15,7 +23,7 @@ is then used to calculate anomalies and climatologies of the time series.
 It can be found in the /examples folder of the pytesmo package under the name anomalies.py
 
 .. include::
-   anomalies.rst
+   examples/anomalies/anomalies.rst
 
 Calculation of the Soil Water Index
 ===================================
@@ -23,7 +31,7 @@ Calculation of the Soil Water Index
 The Soil Water Index(SWI) which is a method to estimate root zone soil moisture can be calculated from Surface Soil Moisture(SSM) using an exponential Filter. For more details see this publication of `C.Abergel et.al <http://www.hydrol-earth-syst-sci.net/12/1323/2008/>`_. The following example shows how to calculate the SWI for two T values from ASCAT H25 SSM.
 
 .. include::
-   swi_calculation/swi_calc.rst
+   examples/swi_calculation/swi_calc.rst
 
 Triple collocation and triple collocation based scaling
 =======================================================
@@ -33,7 +41,7 @@ It also is a crash course to the theory behind triple collocation and links to r
 
 
 .. include::
-   Triple collocation.rst
+   examples/triple_collocation/Triple collocation.rst
 
 Comparing ASCAT and insitu data from the ISMN without the validation framework
 ==============================================================================
@@ -49,4 +57,4 @@ It is stopped after 2 stations to not take to long to run and produce a lot of p
 It can be found in the /examples folder of the pytesmo package under the name compare_ISMN_ASCAT.py.
 
 .. include::
-   compare_ASCAT_ISMN.rst
+   examples/compare_ASCAT_ISMN/compare_ASCAT_ISMN.rst

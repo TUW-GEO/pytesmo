@@ -51,6 +51,19 @@ def build_filename(root, key):
 class PointDataResults(Dataset):
 
     def __init__(self, filename, zlib=True, read_only=False):
+        """
+        Results manager for validation results as returned by the validation
+        framework
+
+        Parameters
+        ----------
+        filename : str
+            Path to the netcdf file to add results to
+        zlib : bool, optional (default: True)
+            Activate/deactivate file compression
+        read_only : bool, optional (default: False)
+            Force read only mode when opening the netcdf file
+        """
 
         self.time_unit = 'days since 1900-01-01 00:00:00'
 

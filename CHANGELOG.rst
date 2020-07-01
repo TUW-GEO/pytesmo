@@ -8,8 +8,8 @@ Unreleased
 -
 
 
-Version 0.9.0, 2020-06-30
-=========================
+Version 0.9, 2020-06-30
+=======================
 
 - Update pyscaffold v3.2.3
 - Rolling Prearson's R and RMSD metrics calculator

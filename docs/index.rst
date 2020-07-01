@@ -1,15 +1,12 @@
-=======
-pytesmo
-=======
-
-This is the documentation of **pytesmo**.
-
 Contents
 ========
+
+.. include:: ../README.rst
 
 .. toctree::
    :maxdepth: 2
 
+   General <../README.rst>
    Introduction <introduction>
    Examples <examples>
    License <license>
