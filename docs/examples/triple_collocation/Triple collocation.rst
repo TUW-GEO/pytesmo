@@ -90,7 +90,7 @@ signal, is a simple sine curve.
 
 
 
-.. image:: output_2_0.png
+.. image:: /examples/triple_collocation/output_2_0.png
 
 
 Approach 1
