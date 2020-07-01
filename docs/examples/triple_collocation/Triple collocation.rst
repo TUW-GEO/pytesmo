@@ -90,7 +90,7 @@ signal, is a simple sine curve.
 
 
 
-.. image:: examples/triple_collocation/output_2_0.png
+.. image:: output_2_0.png
 
 
 Approach 1
@@ -125,7 +125,7 @@ dataset.
 
 
 
-.. image:: examples/triple_collocation/output_4_0.png
+.. image:: output_4_0.png
 
 
 The three datasets do now have the same mean and standard deviation.
@@ -245,7 +245,7 @@ these values directly to scale our datasets.
 
 
 
-.. image:: examples/triple_collocation/output_12_0.png
+.. image:: output_12_0.png
 
 
 The datasets still have different mean values i.e. different :math:`\alpha`
@@ -264,7 +264,7 @@ values. :math:`\alpha` can be estimated through the mean of the dataset.
 
 
 
-.. image:: examples/triple_collocation/output_14_0.png
+.. image:: output_14_0.png
 
 
 This yields scaled/calibrated datasets using triple collocation based

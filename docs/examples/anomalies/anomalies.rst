@@ -39,7 +39,7 @@ Read ASCAT SSM at one location (nearest neighbour lookup).
 
 You should get a time series:
 
-.. image:: examples/anomalies/anomalies_2_1.png
+.. image:: anomalies_2_1.png
 
 Calculate anomaly based on moving +- 17 day window
 
@@ -51,7 +51,7 @@ Calculate anomaly based on moving +- 17 day window
 
 You will get an anomaly time series with a moving average used for the seasonality:
 
-.. image:: examples/anomalies/anomalies_3_1.png
+.. image:: anomalies_3_1.png
 
 Calculate climatology
 
@@ -62,7 +62,7 @@ Calculate climatology
 
 You will get the climatology time series:
 
-.. image:: examples/anomalies/anomalies_4_1.png
+.. image:: anomalies_4_1.png
 
 Calculate anomaly based on climatology
 
@@ -73,7 +73,7 @@ Calculate anomaly based on climatology
 
 You will get an anomaly time series which was found using a climatology:
 
-.. image:: examples/anomalies/anomalies_5_1.png
+.. image:: anomalies_5_1.png
 
 
     
