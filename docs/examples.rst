@@ -54,7 +54,7 @@ It also shows the usage of the :mod:`pytesmo.df_metrics` module.
 
 It is stopped after 2 stations to not take to long to run and produce a lot of plots
 
-It can be found in the /examples folder of the pytesmo package under the name compare_ISMN_ASCAT.py.
+It can be found in the docs/examples folder of the pytesmo package under the name compare_ISMN_ASCAT.py.
 
 .. include::
    examples/compare_ASCAT_ISMN/compare_ASCAT_ISMN.rst

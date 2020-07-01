@@ -1,4 +1,3 @@
-***************************************************************************
 pytesmo - a Python Toolbox for the Evaluation of Soil Moisture Observations
 ***************************************************************************
 
@@ -107,8 +106,7 @@ We are happy if you want to contribute. Please raise an issue explaining what
 is missing or if you find a bug. We will also gladly accept pull requests
 against our master branch for new features or bug fixes.
 
-Guidelines
-----------
+**Guidelines**
 
 If you want to contribute please follow these steps:
 
@@ -121,11 +119,7 @@ If you want to contribute please follow these steps:
   We use py.test so a simple function called test_my_feature is enough
 - submit a pull request to our master branch
 
-Release
--------
-
-Windows
-^^^^^^^^
+**Release Windows**
 
 In order to make a working release for windows the ``whl`` files for windows
 from appveyor CI have to be uploaded to PyPI. They can be found on the appveyor

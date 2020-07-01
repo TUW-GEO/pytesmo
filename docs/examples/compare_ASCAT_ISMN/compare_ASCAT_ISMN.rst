@@ -149,15 +149,15 @@ Temporal matching is then performed and the data is scaled (bias correction).
             break    
 
 
-.. image:: compare_ASCAT_ISMN_0_0_1.png
+.. image:: examples/compare_ASCAT_ISMN/compare_ASCAT_ISMN_0_0_1.png
 
 
 
-.. image:: compare_ASCAT_ISMN_0_0_2.png
+.. image:: examples/compare_ASCAT_ISMN/compare_ASCAT_ISMN_0_0_2.png
 
 
 
-.. image:: compare_ASCAT_ISMN_0_0_3.png
+.. image:: examples/compare_ASCAT_ISMN/compare_ASCAT_ISMN_0_0_3.png
 
 
 .. parsed-literal::
@@ -174,15 +174,15 @@ Temporal matching is then performed and the data is scaled (bias correction).
     Nash Sutcliffe -0.1988660324051037
 
 
-.. image:: compare_ASCAT_ISMN_1_0_1.png
+.. image:: examples/compare_ASCAT_ISMN/compare_ASCAT_ISMN_1_0_1.png
 
 
 
-.. image:: compare_ASCAT_ISMN_1_0_2.png
+.. image:: examples/compare_ASCAT_ISMN/compare_ASCAT_ISMN_1_0_2.png
 
 
 
-.. image:: compare_ASCAT_ISMN_1_0_3.png
+.. image:: examples/compare_ASCAT_ISMN/compare_ASCAT_ISMN_1_0_3.png
 
 
 .. parsed-literal::

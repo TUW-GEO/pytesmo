@@ -5,7 +5,7 @@ Introduction
 Pytesmo provides a number of tools that can be used to validate satellite
 soil moisture (and other climate variables). The pytesmo validation framework
 combines these tools and also uses functions from some of our other packages.
-See e.g. Supported Products. for reader packages that work within pytesmo
+See e.g. the Supported Products. for reader packages that work within pytesmo
 or the `pygeogrids <https://github.com/TUW-GEO/pygeogrids>`__ python package for nearest
 neighbor searching between datasets, calculation of lookup tables, and
 reading all grid points of a dataset in the correct order.
@@ -35,14 +35,14 @@ should be installed:
 
 Some packages are optional:
 
-* pykdtree https://github.com/storpipfugl/pykdtree
+* pykdtree: https://github.com/storpipfugl/pykdtree
 
 	which makes Nearest Neighbor search faster
 
-* pyresample https://github.com/pytroll/pyresample
+* pyresample: https://github.com/pytroll/pyresample
 
 	for resampling of irregular images onto a regular grid for e.g. plotting
 
-* matplotlib with cartopy/basemap http://matplotlib.org
+* matplotlib with cartopy/basemap: http://matplotlib.org
 
   for plotting maps of ISMN stations, maps in general
