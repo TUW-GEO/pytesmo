@@ -361,6 +361,7 @@ def ecol(data, correlated=None, err_cov=None, abs_est=True):
         - error variances
         - signal-to-noise ratios [dB]
         - error cross-covariances (and -correlations)
+
     based on an arbitrary number of N>3 data sets.
 
     !!! EACH DATA SET MUST BE MEMBER OF >= 1 TRIPLET THAT FULFILLS THE CLASSICAL TRIPLE COLLOCATION ASSUMPTIONS !!!
@@ -424,8 +425,8 @@ def ecol(data, correlated=None, err_cov=None, abs_est=True):
     .. [Gruber2016] Gruber, A., Su, C. H., Crow, W. T., Zwieback, S., Dorigo, W. A., & Wagner, W. (2016). Estimating error
     cross-correlations in soil moisture data sets using extended collocation analysis. Journal of Geophysical
     Research: Atmospheres, 121(3), 1208-1219.
-    """
 
+    """
     data.dropna(inplace=True)
 
     cols = data.columns.values
@@ -632,8 +633,8 @@ def pearsonr_recursive(x, y, n_old=0, sum_xi_yi=0,
     params: tuple
        tuple of (n_new, sum_xi_yi, sum_xi, sum_yi, sum_x2, sum_y2) .
        Can be used when calling the next iteration as ``*params``.
-    """
 
+    """
     n_new = n_old + len(x)
     sum_xi_yi = sum_xi_yi + np.sum(np.multiply(x, y))
     sum_xi = sum_xi + np.sum(x)

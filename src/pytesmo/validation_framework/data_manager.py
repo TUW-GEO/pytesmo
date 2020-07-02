@@ -196,7 +196,7 @@ class DataManager(object):
 
     def read_other(self, name, *args):
         """
-        Function to read and prepare a datasets.
+        Function to read and prepare non-reference datasets.
 
         Calls read_ts of the dataset.
 

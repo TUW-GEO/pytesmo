@@ -264,11 +264,11 @@ class MetadataMetrics(object):
 class BasicMetrics(MetadataMetrics):
     """
     This class just computes the basic metrics,
-    - Pearson's R
-    - Spearman's rho
-    - RMSD
-    - BIAS
-    - optionally Kendall's tau
+        - Pearson's R
+        - Spearman's rho
+        - RMSD
+        - BIAS
+        - optionally Kendall's tau
 
     it also stores information about gpi, lat, lon
     and number of observations
@@ -320,8 +320,8 @@ class BasicMetrics(MetadataMetrics):
         Kendall tau is calculation is optional at the moment
         because the scipy implementation is very slow which is problematic for
         global comparisons
-        """
 
+        """
         dataset = super(BasicMetrics, self).calc_metrics(data, gpi_info)
 
         if len(data) < 10:
@@ -386,6 +386,7 @@ class FTMetrics(MetadataMetrics):
 
     it also stores information about gpi, lat, lon
     and number of total observations
+
     """
 
     def __init__(self, frozen_flag=2,
@@ -419,6 +420,7 @@ class FTMetrics(MetadataMetrics):
         Kendall tau is not calculated at the moment
         because the scipy implementation is very slow which is problematic for
         global comparisons
+
         """
         dataset = super(FTMetrics, self).calc_metrics(data, gpi_info)
 
@@ -645,6 +647,7 @@ class IntercomparisonMetrics(MetadataMetrics):
         for the df cols.
     metadata_template: dict, optional (default: None)
         See MetadataMetrics
+
     """
 
     def __init__(self, other_names=('k1', 'k2', 'k3'), calc_tau=False,
@@ -850,6 +853,7 @@ class TCMetrics(MetadataMetrics):
             i.e. jobs.append(
                 (idx, metadata['longitude'], metadata['latitude'], metadata_dict))
             which is then propagated to the end netCDF results file.
+
         """
         self.ref_name = 'ref'
         other_names = list(other_names)
@@ -1111,6 +1115,7 @@ class RollingMetrics(MetadataMetrics):
         i.e. jobs.append(
             (idx, metadata['longitude'], metadata['latitude'], metadata_dict))
         which is then propagated to the end netCDF results file.
+
     """
 
     def __init__(self, other_name='k1', metadata_template=None):

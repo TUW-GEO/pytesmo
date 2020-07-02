@@ -1,10 +1,9 @@
-=======
-pytesmo
-=======
-
-This is the documentation of **pytesmo**.
-
 Contents
+========
+
+.. include:: ../README.rst
+
+Overview
 ========
 
 .. toctree::
