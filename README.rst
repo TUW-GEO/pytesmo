@@ -96,7 +96,7 @@ through independent and optional (reader) packages:
 - `Data from the International Soil Moisture Network (ISMN) <https://github.com/TUW-GEO/ismn/>`_
     In case of the ISMN, two different formats are provided:
     An example of how to use the dataset in the pytesmo validation framework can be
-    found in the :ref:`examples-page`.
+    found in the "Examples" chapter.
     * Variables stored in separate files (CEOP formatted)
 
 Contribute
