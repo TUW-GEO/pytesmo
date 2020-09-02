@@ -387,6 +387,33 @@ def flatten(seq):
     return l
 
 
+def get_result_combinations(ds_dict, n=2):
+    """
+    Get all possible combinations dataset columns
+
+    Parameters
+    ----------
+    ds_dict: dict
+       Dict of lists containing the dataset names as keys and a list of the
+       columns to read from the dataset as values.
+    n: int
+        Number of datasets for combine with each other.
+        If n=2 always two datasets will be combined into one result.
+        If n=3 always three datasets will be combined into one results and so on.
+        n has to be <= the number of total datasets.
+
+    Returns
+    -------
+    results_names : list of tuples
+        Containing all possible combinations of
+        (dataset_x.column, dataset_y.column)
+        for all datasets in ds_dict
+    """
+    combis = []
+    for key in ds_dict:
+        combis.extend(get_result_names(ds_dict, key, n=n))
+    return sorted(list(set(combis)))
+
 def get_result_names(ds_dict, refkey, n=2):
     """
     Return result names based on all possible combinations based on a
@@ -444,6 +471,6 @@ def get_result_names(ds_dict, refkey, n=2):
             continue
         for dataset, column in zip(datasets, columns):
             combo.append((dataset, column))
-        result_combos.append(tuple(combo))
+        result_combos.append(tuple(sorted(combo)))
 
     return result_combos

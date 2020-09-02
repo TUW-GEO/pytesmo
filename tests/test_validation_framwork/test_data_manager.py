@@ -39,6 +39,7 @@ from pygeobase.io_base import GriddedTsBase
 
 from pytesmo.validation_framework.data_manager import DataManager
 from pytesmo.validation_framework.data_manager import get_result_names
+from pytesmo.validation_framework.data_manager import get_result_combinations
 
 from tests.test_validation_framwork.test_datasets import TestDataset
 from tests.test_validation_framwork.test_datasets import setup_TestDatasets
@@ -227,6 +228,22 @@ def test_get_result_names():
                             (('DS1', 'soil moisture'), ('DS3', 'sm2'))]
 
     result_names = get_result_names(tst_ds_dict, 'DS2', 2)
-    assert result_names == [(('DS2', 'sm'), ('DS1', 'soil moisture')),
+    assert result_names == [(('DS1', 'soil moisture'), ('DS2', 'sm')),
+                            (('DS2', 'sm'), ('DS3', 'sm')),
+                            (('DS2', 'sm'), ('DS3', 'sm2'))]
+
+def test_get_result_combinations():
+
+    tst_ds_dict = {'DS1': ['soil moisture'],
+                   'DS2': ['sm'],
+                   'DS3': ['sm', 'sm2']}
+    result_names = get_result_combinations(tst_ds_dict, n=3)
+    assert result_names == [(('DS1', 'soil moisture'), ('DS2', 'sm'), ('DS3', 'sm')),
+                            (('DS1', 'soil moisture'), ('DS2', 'sm'), ('DS3', 'sm2'))]
+
+    result_names = get_result_combinations(tst_ds_dict, n=2)
+    assert result_names == [(('DS1', 'soil moisture'), ('DS2', 'sm')),
+                            (('DS1', 'soil moisture'), ('DS3', 'sm')),
+                            (('DS1', 'soil moisture'), ('DS3', 'sm2')),
                             (('DS2', 'sm'), ('DS3', 'sm')),
                             (('DS2', 'sm'), ('DS3', 'sm2'))]
