@@ -5,7 +5,10 @@ Changelog
 Unreleased
 ==========
 
--
+- Include more combinations in validation framework, raise error if n < n_datasets
+- Correlation coefficients not ignore nans in arrays
+- TC metrics calculator has not option to calculate metrics for reference
+- Fix deprecation warnings in anomaly adapter (#198)
 
 
 Version 0.9, 2020-07-02
