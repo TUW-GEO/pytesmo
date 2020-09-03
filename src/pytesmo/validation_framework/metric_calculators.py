@@ -833,7 +833,7 @@ class TCMetrics(MetadataMetrics):
     """
 
     def __init__(self, other_names=('k1', 'k2'), calc_tau=False, dataset_names=None,
-                 metadata_template=None):
+                 tc_metrics_for_ref=True, metadata_template=None):
         """
         Triple Collocation metrics as implemented in the QA4SM project.
 
@@ -846,6 +846,8 @@ class TCMetrics(MetadataMetrics):
         dataset_names : tuple, optional (default: None)
             List that maps the names of the satellite dataset columns to their
             real name that will be used in the results file.
+        tc_metrics_for_ref : bool, optional (default: False)
+            Store TC metrics for the reference data sets as well.
         metadata_template: dictionary, optional
             A dictionary containing additional fields (and types) of the form
             dict = {'field': np.float32([np.nan]}. Allows users to specify
@@ -888,8 +890,10 @@ class TCMetrics(MetadataMetrics):
 
         metrics_common = _get_metric_template(metrics_common)
         metrics_tds = _get_metric_template(metrics_tds)
+
+        ignore_ds = [self.ref_name] if not tc_metrics_for_ref else ()
         metrics_thds = _get_tc_metric_template(metrics_thds,
-                                               [self.ds_names_lut[n] for n in self.df_columns if n != self.ref_name])
+            [self.ds_names_lut[n] for n in self.df_columns if n not in ignore_ds])
 
         for metric in metrics_common.keys():
             self.result_template[metric] = metrics_common[metric].copy()
