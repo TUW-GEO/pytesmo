@@ -642,6 +642,9 @@ class IntercomparisonMetrics(MetadataMetrics):
         if True then also tau is calculated. This is set to False by default
         since the calculation of Kendalls tau is rather slow and can significantly
         impact performance of e.g. global validation studies
+    metrics_between_nonref : bool, optional (default: False)
+        Allow 2-dataset combinations where the ref is not included.
+        Warning: can lead to many combinations.
     dataset_names : list, optional (default: None)
         Names of the original datasets, that are used to find the lookup table
         for the df cols.
@@ -651,6 +654,7 @@ class IntercomparisonMetrics(MetadataMetrics):
     """
 
     def __init__(self, other_names=('k1', 'k2', 'k3'), calc_tau=False,
+                 metrics_between_nonref=False,
                  dataset_names=None, metadata_template=None):
 
         other_names = list(other_names)
@@ -674,7 +678,9 @@ class IntercomparisonMetrics(MetadataMetrics):
         for name, col in zip(self.ds_names, self.df_columns):
             self.ds_names_lut[col] = name
 
-        combis = n_combinations(self.df_columns, 2, must_include='ref')
+        combis = n_combinations(self.df_columns, 2,
+            must_include='ref' if not metrics_between_nonref else None)
+
         self.tds_names = []
         for combi in combis:
             self.tds_names.append("{1}{0}{2}".format(
