@@ -5,10 +5,16 @@ Changelog
 Unreleased
 ==========
 
+-
+
+Version 0.9.1, 2020-09-14
+=========================
+
 - Include more combinations in validation framework, raise error if n < n_datasets
-- Correlation coefficients not ignore nans in arrays
-- TC metrics calculator has not option to calculate metrics for reference
-- Fix deprecation warnings in anomaly adapter (#198)
+- `n_wise_apply` now can handle (drop) nans in a passed data frame correctly.
+- TC metrics calculator has now option to calculate metrics for reference
+- Fix deprecation warnings in anomaly adapter (Issue #198)
+- Change combinations created by val framework, catch cases where scaling ref not in combinations (Issue #187)
 
 
 Version 0.9, 2020-07-02
