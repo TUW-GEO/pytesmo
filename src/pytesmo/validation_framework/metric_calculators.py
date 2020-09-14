@@ -642,6 +642,9 @@ class IntercomparisonMetrics(MetadataMetrics):
         if True then also tau is calculated. This is set to False by default
         since the calculation of Kendalls tau is rather slow and can significantly
         impact performance of e.g. global validation studies
+    metrics_between_nonref : bool, optional (default: False)
+        Allow 2-dataset combinations where the ref is not included.
+        Warning: can lead to many combinations.
     dataset_names : list, optional (default: None)
         Names of the original datasets, that are used to find the lookup table
         for the df cols.
@@ -651,6 +654,7 @@ class IntercomparisonMetrics(MetadataMetrics):
     """
 
     def __init__(self, other_names=('k1', 'k2', 'k3'), calc_tau=False,
+                 metrics_between_nonref=False,
                  dataset_names=None, metadata_template=None):
 
         other_names = list(other_names)
@@ -674,7 +678,9 @@ class IntercomparisonMetrics(MetadataMetrics):
         for name, col in zip(self.ds_names, self.df_columns):
             self.ds_names_lut[col] = name
 
-        combis = n_combinations(self.df_columns, 2, must_include='ref')
+        combis = n_combinations(self.df_columns, 2,
+            must_include='ref' if not metrics_between_nonref else None)
+
         self.tds_names = []
         for combi in combis:
             self.tds_names.append("{1}{0}{2}".format(
@@ -833,6 +839,7 @@ class TCMetrics(MetadataMetrics):
     """
 
     def __init__(self, other_names=('k1', 'k2'), calc_tau=False, dataset_names=None,
+                 tc_metrics_for_ref=True, metrics_between_nonref=False,
                  metadata_template=None):
         """
         Triple Collocation metrics as implemented in the QA4SM project.
@@ -846,6 +853,11 @@ class TCMetrics(MetadataMetrics):
         dataset_names : tuple, optional (default: None)
             List that maps the names of the satellite dataset columns to their
             real name that will be used in the results file.
+        tc_metrics_for_ref : bool, optional (default: False)
+            Store TC metrics for the reference data set as well.
+        metrics_between_nonref : bool, optional (default: False)
+            Allow 2-dataset combinations where the ref is not included.
+            Warning: can lead to many combinations.
         metadata_template: dictionary, optional
             A dictionary containing additional fields (and types) of the form
             dict = {'field': np.float32([np.nan]}. Allows users to specify
@@ -876,6 +888,7 @@ class TCMetrics(MetadataMetrics):
         for name, col in zip(self.ds_names, self.df_columns):
             self.ds_names_lut[col] = name
 
+        self.metrics_between_nonref = metrics_between_nonref
         self.tds_names, self.thds_names = self._make_names()
 
         # metrics that are equal for all datasets
@@ -888,8 +901,10 @@ class TCMetrics(MetadataMetrics):
 
         metrics_common = _get_metric_template(metrics_common)
         metrics_tds = _get_metric_template(metrics_tds)
+
+        ignore_ds = [self.ref_name] if not tc_metrics_for_ref else ()
         metrics_thds = _get_tc_metric_template(metrics_thds,
-                                               [self.ds_names_lut[n] for n in self.df_columns if n != self.ref_name])
+            [self.ds_names_lut[n] for n in self.df_columns if n not in ignore_ds])
 
         for metric in metrics_common.keys():
             self.result_template[metric] = metrics_common[metric].copy()
@@ -923,8 +938,8 @@ class TCMetrics(MetadataMetrics):
 
     def _make_names(self):
         tds_names, thds_names = [], []
-        combis_2 = n_combinations(
-            self.df_columns, 2, must_include=[self.ref_name])
+        combis_2 = n_combinations(self.df_columns, 2,
+            must_include=[self.ref_name] if not self.metrics_between_nonref else None)
         combis_3 = n_combinations(
             self.df_columns, 3, must_include=[self.ref_name])
 
@@ -1264,7 +1279,7 @@ def get_dataset_names(ref_key, datasets, n=3):
     return dataset_names
 
 if __name__ == '__main__':
-    calc = IntercomparisonMetrics(other_names=('k1', 'k2', 'k3'),
+    calc = TCMetrics(other_names=('k1', 'k2', 'k3'),
                                   calc_tau=False,
                                   metadata_template=dict(meta1=np.array(['TBD']),
                                                          meta2=np.float32([np.nan])))
@@ -1278,4 +1293,4 @@ if __name__ == '__main__':
                             'k2': np.random.rand(idx.size),
                             'k3': np.random.rand(idx.size)})
 
-    adapted.calc_metrics(df, (0,1,2,{'meta1':'meta', 'meta2':12}))
+    calc.calc_metrics(df, (0,1,2,{'meta1':'meta', 'meta2':12}))

@@ -6,7 +6,7 @@ of columns from a data frame.
 """
 
 import pytesmo.df_metrics as df_metrics
-from pytesmo.metrics import bias
+from pytesmo.metrics import bias, pearsonr
 import pandas as pd
 import numpy as np
 
@@ -23,8 +23,11 @@ def test_apply():
 
     df = pd.DataFrame(index=pd.date_range(start='2000-01-01', end='2000-12-31', freq='D'),
                       data={'ds0': np.repeat(0, 366), 'ds1': np.repeat(1, 366)})
+    df.loc[df.index[np.random.choice(range(366), 10)], 'ds0'] = np.nan
+    df.loc[df.index[np.random.choice(range(366), 10)], 'ds1'] = np.nan
     bias_matrix_old = df_metrics.pairwise_apply(df, bias)
     bias_matrix_new = df_metrics.nwise_apply(df, bias,  n=2, as_df=True)
+    r_matrix_new = df_metrics.nwise_apply(df, pearsonr,  n=2, as_df=True)
     assert bias_matrix_old.equals(bias_matrix_new)
 
     # check if dict implementation and matrix implementation have same result
@@ -38,3 +41,5 @@ def test_dict_to_namedtuple():
     assert d_named._fields == ('a', 'b')
     assert type(d_named).__name__ == 'name'
 
+if __name__ == '__main__':
+    test_apply()

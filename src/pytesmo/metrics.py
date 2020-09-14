@@ -31,6 +31,7 @@ from __future__ import division
 import numpy as np
 import scipy.stats as sc_stats
 from itertools import permutations,combinations
+from pytesmo.utils import array_dropna
 
 def bias(x, y):
     """
@@ -569,29 +570,29 @@ def RSS(o, p):
 
 
 def pearsonr(x, y):
-    """
-    Wrapper for scipy.stats.pearsonr. Calculates a Pearson correlation
-    coefficient and the p-value for testing non-correlation.
+   """
+   Wrapper for scipy.stats.pearsonr. Calculates a Pearson correlation
+   coefficient and the p-value for testing non-correlation.
 
-    Parameters
-    ----------
-    x : numpy.ndarray
-        First input vector.
-    y : numpy.ndarray
-        Second input vector.
+   Parameters
+   ----------
+   x : numpy.ndarray
+       First input vector.
+   y : numpy.ndarray
+       Second input vector.
 
-    Returns
-    -------
-    r : float
-        Pearson's correlation coefficent.
-    p-value : float
-        2 tailed p-value.
+   Returns
+   -------
+   r : float
+       Pearson's correlation coefficent.
+   p-value : float
+       2 tailed p-value.
 
-    See Also
-    --------
-    scipy.stats.pearsonr
-    """
-    return sc_stats.pearsonr(x, y)
+   See Also
+   --------
+   scipy.stats.pearsonr
+   """
+   return sc_stats.pearsonr(x, y)
 
 @np.errstate(invalid='ignore')
 def pearsonr_recursive(x, y, n_old=0, sum_xi_yi=0,
@@ -695,9 +696,9 @@ def spearmanr(x, y):
 
     Parameters
     ----------
-    x : numpy.ndarray
+    x : numpy.array
         First input vector.
-    y : numpy.ndarray
+    y : numpy.array
         Second input vector.
 
     Returns
@@ -721,9 +722,9 @@ def kendalltau(x, y):
 
     Parameters
     ----------
-    x : numpy.ndarray
+    x : numpy.array
         First input vector.
-    y : numpy.ndarray
+    y : numpy.array
         Second input vector.
 
     Returns
@@ -738,7 +739,7 @@ def kendalltau(x, y):
     --------
     scipy.stats.kendalltau
     """
-    return sc_stats.kendalltau(x.tolist(), y.tolist())
+    return sc_stats.kendalltau(x, y)
 
 
 def index_of_agreement(o, p):

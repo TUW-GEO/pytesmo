@@ -40,6 +40,7 @@ from collections.abc import Iterable
 import itertools
 import pandas as pd
 import warnings
+from pytesmo.utils import array_dropna
 
 def n_combinations(iterable, n, must_include=None, permutations=False):
     """
@@ -448,8 +449,7 @@ def nwise_apply(df, method, n=2, comm=False, as_df=False, ds_names=True,
     # find out how many variables the applyf returns
     result = []
     # apply the method using the first data set to find out the shape of c,
-    # we add a bias (i) to avoid raising warnings.
-    c = applyf(*[mat[i] for i in range(n)])
+    c = applyf(*array_dropna(*[mat[i] for i in range(n)]))
     for index, value in enumerate(np.atleast_1d(c)):
         result.append(OrderedDict([(c, np.nan) for c in combs]))
     result = np.array(result)    # array of OrderedDicts

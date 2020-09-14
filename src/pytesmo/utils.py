@@ -251,3 +251,25 @@ def ensure_iterable(el):
         return [el]
     else:
         return el
+
+def array_dropna(*arrs):
+    """
+    Drop elements from input arrays where ANY array is NaN
+
+    Parameters
+    ----------
+    *arrs : np.array(s)
+        One or multiple numpy arrays of the same length that contain nans
+
+    Returns
+    -------
+    arrs_dropna : np.array
+        Input arrays without NaNs
+    """
+
+    idx = ~np.logical_or(*[np.isnan(x) for x in arrs])
+    arrs_dropna = [np.compress(idx, x) for x in arrs]
+
+    if len(arrs_dropna) == 1: arrs_dropna = arrs_dropna[0]
+
+    return tuple(arrs_dropna)
