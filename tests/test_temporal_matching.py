@@ -32,11 +32,13 @@ Created on Wed Jul  8 19:37:14 2015
 '''
 
 
-import pytesmo.temporal_matching as tmatching
-import pandas as pd
+from copy import deepcopy
 from datetime import datetime
 import numpy as np
 import numpy.testing as nptest
+import pandas as pd
+import pytesmo.temporal_matching as tmatching
+import pytest
 
 
 def test_df_match_borders():
@@ -158,3 +160,211 @@ def test_matching_series():
 
     nptest.assert_allclose(np.array([0, 1, 2, 4]), matched.matched_data)
     assert len(matched) == 4
+
+
+#############################################################################
+# Tests for new implementation
+#############################################################################
+
+
+@pytest.fixture
+def test_data():
+    """
+    Test data for temporal matching.
+
+    The test frames have modified time indices:
+    - shifted by 3 hours
+    - shifted by 7 hours
+    - shifted by 3 hours, and in a timezone such that displayed numbers are >6
+      hours apart
+    - shifted by 7 hours, and in a timezone such that displayed numbers are <6
+      hours apart
+    - randomly shifted by a value between -12h and 12h
+    - same as above, but with some dropped values
+    - shifted by 3 hours, with duplicates
+
+    Returns
+    -------
+    ref_frame : pd.DataFrame
+        Reference data frame
+    test_frames : dict of pd.DataFrame
+        Dictionary of data frames, keys are: "shifted_3", "shifted_7",
+        "shifted_3_asia", "shifted_7_us", "random_shift", "duplicates".
+    expected_nan : dict of np.ndarray
+        Dictionary with same keywords as `test_frames`, each entry is a mask
+        indicating where NaNs are expected (i.e. no matching was taking place)
+    """
+    # the reference date range
+    ref_dr = pd.date_range('1970', '2020', freq='D', tz="UTC")
+
+    test_dr = {}
+    test_dr["shifted_3"] = ref_dr + pd.Timedelta(3, "H")
+    test_dr["shifted_7"] = ref_dr + pd.Timedelta(7, "H")
+    test_dr["shifted_3_asia"] = (
+        test_dr["shifted_3"].tz_convert("Asia/Yekaterinburg")
+    )
+    test_dr["shifted_7_us"] = test_dr["shifted_7"].tz_convert("US/Eastern")
+
+    # random shifts
+    random_hours = np.random.uniform(-12.0, 12.0, len(ref_dr))
+    random_mask = np.abs(random_hours) > 6
+    dr_random_shift = ref_dr + pd.to_timedelta(random_hours, "H")
+    test_dr["random_shift"] = dr_random_shift
+
+    # missing data
+    drop_mask = np.zeros(len(ref_dr), dtype=np.bool)
+    drop_mask[100:200] = True
+    dr_random_shift = dr_random_shift[~drop_mask]
+    test_dr["missing"] = dr_random_shift
+    missing_mask = random_mask | drop_mask
+
+    # with duplicates
+    test_dr["duplicates"] = deepcopy(test_dr["shifted_3"])
+    duplicates_mask = np.zeros(len(ref_dr), dtype=np.bool)
+    for idx in np.random.randint(0, len(test_dr["duplicates"])-1, 5):
+        test_dr["duplicates"].values[idx] = test_dr["duplicates"].values[idx+1]
+        duplicates_mask[idx] = True
+
+    # setting up dataframes
+    test_frames = {
+        key: pd.DataFrame(np.random.randn(len(test_dr[key]), 3),
+                          index=test_dr[key]) for key in test_dr
+    }
+    ref_frame = pd.DataFrame(np.random.randn(len(ref_dr), 3), index=ref_dr)
+
+    # mask for where we expect nans in the output
+    all_nan = np.ones(len(ref_dr), dtype=np.bool)
+    expected_nan = {
+        "shifted_3": ~all_nan,
+        "shifted_7": all_nan,
+        "shifted_3_asia": ~all_nan,
+        "shifted_7_us": all_nan,
+        "random_shift": random_mask,
+        "missing": missing_mask,
+        "duplicates": duplicates_mask,
+    }
+    return ref_frame, test_frames, expected_nan
+
+
+def setup_data(data, key):
+    """Returns only relevant data of test_data for given key"""
+    return data[0], data[1][key], data[2][key]
+
+
+def assert_equal_except_nan(res, ref, nan_mask, index_shifted=False):
+    expected_nan_idx = nan_mask.nonzero()[0]
+    expected_nonan_idx = (~nan_mask).nonzero()[0]
+    # using column zero here, all should be the same
+    nan_idx = np.isnan(res.values[:, 0]).nonzero()[0]
+    nonan_idx = (~np.isnan(res.values[:, 0])).nonzero()[0]
+    assert len(expected_nan_idx) == len(nan_idx)
+    if len(nan_idx) > 0:
+        assert np.all(nan_idx == expected_nan_idx)
+    if len(nonan_idx) > 0 and not index_shifted:
+        assert np.all(nonan_idx == expected_nonan_idx)
+        assert np.all(
+            res.values[nonan_idx, :] == ref.values[nonan_idx, :]
+        )
+
+
+@pytest.mark.parametrize("key", ["shifted_3", "shifted_7", "shifted_7_us",
+                                 "shifted_3_asia", "random_shift"])
+def test_collocation_nearest_neighbour(test_data, key):
+    ref_frame, test_frame, expected_nan = setup_data(test_data, key)
+    res = tmatching.temporal_collocation(
+        ref_frame, test_frame, pd.Timedelta(6, "H")
+    )
+    assert_equal_except_nan(res, test_frame, expected_nan)
+
+
+@pytest.mark.parametrize("key", ["missing"])
+def test_collocation_missing(test_data, key):
+    ref_frame, test_frame, expected_nan = setup_data(test_data, key)
+    res = tmatching.temporal_collocation(
+        ref_frame, test_frame, pd.Timedelta(6, "H"),
+    )
+    # indices of test_frame are shifted w.r.t expected_nan, therefore we can't
+    # compare values
+    assert_equal_except_nan(res, test_frame, expected_nan, index_shifted=True)
+
+
+@pytest.mark.parametrize("key", ["shifted_3"])
+def test_collocation_window(test_data, key):
+    ref_frame, test_frame, expected_nan = setup_data(test_data, key)
+    res = tmatching.temporal_collocation(
+        ref_frame, test_frame, 6/24, dropduplicates=True
+    )
+    assert_equal_except_nan(res, test_frame, expected_nan, index_shifted=True)
+
+
+@pytest.mark.parametrize("key", ["duplicates"])
+def test_collocation_duplicates(test_data, key):
+    ref_frame, test_frame, expected_nan = setup_data(test_data, key)
+    res = tmatching.temporal_collocation(
+        ref_frame, test_frame, pd.Timedelta(6, "H"), dropduplicates=True
+    )
+    assert_equal_except_nan(res, test_frame, expected_nan, index_shifted=True)
+
+
+@pytest.mark.parametrize("key", ["shifted_3"])
+def test_collocation_input(test_data, key):
+    ref_frame, test_frame, expected_nan = setup_data(test_data, key)
+
+    # test with series and index:
+    for ref in [ref_frame[0], ref_frame.index]:
+        res = tmatching.temporal_collocation(
+            ref, test_frame, pd.Timedelta(6, "H")
+        )
+        assert_equal_except_nan(res, test_frame, expected_nan)
+
+
+@pytest.mark.parametrize("key", ["shifted_3", "shifted_7", "shifted_7_us",
+                                 "shifted_3_asia", "random_shift"])
+def test_collocation_dropna(test_data, key):
+    ref_frame, test_frame, expected_nan = setup_data(test_data, key)
+    res = tmatching.temporal_collocation(
+        ref_frame, test_frame, pd.Timedelta(6, "H"), dropna=True
+    )
+    expected_nonan_idx = (~expected_nan).nonzero()[0]
+    assert np.all(test_frame.values[expected_nonan_idx, :] == res.values)
+
+
+@pytest.mark.parametrize("key", ["shifted_3", "shifted_7", "shifted_7_us",
+                                 "shifted_3_asia", "random_shift"])
+def test_collocation_flag(test_data, key):
+    ref_frame, test_frame, expected_nan = setup_data(test_data, key)
+    flag = np.random.choice([True, False], len(ref_frame))
+
+    # with array
+    res = tmatching.temporal_collocation(
+        ref_frame, test_frame, pd.Timedelta(6, "H"), flag=flag,
+    )
+
+    def compare_with_nan(a, b):
+        return (a == b) | (np.isnan(a) & np.isnan(b))
+    compare_with_nan(
+        res.iloc[:, 0].values[~flag],
+        test_frame.iloc[:, 0].values[~flag]
+        )
+    assert np.all(np.isnan(res.values[:, 0][flag]))
+
+    # with array, using invalid as replacement
+    res = tmatching.temporal_collocation(
+        ref_frame, test_frame, pd.Timedelta(6, "H"), flag=flag,
+        use_invalid=True
+    )
+    compare_with_nan(
+        res.iloc[:, 0].values,
+        test_frame.iloc[:, 0].values
+        )
+
+    # with dataframe
+    test_frame['flag'] = flag
+    res = tmatching.temporal_collocation(
+        ref_frame, test_frame, pd.Timedelta(6, "H"), flag='flag',
+    )
+    compare_with_nan(
+        res.iloc[:, 0].values[~flag],
+        test_frame.iloc[:, 0].values[~flag]
+        )
+    assert np.all(np.isnan(res.iloc[:, 0].values[flag]))
