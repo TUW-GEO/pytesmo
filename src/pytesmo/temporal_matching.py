@@ -180,9 +180,13 @@ def temporal_collocation(reference, other, window, method="nearest",
     Parameters
     ----------
     reference : pd.DataFrame, pd.Series, or pd.DatetimeIndex
-        The reference onto which `other` should be matched. If this is a
-        DataFrame or a Series, the index must be a DatetimeIndex.
+        The reference onto which `other` should be collocated. If this is a
+        DataFrame or a Series, the index must be a DatetimeIndex. If the index
+        is timezone-naive, UTC will be assumed.
     other : pd.DataFrame or pd.Series
+        Data to be collocated. Must have a pd.DatetimeIndex as index. If the
+        index is timezone-naive, the timezone of the reference data will be
+        assumed.
     window : pd.Timedelta or float
         Window around reference timestamps in which to look for data. Floats
         are interpreted as number of days.
@@ -195,11 +199,13 @@ def temporal_collocation(reference, other, window, method="nearest",
 
     return_index : boolean, optional
         Include index of `other` in matched dataframe (default: False). Only
-        used with ``method="nearest"``.
+        used with ``method="nearest"``. The index will be added as a separate
+        column with the name "index_other".
     return_distance : boolean, optional
         Include distance information between `reference` and `other` in matched
         dataframe (default: False). This is only used with
-        ``method="nearest"``, and implies ``return_index=True``.
+        ``method="nearest"``, and implies ``return_index=True``. The distance
+        will be added as a separate column with the name "distance_other".
     dropduplicates : bool, optional
         Whether to drop duplicated timestamps in `other`. Default is ``False``,
         except when ``method="nearest"``, in which case this is enforced to be
@@ -240,7 +246,7 @@ def temporal_collocation(reference, other, window, method="nearest",
         window = pd.Timedelta(days=window)
     if flag is not None:
         if isinstance(flag, str):
-            flag = other[flag]
+            flag = other[flag].values
         if len(flag) != len(ref_dr):  # pragma: no cover
             raise ValueError(
                 "Flag must have same length as reference"
@@ -253,7 +259,12 @@ def temporal_collocation(reference, other, window, method="nearest",
 
     # preprocessing
     # ------------
-    other = other.tz_convert("UTC")
+    if ref_dr.tz is None:
+        ref_dr = ref_dr.tz_localize("UTC")
+    if other.index.tz is None:
+        other = other.tz_localize(ref_dr.tz)
+    if other.index.tz != ref_dr.tz:
+        other = other.tz_convert(ref_dr.tz)
     if dropduplicates or method == "nearest":
         other = other[~other.index.duplicated(keep="first")]
 

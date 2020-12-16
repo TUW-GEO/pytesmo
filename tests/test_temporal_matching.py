@@ -303,8 +303,9 @@ def test_collocation_window(test_data, key):
 def test_collocation_input(test_data, key):
     ref_frame, test_frame, expected_nan = setup_data(test_data, key)
 
+    no_timezone = pd.date_range('1970', '2020', freq='D')
     # test with series and index:
-    for ref in [ref_frame[0], ref_frame.index]:
+    for ref in [ref_frame[0], ref_frame.index, no_timezone]:
         res = tmatching.temporal_collocation(
             ref, test_frame, pd.Timedelta(6, "H")
         )
