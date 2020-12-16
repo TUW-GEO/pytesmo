@@ -250,20 +250,22 @@ def setup_data(data, key):
     """Returns only relevant data of test_data for given key"""
     return data[0], data[1][key], data[2][key]
 
+def compare_with_nan(a, b):
+    return (a == b) | (np.isnan(a) & np.isnan(b))
 
 def assert_equal_except_nan(res, ref, nan_mask, index_shifted=False):
     expected_nan_idx = nan_mask.nonzero()[0]
     expected_nonan_idx = (~nan_mask).nonzero()[0]
     # using column zero here, all should be the same
-    nan_idx = np.isnan(res.values[:, 0]).nonzero()[0]
-    nonan_idx = (~np.isnan(res.values[:, 0])).nonzero()[0]
+    nan_idx = np.isnan(res.iloc[:, 0].values).nonzero()[0]
+    nonan_idx = (~np.isnan(res.iloc[:, 0].values)).nonzero()[0]
     assert len(expected_nan_idx) == len(nan_idx)
     if len(nan_idx) > 0:
         assert np.all(nan_idx == expected_nan_idx)
     if len(nonan_idx) > 0 and not index_shifted:
         assert np.all(nonan_idx == expected_nonan_idx)
         assert np.all(
-            res.values[nonan_idx, :] == ref.values[nonan_idx, :]
+            res.iloc[nonan_idx, 0].values == ref.iloc[nonan_idx, 0].values
         )
 
 
@@ -277,8 +279,8 @@ def test_collocation_nearest_neighbour(test_data, key):
     assert_equal_except_nan(res, test_frame, expected_nan)
 
 
-@pytest.mark.parametrize("key", ["missing"])
-def test_collocation_missing(test_data, key):
+@pytest.mark.parametrize("key", ["missing", "duplicates"])
+def test_collocation_missing_duplicates(test_data, key):
     ref_frame, test_frame, expected_nan = setup_data(test_data, key)
     res = tmatching.temporal_collocation(
         ref_frame, test_frame, pd.Timedelta(6, "H"),
@@ -293,15 +295,6 @@ def test_collocation_window(test_data, key):
     ref_frame, test_frame, expected_nan = setup_data(test_data, key)
     res = tmatching.temporal_collocation(
         ref_frame, test_frame, 6/24, dropduplicates=True
-    )
-    assert_equal_except_nan(res, test_frame, expected_nan, index_shifted=True)
-
-
-@pytest.mark.parametrize("key", ["duplicates"])
-def test_collocation_duplicates(test_data, key):
-    ref_frame, test_frame, expected_nan = setup_data(test_data, key)
-    res = tmatching.temporal_collocation(
-        ref_frame, test_frame, pd.Timedelta(6, "H"), dropduplicates=True
     )
     assert_equal_except_nan(res, test_frame, expected_nan, index_shifted=True)
 
@@ -326,7 +319,7 @@ def test_collocation_dropna(test_data, key):
         ref_frame, test_frame, pd.Timedelta(6, "H"), dropna=True
     )
     expected_nonan_idx = (~expected_nan).nonzero()[0]
-    assert np.all(test_frame.values[expected_nonan_idx, :] == res.values)
+    assert np.all(test_frame.iloc[expected_nonan_idx, :].values == res.values)
 
 
 @pytest.mark.parametrize("key", ["shifted_3", "shifted_7", "shifted_7_us",
@@ -340,8 +333,6 @@ def test_collocation_flag(test_data, key):
         ref_frame, test_frame, pd.Timedelta(6, "H"), flag=flag,
     )
 
-    def compare_with_nan(a, b):
-        return (a == b) | (np.isnan(a) & np.isnan(b))
     compare_with_nan(
         res.iloc[:, 0].values[~flag],
         test_frame.iloc[:, 0].values[~flag]
@@ -368,3 +359,26 @@ def test_collocation_flag(test_data, key):
         test_frame.iloc[:, 0].values[~flag]
         )
     assert np.all(np.isnan(res.iloc[:, 0].values[flag]))
+
+# using only shifted_3, because comparison won't work when there are nans
+@pytest.mark.parametrize("key", ["shifted_3"])
+def test_return_index(test_data, key):
+    ref_frame, test_frame, expected_nan = setup_data(test_data, key)
+    res = tmatching.temporal_collocation(
+        ref_frame, test_frame, pd.Timedelta(6, "H"), return_index=True
+    )
+    assert_equal_except_nan(res, test_frame, expected_nan)
+    assert np.all(test_frame.index.values == res["index_other"].values)
+
+# using only shifted_3, because comparison won't work when there are nans
+@pytest.mark.parametrize("key", ["shifted_3", "shifted_7"])
+def test_return_distance(test_data, key):
+    ref_frame, test_frame, expected_nan = setup_data(test_data, key)
+    res = tmatching.temporal_collocation(
+        ref_frame, test_frame, pd.Timedelta(6, "H"), return_distance=True
+    )
+    assert_equal_except_nan(res, test_frame, expected_nan)
+    if key == "shifted_3":
+        assert np.all(res["distance_other"] == pd.Timedelta(3, "H"))
+    if key == "shifted_7":
+        assert np.all(np.isnan(res["distance_other"]))

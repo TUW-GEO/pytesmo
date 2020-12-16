@@ -171,6 +171,7 @@ def matching(reference, *args, **kwargs):
 
 
 def temporal_collocation(reference, other, window, method="nearest",
+                         return_index=False, return_distance=False,
                          dropduplicates=False, dropna=False, flag=None,
                          use_invalid=False):
     """
@@ -188,10 +189,21 @@ def temporal_collocation(reference, other, window, method="nearest",
     method : str, optional
         Which method to use for the temporal collocation:
 
-        - "nearest" (default): Uses the nearest valid neighbour.
+        - "nearest" (default): Uses the nearest valid neighbour. When this
+          method is used, entries with duplicate index values in `other` will
+          be dropped, and only the first of the duplicates is kept.
 
+    return_index : boolean, optional
+        Include index of `other` in matched dataframe (default: False). Only
+        used with ``method="nearest"``.
+    return_distance : boolean, optional
+        Include distance information between `reference` and `other` in matched
+        dataframe (default: False). This is only used with
+        ``method="nearest"``, and implies ``return_index=True``.
     dropduplicates : bool, optional
-        Whether to drop duplicated timestamps in `other`. Default is ``False``.
+        Whether to drop duplicated timestamps in `other`. Default is ``False``,
+        except when ``method="nearest"``, in which case this is enforced to be
+        ``True``.
     dropna : bool, optional
         Whether to drop NaNs from the resulting dataframe (arising for example
         from duplicates with ``duplicates_nan=True`` or from missing values).
@@ -238,16 +250,24 @@ def temporal_collocation(reference, other, window, method="nearest",
     else:
         has_invalid = False
 
+
     # preprocessing
     # ------------
     other = other.tz_convert("UTC")
-    if dropduplicates:
+    if dropduplicates or method == "nearest":
         other = other[~other.index.duplicated(keep="first")]
 
     # collocation
     # -----------
     if method == "nearest":
         # Nearest neighbour collocation, uses pandas reindex
+
+        if return_index or return_distance:
+            new_cols = {}
+            new_cols["index_other"] = other.index
+            if return_distance:
+                new_cols["distance_other"] = np.zeros(len(other))
+            other = other.assign(**new_cols)
 
         def collocate(df):
             return df.reindex(ref_dr, method="nearest", tolerance=window)
@@ -259,6 +279,11 @@ def temporal_collocation(reference, other, window, method="nearest",
                 collocated = collocated.combine_first(invalid)
         else:
             collocated = collocate(other)
+
+        if return_distance:
+            collocated["distance_other"] = (
+                collocated["index_other"] - collocated.index
+            )
 
     else:
         raise NotImplementedError(
