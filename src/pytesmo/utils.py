@@ -145,12 +145,12 @@ def unique_percentiles_interpolate(perc_values,
         Unique percentile values generated through linear
         interpolation over removed duplicate percentile values
     """
-    uniq_ind = np.unique(perc_values, return_index=True)[1]
+    uniq_ind = np.sort(np.unique(perc_values, return_index=True)[1])
     if len(uniq_ind) == 1:
         uniq_ind = np.repeat(uniq_ind, 2)
     uniq_ind[-1] = len(percentiles) - 1
     uniq_perc_values = perc_values[uniq_ind]
-
+    # is part below really needed?
     inter = sc_int.InterpolatedUnivariateSpline(
         np.array(percentiles)[uniq_ind],
         uniq_perc_values,
@@ -273,3 +273,122 @@ def array_dropna(*arrs):
     if len(arrs_dropna) == 1: arrs_dropna = arrs_dropna[0]
 
     return tuple(arrs_dropna)
+
+def get_edge_percentiles(percentiles, n=1):
+    '''
+    Finds the percentile values used in the edge definition
+
+    Parameters
+    ----------
+    percentiles : np.array
+        percentile values for a timeseries
+    n : int, optional
+        Passed from scale_edges(). The default is 1.
+
+    Returns
+    -------
+    edge_perc : TYPE
+        DESCRIPTION.
+
+    '''
+    edge_perc = {}
+    edge_perc['inside_lo'] = percentiles[n]
+    edge_perc['outside_lo'] = percentiles[n-1]
+    edge_perc['inside_hi'] = percentiles[-1-n]
+    edge_perc['outside_hi'] = percentiles[-n]
+    
+    return edge_perc
+
+def derive_edge_parameters(src, ref, edge_src, edge_ref):
+    '''
+    Method to compute the slopes for the edge matching in CDF matching,
+    based on a linear scaling model.
+
+    Parameters
+    ----------
+    src : numpy.array
+        input dataset which will be scaled
+    ref : numpy.array
+        src will be scaled to this dataset
+    edge_src : list
+        list with low and high edges (in percentile values) of src
+    edge_ref : list
+        list with low and high edges (in percentile values) of ref
+
+    Returns
+    -------
+    slope_low : float
+        slope parameter to scale the lower edge.
+    slope_high : float
+        slope parameter to scale the higher edge.
+    '''
+    x_lo = src[src <= edge_src['inside_lo']] - edge_src['inside_lo']
+    y_lo = ref[ref <= edge_ref['inside_lo']] - edge_ref['inside_lo']
+    x_hi = src[src >= edge_src['inside_hi']] - edge_src['inside_hi']
+    y_hi = ref[ref >= edge_ref['inside_hi']] - edge_ref['inside_hi']
+    
+    def return_regress(x,y,
+                       where,
+                       edge_src=edge_src,
+                       edge_ref=edge_ref):
+        l = min(len(x),len(y))
+        x, y = x[:l], y[:l]
+        x, y = np.sort(x), np.sort(y)
+        slope, res, rank, s = np.linalg.lstsq(x.reshape(-1, 1), y, rcond=None)
+        if where == 'low':
+            intercept = edge_ref['inside_lo'] - slope[0]*edge_src['inside_lo']
+        elif where == 'high':
+            intercept = edge_ref['inside_hi'] - slope[0]*edge_src['inside_hi']
+        
+        return slope[0], intercept 
+    
+    parms_lo = return_regress(x_lo, y_lo, 'low')
+    parms_hi = return_regress(x_hi, y_hi, 'high')
+    
+    return parms_lo, parms_hi
+
+def scale_edges(scaled, src, ref, perc_src, perc_ref, n=1):
+    '''
+    Method to scale the edges of the src timeseries using a linear regression
+    method based on Moesinger et al. (2020).
+    The edges are defined as the values below the second (nth + 1) or above the
+    penultimate (X-1-nth) quantile in the src timeseries.
+
+    Parameters
+    ----------
+    scaled : numpy.array
+        scaled array where edge values should be replaced
+    src : numpy.array
+        input dataset which will be scaled.
+    ref : numpy.array
+        src will be scaled to this dataset
+    perc_src : numpy.array
+        percentiles of src
+    perc_ref : numpy.array
+        percentiles of reference data
+    n : int, optional
+        Edges are percentile values below the nth+1 percentile and above the
+        -1-nth percentile. The default is 1.
+
+    Returns
+    -------
+    scaled : numpy.array
+        Scaled timeseries with scaled edges
+    '''
+    # get edge percentile value
+    edge_src = get_edge_percentiles(perc_src, n=n)
+    edge_ref = get_edge_percentiles(perc_ref, n=n)
+    
+    # calculate scaling slope at edges
+    parms_lo, parms_hi = derive_edge_parameters(src=src,
+                        ref=ref, edge_src= edge_src, edge_ref=edge_ref)
+    
+    # find indexes of edge values in source data
+    ids_lo = np.where(src <= edge_src['inside_lo'])
+    ids_hi = np.where(src >= edge_src['inside_hi'])
+    
+    # correct the scaled data at the edges
+    scaled[ids_lo] = scaled[ids_lo]*parms_lo[0] + parms_lo[1]
+    scaled[ids_hi] = scaled[ids_hi]*parms_hi[0] + parms_hi[1]
+
+    return scaled

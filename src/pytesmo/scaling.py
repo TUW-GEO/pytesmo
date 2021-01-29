@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 import scipy.interpolate as sc_int
 from warnings import warn
-from pytesmo.utils import unique_percentiles_interpolate
+from pytesmo.utils import unique_percentiles_interpolate, scale_edges
 
 
 def add_scaled(df, method='linreg', label_in=None, label_scale=None):
@@ -279,11 +279,12 @@ def lin_cdf_match(src, ref,
     perc_src = np.array(np.percentile(src, percentiles))
     perc_ref = np.array(np.percentile(ref, percentiles))
 
-    return lin_cdf_match_stored_params(src, perc_src, perc_ref,
+    return lin_cdf_match_stored_params(src, perc_src, perc_ref, ref=ref,
                                        min_val=min_val, max_val=max_val)
 
 
 def lin_cdf_match_stored_params(src, perc_src, perc_ref,
+                                ref=None,
                                 min_val=None, max_val=None):
     """
     Performs cdf matching using given percentiles.
@@ -298,13 +299,16 @@ def lin_cdf_match_stored_params(src, perc_src, perc_ref,
         percentiles of reference data
         estimated through method of choice, must be same size as
         perc_src
+    ref: numpy.array, optional.
+        src will be scaled to this dataset, used by scale_edges(). The default
+        is None.
     min_val: float, optional
         Minimum allowed value, output data is capped at this value
     max_val: float, optional
         Maximum allowed value, output data is capped at this value
     """
 
-    return gen_cdf_match(src, perc_src, perc_ref,
+    return gen_cdf_match(src, perc_src, perc_ref, ref=ref,
                          min_val=min_val, max_val=max_val,
                          k=1)
 
@@ -348,14 +352,17 @@ def cdf_match(src, ref,
     perc_ref = unique_percentiles_interpolate(perc_ref,
                                               percentiles=percentiles)
 
-    return gen_cdf_match(src, perc_src, perc_ref,
+    return gen_cdf_match(src, perc_src, perc_ref, ref=ref,
                          min_val=min_val, max_val=max_val,
                          k=5)
 
 
 def gen_cdf_match(src,
                   perc_src, perc_ref,
+                  lin_edge_scaling=True,
+                  ref=None,
                   min_val=None, max_val=None,
+                  n=1,
                   k=1):
     """
     General cdf matching:
@@ -375,10 +382,19 @@ def gen_cdf_match(src,
         percentiles of reference data
         estimated through method of choice, must be same size as
         perc_src
+    lin_edge_scaling: Bool, optional.
+        uses the method sclae_edges() to perform a linear regression on the
+        edge values. Method in Moesinger et al. (2020).
+    ref: numpy.array, optional.
+        src will be scaled to this dataset, used by scale_edges(). The default
+        is None.
     min_val: float, optional
         Minimum allowed value, output data is capped at this value
     max_val: float, optional
         Maximum allowed value, output data is capped at this value
+    n : int, optional
+        Edges are percentile values below the nth+1 percentile and above the
+        -1-nth percentile. The default is 1.
     k : int, optional
         Order of spline to fit
 
@@ -403,6 +419,19 @@ def gen_cdf_match(src,
         return np.full_like(src, np.nan)
 
     scaled = inter(src)
+    
+    # linear scaling of the edge values
+    if lin_edge_scaling:
+        if ref is None:
+            pass
+        else:
+            scaled = scale_edges(scaled=scaled, 
+                                 src=src, 
+                                 ref=ref,
+                                 perc_src=perc_src, 
+                                 perc_ref=perc_ref, 
+                                 n=n)
+    
     if max_val is not None:
         scaled[scaled > max_val] = max_val
     if min_val is not None:
