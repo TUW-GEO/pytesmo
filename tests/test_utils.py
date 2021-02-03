@@ -38,6 +38,9 @@ from pytesmo.utils import interp_uniq
 from pytesmo.utils import ensure_iterable
 from pytesmo.utils import unique_percentiles_interpolate
 from pytesmo.utils import unique_percentiles_beta
+from pytesmo.utils import resize_percentiles
+from pytesmo.utils import scale_edges
+from pytesmo.utils import derive_edge_parameters
 import numpy as np
 import numpy.testing as nptest
 
@@ -117,3 +120,52 @@ def test_ensure_iterable_string():
     el = 'test'
     new_el = ensure_iterable(el)
     assert new_el == [el]
+    
+def test_derive_edge_parameters():
+    """
+    assert the result types for the edge parameters
+    """
+    src = np.linspace(-1,1,1000)
+    ref = src*0.5
+    percentiles = np.linspace(0,100,100)
+    perc_src = ml_percentile(src, percentiles)
+    perc_ref = ml_percentile(ref, percentiles)
+    
+    a,b,c = derive_edge_parameters(src=src, ref=ref,
+                                   perc_src=perc_src, perc_ref=perc_ref)
+    
+    assert (type(a) is tuple) & (type(b) is tuple) & (type(c) is np.ndarray)
+    
+def test_scale_edges():
+    """
+    test that the edge values decrease to match a timeseries with smaller values
+    """
+    scaled = np.linspace(-1,1,1000)
+    src = np.linspace(-1,1,1000)
+    ref = scaled*0.5
+    percentiles = np.linspace(0,100,100)
+    perc_src = ml_percentile(src, percentiles)
+    perc_ref = ml_percentile(ref, percentiles)
+    
+    edge_scaled = scale_edges(scaled=scaled,
+                              src=src, ref=ref,
+                              perc_src=perc_src,
+                              perc_ref=perc_ref)
+    test_low = np.abs(edge_scaled[:9]) < np.abs(src[:9])
+    test_high = np.abs(edge_scaled[990:]) < np.abs(src[990:])
+    
+    assert np.all(test_low) and np.all(test_high)
+    
+def test_resize_percentiles():
+    """
+    test that the number of bins respects the 20 minimum obs. per bin
+    """
+    in_data = np.arange(100)
+    minobs = 20
+    percentiles = np.linspace(0,100,10)
+    
+    new_p = resize_percentiles(in_data = in_data,
+                               percentiles = percentiles,
+                               minobs=minobs)
+    
+    assert len(new_p) == 6

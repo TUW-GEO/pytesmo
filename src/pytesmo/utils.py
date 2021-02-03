@@ -184,20 +184,24 @@ def unique_percentiles_beta(perc_values,
     RuntimeError
         If no fit could be found.
     """
-
     # normalize between 0 and 1
-    min_value = np.min(perc_values)
-    perc_values = perc_values - min_value
-    max_value = np.max(perc_values)
-    perc_values = perc_values / max_value
-    percentiles = np.asanyarray(percentiles)
-    percentiles = percentiles / 100.0
+    uniq, uniq_ind, counts = np.unique(
+        perc_values, return_index=True, return_counts=True)
+    if len(uniq) != len(perc_values):
+        min_value = np.min(perc_values)
+        perc_values = perc_values - min_value
+        max_value = np.max(perc_values)
+        perc_values = perc_values / max_value
+        percentiles = np.asanyarray(percentiles)
+        percentiles = percentiles / 100.0
 
-    p, ier = sc_opt.curve_fit(betainc,
-                              percentiles,
-                              perc_values)
-    uniq_perc_values = sc_special.betainc(p[0], p[1], percentiles)
-    uniq_perc_values = uniq_perc_values * max_value + min_value
+        p, ier = sc_opt.curve_fit(betainc,
+                                  percentiles,
+                                  perc_values)
+        uniq_perc_values = sc_special.betainc(p[0], p[1], percentiles)
+        uniq_perc_values = uniq_perc_values * max_value + min_value
+    else:
+        uniq_perc_values = perc_values
     return uniq_perc_values
 
 
@@ -275,8 +279,8 @@ def array_dropna(*arrs):
 
 def derive_edge_parameters(src, ref, perc_src, perc_ref):
     '''
-    Method to compute the slopes for the edge matching in CDF matching,
-    based on a linear scaling model.
+    Method to compute the regression parameters and new percentile values for 
+    the edge matching in CDF matching, based on a linear scaling model.
 
     Parameters
     ----------
@@ -297,17 +301,7 @@ def derive_edge_parameters(src, ref, perc_src, perc_ref):
         slope and intercept parameters to scale the higher edge.
     perc_ref : list-like
         new percentile values after regression
-    '''
-    # match the two arrays
-    if len(src) != len(ref):
-        max_obs = max(len(src), len(ref))
-        d_perc = np.arange(max_obs, dtype='float') / (max_obs-1)*100
-
-        if len(src) < len(ref):
-            src = ml_percentile(src, d_perc)
-        else:
-            ref = ml_percentile(ref, d_perc)
-            
+    '''            
     # select higher and lower edges
     x_lo = src[src <= perc_src[1]] - perc_src[1]
     y_lo = ref[ref <= perc_ref[1]] - perc_ref[1]
@@ -370,10 +364,9 @@ def scale_edges(scaled, src, ref, perc_src, perc_ref):
     ids_lo = np.where(src <= perc_src[1])
     ids_hi = np.where(src >= perc_src[-2])
     
+    # replace in new array
     inter = sc_int.InterpolatedUnivariateSpline(perc_src, perc_ref, k=1)
-    
     scaled_edges = inter(src)
-    
     scaled[ids_lo] = scaled_edges[ids_lo]
     scaled[ids_hi] = scaled_edges[ids_hi]
     

@@ -80,7 +80,30 @@ def test_scaling_method(method):
 
     o = getattr(scaling, method)(y, x)
     nptest.assert_almost_equal(x, o)
+    
+@pytest.mark.parametrize('method', scaling_methods)
+def test_scaling_kwargs(method):
+    """
+    Tests that kwargs are passed correctly for every scaling method
+    """
 
+    # two linear functions should be matched onto each other
+    n = 1000
+    x = np.arange(n)
+    y = np.arange(n) * 0.5
+    raised = False
+    
+    try:
+        kwargs = {'lin_edge_scaling':True,
+                  'minobs':20,
+                  'max_val':950,
+                  'min_val':50}
+        o = getattr(scaling, method)(y, x, **kwargs)
+    
+    except:
+        raised = True
+    
+    assert raised is False
 
 @pytest.mark.parametrize('method', scaling_methods)
 def test_scale(method):

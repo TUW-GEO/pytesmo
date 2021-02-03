@@ -351,7 +351,6 @@ def cdf_match(src, ref,
         Maximum allowed value, output data is capped at this value
     nbins: int, optional
         Number of bins to use for estimation of the CDF
-        The default is True.
     minobs : int
         Minimum desired number of observations in a bin.
     ** kwargs: dict
@@ -381,6 +380,7 @@ def cdf_match(src, ref,
 
 def cdf_beta_match(src, ref,
                    minobs=20,
+                   lin_edge_scaling=True,
                    nbins=100,
                    **kwargs):
     """
@@ -417,6 +417,16 @@ def cdf_beta_match(src, ref,
 
     if not minobs is None:    
         percentiles = utils.resize_percentiles(src, percentiles, minobs)
+    
+    # match the two arrays
+    if len(src) != len(ref):
+        max_obs = max(len(src), len(ref))
+        d_perc = np.arange(max_obs, dtype='float') / (max_obs-1)*100
+
+        if len(src) < len(ref):
+            src = utils.ml_percentile(src, d_perc)
+        else:
+            ref = utils.ml_percentile(ref, d_perc)
         
     # calculate percentiles using matlab method
     perc_src = utils.ml_percentile(src, percentiles)
@@ -429,7 +439,7 @@ def cdf_beta_match(src, ref,
         perc_src = utils.unique_percentiles_beta(perc_src, percentiles=percentiles)
         
     return gen_cdf_match(src, perc_src, perc_ref,
-                         lin_edge_scaling=True,
+                         lin_edge_scaling=lin_edge_scaling,
                          ref=ref, 
                          **kwargs)
 
