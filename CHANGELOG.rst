@@ -5,7 +5,7 @@ Changelog
 Unreleased
 ==========
 
--
+- Drop Travis CI and Appveyor CI, replaced by Github Actions ci.yml workflow
 
 Version 0.9.1, 2020-09-14
 =========================
