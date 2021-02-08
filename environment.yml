@@ -1,4 +1,4 @@
-# List of conda and pip packages that are should be install when developing the packages
+# List of conda and pip packages that should be installed when developing the packages
 # To create the full conda environment: conda env create -f environment.yml
 name: pytesmo
 channels:

@@ -191,7 +191,8 @@ class AdvancedMaskingAdapter(BasicAdapter):
                           '==': operator.eq,
                           '!=': operator.ne,
                           '>=': operator.ge,
-                          '>': operator.gt}
+                          '>': operator.gt,
+                          'contains': operator.contains}
 
         self.filter_list = filter_list
 
