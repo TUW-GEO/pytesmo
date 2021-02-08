@@ -68,13 +68,13 @@ jobs:
         shell: bash -l {0}
         run: |
           pip install wheel
-          python setup.py sdist --dist-dir .artifacts
-          python setup.py bdist_wheel --dist-dir .artifacts
-          ls .artifacts
+          python setup.py sdist --dist-dir .artifacts/dist
+          python setup.py bdist_wheel --dist-dir .artifacts/dist
+          ls .artifacts/dist
       - name: Upload Artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: os_py_environments
+          name: Artifacts
           path: .artifacts/*
   coveralls:
     name: Submit Coveralls 👚
