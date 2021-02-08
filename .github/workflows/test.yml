@@ -16,7 +16,7 @@ jobs:
     strategy:
       matrix:
         os: ["ubuntu-latest", "windows-latest"] # currently windows is not tested
-        python-version: ['3.6', '3.8', '3.9']
+        python-version: ['3.6', '3.7', '3.8']
         ymlfile: ['environment.yml']
     name: Py${{ matrix.python-version }}@${{ matrix.os }}|${{ matrix.ymlfile }}🐍
     runs-on: ${{ matrix.os }}
@@ -69,7 +69,7 @@ jobs:
         run: |
           pip install wheel
           python setup.py sdist --dist-dir .artifacts
-          python setup.py bdist_wheel bdist_wininst --dist-dir .artifacts
+          python setup.py bdist_wheel --dist-dir .artifacts
           ls .artifacts
       - name: Upload Artifacts
         uses: actions/upload-artifact@v2
