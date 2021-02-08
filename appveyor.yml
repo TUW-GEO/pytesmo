@@ -64,7 +64,8 @@ install:
   
 test_script:
   # Build the compiled extension and run the project tests
-  - cmd: python setup.py test
+  - cmd: python setup.py test --addopts "--cache-clear -m 'not full_framework'"
+  - cmd: python setup.py test --addopts "--cache-clear -m 'full_framework'"
 
 after_test:
   # If tests are successful, create a whl package for the project.

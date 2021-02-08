@@ -1,0 +1,89 @@
+# This workflow will install Python dependencies and run tests on
+# windows and linux systems with a variety of Python versions
+
+# For more information see:
+# https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: tests
+
+on:
+  push:
+  pull_request:
+  schedule: # only upstream, won't trigger on forks!
+    - cron: '0 0 * * *' # daily
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: ["ubuntu-latest", "windows-latest"] # currently windows is not tested
+        python-version: ['3.6', '3.8', '3.9']
+        ymlfile: ['environment.yml']
+    name: Py${{ matrix.python-version }}@${{ matrix.os }}|${{ matrix.ymlfile }}🐍
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true # does not work with self-hosted testdata
+      - uses: conda-incubator/setup-miniconda@v2.0.1
+        with:
+          miniconda-version: "latest"
+          auto-update-conda: true
+          python-version: ${{ matrix.python-version }}
+          environment-file: ${{ matrix.ymlfile }}
+          activate-environment: pytesmo # todo: must match with name in environment.yml
+          auto-activate-base: false
+      - name: Print Infos
+        shell: bash -l {0}
+        run: |
+          conda info -a
+          conda list
+          pip list
+          which pip
+          which python
+      - name: Export Environment
+        shell: bash -l {0}
+        run: |
+          mkdir -p .artifacts
+          if [ ${{ matrix.ymlfile }} == "environment.yml" ]
+          then
+              filename=env_py${{ matrix.python-version }}_${{ matrix.os }}.yml
+              conda env export --no-builds | grep -v "prefix" > .artifacts/$filename
+          fi
+      - name: Install package and test
+        shell: bash -l {0}
+        run: |
+          python setup.py install
+          python setup.py test --addopts "--cache-clear -m 'not full_framework'"
+          python setup.py test --addopts "--cache-clear -m 'full_framework'"
+      - name: Upload Coverage
+        shell: bash -l {0}
+        run: |
+          pip install coveralls && coveralls --service=github
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COVERALLS_FLAG_NAME: ${{ matrix.python-version }}
+          COVERALLS_PARALLEL: true
+      - name: Create wheel package
+        shell: bash -l {0}
+        run: |
+          pip install wheel
+          python setup.py sdist --dist-dir .artifacts
+          python setup.py bdist_wheel bdist_wininst --dist-dir .artifacts
+          ls .artifacts
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: os_py_environments
+          path: .artifacts/*
+  coveralls:
+    name: Submit Coveralls 👚
+    needs: build
+    runs-on: ubuntu-latest
+    container: python:3-slim
+    steps:
+      - name: Finished
+        run: |
+          pip3 install --upgrade coveralls && coveralls --service=github --finish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

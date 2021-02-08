@@ -52,3 +52,4 @@ MANIFEST
 
 # playground dir
 */_local_scripts/*
+.artifacts/
