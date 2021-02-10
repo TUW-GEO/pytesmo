@@ -246,7 +246,7 @@ def mean_std(src, ref, **kwargs):
     return ((src - np.mean(src)) /
             np.std(src)) * np.std(ref) + np.mean(ref)
 
-
+@utils.deprecated
 def lin_cdf_match(src, ref,
                   min_val=None, max_val=None,
                   percentiles=[0, 5, 10, 30, 50, 70, 90, 95, 100],
@@ -325,6 +325,7 @@ def lin_cdf_match_stored_params(src, perc_src, perc_ref,
                          min_val=min_val, max_val=max_val,
                          k=1, **kwargs)
 
+@utils.deprecated
 def cdf_match(src, ref,
               min_val=None, max_val=None,
               nbins=100,
@@ -361,7 +362,6 @@ def cdf_match(src, ref,
     CDF matched values: numpy.array
         dataset src with CDF as ref
     '''
-
     percentiles = np.linspace(0, 100, nbins)
     
     if not minobs is None:      
