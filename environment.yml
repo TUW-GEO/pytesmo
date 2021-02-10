@@ -26,5 +26,6 @@ dependencies:
     - ismn
     - repurpose
     - pytest
+    - pytest-cov
     - more_itertools
     - cadati

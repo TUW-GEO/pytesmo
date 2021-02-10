@@ -3,9 +3,9 @@ Provides a temporal matching function
 """
 
 import numpy as np
-from pykdtree.kdtree import KDTree
-
 import pandas as pd
+from pykdtree.kdtree import KDTree
+import warnings
 
 
 def df_match(reference, *args, **kwds):
@@ -39,6 +39,12 @@ def df_match(reference, *args, **kwds):
     temporal_matched_args : pandas.DataFrame or tuple of pandas.DataFrame
         Dataframe with index from matched reference index
     """
+    warnings.warn(
+        "'pytesmo.temporal_matching.df_match' is deprecated. Use"
+        "'pytesmo.temporal_matching.temporal_collocation' instead!",
+        DeprecationWarning
+    )
+
     if "window" in kwds:
         window = kwds['window']
     else:
@@ -144,6 +150,11 @@ def matching(reference, *args, **kwargs):
         containing the index of the reference Series and a column for each of the
         other input Series
     """
+    warnings.warn(
+        "'pytesmo.temporal_matching.matching' is deprecated. Use"
+        "'pytesmo.temporal_matching.temporal_collocation' instead!",
+        DeprecationWarning
+    )
     matched_datasets = df_match(reference, *args, dropna=True,
                                 dropduplicates=True, **kwargs)
 
@@ -157,3 +168,142 @@ def matching(reference, *args, **kwargs):
         matched_data = matched_data.join(match)
 
     return matched_data.dropna()
+
+
+def temporal_collocation(reference, other, window, method="nearest",
+                         return_index=False, return_distance=False,
+                         dropduplicates=False, dropna=False, flag=None,
+                         use_invalid=False):
+    """
+    Temporally collocates values to reference.
+
+    Parameters
+    ----------
+    reference : pd.DataFrame, pd.Series, or pd.DatetimeIndex
+        The reference onto which `other` should be collocated. If this is a
+        DataFrame or a Series, the index must be a DatetimeIndex. If the index
+        is timezone-naive, UTC will be assumed.
+    other : pd.DataFrame or pd.Series
+        Data to be collocated. Must have a pd.DatetimeIndex as index. If the
+        index is timezone-naive, the timezone of the reference data will be
+        assumed.
+    window : pd.Timedelta or float
+        Window around reference timestamps in which to look for data. Floats
+        are interpreted as number of days.
+    method : str, optional
+        Which method to use for the temporal collocation:
+
+        - "nearest" (default): Uses the nearest valid neighbour. When this
+          method is used, entries with duplicate index values in `other` will
+          be dropped, and only the first of the duplicates is kept.
+
+    return_index : boolean, optional
+        Include index of `other` in matched dataframe (default: False). Only
+        used with ``method="nearest"``. The index will be added as a separate
+        column with the name "index_other".
+    return_distance : boolean, optional
+        Include distance information between `reference` and `other` in matched
+        dataframe (default: False). This is only used with
+        ``method="nearest"``, and implies ``return_index=True``. The distance
+        will be added as a separate column with the name "distance_other".
+    dropduplicates : bool, optional
+        Whether to drop duplicated timestamps in `other`. Default is ``False``,
+        except when ``method="nearest"``, in which case this is enforced to be
+        ``True``.
+    dropna : bool, optional
+        Whether to drop NaNs from the resulting dataframe (arising for example
+        from duplicates with ``duplicates_nan=True`` or from missing values).
+        Default is ``False``
+    flag : np.ndarray, str or None, optional
+        Flag column as array or name of the flag column in `other`. If this is
+        given, the column will be interpreted as validity indicator. Any
+        nonzero values mark the row as invalid. Default is ``None``.
+    use_invalid : bool, optional
+        Whether to use invalid values marked by `flag` in case no valid values
+        are available. Default is ``False``.
+
+    Returns
+    -------
+    collocated : pd.DataFrame or pd.Series
+        Temporally collocated version of ``other``.
+    """
+
+    # input validation
+    # ----------------
+    if isinstance(reference, (pd.Series, pd.DataFrame)):
+        ref_dr = reference.index
+    elif isinstance(reference, pd.DatetimeIndex):
+        ref_dr = reference
+    else:  # pragma: no cover
+        raise ValueError(
+            "'reference' must be pd.DataFrame, pd.Series, or pd.DatetimeIndex."
+        )
+    if not isinstance(other, (pd.Series, pd.DataFrame)):  # pragma: no cover
+        raise ValueError(
+            "'other' must be pd.DataFrame or pd.Series."
+        )
+    if not isinstance(window, pd.Timedelta):
+        window = pd.Timedelta(days=window)
+    if flag is not None:
+        if isinstance(flag, str):
+            flag = other[flag].values
+        if len(flag) != len(ref_dr):  # pragma: no cover
+            raise ValueError(
+                "Flag must have same length as reference"
+            )
+        flagged = flag.astype(np.bool)
+        has_invalid = np.any(flagged)
+    else:
+        has_invalid = False
+
+
+    # preprocessing
+    # ------------
+    if ref_dr.tz is None:
+        ref_dr = ref_dr.tz_localize("UTC")
+    if other.index.tz is None:
+        other = other.tz_localize(ref_dr.tz)
+    if other.index.tz != ref_dr.tz:
+        other = other.tz_convert(ref_dr.tz)
+    if dropduplicates or method == "nearest":
+        other = other[~other.index.duplicated(keep="first")]
+
+    # collocation
+    # -----------
+    if method == "nearest":
+        # Nearest neighbour collocation, uses pandas reindex
+
+        if return_index or return_distance:
+            new_cols = {}
+            new_cols["index_other"] = other.index
+            if return_distance:
+                new_cols["distance_other"] = np.zeros(len(other))
+            other = other.assign(**new_cols)
+
+        def collocate(df):
+            return df.reindex(ref_dr, method="nearest", tolerance=window)
+
+        if has_invalid:
+            collocated = collocate(other[~flagged])
+            if use_invalid:
+                invalid = collocate(other[flagged])
+                collocated = collocated.combine_first(invalid)
+        else:
+            collocated = collocate(other)
+
+        if return_distance:
+            collocated["distance_other"] = (
+                collocated["index_other"] - collocated.index
+            )
+
+    else:
+        raise NotImplementedError(
+            "Only nearest neighbour collocation is implemented so far"
+        )
+
+    # postprocessing
+    # --------------
+    if dropna:
+        collocated.dropna(inplace=True)
+
+    return collocated

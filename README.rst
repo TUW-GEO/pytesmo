@@ -69,7 +69,7 @@ will clone test-data, which is needed by some tests.
     $ cd pytesmo
     $ conda create -n pytesmo python=3.6 # or any supported python version
     $ source activate pytesmo
-    $ conda update -f environment.yml -n pytesmo
+    $ conda env update -f environment.yml -n pytesmo
     $ python setup.py develop
 
 .. note::
