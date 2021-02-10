@@ -216,9 +216,12 @@ class MetadataMetrics(object):
         dict = {'field': np.float32([np.nan]}. Allows users to specify information in the job tuple,
         i.e. jobs.append((idx, metadata['longitude'], metadata['latitude'], metadata_dict)) which
         is then propagated to the end netCDF results file.
+    min_obs : int, optional
+        Minium number of observations required t calculate metrics. Default is
+        10.
     """
 
-    def __init__(self, other_name='k1', metadata_template=None):
+    def __init__(self, other_name='k1', metadata_template=None, min_obs=10):
 
         self.result_template = {'gpi': np.int32([-1]),
                                 'lon': np.float64([np.nan]),
@@ -229,6 +232,7 @@ class MetadataMetrics(object):
             self.result_template.update(metadata_template)
 
         self.other_name = other_name
+        self.min_obs = min_obs
 
     def calc_metrics(self, data, gpi_info):
         """
@@ -324,7 +328,7 @@ class BasicMetrics(MetadataMetrics):
         """
         dataset = super(BasicMetrics, self).calc_metrics(data, gpi_info)
 
-        if len(data) < 10:
+        if len(data) < self.min_obs:
             return dataset
 
         x, y = data['ref'].values, data[self.other_name].values
@@ -362,7 +366,7 @@ class BasicMetricsPlusMSE(BasicMetrics):
 
     def calc_metrics(self, data, gpi_info):
         dataset = super(BasicMetricsPlusMSE, self).calc_metrics(data, gpi_info)
-        if len(data) < 10:
+        if len(data) < self.min_obs:
             return dataset
         x, y = data['ref'].values, data[self.other_name].values
         mse, mse_corr, mse_bias, mse_var = metrics.mse(x, y)
@@ -424,7 +428,8 @@ class FTMetrics(MetadataMetrics):
         """
         dataset = super(FTMetrics, self).calc_metrics(data, gpi_info)
 
-        # if len(data) < 10: return dataset
+        if len(data) < self.min_obs:
+            return dataset
 
         ssf, temp = data['ref'].values, data[self.other_name].values
         # SSF <= 1 unfrozen
@@ -555,7 +560,7 @@ class HSAF_Metrics(MetadataMetrics):
 
             # number of observations
             n_obs = subset.sum()
-            if n_obs < 10:
+            if n_obs < self.min_obs:
                 continue
             dataset['{:}_n_obs'.format(season)][0] = n_obs
 
@@ -737,7 +742,7 @@ class IntercomparisonMetrics(MetadataMetrics):
         subset = np.ones(len(data), dtype=bool)
 
         n_obs = subset.sum()
-        if n_obs < 10:
+        if n_obs < self.min_obs:
             return dataset
 
         dataset['n_obs'][0] = n_obs
@@ -999,7 +1004,7 @@ class TCMetrics(MetadataMetrics):
         subset = np.ones(len(data), dtype=bool)
 
         n_obs = subset.sum()
-        if n_obs < 10:
+        if n_obs < self.min_obs:
             return dataset
 
         dataset['n_obs'][0] = n_obs
@@ -1162,6 +1167,9 @@ class RollingMetrics(MetadataMetrics):
             Minimum number of observations in window required for computation.
         """
         dataset = super(RollingMetrics, self).calc_metrics(data, gpi_info)
+
+        if len(data) < self.min_obs:
+            return dataset
 
         xy = data.to_numpy()
         timestamps = data.index.to_julian_date().values
