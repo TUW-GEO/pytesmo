@@ -145,12 +145,11 @@ def unique_percentiles_interpolate(perc_values,
         Unique percentile values generated through linear
         interpolation over removed duplicate percentile values
     """
-    uniq_ind = np.unique(perc_values, return_index=True)[1]
+    uniq_ind = np.sort(np.unique(perc_values, return_index=True)[1])
     if len(uniq_ind) == 1:
         uniq_ind = np.repeat(uniq_ind, 2)
     uniq_ind[-1] = len(percentiles) - 1
     uniq_perc_values = perc_values[uniq_ind]
-
     inter = sc_int.InterpolatedUnivariateSpline(
         np.array(percentiles)[uniq_ind],
         uniq_perc_values,
@@ -185,20 +184,24 @@ def unique_percentiles_beta(perc_values,
     RuntimeError
         If no fit could be found.
     """
-
     # normalize between 0 and 1
-    min_value = np.min(perc_values)
-    perc_values = perc_values - min_value
-    max_value = np.max(perc_values)
-    perc_values = perc_values / max_value
-    percentiles = np.asanyarray(percentiles)
-    percentiles = percentiles / 100.0
+    uniq, uniq_ind, counts = np.unique(
+        perc_values, return_index=True, return_counts=True)
+    if len(uniq) != len(perc_values):
+        min_value = np.min(perc_values)
+        perc_values = perc_values - min_value
+        max_value = np.max(perc_values)
+        perc_values = perc_values / max_value
+        percentiles = np.asanyarray(percentiles)
+        percentiles = percentiles / 100.0
 
-    p, ier = sc_opt.curve_fit(betainc,
-                              percentiles,
-                              perc_values)
-    uniq_perc_values = sc_special.betainc(p[0], p[1], percentiles)
-    uniq_perc_values = uniq_perc_values * max_value + min_value
+        p, ier = sc_opt.curve_fit(betainc,
+                                  percentiles,
+                                  perc_values)
+        uniq_perc_values = sc_special.betainc(p[0], p[1], percentiles)
+        uniq_perc_values = uniq_perc_values * max_value + min_value
+    else:
+        uniq_perc_values = perc_values
     return uniq_perc_values
 
 
@@ -273,3 +276,133 @@ def array_dropna(*arrs):
     if len(arrs_dropna) == 1: arrs_dropna = arrs_dropna[0]
 
     return tuple(arrs_dropna)
+
+def derive_edge_parameters(src, ref, perc_src, perc_ref):
+    '''
+    Method to compute the regression parameters and new percentile values for 
+    the edge matching in CDF matching, based on a linear scaling model.
+
+    Parameters
+    ----------
+    src : numpy.array
+        input dataset which will be scaled
+    ref : numpy.array
+        src will be scaled to this dataset
+    edge_src : list
+        list with low and high edges (in percentile values) of src
+    edge_ref : list
+        list with low and high edges (in percentile values) of ref
+
+    Returns
+    -------
+    parms_lo : tuple
+        slope and intercept parameters to scale the lower edge.
+    parms_hi : tuple
+        slope and intercept parameters to scale the higher edge.
+    perc_ref : list-like
+        new percentile values after regression
+    '''            
+    # select higher and lower edges
+    x_lo = src[src <= perc_src[1]] - perc_src[1]
+    y_lo = ref[ref <= perc_ref[1]] - perc_ref[1]
+    x_hi = src[src >= perc_src[-2]] - perc_src[-2]
+    y_hi = ref[ref >= perc_ref[-2]] - perc_ref[-2]
+    
+    # calculate least squares regression parameters
+    def return_regress(x,y,
+                       where,
+                       perc_src=perc_src,
+                       perc_ref=perc_ref):
+        n = min(len(x),len(y))
+        x, y = x[:n], y[:n]
+        x, y = np.sort(x), np.sort(y)
+        slope, res, rank, s = np.linalg.lstsq(x.reshape(-1, 1), y, rcond=None)
+        if where == 'low':
+            intercept = perc_ref[1] - slope[0]*perc_src[1]
+        elif where == 'high':
+            intercept = perc_ref[-2] - slope[0]*perc_src[-2]
+        
+        return slope[0], intercept 
+    
+    parms_lo = return_regress(x_lo, y_lo, 'low')
+    parms_hi = return_regress(x_hi, y_hi, 'high')
+    
+    perc_ref[0] = perc_ref[1] + parms_lo[0] * (perc_src[0] - perc_src[1])
+    perc_ref[-1] = perc_ref[-2] + parms_hi[0] * (perc_src[-1] - perc_src[-2])
+    
+    return parms_lo, parms_hi, perc_ref
+
+def scale_edges(scaled, src, ref, perc_src, perc_ref):
+    '''
+    Method to scale the edges of the src timeseries using a linear regression
+    method based on Moesinger et al. (2020).
+
+    Parameters
+    ----------
+    scaled : numpy.array
+        scaled array where edge values should be replaced
+    src : numpy.array
+        input dataset which will be scaled.
+    ref : numpy.array
+        src will be scaled to this dataset
+    perc_src : numpy.array
+        percentiles of src
+    perc_ref : numpy.array
+        percentiles of reference data
+
+    Returns
+    -------
+    scaled : numpy.array
+        Scaled timeseries with scaled edges
+    '''
+    
+    # calculate scaling slope and new reference points at edges
+    parms_lo, parms_hi, perc_ref = derive_edge_parameters(src=src,
+                        ref=ref, perc_src= perc_src, perc_ref=perc_ref)
+    
+    # find indexes of edge values in source data
+    ids_lo = np.where(src <= perc_src[1])
+    ids_hi = np.where(src >= perc_src[-2])
+    
+    # replace in new array
+    inter = sc_int.InterpolatedUnivariateSpline(perc_src, perc_ref, k=1)
+    scaled_edges = inter(src)
+    scaled[ids_lo] = scaled_edges[ids_lo]
+    scaled[ids_hi] = scaled_edges[ids_hi]
+    
+    return scaled
+
+def resize_percentiles(in_data, percentiles, minobs):
+    '''
+    Shrinks bin size of percentiles if not enough data is available
+
+    Parameters
+    ----------
+    in_data : numpy.array
+        Input array.
+    percentiles : list-like
+        list of percentiles.
+    minobs : int
+        Minimum desired number of observations in a bin.
+
+    Returns
+    -------
+    np.array
+        resized percentiles.
+
+    '''
+    n = len(in_data)
+    minbinsize = np.min(np.diff(percentiles))
+
+    if n * minbinsize / 100 < minobs:
+        warnings.warn("The bins have been resized")
+        
+        nbins = np.int32(np.floor(n / minobs))
+        if nbins == 0:
+            nbins = 1
+        elif nbins > len(percentiles)-1:
+            nbins = len(percentiles)-1
+
+        return np.arange(nbins + 1, dtype=np.float64) / nbins * 100
+
+    return percentiles
