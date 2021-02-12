@@ -6,6 +6,9 @@ Unreleased
 ==========
 
 - Drop Travis CI and Appveyor CI, replaced by Github Actions ci.yml workflow
+- New implementation of temporal collocation based on pd.reindex (PR #204):
+  :py:func:`pytesmo.temporal_matching.temporal_collocation`
+
 
 Version 0.9.1, 2020-09-14
 =========================
@@ -166,7 +169,7 @@ Version 0.5.0, 2016-04-20
 =========================
 
 -  Fix bug in temporal resampling if input was a pandas.Series
--  Major refactoring of validation framwork. Please see updated
+-  Major refactoring of validation framework. Please see updated
    documentation and example for detailed changes. The most important
    breaking changes are:
 -  'type' is no longer used in the dataset dictionary.

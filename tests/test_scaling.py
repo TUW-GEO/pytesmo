@@ -140,7 +140,7 @@ def test_scale_error(method):
 def test_add_scale_error(method):
 
     n = 1000
-    x = np.arange(n, dtype=np.float)
+    x = np.arange(n, dtype=float)
     y = np.arange(n) * 0.5
 
     df = pd.DataFrame({'x': x, 'y': y}, columns=['x', 'y'])
@@ -154,7 +154,7 @@ def test_add_scale_error(method):
 def test_add_scale(method):
 
     n = 1000
-    x = np.arange(n, dtype=np.float)
+    x = np.arange(n, dtype=float)
     y = np.arange(n) * 0.5
 
     df = pd.DataFrame({'x': x, 'y': y}, columns=['x', 'y'])
@@ -190,7 +190,7 @@ def test_linreg_with_nan():
 def test_single_percentile_data():
 
     n = 1000
-    x = np.arange(n, dtype=np.float)
+    x = np.arange(n, dtype=float)
     y = np.ones(n)
 
     s = scaling.lin_cdf_match(y, x)

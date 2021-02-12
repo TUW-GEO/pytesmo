@@ -54,7 +54,7 @@ class TestDataset(object):
         else:
             start = '2000-01-01'
 
-        x = np.arange(self.n)
+        x = np.arange(self.n) * 1.0  # must be a float
         y = np.arange(self.n) * 0.5
         index = pd.date_range(start=start, periods=self.n, freq="D")
 

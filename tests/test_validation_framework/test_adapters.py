@@ -37,7 +37,7 @@ from pytesmo.validation_framework.adapters import MaskingAdapter,\
 from pytesmo.validation_framework.adapters import SelfMaskingAdapter
 from pytesmo.validation_framework.adapters import AnomalyAdapter
 from pytesmo.validation_framework.adapters import AnomalyClimAdapter
-from tests.test_validation_framwork.test_datasets import TestDataset
+from tests.test_validation_framework.test_datasets import TestDataset
 from ascat.read_native.cdr import AscatSsmCdr
 
 import numpy as np
@@ -80,7 +80,7 @@ def test_self_masking_adapter():
     nptest.assert_almost_equal(data_masked2['y'].values,ref_y)
 
 def my_bitmasking(a,b):
-    return a & b == b
+    return a.astype(int) & b == b
 
 def test_advanced_masking_adapter():
     ref_x = np.arange(5,15,2)
