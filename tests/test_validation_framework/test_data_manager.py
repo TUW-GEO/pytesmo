@@ -41,8 +41,8 @@ from pytesmo.validation_framework.data_manager import DataManager
 from pytesmo.validation_framework.data_manager import get_result_names
 from pytesmo.validation_framework.data_manager import get_result_combinations
 
-from tests.test_validation_framwork.test_datasets import TestDataset
-from tests.test_validation_framwork.test_datasets import setup_TestDatasets
+from tests.test_validation_framework.test_datasets import TestDataset
+from tests.test_validation_framework.test_datasets import setup_TestDatasets
 
 
 class TestDatasetRuntimeError(object):

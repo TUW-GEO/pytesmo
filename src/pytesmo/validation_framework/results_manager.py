@@ -4,12 +4,14 @@
 The results manager stores validation results in netcdf format.
 """
 
-import numpy as np
-import pandas as pd
-import os
-from pynetcf.base import Dataset
 from netCDF4 import date2num, num2date, Variable
+import numpy as np
+import os
+import pandas as pd
+from pynetcf.base import Dataset
 from typing import Union
+import warnings
+
 
 def build_filename(root, key):
     """
@@ -331,6 +333,8 @@ def netcdf_results_manager(results, save_path, ts_vars:list=None, zlib=True,
         dict in values.
     """
 
+    if len(results) == 0:
+        warnings.warn(f"Empty results, {save_path} will not be created.")
     for ds_names, res in results.items():
         filename = build_filename(save_path, ds_names)
 

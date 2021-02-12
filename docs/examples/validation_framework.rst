@@ -213,7 +213,7 @@ framework can go through the jobs and read the correct time series.
 Initialize the Validation class
 -------------------------------
 
-The Validation class is the heart of the validation framwork. It
+The Validation class is the heart of the validation framework. It
 contains the information about which datasets to read using which
 arguments or keywords and if they are spatially compatible. It also
 contains the settings about which metric calculators to use and how to
