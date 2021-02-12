@@ -5,10 +5,12 @@ Test functions from the df_metrics module that applies metrics to combinations
 of columns from a data frame.
 """
 
+import numpy as np
+import pandas as pd
 import pytesmo.df_metrics as df_metrics
 from pytesmo.metrics import bias, pearsonr
-import pandas as pd
-import numpy as np
+import pytest
+from scipy import stats
 
 def test_n_combinations():
     coll = [1,2,3,4]
@@ -25,9 +27,10 @@ def test_apply():
                       data={'ds0': np.repeat(0, 366), 'ds1': np.repeat(1, 366)})
     df.loc[df.index[np.random.choice(range(366), 10)], 'ds0'] = np.nan
     df.loc[df.index[np.random.choice(range(366), 10)], 'ds1'] = np.nan
-    bias_matrix_old = df_metrics.pairwise_apply(df, bias)
+    with pytest.deprecated_call():
+        bias_matrix_old = df_metrics.pairwise_apply(df, bias)
     bias_matrix_new = df_metrics.nwise_apply(df, bias,  n=2, as_df=True)
-    r_matrix_new = df_metrics.nwise_apply(df, pearsonr,  n=2, as_df=True)
+    r_matrix_new = df_metrics.nwise_apply(df, stats.pearsonr,  n=2, as_df=True)
     assert bias_matrix_old.equals(bias_matrix_new)
 
     # check if dict implementation and matrix implementation have same result

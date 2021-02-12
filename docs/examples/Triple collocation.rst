@@ -194,11 +194,11 @@ It is given in dB to make it symmetric around zero. If the value is zero
 it means that the signal variance and the noise variance are equal. +3dB
 means that the signal variance is twice as high as the noise variance.
 
-This approach is implemented in :py:func:`pytesmo.metrics.tcol_snr`.
+This approach is implemented in :py:func:`pytesmo.metrics.tcol_metrics`.
 
 .. code:: python
 
-    snr, err, beta = metrics.tcol_snr(x, y, z)
+    snr, err, beta = metrics.tcol_metrics(x, y, z)
     print("Error of x approach 1: {:.4f}, approach 2: {:.4f}, true: {:.4f}".format(e_x, err[0], sig_err_x))
     print("Error of y approach 1: {:.4f}, approach 2: {:.4f}, true: {:.4f}".format(e_y, err[1], sig_err_y))
     print("Error of z approach 1: {:.4f}, approach 2: {:.4f}, true: {:.4f}".format(e_z, err[2], sig_err_z))
@@ -273,7 +273,7 @@ scaling which is ideal for e.g. data assimilation.
 The SNR is nothing else than the fraction of the signal variance to the
 noise variance in dB
 
-Let's first print the snr we got from :py:func:`pytesmo.metrics.tcol_snr`
+Let's first print the snr we got from :py:func:`pytesmo.metrics.tcol_metrics`
 
 .. code:: python
 
