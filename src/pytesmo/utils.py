@@ -313,8 +313,8 @@ def derive_edge_parameters(src, ref, perc_src, perc_ref):
                        where,
                        perc_src=perc_src,
                        perc_ref=perc_ref):
-        l = min(len(x),len(y))
-        x, y = x[:l], y[:l]
+        n = min(len(x),len(y))
+        x, y = x[:n], y[:n]
         x, y = np.sort(x), np.sort(y)
         slope, res, rank, s = np.linalg.lstsq(x.reshape(-1, 1), y, rcond=None)
         if where == 'low':
