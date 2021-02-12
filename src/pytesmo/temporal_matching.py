@@ -30,8 +30,9 @@ def df_match(reference, *args, **kwds):
     dropduplicates : boolean
         Drop duplicated temporal matched (default: False)
     asym_window: string, optional
-        ``<=`` stands for using a smaller and equal only for the left/smaller side of the window comparison
-        ``>=`` stands for using a larger and equal only for the right/larger side of the window comparison
+        ``<=`` stands for using a smaller and equal only for the left/smaller
+        side of the window comparison, ``>=`` stands for using a larger and
+        equal only for the right/larger side of the window comparison.
         The default is to use <= and >= for both sides of the search window
 
     Returns
@@ -99,14 +100,18 @@ def df_match(reference, *args, **kwds):
             if asym_window == "<=":
                 # this means that only distance in the interval [distance[ are
                 # taken
-                valid_dist = ((arg_matched['distance'] >= 0.0) & (arg_matched['distance'] <= window)) | (
-                    (arg_matched['distance'] <= 0.0) & (arg_matched['distance'] > -window))
+                valid_dist = (((arg_matched['distance'] >= 0.0)
+                               & (arg_matched['distance'] <= window))
+                              | ((arg_matched['distance'] <= 0.0)
+                                 & (arg_matched['distance'] > -window)))
                 invalid_dist = ~valid_dist
             if asym_window == ">=":
                 # this means that only distance in the interval ]distance] are
                 # taken
-                valid_dist = ((arg_matched['distance'] >= 0.0) & (arg_matched['distance'] < window)) | (
-                    (arg_matched['distance'] <= 0.0) & (arg_matched['distance'] >= -window))
+                valid_dist = (((arg_matched['distance'] >= 0.0)
+                               & (arg_matched['distance'] < window))
+                              | ((arg_matched['distance'] <= 0.0)
+                                 & (arg_matched['distance'] >= -window)))
                 invalid_dist = ~valid_dist
             arg_matched.loc[invalid_dist] = np.nan
 
@@ -147,8 +152,8 @@ def matching(reference, *args, **kwargs):
     Returns
     -------
     temporal_match : pandas.DataFrame
-        containing the index of the reference Series and a column for each of the
-        other input Series
+        containing the index of the reference Series and a column for each of
+        the other input Series
     """
     warnings.warn(
         "'pytesmo.temporal_matching.matching' is deprecated. Use"
@@ -172,8 +177,8 @@ def matching(reference, *args, **kwargs):
 
 def temporal_collocation(reference, other, window, method="nearest",
                          return_index=False, return_distance=False,
-                         dropduplicates=False, dropna=False, flag=None,
-                         use_invalid=False):
+                         dropduplicates=False, dropna=False, checkna=False,
+                         flag=None, use_invalid=False):
     """
     Temporally collocates values to reference.
 
@@ -213,7 +218,11 @@ def temporal_collocation(reference, other, window, method="nearest",
     dropna : bool, optional
         Whether to drop NaNs from the resulting dataframe (arising for example
         from duplicates with ``duplicates_nan=True`` or from missing values).
-        Default is ``False``
+        Default is ``False``.
+    checkna: bool, optional
+        Whether to check if only NaNs are returned (i.e. no match has been
+        found). If set to ``True``, raises a ``UserWarning`` in case no match
+        has been found. Default is ``False``.
     flag : np.ndarray, str or None, optional
         Flag column as array or name of the flag column in `other`. If this is
         given, the column will be interpreted as validity indicator. Any
@@ -255,7 +264,6 @@ def temporal_collocation(reference, other, window, method="nearest",
         has_invalid = np.any(flagged)
     else:
         has_invalid = False
-
 
     # preprocessing
     # ------------
@@ -303,6 +311,9 @@ def temporal_collocation(reference, other, window, method="nearest",
 
     # postprocessing
     # --------------
+    if checkna:
+        if np.any(collocated.isnull().apply(np.all)):
+            warnings.warn("No match has been found")
     if dropna:
         collocated.dropna(inplace=True)
 
