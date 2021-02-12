@@ -30,8 +30,9 @@ def df_match(reference, *args, **kwds):
     dropduplicates : boolean
         Drop duplicated temporal matched (default: False)
     asym_window: string, optional
-        ``<=`` stands for using a smaller and equal only for the left/smaller side of the window comparison
-        ``>=`` stands for using a larger and equal only for the right/larger side of the window comparison
+        ``<=`` stands for using a smaller and equal only for the left/smaller
+        side of the window comparison, ``>=`` stands for using a larger and
+        equal only for the right/larger side of the window comparison.
         The default is to use <= and >= for both sides of the search window
 
     Returns
@@ -99,14 +100,18 @@ def df_match(reference, *args, **kwds):
             if asym_window == "<=":
                 # this means that only distance in the interval [distance[ are
                 # taken
-                valid_dist = ((arg_matched['distance'] >= 0.0) & (arg_matched['distance'] <= window)) | (
-                    (arg_matched['distance'] <= 0.0) & (arg_matched['distance'] > -window))
+                valid_dist = (((arg_matched['distance'] >= 0.0)
+                               & (arg_matched['distance'] <= window))
+                              | ((arg_matched['distance'] <= 0.0)
+                                 & (arg_matched['distance'] > -window)))
                 invalid_dist = ~valid_dist
             if asym_window == ">=":
                 # this means that only distance in the interval ]distance] are
                 # taken
-                valid_dist = ((arg_matched['distance'] >= 0.0) & (arg_matched['distance'] < window)) | (
-                    (arg_matched['distance'] <= 0.0) & (arg_matched['distance'] >= -window))
+                valid_dist = (((arg_matched['distance'] >= 0.0)
+                               & (arg_matched['distance'] < window))
+                              | ((arg_matched['distance'] <= 0.0)
+                                 & (arg_matched['distance'] >= -window)))
                 invalid_dist = ~valid_dist
             arg_matched.loc[invalid_dist] = np.nan
 
@@ -147,8 +152,8 @@ def matching(reference, *args, **kwargs):
     Returns
     -------
     temporal_match : pandas.DataFrame
-        containing the index of the reference Series and a column for each of the
-        other input Series
+        containing the index of the reference Series and a column for each of
+        the other input Series
     """
     warnings.warn(
         "'pytesmo.temporal_matching.matching' is deprecated. Use"
@@ -255,7 +260,6 @@ def temporal_collocation(reference, other, window, method="nearest",
         has_invalid = np.any(flagged)
     else:
         has_invalid = False
-
 
     # preprocessing
     # ------------
