@@ -177,8 +177,8 @@ def matching(reference, *args, **kwargs):
 
 def temporal_collocation(reference, other, window, method="nearest",
                          return_index=False, return_distance=False,
-                         dropduplicates=False, dropna=False, flag=None,
-                         use_invalid=False):
+                         dropduplicates=False, dropna=False, checkna=False,
+                         flag=None, use_invalid=False):
     """
     Temporally collocates values to reference.
 
@@ -218,7 +218,11 @@ def temporal_collocation(reference, other, window, method="nearest",
     dropna : bool, optional
         Whether to drop NaNs from the resulting dataframe (arising for example
         from duplicates with ``duplicates_nan=True`` or from missing values).
-        Default is ``False``
+        Default is ``False``.
+    checkna: bool, optional
+        Whether to check if only NaNs are returned (i.e. no match has been
+        found). If set to ``True``, raises a ``UserWarning`` in case no match
+        has been found. Default is ``False``.
     flag : np.ndarray, str or None, optional
         Flag column as array or name of the flag column in `other`. If this is
         given, the column will be interpreted as validity indicator. Any
@@ -307,6 +311,9 @@ def temporal_collocation(reference, other, window, method="nearest",
 
     # postprocessing
     # --------------
+    if checkna:
+        if np.any(collocated.isnull().apply(np.all)):
+            warnings.warn("No match has been found")
     if dropna:
         collocated.dropna(inplace=True)
 

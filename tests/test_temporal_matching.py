@@ -249,7 +249,7 @@ def test_data():
     test_dr["random_shift"] = dr_random_shift
 
     # missing data
-    drop_mask = np.zeros(len(ref_dr), dtype=np.bool)
+    drop_mask = np.zeros(len(ref_dr), dtype=bool)
     drop_mask[100:200] = True
     dr_random_shift = dr_random_shift[~drop_mask]
     test_dr["missing"] = dr_random_shift
@@ -257,7 +257,7 @@ def test_data():
 
     # with duplicates
     test_dr["duplicates"] = deepcopy(test_dr["shifted_3"])
-    duplicates_mask = np.zeros(len(ref_dr), dtype=np.bool)
+    duplicates_mask = np.zeros(len(ref_dr), dtype=bool)
     for idx in np.random.randint(0, len(test_dr["duplicates"]) - 1, 5):
         test_dr["duplicates"].values[idx] = test_dr["duplicates"].values[
             idx + 1
@@ -274,7 +274,7 @@ def test_data():
     ref_frame = pd.DataFrame(np.random.randn(len(ref_dr), 3), index=ref_dr)
 
     # mask for where we expect nans in the output
-    all_nan = np.ones(len(ref_dr), dtype=np.bool)
+    all_nan = np.ones(len(ref_dr), dtype=bool)
     expected_nan = {
         "shifted_3": ~all_nan,
         "shifted_7": all_nan,
@@ -485,3 +485,15 @@ def test_timezone_handling():
 
     nptest.assert_allclose(np.array([0, 1, 2, 4]), matched.matched_data)
     assert len(matched) == 4
+
+
+def test_warning_on_no_match(test_data):
+    # Issue #152
+    ref_frame, test_frame, expected_nan = setup_data(test_data, "shifted_7")
+    with pytest.warns(UserWarning):
+        tmatching.temporal_collocation(
+            ref_frame, test_frame, pd.Timedelta(6, "H"), checkna=True
+        )
+
+
+
