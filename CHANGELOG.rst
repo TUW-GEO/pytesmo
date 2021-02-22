@@ -4,8 +4,6 @@ Changelog
 
 Unreleased
 ==========
-- Drop Travis CI and Appveyor CI, replaced by Github Actions ci.yml workflow
-- New implementation of temporal collocation based on pd.reindex (PR #204):
 - Analytical and bootstrapping confidence intervals for metrics (PR #206). This
   includes some changes to the existing implementations (all old
   implementations are still available, but deprecated)
@@ -31,6 +29,16 @@ Unreleased
     components can be calculated with :py:func:`pytesmo.metrics.mse`,
     :py:func:`pytesmo.metrics.mse_corr`, func:`pytesmo.metrics.mse_bias`,
     :py:func:`pytesmo.metrics.mse_var`.
+
+
+Version 0.10.0, 2021-02-15
+=========================
+
+- Drop Travis CI and Appveyor CI, replaced by Github Actions ci.yml workflow
+- New implementation of temporal collocation based on pd.reindex (PR #204):
+  :py:func:`pytesmo.temporal_matching.temporal_collocation`
+- CDF matching function updated
+- min_obs keyword added to MetricsCalculators
 
 
 Version 0.9.1, 2020-09-14
