@@ -31,10 +31,9 @@ Metric calculators implement combinations of metrics and structure the output.
 import copy
 import itertools
 
-from scipy.special import betainc
-import pandas as pd
 import numpy as np
-from numba import jit
+import pandas as pd
+from scipy import stats
 
 import pytesmo.metrics as metrics
 import pytesmo.df_metrics as df_metrics
@@ -332,8 +331,8 @@ class BasicMetrics(MetadataMetrics):
             return dataset
 
         x, y = data['ref'].values, data[self.other_name].values
-        R, p_R = metrics.pearsonr(x, y)
-        rho, p_rho = metrics.spearmanr(x, y)
+        R, p_R = stats.pearsonr(x, y)
+        rho, p_rho = stats.spearmanr(x, y)
         RMSD = metrics.rmsd(x, y)
         BIAS = metrics.bias(x, y)
 
@@ -369,7 +368,7 @@ class BasicMetricsPlusMSE(BasicMetrics):
         if len(data) < self.min_obs:
             return dataset
         x, y = data['ref'].values, data[self.other_name].values
-        mse, mse_corr, mse_bias, mse_var = metrics.mse(x, y)
+        mse, mse_corr, mse_bias, mse_var = metrics.mse_decomposition(x, y)
         dataset['mse'][0] = mse
         dataset['mse_corr'][0] = mse_corr
         dataset['mse_bias'][0] = mse_bias
@@ -570,7 +569,7 @@ class HSAF_Metrics(MetadataMetrics):
             y = data[self.df_columns[1]].values[subset]
             z = data[self.df_columns[2]].values[subset]
 
-            snr, err, beta = metrics.tcol_snr(x, y, z)
+            snr, err, beta = metrics.tcol_metrics(x, y, z)
 
             for i, name in enumerate(self.ds_names):
                 dataset['{:}_{:}_snr'.format(name, season)][0] = snr[i]
@@ -764,7 +763,7 @@ class IntercomparisonMetrics(MetadataMetrics):
         rmsd_dict = rmsd._asdict()
 
         # calculate MSE
-        mse, mse_corr, mse_bias, mse_var = df_metrics.mse(data)
+        mse, mse_corr, mse_bias, mse_var = df_metrics.mse_decomposition(data)
         mse_dict, mse_corr_dict, mse_bias_dict, mse_var_dict = \
             mse._asdict(), mse_corr._asdict(), mse_bias._asdict(), mse_var._asdict()
 
@@ -1022,7 +1021,7 @@ class TCMetrics(MetadataMetrics):
         rmsd = df_metrics.rmsd(data)
         rmsd_dict = rmsd._asdict()
         # calculate MSE
-        mse, mse_corr, mse_bias, mse_var = df_metrics.mse(data)
+        mse, mse_corr, mse_bias, mse_var = df_metrics.mse_decomposition(data)
         mse_dict = mse._asdict()
         mse_corr_dict = mse_corr._asdict()
         mse_bias_dict = mse_bias._asdict()
@@ -1043,7 +1042,7 @@ class TCMetrics(MetadataMetrics):
             tau = p_tau = p_tau_dict = tau_dict = None
         # calculate TC metrics
         ref_ind = np.where(np.array(data.columns) == self.ref_name)[0][0]
-        snrs, err_stds, betas = df_metrics.tcol_snr(data, ref_ind=ref_ind)
+        snrs, err_stds, betas = df_metrics.tcol_metrics(data, ref_ind=ref_ind)
         snr_dict = self._tc_res_dict(snrs)
         err_std_dict = self._tc_res_dict(err_stds)
         beta_dict = self._tc_res_dict(betas)
@@ -1175,8 +1174,14 @@ class RollingMetrics(MetadataMetrics):
         timestamps = data.index.to_julian_date().values
         window_size_jd = pd.Timedelta(
             window_size).to_numpy()/np.timedelta64(1, 'D')
-        pr_arr, rmsd_arr = rolling_pr_rmsd(
-            timestamps, xy, window_size_jd, center, min_periods)
+        pr_arr, rmsd_arr = metrics.rolling_pr_rmsd(
+            timestamps,
+            xy[:, 0],
+            xy[:, 1],
+            window_size_jd,
+            center,
+            min_periods
+        )
 
         dataset['time'] = np.array([data.index])
         dataset['R'] = np.array([pr_arr[:, 0]])
@@ -1184,71 +1189,6 @@ class RollingMetrics(MetadataMetrics):
         dataset['RMSD'] = np.array([rmsd_arr[:]])
 
         return dataset
-
-
-@jit
-def rolling_pr_rmsd(timestamps, data, window_size, center, min_periods):
-    """
-    Computation of rolling Pearson R.
-
-    Parameters
-    ----------
-    timestamps : float64
-        Time stamps as julian dates.
-    data : numpy.ndarray
-        Time series data in 2d array.
-    window_size : float
-        Window size in fraction of days.
-    center : bool
-        Set window at the center.
-    min_periods : int
-        Minimum number of observations in window required for computation.
-
-    Results
-    -------
-    pr_arr : numpy.array
-        Pearson R and p-value.
-    """
-    pr_arr = np.empty((timestamps.size, 2), dtype=np.float32)
-    rmsd_arr = np.empty(timestamps.size, dtype=np.float32)
-    ddof = 0
-
-    for i in range(timestamps.size):
-        time_diff = timestamps - timestamps[i]
-
-        if center:
-            inside_window = np.abs(time_diff) <= window_size
-        else:
-            inside_window = (time_diff <= 0) & (time_diff > -window_size)
-
-        idx = np.nonzero(inside_window)[0]
-        n_obs = inside_window.sum()
-
-        if n_obs == 0 or n_obs < min_periods:
-            pr_arr[i, :] = np.nan
-        else:
-            sub1 = data[idx[0]:idx[-1]+1, 0]
-            sub2 = data[idx[0]:idx[-1]+1, 1]
-
-            # pearson r
-            pr_arr[i, 0] = np.corrcoef(sub1, sub2)[0, 1]
-
-            # p-value
-            if np.abs(pr_arr[i, 0]) == 1.0:
-                pr_arr[i, 1] = 0.0
-            else:
-                df = n_obs - 2.
-                t_squared = pr_arr[i, 0]*pr_arr[i, 0] * \
-                    (df / ((1.0 - pr_arr[i, 0]) * (1.0 + pr_arr[i, 0])))
-                x = df / (df + t_squared)
-                x = np.ma.where(x < 1.0, x, 1.0)
-                pr_arr[i, 1] = betainc(0.5*df, 0.5, x)
-
-            # rmsd
-            rmsd_arr[i] = np.sqrt(
-                np.sum((sub1 - sub2) ** 2) / (sub1.size - ddof))
-
-    return pr_arr, rmsd_arr
 
 
 def get_dataset_names(ref_key, datasets, n=3):

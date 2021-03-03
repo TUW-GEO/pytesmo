@@ -24,6 +24,7 @@ def custom_cythonize():
     cythonize(
         [
             "src/pytesmo/time_series/filters.pyx",
+            "src/pytesmo/metrics/_fast.pyx",
         ],
     )
 
@@ -71,6 +72,11 @@ ext_modules = [
     Extension(
         "pytesmo.time_series.filters",
         ["src/pytesmo/time_series/filters.c"],
+    ),
+    Extension(
+        "pytesmo.metrics._fast",
+        ["src/pytesmo/metrics/_fast.c"],
+        include_dirs=["src/pytesmo/metrics"],
     ),
 ]
 

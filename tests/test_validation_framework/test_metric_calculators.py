@@ -215,16 +215,26 @@ def test_IntercompMetrics_calculator():
     assert np.isnan(res['rho_between_ref_and_k1'])
     assert np.isnan(res['rho_between_ref_and_k2'])
 
-    assert np.isnan(res['mse_between_ref_and_k1'])
-    assert np.isnan(res['mse_between_ref_and_k2'])
+    np.testing.assert_almost_equal(
+        res['mse_between_ref_and_k1'], np.array([0.04], dtype=np.float32)
+    )
+    np.testing.assert_almost_equal(
+        res['mse_between_ref_and_k2'], np.array([0.04], dtype=np.float32)
+    )
 
-    assert np.isnan(res['mse_corr_between_ref_and_k1'])
-    assert np.isnan(res['mse_corr_between_ref_and_k2'])
+    np.testing.assert_almost_equal(
+        res['mse_corr_between_ref_and_k1'], np.array([0], dtype=np.float32)
+    )
+    np.testing.assert_almost_equal(
+        res['mse_corr_between_ref_and_k2'], np.array([0], dtype=np.float32)
+    )
 
-    assert res['mse_bias_between_ref_and_k1'], np.array(
-        [0.04], dtype='float32')
-    assert res['mse_bias_between_ref_and_k2'], np.array(
-        [0.04], dtype='float32')
+    np.testing.assert_almost_equal(
+        res['mse_bias_between_ref_and_k1'], np.array([0.04], dtype=np.float32)
+    )
+    np.testing.assert_almost_equal(
+        res['mse_bias_between_ref_and_k2'], np.array([0.04], dtype=np.float32)
+    )
 
     # scipy 1.3.0 is not built for python 2.7 so we allow both for now
     assert (np.isnan(res['p_R_between_ref_and_k1'])
@@ -285,16 +295,26 @@ def test_TC_metrics_calculator():
     assert np.isnan(res['rho_between_ref_and_k1'])
     assert np.isnan(res['rho_between_ref_and_k2'])
 
-    assert np.isnan(res['mse_between_ref_and_k1'])
-    assert np.isnan(res['mse_between_ref_and_k2'])
+    np.testing.assert_almost_equal(
+        res['mse_between_ref_and_k1'], np.array([0.04], dtype=np.float32)
+    )
+    np.testing.assert_almost_equal(
+        res['mse_between_ref_and_k2'], np.array([0.04], dtype=np.float32)
+    )
 
-    assert np.isnan(res['mse_corr_between_ref_and_k1'])
-    assert np.isnan(res['mse_corr_between_ref_and_k2'])
+    np.testing.assert_almost_equal(
+        res['mse_corr_between_ref_and_k1'], np.array([0], dtype=np.float32)
+    )
+    np.testing.assert_almost_equal(
+        res['mse_corr_between_ref_and_k2'], np.array([0], dtype=np.float32)
+    )
 
-    assert res['mse_bias_between_ref_and_k1'], np.array(
-        [0.04], dtype='float32')
-    assert res['mse_bias_between_ref_and_k2'], np.array(
-        [0.04], dtype='float32')
+    np.testing.assert_almost_equal(
+        res['mse_bias_between_ref_and_k1'], np.array([0.04], dtype=np.float32)
+    )
+    np.testing.assert_almost_equal(
+        res['mse_bias_between_ref_and_k2'], np.array([0.04], dtype=np.float32)
+    )
 
     # scipy 1.3.0 is not built for python 2.7 so we allow both for now
     assert (np.isnan(res['p_R_between_ref_and_k1'])

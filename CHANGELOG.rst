@@ -4,8 +4,32 @@ Changelog
 
 Unreleased
 ==========
+- Analytical and bootstrapping confidence intervals for metrics (PR #206). This
+  includes some changes to the existing implementations (all old
+  implementations are still available, but deprecated)
+  - all pairwise metric functions take two arrays as input and return a single
+    value
+  - the correlation metrics (``pearsonr``, ``spearmanr``, ``kendalltau``) have new
+    versions ``pearson_r``, ``spearman_r``, and ``kendall_tau`` which only return the
+    correlation value, but not the p-value. The old functions have been
+    deprecated. For calculating correlation + p-value, it is advised to use
+    ``scipy.stats.pearsonr``, ``scipy.stats.spearmanr``, and
+    ``scipy.stats.kendalltau``. Instead of p-values, confidence intervals for
+    the correlation coefficients could be obtained with::
 
--
+      r, lower, upper = with_analytical_ci(pearson_r, x, y)
+
+  - :py:func:`pytesmo.metrics.tcol_error` and
+    :py:func:`pytesmo.metrics.tcol_snr` have been deprecated. Use
+    :py:func:`pytesmo.metrics.tcol_metrics` instead (which is simply a renaming
+    of `tcol_snr`).
+  - :py:func:`pytesmo.metrics.mse` has been deprecated. There is a new (up to
+    32 times faster during our tests) implementation available
+    (:py:func:`pytesmo.metrics.mse_decomposition`). Individual values of the
+    components can be calculated with :py:func:`pytesmo.metrics.mse`,
+    :py:func:`pytesmo.metrics.mse_corr`, func:`pytesmo.metrics.mse_bias`,
+    :py:func:`pytesmo.metrics.mse_var`.
+
 
 Version 0.10.0, 2021-02-15
 =========================

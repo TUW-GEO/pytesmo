@@ -33,14 +33,17 @@ If the DataFrame has more columns than the function has input parameters
 the function will be applied pairwise, resp. to triples.
 """
 
-import numpy as np
-import pytesmo.metrics as metrics
 from collections import namedtuple, OrderedDict
 from collections.abc import Iterable
 import itertools
+import numpy as np
 import pandas as pd
+from scipy import stats
 import warnings
-from pytesmo.utils import array_dropna
+
+import pytesmo.metrics as metrics
+from pytesmo.utils import array_dropna, deprecated
+
 
 def n_combinations(iterable, n, must_include=None, permutations=False):
     """
@@ -79,22 +82,81 @@ def n_combinations(iterable, n, must_include=None, permutations=False):
         combs = combs_filtered
     return combs
 
-def bias(df):
-    """Bias
+
+def _wrap_metric(metric, symmetric=True, name=None):
+    """
+    Wraps a metric function to be called by only providing a dataframe.
+
+    Parameters
+    ----------
+    metric : callable
+        Metric function from pytesmo.metrics
+    symmetric : bool, optional
+        Whether the metric is symmetrical w.r.t to the order of input
+        arguments. Default is ``True``.
+    name : str or None, optional
+        The name of the namedtuple. If it is None (default), the name of the
+        metric will be used.
 
     Returns
     -------
-    bias : pandas.Dataframe
-        of shape (len(df.columns),len(df.columns))
-    See Also
-    --------
-    pytesmo.metrics.bias
+    wrapped : callable
+        New function that takes a dataframe as input and returns the metric
+        value(s) as named tuple.
+        The name of the function is the same as the input function name.
     """
-    return _dict_to_namedtuple(nwise_apply(df, metrics.bias, n=2, comm=False),
-                               'bias')
+    metric_name = metric.__name__
+    if name is None:
+        name = metric_name
 
-def rmsd(df):
-    """Root-mean-square deviation
+    def wrapped(df):
+        return _dict_to_namedtuple(
+            nwise_apply(df, metric, n=2, comm=symmetric),
+            metric_name
+        )
+
+    # add name and docstring
+    wrapped.__name__ = name
+    wrapped.__doc__ = f"""
+    Wrapper to call :py:func:`pytesmo.metrics.{metric_name}` on a dataframe
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Dataframe for whose columns combinations the metric should be
+        evaluated.
+
+    Returns
+    -------
+    result : namedtuple
+        Metric values for the different combinations. Member names are `df`'s
+        column names separated by '_and_'.
+
+    See also :py:func:`pytesmo.metrics.{metric_name}` docstring.
+    """
+    return wrapped
+
+
+# add functions that are simple to wrap to the module
+bias = _wrap_metric(metrics.bias, symmetric=False)
+msd = _wrap_metric(metrics.msd)
+rmsd = _wrap_metric(metrics.rmsd)
+nrmsd = _wrap_metric(metrics.nrmsd)
+ubrmsd = _wrap_metric(metrics.ubrmsd)
+mse_corr = _wrap_metric(metrics.mse_corr)
+mse_var = _wrap_metric(metrics.mse_var)
+mse_bias = _wrap_metric(metrics.mse_bias)
+pearson_r = _wrap_metric(metrics.pearson_r)
+spearman_r = _wrap_metric(metrics.spearman_r)
+kendall_tau = _wrap_metric(metrics.kendall_tau)
+nash_sutcliffe = _wrap_metric(metrics.nash_sutcliffe, name="Nash_Sutcliffe")
+RSS = _wrap_metric(metrics.RSS)
+
+
+def mse_decomposition(df):
+    """
+    Mean square error (MSE) and decomposition of the MSE into individual
+    error components.
 
     Returns
     -------
@@ -105,48 +167,27 @@ def rmsd(df):
 
     See Also
     --------
-    pytesmo.metrics.rmsd
+    pytesmo.metrics.mse_decomposition
     """
-    return _dict_to_namedtuple(nwise_apply(df, metrics.rmsd, n=2, comm=True),
-                               'rmsd')
+    mse, mse_corr, mse_bias, mse_var = nwise_apply(
+        df, metrics.mse_decomposition, n=2, comm=True
+    )
+    return (_dict_to_namedtuple(mse, 'MSE'),
+            _dict_to_namedtuple(mse_corr, 'MSEcorr'),
+            _dict_to_namedtuple(mse_bias, 'MSEbias'),
+            _dict_to_namedtuple(mse_var, 'MSEvar'))
 
-def nrmsd(df):
-    """Normalized root-mean-square deviation
 
-    Returns
-    -------
-    result : namedtuple
-        with column names of df for which the calculation
-        was done as name of the
-        element separated by '_and_'
-
-    See Also
-    --------
-    pytesmo.metrics.nrmsd
-    """
-    return _dict_to_namedtuple(nwise_apply(df, metrics.nrmsd, n=2, comm=True),
-                               'nrmsd')
-
-def ubrmsd(df):
-    """Unbiased root-mean-square deviation
-
-    Returns
-    -------
-    result : namedtuple
-        with column names of df for which the calculation
-        was done as name of the
-        element separated by '_and_'
-
-    See Also
-    --------
-    pytesmo.metrics.ubrmsd
-    """
-    return _dict_to_namedtuple(nwise_apply(df, metrics.ubrmsd, n=2, comm=True),
-                               'ubrmsd')
-
+@deprecated
 def mse(df):
-    """Mean square error (MSE) as a decomposition of the RMSD into
-    individual error components
+    """
+    Deprecated: use :py:func:`pytesmo.df_metrics.msd` and the functions for the
+    individual components instead, or
+    :py:func:`pytesmo.df_metrics.msd_decomposition` for the old functionality
+    with better performance.
+
+    Mean square error (MSE) as a decomposition of the RMSD into individual
+    error components
 
     Returns
     -------
@@ -166,8 +207,12 @@ def mse(df):
             _dict_to_namedtuple(MSEbias, 'MSEbias'),
             _dict_to_namedtuple(MSEvar, 'MSEvar'))
 
+
+@deprecated
 def tcol_error(df):
     """
+    Deprecated: use :py:func:`pytesmo.df_metrics.tcol_metrics` instead.
+
     Triple collocation error estimate, applied to triples of columns of the
     passed data frame.
 
@@ -198,10 +243,15 @@ def tcol_error(df):
     return tuple(errors)
 
 
+@deprecated
 def tcol_snr(df, ref_ind=0):
+    """DEPRECATED: use `tcol_metrics` instead."""
+    return tcol_metrics(df, ref_ind=0)
+
+
+def tcol_metrics(df, ref_ind=0):
     """
-    Triple Collocation based SNR estimation, applied to triples of columns of the
-    passed data frame.
+    Triple Collocation metrics applied to triples of dataframe columns.
 
     Parameters
     ----------
@@ -224,17 +274,20 @@ def tcol_snr(df, ref_ind=0):
     """
     # For TC, the input order has NO effect --> comm=True
     if ref_ind is not None:
-        # This column must be part of each triple and is always used as the reference
+        # This column must be part of each triple and is always used as the
+        # reference
         incl = [ref_ind]
     else:
-        # All unique triples are processed, the first dataset of a triple is the reference.
+        # All unique triples are processed, the first dataset of a triple is
+        # the reference.
         incl = None
         ref_ind = 0
-    snr, err, beta = nwise_apply(df, metrics.tcol_snr, n=3, comm=True,
+    snr, err, beta = nwise_apply(df, metrics.tcol_metrics, n=3, comm=True,
                                  must_include=incl, ref_ind=ref_ind)
 
     results = {}
-    for var_name, var_vals in {'snr': snr, 'err_std_dev' : err, 'beta' : beta}.items():
+    var_dict = {'snr': snr, 'err_std_dev': err, 'beta': beta}
+    for var_name, var_vals in var_dict.items():
         results[var_name] = []
         for trip, res in var_vals.items():
             Inner = namedtuple(var_name, OrderedDict(zip(trip, res)))
@@ -242,39 +295,6 @@ def tcol_snr(df, ref_ind=0):
 
     return (results['snr'], results['err_std_dev'], results['beta'])
 
-
-def nash_sutcliffe(df):
-    """Nash Sutcliffe model efficiency coefficient
-
-    Returns
-    -------
-    result : namedtuple
-        with column names of df for which the calculation
-        was done as name of the
-        element separated by '_and_'
-
-    See Also
-    --------
-    pytesmo.metrics.nash_sutcliffe
-    """
-    return _dict_to_namedtuple(nwise_apply(df, metrics.nash_sutcliffe, n=2,
-                                         comm=True), 'Nash_Sutcliffe')
-
-def RSS(df):
-    """Redidual sum of squares
-
-    Returns
-    -------
-    result : namedtuple
-        with column names of df for which the calculation
-        was done as name of the
-        element separated by '_and_'
-
-    See Also
-    --------
-    pytesmo.metrics.RSS
-    """
-    return _dict_to_namedtuple(nwise_apply(df, metrics.RSS, n=2, comm=True), 'RSS')
 
 def pearsonr(df):
     """
@@ -292,8 +312,13 @@ def pearsonr(df):
     pytesmo.metrics.pearsonr
     scipy.stats.pearsonr
     """
-    r, p = nwise_apply(df, metrics.pearsonr, n=2, comm=True)
-    return _dict_to_namedtuple(r, 'Pearsons_r'), _dict_to_namedtuple(p, 'p_value')
+    r, p = nwise_apply(df, stats.pearsonr, n=2, comm=True)
+    return (
+        _dict_to_namedtuple(r, 'Pearsons_r'),
+        _dict_to_namedtuple(p, 'p_value')
+    )
+        
+
 
 def spearmanr(df):
     """
@@ -311,8 +336,12 @@ def spearmanr(df):
     pytesmo.metrics.spearmenr
     scipy.stats.spearmenr
     """
-    r, p = nwise_apply(df, metrics.spearmanr, n=2, comm=True)
-    return _dict_to_namedtuple(r, 'Spearman_r'), _dict_to_namedtuple(p, 'p_value')
+    r, p = nwise_apply(df, stats.spearmanr, n=2, comm=True)
+    return (
+        _dict_to_namedtuple(r, 'Spearman_r'),
+        _dict_to_namedtuple(p, 'p_value')
+    )
+
 
 def kendalltau(df):
     """
@@ -330,8 +359,12 @@ def kendalltau(df):
     pytesmo.metrics.kendalltau
     scipy.stats.kendalltau
     """
-    r, p = nwise_apply(df, metrics.kendalltau, n=2, comm=True)
-    return _dict_to_namedtuple(r, 'Kendall_tau'), _dict_to_namedtuple(p, 'p_value')
+    r, p = nwise_apply(df, stats.kendalltau, n=2, comm=True)
+    return (
+        _dict_to_namedtuple(r, 'Kendall_tau'),
+        _dict_to_namedtuple(p, 'p_value')
+    )
+
 
 def pairwise_apply(df, method, comm=False):
     """
@@ -351,8 +384,10 @@ def pairwise_apply(df, method, comm=False):
     -------
     results : pd.DataFrame
     """
-    warnings.warn("pairwise_apply() is deprecated, use nwise_apply(..., n=2) instead",
-                  DeprecationWarning)
+    warnings.warn(
+        "pairwise_apply() is deprecated, use nwise_apply(..., n=2) instead",
+        DeprecationWarning
+    )
     numeric_df = df._get_numeric_data()
     cols = numeric_df.columns
     mat = numeric_df.values
@@ -396,6 +431,7 @@ def pairwise_apply(df, method, comm=False):
     else:
         return tuple(return_list)
 
+
 def nwise_apply(df, method, n=2, comm=False, as_df=False, ds_names=True,
                 must_include=None, **method_kwargs):
     """
@@ -405,7 +441,8 @@ def nwise_apply(df, method, n=2, comm=False, as_df=False, ds_names=True,
     Parameters
     ----------
     df : pd.DataFrame
-        Input data, method will be applied to combinations of columns of this df.
+        Input data, method will be applied to combinations of columns of this
+        df.
     method : function
         method to apply to each column pair. Has to take 2 input arguments of
         type numpy.array and return one value or tuple of values
@@ -413,14 +450,16 @@ def nwise_apply(df, method, n=2, comm=False, as_df=False, ds_names=True,
         Number of columns that are combined. The default n=2 is the same as the
         previous pairwise_apply() function.
     comm : bool, optional (default: False)
-        Metrics do NOT depend on the order of input values. In these cases we can
-        skip unnecessary calculations and simply copy the results if necessary (faster).
+        Metrics do NOT depend on the order of input values. In these cases we
+        can skip unnecessary calculations and simply copy the results if
+        necessary (faster).
     as_df : bool, optional (default: False)
-        Return matrix structure, same as for previous pairwise_apply(), only available for
-        n=2. By default, the return value will be a list of ordered dicts.
+        Return matrix structure, same as for previous pairwise_apply(), only
+        available for n=2. By default, the return value will be a list of
+        ordered dicts.
     ds_names : bool, optional (default: True)
-        Use the column names of df to identify the dataset instead of using their
-        index.
+        Use the column names of df to identify the dataset instead of using
+        their index.
     must_include : list, optional (default: None)
         The index of one or multiple columns in df that MUST be in part of each
         combination that is processed.
@@ -441,10 +480,12 @@ def nwise_apply(df, method, n=2, comm=False, as_df=False, ds_names=True,
     mask = np.isfinite(mat)
 
     # create the possible combinations of lines
-    counter = list(range(mat.shape[0])) # get the number of lines?
+    counter = list(range(mat.shape[0]))  # get the number of lines?
     # ALL possible combinations of lines?
     perm = True if not comm else False
-    combs = n_combinations(counter, n, must_include=must_include, permutations=perm)
+    combs = n_combinations(
+        counter, n, must_include=must_include, permutations=perm
+    )
 
     # find out how many variables the applyf returns
     result = []
@@ -459,16 +500,16 @@ def nwise_apply(df, method, n=2, comm=False, as_df=False, ds_names=True,
     lut_comb_cols = dict()
 
     for comb in combs:
-        valid = np.logical_and(*[mask[i] for i in comb]) # where all are True
+        valid = np.logical_and(*[mask[i] for i in comb])  # where all are True
 
         lut_comb_cols.update(dict(zip(comb, tuple(np.take(cols, comb)))))
 
         if not valid.any():
             continue
         if not valid.all():
-            c = applyf(*[mat[i,:][valid] for i in comb], **method_kwargs)
+            c = applyf(*[mat[i, :][valid] for i in comb], **method_kwargs)
         else:
-            c = applyf(*[mat[i,:] for i in comb], **method_kwargs)
+            c = applyf(*[mat[i, :] for i in comb], **method_kwargs)
 
         for index, value in enumerate(np.atleast_1d(c)):
             result[index][comb] = value
@@ -479,7 +520,8 @@ def nwise_apply(df, method, n=2, comm=False, as_df=False, ds_names=True,
         else:
             if not ds_names:
                 lut_comb_cols = None
-            result = [_to_df(r, comm=comm, lut_names=lut_comb_cols) for r in result]
+            result = [_to_df(r, comm=comm, lut_names=lut_comb_cols)
+                      for r in result]
     else:
         if ds_names:
             formatted_results = []
@@ -497,10 +539,11 @@ def nwise_apply(df, method, n=2, comm=False, as_df=False, ds_names=True,
 
     return result
 
+
 def _to_df(result, comm=False, lut_names=None):
     """
-    Create a 2d results matrix/dataframe from the result dictionary to reproduce
-    the output structure of the previous pairwise_apply() function.
+    Create a 2d results matrix/dataframe from the result dictionary to
+    reproduce the output structure of the previous pairwise_apply() function.
 
     Parameters
     ---------
@@ -509,8 +552,8 @@ def _to_df(result, comm=False, lut_names=None):
     comm : bool, optional (default: False)
         Copy elements from the upper diagonal matrix in the lower diagonal.
     lut_names: dict, optional (default: None)
-        A LUT that applies nice names to the columns and lines in the data frame.
-        e.g. {1:'ds1', 2:'ds2', 3:'ds3')
+        A LUT that applies nice names to the columns and lines in the data
+        frame, e.g. {1:'ds1', 2:'ds2', 3:'ds3')
     """
 
     # find out how large the matrix is
@@ -527,11 +570,17 @@ def _to_df(result, comm=False, lut_names=None):
         res[i_lower] = res[i_upper]
 
     if lut_names is not None:
-        res = pd.DataFrame(data={lut_names[i]: res[:, i] for i in list(range(max(res.shape)))})
+        res = pd.DataFrame(
+            data={lut_names[i]: res[:, i]
+                  for i in list(range(max(res.shape)))}
+        )
     else:
-        res = pd.DataFrame(data={i : res[:, i] for i in list(range(max(res.shape)))})
+        res = pd.DataFrame(
+            data={i: res[:, i] for i in list(range(max(res.shape)))}
+        )
     res.index = res.columns
     return res
+
 
 def _dict_to_namedtuple(res_dict, name):
     """
