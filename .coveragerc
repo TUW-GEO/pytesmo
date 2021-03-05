@@ -1,8 +1,7 @@
 # .coveragerc to control coverage.py
 [run]
 branch = True
-source = pytesmo
-# omit = bad_file.py
+# source = pytesmo
 
 [paths]
 source =

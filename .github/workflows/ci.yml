@@ -54,8 +54,6 @@ jobs:
         shell: bash -l {0}
         run: |
           python setup.py install
-          ls -a tests
-          pip freeze
           pytest --cache-clear -m 'not full_framework'
           pytest --cache-clear -m 'full_framework'
       - name: Upload Coverage
