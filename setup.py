@@ -23,14 +23,13 @@ def get_ext_modules(ext):
         Extension(
             "pytesmo.time_series.filters",
             ["src/pytesmo/time_series/filters" + ext],
-            # This extension still requires the deprecated API
-            # define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
-            include_dirs=[numpy.get_include()]
+            include_dirs=[numpy.get_include()],
+            define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
         ),
         Extension(
             "pytesmo.metrics._fast",
             ["src/pytesmo/metrics/_fast" + ext],
-            include_dirs=["src/pytesmo/metrics", numpy.get_include()],
+            include_dirs=[numpy.get_include()],
             define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
         ),
     ]
@@ -70,12 +69,6 @@ class build_ext(_build_ext):
     def run(self):
         cythonize_extensions()
         super().run()
-
-    def finalize_options(self):
-        _build_ext.finalize_options(self)
-        # Add numpy include dirs
-        # import numpy
-        # self.include_dirs.append(numpy.get_include())
 
 
 if __name__ == '__main__':

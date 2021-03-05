@@ -1,18 +1,49 @@
 # cython: boundscheck=False, wraparound=False, cdivision=True, nonecheck=False
 import numpy as np
 cimport numpy as cnp
+from numpy.math cimport NAN
 cimport cython
+from cython cimport floating
 from libc.math cimport sqrt, fabs
-
-cdef extern from "incbeta.c":
-    cdef double incbeta(double, double, double)
-
-ctypedef fused numeric:
-    cnp.float32_t
-    cnp.float64_t
+from scipy.special.cython_special import betainc
 
 
-cpdef bias(numeric [:] x, numeric [:] y):
+cpdef _moments_welford(floating [:] x, floating [:] y):
+    """
+    Calculates means, variances, and covariance of the given input array using
+    Welford's algorithm.
+
+    Parameters
+    ----------
+    x : numpy.ndarray
+        First input vector.
+    y : numpy.ndarray
+        Second input vector.
+
+    Returns
+    -------
+    mx, my, varx, vary, cov : floating
+    """
+    cdef int i, n
+    cdef floating mx, my, mxold, myold, M2x, M2y, C
+    cdef floating nobs
+    n = len(x)
+
+    mx = my = M2x = M2y = C = 0
+    nobs = 0
+    for i in range(n):
+        nobs += 1
+        mxold = mx
+        myold = my
+        mx += (x[i] - mx) / nobs
+        my += (y[i] - my) / nobs
+        M2x += (x[i] - mx) * (x[i] - mxold)
+        M2y += (y[i] - my) * (y[i] - myold)
+        C += (x[i] - mx) * (y[i] - myold)
+    return mx, my, M2x/n, M2y/n, C/n
+
+
+cpdef bias(floating [:] x, floating [:] y):
     """
     Difference of the mean values.
 
@@ -30,14 +61,14 @@ cpdef bias(numeric [:] x, numeric [:] y):
     bias : float
         Bias between x and y.
     """
-    cdef numeric b = 0
+    cdef floating b = 0
     cdef int i, n = len(x)
     for i in range(n):
         b += x[i] - y[i]
     return b / n
 
 
-cpdef RSS(numeric [:] x, numeric [:] y):
+cpdef RSS(floating [:] x, floating [:] y):
     """
     Residual sum of squares.
 
@@ -53,7 +84,7 @@ cpdef RSS(numeric [:] x, numeric [:] y):
     res : float
         Residual sum of squares.
     """
-    cdef numeric sum = 0
+    cdef floating sum = 0
     cdef int i
     cdef int n = len(x)
     for i in range(n):
@@ -61,7 +92,7 @@ cpdef RSS(numeric [:] x, numeric [:] y):
     return sum
 
 
-cpdef mse_corr(numeric [:] x, numeric [:] y):
+cpdef mse_corr(floating [:] x, floating [:] y):
     r"""
     Correlation component of MSE.
 
@@ -91,29 +122,12 @@ cpdef mse_corr(numeric [:] x, numeric [:] y):
     mse_corr : float
         Correlation component of MSE.
     """
-    cdef numeric mx = 0, my = 0
-    cdef numeric varx = 0, vary = 0, cov = 0
-    cdef int i, n = len(x)
-    
-    # calculate means
-    for i in range(n):
-        mx += x[i]
-        my += y[i]
-    mx /= n
-    my /= n
-    
-    # calculate variances and covariance
-    for i in range(n):
-        varx += (x[i] - mx)**2
-        vary += (y[i] - my)**2
-        cov += (x[i] - mx) * (y[i] - my)
-    varx /= n
-    vary /= n
-    cov /= n
+    cdef floating varx, vary, cov
+    _, _, varx, vary, cov = _moments_welford(x, y)
     return 2 * sqrt(varx) * sqrt(vary) - 2 * cov
 
 
-cpdef mse_var(numeric [:] x, numeric [:] y):
+cpdef mse_var(floating [:] x, floating [:] y):
     r"""
     Variance component of MSE.
 
@@ -143,27 +157,12 @@ cpdef mse_var(numeric [:] x, numeric [:] y):
     mse_var : float
         Variance component of MSE.
     """
-    cdef numeric mx = 0, my = 0
-    cdef numeric varx = 0, vary = 0
-    cdef int i, n = len(x)
-    
-    # calculate means
-    for i in range(n):
-        mx += x[i]
-        my += y[i]
-    mx /= n
-    my /= n
-    
-    # calculate variance
-    for i in range(n):
-        varx += (x[i] - mx)**2
-        vary += (y[i] - my)**2
-    varx /= n
-    vary /= n
+    cdef floating varx, vary
+    _, _, varx, vary, _ = _moments_welford(x, y)
     return (sqrt(varx) - sqrt(vary)) ** 2
 
 
-cpdef mse_bias(numeric [:] x, numeric [:] y):
+cpdef mse_bias(floating [:] x, floating [:] y):
     r"""
     Bias component of MSE.
 
@@ -201,7 +200,7 @@ cpdef mse_bias(numeric [:] x, numeric [:] y):
 # mse_decomposition:
 # 48.3 µs ± 8.69 µs per loop (mean ± std. dev. of 7 runs, 10000 loops each)
 # -> 32 times faster!
-cpdef mse_decomposition(numeric [:] x, numeric [:] y):
+cpdef mse_decomposition(floating [:] x, floating [:] y):
     r"""
     Mean square deviation/mean square error.
 
@@ -242,26 +241,8 @@ cpdef mse_decomposition(numeric [:] x, numeric [:] y):
     mse_var : float
         Variance component of the MSE.
     """
-    cdef numeric mx = 0, my = 0
-    cdef numeric varx = 0, vary = 0, cov = 0
-    cdef numeric mse, mse_corr, mse_var, mse_bias
-    cdef int i, n = len(x)
-    
-    # calculate means
-    for i in range(n):
-        mx += x[i]
-        my += y[i]
-    mx /= n
-    my /= n
-    
-    # calculate variances and covariance
-    for i in range(n):
-        varx += (x[i] - mx)**2
-        vary += (y[i] - my)**2
-        cov += (x[i] - mx) * (y[i] - my)
-    varx /= n
-    vary /= n
-    cov /= n
+    cdef floating mx, my, varx, vary, cov
+    mx, my, varx, vary, cov = _moments_welford(x, y)
 
     # decompositions
     mse_corr =  2 * sqrt(varx) * sqrt(vary) - 2 * cov
@@ -271,7 +252,7 @@ cpdef mse_decomposition(numeric [:] x, numeric [:] y):
     return mse, mse_corr, mse_bias, mse_var
 
 
-cpdef _ubrmsd(numeric [:] x, numeric [:] y):
+cpdef _ubrmsd(floating [:] x, floating [:] y):
     r"""
     Unbiased root-mean-square deviation (uRMSD).
 
@@ -297,13 +278,13 @@ cpdef _ubrmsd(numeric [:] x, numeric [:] y):
     ubrmsd : float
         Unbiased root-mean-square deviation (uRMSD).
     """
-    cdef numeric mx = 0, my = 0
-    cdef numeric sum = 0
+    cdef floating mx = 0, my = 0
+    cdef floating sum = 0
     cdef int i, n = len(x)
 
     if n == 0:
-        return float("nan")
-    
+        return NAN
+
     # calculate means
     for i in range(n):
         mx += x[i]
@@ -320,14 +301,14 @@ cpdef _ubrmsd(numeric [:] x, numeric [:] y):
 # This implementation is much faster than the old version with numba:
 # old: 76.7 ms ± 1.62 ms per loop (mean ± std. dev. of 7 runs, 10 loops each)
 # new: 117 µs ± 836 ns per loop (mean ± std. dev. of 7 runs, 10000 loops each)
-cpdef rolling_pr_rmsd(numeric [:] timestamps,
-                      numeric [:] x,
-                      numeric [:] y,
-                      numeric window_size,
+cpdef rolling_pr_rmsd(floating [:] timestamps,
+                      floating [:] x,
+                      floating [:] y,
+                      floating window_size,
                       int center,
                       int min_periods):
     """
-    Computation of rolling Pearson R.
+    Computation of rolling Pearson R and RMSD.
 
     Parameters
     ----------
@@ -349,88 +330,109 @@ cpdef rolling_pr_rmsd(numeric [:] timestamps,
     rmsd_arr : numpy.array
         Rolling RMSD
     """
-    cdef int i, j, n_ts, n_obs, df, start_idx, end_idx
-    cdef cnp.float32_t mx, my, vx, vy, cov, r, t_squared, z, msd
-    cdef cnp.float32_t nan = float("nan")
+    # This uses an adapted Welford's algorithm to calculate the rolling mean,
+    # variance, covariance, and mean squared difference.
+    cdef int i, j, n_ts, num_obs, df, lower, upper, lold, uold, rolling_nobs
+    cdef floating mx, my, mxold, myold, M2x, M2y, C, r, t_squared, z, msd
+    cdef cnp.ndarray[floating, ndim=2] pr_arr
+    cdef cnp.ndarray[floating, ndim=1] rmsd_arr
+    cdef floating [:,:] pr_view
+    cdef floating [:] rmsd_view
 
     n_ts = len(timestamps)
-    cdef cnp.float32_t [:,:] pr_arr = np.empty((n_ts, 2), dtype=np.float32)
-    cdef cnp.float32_t [:] rmsd_arr = np.empty(n_ts, dtype=np.float32)
+    # allocate numpy arrays of the correct dtype for returning
+    if floating is float:
+        pr_arr = np.empty((n_ts, 2), dtype=np.float32)
+        rmsd_arr = np.empty(n_ts, dtype=np.float32)
+    elif floating is double:
+        pr_arr = np.empty((n_ts, 2), dtype=np.float64)
+        rmsd_arr = np.empty(n_ts, dtype=np.float64)
+    else:
+        raise ValueError("Unkown floating type")
+    # work on memoryviews instead of on arrays directly
+    pr_view = pr_arr
+    rmsd_view = rmsd_arr
 
-    start_idx = 0
-    end_idx = 0
+    mx = my = msd = M2x = M2y = C = 0
+    lower = 0
+    upper = -1
+    rolling_nobs = 0
     for i in range(n_ts):
-        
+        lold = lower
+        uold = upper
+
         # find interval
         if center:
             # find new start
-            for j in range(start_idx, n_ts):
-                start_idx = j
+            for j in range(lower, n_ts):
+                lower = j
                 if timestamps[j] >= timestamps[i] - window_size:
                     break
             # find new end
+            # we have to check separately whether the last entry is outside
+            # the window, otherwise we will always get n_ts - 2 as result
             if timestamps[n_ts - 1] > timestamps[i] + window_size:
-                # we have to check separately whether the last entry is outside the window,
-                # otherwise we will always get n_ts - 2 as result
-                for j in range(end_idx, n_ts):
-                    end_idx = j - 1
+                for j in range(upper, n_ts):
+                    upper = j - 1
                     if timestamps[j] > timestamps[i] + window_size:
                         break
             else:
-                end_idx = n_ts - 1
-                
+                upper = n_ts - 1
+
         else:
-            for j in range(start_idx, n_ts):
-                start_idx = j
+            for j in range(lower, n_ts):
+                lower = j
                 if timestamps[j] > timestamps[i] - window_size:
                     break
-            end_idx = i
-        
+            upper = i
+
         # check if we have enough observations
-        n_obs = end_idx - start_idx + 1
-        if n_obs == 0 or n_obs < min_periods:
-            pr_arr[i, 0] = nan
-            pr_arr[i, 1] = nan
+        num_obs = upper - lower + 1
+        if num_obs == 0 or num_obs < min_periods:
+            pr_arr[i, 0] = NAN
+            pr_arr[i, 1] = NAN
         else:
-            
-            # calculate means
-            mx = 0
-            my = 0
-            for j in range(start_idx, end_idx+1):
-                mx += x[j]
-                my += y[j]
-            mx /= n_obs
-            my /= n_obs
-            
-            # calculate variances and covariance
-            vx = 0
-            vy = 0
-            cov = 0
-            for j in range(start_idx, end_idx+1):
-                vx += (x[j] - mx)**2
-                vy += (y[j] - my)**2
-                cov += (x[j] - mx) * (y[j] - my)
-            vx /= n_obs
-            vy /= n_obs
-            cov /= n_obs
-    
-            r = cov / (sqrt(vx*vy))
-            pr_arr[i, 0] = r
+
+            # first, add the new terms with Welford's algorithm
+            for j in range(uold+1, upper+1):
+                mxold = mx
+                myold = my
+                rolling_nobs += 1
+                mx += (x[j] - mx) / rolling_nobs
+                my += (y[j] - my) / rolling_nobs
+                msd += ((x[j] - y[j])**2 - msd) / rolling_nobs
+                M2x += (x[j] - mx) * (x[j] - mxold)
+                M2y += (y[j] - my) * (y[j] - myold)
+                C += (x[j] - mx) * (y[j] - myold)
+
+            # now subtract the ones that fell out the window
+            # the old values here correspond to the m_n values in the formula,
+            # that's why the order is different here
+            for j in range(lold, lower):
+                mxold = mx
+                myold = my
+                rolling_nobs -= 1
+                mx -= (x[j] - mx) / rolling_nobs
+                my -= (y[j] - my) / rolling_nobs
+                msd -= ((x[j] - y[j])**2 - msd) / rolling_nobs
+                M2x -= (x[j] - mxold) * (x[j] - mx)
+                M2y -= (y[j] - myold) * (y[j] - my)
+                C -= (x[j] - mxold) * (y[j] - my)
+
+
+            # to get var and cov we would need to divide by n, but since
+            # we're only interested in the ratio that's not necessary
+            r = C / (sqrt(M2x * M2y))
+            pr_view[i, 0] = r
+            rmsd_view[i] = sqrt(msd)
 
             # p-value
             if fabs(r) == 1.0:
-                pr_arr[i, 1] = 0.0
+                pr_view[i, 1] = 0.0
             else:
-                df = n_obs - 2
+                df = num_obs - 2
                 t_squared = r * r * (df / ((1.0 - r) * (1.0 + r)))
                 z = min(float(df) / (df + t_squared), 1.0)
-                pr_arr[i, 1] = incbeta(0.5*df, 0.5, z)
-
-            # rmsd
-            msd = 0
-            for j in range(start_idx, end_idx+1):
-                msd += (x[j] - y[j])**2
-            msd /= n_obs
-            rmsd_arr[i] = sqrt(msd)
+                pr_view[i, 1] = betainc(0.5*df, 0.5, z)
 
     return pr_arr, rmsd_arr
