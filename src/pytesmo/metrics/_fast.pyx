@@ -1,5 +1,6 @@
+# cython: boundscheck=False, wraparound=False, cdivision=True, nonecheck=False
 import numpy as np
-cimport numpy as np
+cimport numpy as cnp
 cimport cython
 from libc.math cimport sqrt, fabs
 
@@ -7,13 +8,10 @@ cdef extern from "incbeta.c":
     cdef double incbeta(double, double, double)
 
 ctypedef fused numeric:
-    np.float32_t
-    np.float64_t
+    cnp.float32_t
+    cnp.float64_t
 
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
-@cython.cdivision(True)
 cpdef bias(numeric [:] x, numeric [:] y):
     """
     Difference of the mean values.
@@ -39,8 +37,6 @@ cpdef bias(numeric [:] x, numeric [:] y):
     return b / n
 
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
 cpdef RSS(numeric [:] x, numeric [:] y):
     """
     Residual sum of squares.
@@ -65,9 +61,6 @@ cpdef RSS(numeric [:] x, numeric [:] y):
     return sum
 
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
-@cython.cdivision(True)
 cpdef mse_corr(numeric [:] x, numeric [:] y):
     r"""
     Correlation component of MSE.
@@ -120,9 +113,6 @@ cpdef mse_corr(numeric [:] x, numeric [:] y):
     return 2 * sqrt(varx) * sqrt(vary) - 2 * cov
 
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
-@cython.cdivision(True)
 cpdef mse_var(numeric [:] x, numeric [:] y):
     r"""
     Variance component of MSE.
@@ -154,7 +144,7 @@ cpdef mse_var(numeric [:] x, numeric [:] y):
         Variance component of MSE.
     """
     cdef numeric mx = 0, my = 0
-    cdef numeric varx = 0, vary = 0, cov = 0
+    cdef numeric varx = 0, vary = 0
     cdef int i, n = len(x)
     
     # calculate means
@@ -173,9 +163,6 @@ cpdef mse_var(numeric [:] x, numeric [:] y):
     return (sqrt(varx) - sqrt(vary)) ** 2
 
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
-@cython.cdivision(True)
 cpdef mse_bias(numeric [:] x, numeric [:] y):
     r"""
     Bias component of MSE.
@@ -214,9 +201,6 @@ cpdef mse_bias(numeric [:] x, numeric [:] y):
 # mse_decomposition:
 # 48.3 µs ± 8.69 µs per loop (mean ± std. dev. of 7 runs, 10000 loops each)
 # -> 32 times faster!
-@cython.boundscheck(False)
-@cython.wraparound(False)
-@cython.cdivision(True)
 cpdef mse_decomposition(numeric [:] x, numeric [:] y):
     r"""
     Mean square deviation/mean square error.
@@ -287,9 +271,6 @@ cpdef mse_decomposition(numeric [:] x, numeric [:] y):
     return mse, mse_corr, mse_bias, mse_var
 
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
-@cython.cdivision(True)
 cpdef _ubrmsd(numeric [:] x, numeric [:] y):
     r"""
     Unbiased root-mean-square deviation (uRMSD).
@@ -339,9 +320,6 @@ cpdef _ubrmsd(numeric [:] x, numeric [:] y):
 # This implementation is much faster than the old version with numba:
 # old: 76.7 ms ± 1.62 ms per loop (mean ± std. dev. of 7 runs, 10 loops each)
 # new: 117 µs ± 836 ns per loop (mean ± std. dev. of 7 runs, 10000 loops each)
-@cython.boundscheck(False)
-@cython.cdivision(True)
-@cython.wraparound(False)
 cpdef rolling_pr_rmsd(numeric [:] timestamps,
                       numeric [:] x,
                       numeric [:] y,
@@ -372,12 +350,12 @@ cpdef rolling_pr_rmsd(numeric [:] timestamps,
         Rolling RMSD
     """
     cdef int i, j, n_ts, n_obs, df, start_idx, end_idx
-    cdef np.float32_t mx, my, yx, vx, vy, cov, r, t_squared, z, msd
-    cdef np.float32_t nan = float("nan")
+    cdef cnp.float32_t mx, my, vx, vy, cov, r, t_squared, z, msd
+    cdef cnp.float32_t nan = float("nan")
 
     n_ts = len(timestamps)
-    cdef np.float32_t [:,:] pr_arr = np.empty((n_ts, 2), dtype=np.float32)
-    cdef np.float32_t [:] rmsd_arr = np.empty(n_ts, dtype=np.float32)
+    cdef cnp.float32_t [:,:] pr_arr = np.empty((n_ts, 2), dtype=np.float32)
+    cdef cnp.float32_t [:] rmsd_arr = np.empty(n_ts, dtype=np.float32)
 
     start_idx = 0
     end_idx = 0

@@ -6,91 +6,86 @@
     This file was generated with PyScaffold 3.2.3.
     PyScaffold helps you to put up the scaffold of your new Python project.
     Learn more under: https://pyscaffold.org/
+
+    The code to cythonize extensions was added manually.
 """
 
-import pkg_resources
-from pkg_resources import VersionConflict, require
 from setuptools import setup
 from setuptools.command.build_ext import build_ext as _build_ext
-from setuptools.command.develop import develop
-from setuptools.command.install import install
+from setuptools.command.sdist import sdist as _sdist
 from setuptools.extension import Extension
-import sys
+import numpy
 
 
-def custom_cythonize():
+# list of C/Cython extensions
+def get_ext_modules(ext):
+    return [
+        Extension(
+            "pytesmo.time_series.filters",
+            ["src/pytesmo/time_series/filters" + ext],
+            # This extension still requires the deprecated API
+            # define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
+            include_dirs=[numpy.get_include()]
+        ),
+        Extension(
+            "pytesmo.metrics._fast",
+            ["src/pytesmo/metrics/_fast" + ext],
+            include_dirs=["src/pytesmo/metrics", numpy.get_include()],
+            define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
+        ),
+    ]
+
+
+# defining a custom cythonize function that sets all the options we want and
+# that can be reused for the different options
+def cythonize_extensions():
     from Cython.Build import cythonize
-
+    import numpy
     cythonize(
-        [
-            "src/pytesmo/time_series/filters.pyx",
-            "src/pytesmo/metrics/_fast.pyx",
-        ],
+        get_ext_modules(".pyx"),
+        compiler_directives={
+            "embedsignature": True,
+            "language_level": 3,
+            # "warn.undeclared": True,
+            # "warn.maybe_unitialized": True,
+            "warn.unused": True,
+            # "warn.unused_arg": True,
+            # "warn.unused_result": True,
+        },
+        # include_path=[numpy.get_include()],
     )
 
 
-# cythonize when ``--cythonize`` command line option is passed
-class CythonizeMixin:
-
-    user_options = [
-        ("cythonize", None, "recreate the c extionsions with cython")
-    ]
-
-    def initialize_options(self):
-        super().initialize_options()
-        self.cythonize = False
-
+# We want to cythonize the .pyx modules (that is, regenerate the .c files)
+# whenever we run build_ext or sdist, so we always ship up to date .c files.
+# Therefore we subclass the setuptools versions of those and tell them to use
+# Cython
+class sdist(_sdist):
     def run(self):
-        if self.cythonize:
-            custom_cythonize()
+        cythonize_extensions()
         super().run()
 
 
-class develop_with_cythonize(CythonizeMixin, develop):
-    user_options = (
-        getattr(develop, "user_options", []) + CythonizeMixin.user_options
-    )
-
-
-class install_with_cythonize(CythonizeMixin, install):
-    user_options = (
-        getattr(install, "user_options", []) + CythonizeMixin.user_options
-    )
-
-
 class build_ext(_build_ext):
+    def run(self):
+        cythonize_extensions()
+        super().run()
 
     def finalize_options(self):
         _build_ext.finalize_options(self)
-        # Prevent numpy from thinking it is still in its setup process:
-        __builtins__.__NUMPY_SETUP__ = False
-        import numpy
-        self.include_dirs.append(numpy.get_include())
+        # Add numpy include dirs
+        # import numpy
+        # self.include_dirs.append(numpy.get_include())
 
 
-ext_modules = [
-    Extension(
-        "pytesmo.time_series.filters",
-        ["src/pytesmo/time_series/filters.c"],
-    ),
-    Extension(
-        "pytesmo.metrics._fast",
-        ["src/pytesmo/metrics/_fast.c"],
-        include_dirs=["src/pytesmo/metrics"],
-    ),
-]
 
-
-try:
-    require("setuptools>=38.3")
-except VersionConflict:
-    print("Error: version of setuptools is too old (<38.3)!")
-    sys.exit(1)
-
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     cmdclass = {}
     cmdclass["build_ext"] = build_ext
-    cmdclass["develop"] = develop_with_cythonize
-    cmdclass["install"] = install_with_cythonize
-    setup(use_pyscaffold=True, cmdclass=cmdclass, ext_modules=ext_modules)
+    cmdclass["sdist"] = sdist
+    setup(
+        use_pyscaffold=True,
+        cmdclass=cmdclass,
+        # at this point the C modules have already been generated if necessary
+        ext_modules=get_ext_modules(".c")
+    )
