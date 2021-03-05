@@ -39,7 +39,6 @@ def get_ext_modules(ext):
 # that can be reused for the different options
 def cythonize_extensions():
     from Cython.Build import cythonize
-    import numpy
     cythonize(
         get_ext_modules(".pyx"),
         compiler_directives={
@@ -56,7 +55,9 @@ def cythonize_extensions():
 
 
 # We want to cythonize the .pyx modules (that is, regenerate the .c files)
-# whenever we run build_ext or sdist, so we always ship up to date .c files.
+# whenever we run sdist, so we always ship up to date .c files.
+# Additionally, we want build_ext to have an additional option `--cythonize`
+# with which we can also recythonize.
 # Therefore we subclass the setuptools versions of those and tell them to use
 # Cython
 class sdist(_sdist):
@@ -66,15 +67,26 @@ class sdist(_sdist):
 
 
 class build_ext(_build_ext):
+
+    user_options = (
+        getattr(_build_ext, "user_options", [])
+        + [("cythonize", None, "recreate the C extensions with cython")]
+    )
+
+    def initialize_options(self):
+        super().initialize_options()
+        self.cythonize = False
+
     def run(self):
-        cythonize_extensions()
+        if self.cythonize:
+            cythonize_extensions()
         super().run()
 
 
 if __name__ == '__main__':
     cmdclass = {}
-    cmdclass["build_ext"] = build_ext
     cmdclass["sdist"] = sdist
+    cmdclass["build_ext"] = build_ext
     setup(
         cmdclass=cmdclass,
         # at this point the C modules have already been generated if necessary
