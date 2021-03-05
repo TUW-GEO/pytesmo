@@ -78,13 +78,11 @@ class build_ext(_build_ext):
         # self.include_dirs.append(numpy.get_include())
 
 
-
 if __name__ == '__main__':
     cmdclass = {}
     cmdclass["build_ext"] = build_ext
     cmdclass["sdist"] = sdist
     setup(
-        use_pyscaffold=True,
         cmdclass=cmdclass,
         # at this point the C modules have already been generated if necessary
         ext_modules=get_ext_modules(".c")

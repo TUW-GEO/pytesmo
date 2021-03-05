@@ -6,7 +6,7 @@ pytesmo - a Python Toolbox for the Evaluation of Soil Moisture Observations
 
 .. image:: https://coveralls.io/repos/TUW-GEO/pytesmo/badge.png?branch=master
   :target: https://coveralls.io/r/TUW-GEO/pytesmo?branch=master
-  
+
 .. image:: https://badge.fury.io/py/pytesmo.svg
     :target: https://badge.fury.io/py/pytesmo
 
@@ -49,7 +49,7 @@ We recommend using either `Anaconda <https://www.anaconda.com/>`__ or
 
 .. code-block:: bash
 
-    $ conda install -c conda-forge numpy scipy pandas netCDF4 cython pyresample pyresample
+    $ conda install -c conda-forge numpy scipy pandas netCDF4 cython pyresample
 
 Afterwards ``pytesmo`` can be installed via pip.
 
@@ -114,10 +114,12 @@ If you want to contribute please follow these steps:
 - Clone the repository, make sure you use ``git clone --recursive`` to also get
   the test data repository.
 - make a new feature branch from the pytesmo master branch
+- Follow the guide to setup pytesmo for developing
 - Add your feature
 - please include tests for your contributions in one of the test directories
   We use py.test so a simple function called test_my_feature is enough
 - submit a pull request to our master branch
+
 
 **Release Windows**
 
@@ -126,6 +128,34 @@ from appveyor CI have to be uploaded to PyPI. They can be found on the appveyor
 CI run for the created tag under the ``jobs/Artifacts`` tab. All the ``.whl``
 files should be downloaded into a folder. They can then be added to the release
 on PyPI using e.g. ``twine upload pytesmo-0.7.1*whl``
+
+
+Developers Guide
+================
+
+1) Clone your fork of pytesmo to your machine using ``git clone --recursive``
+   to also get the test data
+2) Create a new conda environment::
+
+     conda env create -f environment.yml
+     conda activate pytesmo
+
+3) Install the pre-commit hooks::
+
+     pre-commit install
+
+   This runs a few checks before you commit your code to make sure it's nicely
+   formatted.
+
+Now you should be ready to go.
+
+In case you change something in the cython extensions, make sure to run::
+
+  python setup.py build_ext --inplace
+
+after you applied your changes.
+
+
 
 Note
 ====

@@ -126,40 +126,55 @@ def test_netcdf_result_manager_n3():
 
     tempdir = tempfile.mkdtemp()
     netcdf_results_manager(tst_results, tempdir)
-    assert sorted(os.listdir(tempdir)) == sorted(['DS1.x_with_DS2.y_with_DS3.x.nc',
-                                                  'DS1.x_with_DS2.y_with_DS3.y.nc'])
+    assert (
+        sorted(os.listdir(tempdir))
+        == sorted(['DS1.x_with_DS2.y_with_DS3.x.nc',
+                   'DS1.x_with_DS2.y_with_DS3.y.nc'])
+    )
 
     # check a few variable in the file
-    with netCDF4.Dataset(os.path.join(tempdir, 'DS1.x_with_DS2.y_with_DS3.x.nc')) as ds:
+    with netCDF4.Dataset(
+            os.path.join(tempdir, 'DS1.x_with_DS2.y_with_DS3.x.nc')
+    ) as ds:
         assert ds.variables['lon'][:] == np.array([4])
         assert ds.variables['n_obs'][:] == np.array([1000])
 
+
 def test_netcdf_results_manager_ts():
-    results = {(('a1', 'x1'), ('b1', 'y1')):
-                   {'time': np.array([
-                       pd.date_range('2000-01-01', '2000-01-03', freq='D'),
-                       pd.date_range('2000-05-01', '2000-05-05', freq='D')]),
-                    'tvar': np.array([
-                        np.array([1,2,3]),
-                        np.array([1,2,3,4,5])]),
-                    'lvar': np.array([99,100]),
-                    'lon': np.array([1.,2.]),
-                    'lat': np.array([1.,2.])},
-               (('a2', 'x2'), ('b2', 'y2')):
-                   {'time': np.array([
-                       pd.date_range('2003-01-01', '2003-01-02', freq='D')]),
-                    'tvar': np.array([
-                        np.array([1, 2])]),
-                    'lvar': np.array([99]),
-                    'lon': np.array([1.]),
-                    'lat': np.array([1.])}}
+    results = {
+        (('a1', 'x1'), ('b1', 'y1')): {
+            'time': np.array([
+                pd.date_range('2000-01-01', '2000-01-03', freq='D'),
+                pd.date_range('2000-05-01', '2000-05-05', freq='D')
+            ], dtype="object"),
+            'tvar': np.array([
+                np.array([1, 2, 3]),
+                np.array([1, 2, 3, 4, 5])
+            ], dtype="object"),
+            'lvar': np.array([99, 100]),
+            'lon': np.array([1., 2.]),
+            'lat': np.array([1., 2.])
+        },
+        (('a2', 'x2'), ('b2', 'y2')): {
+            'time': np.array([
+                pd.date_range('2003-01-01', '2003-01-02', freq='D')]),
+            'tvar': np.array([np.array([1, 2])]),
+            'lvar': np.array([99]),
+            'lon': np.array([1.]),
+            'lat': np.array([1.])
+        }
+    }
 
     tempdir = tempfile.mkdtemp()
-    netcdf_results_manager(results=results, save_path=tempdir, ts_vars=['tvar'],
-                           attr={'tvar':{'long_name': 'Time var'},
-                                 'lvar': {'long_name': 'Loc var'}})
+    netcdf_results_manager(
+        results=results, save_path=tempdir, ts_vars=['tvar'],
+        attr={'tvar': {'long_name': 'Time var'},
+              'lvar': {'long_name': 'Loc var'}}
+    )
 
-    ds= PointDataResults(os.path.join(tempdir, 'a1.x1_with_b1.y1.nc'), read_only=True)
+    ds = PointDataResults(
+        os.path.join(tempdir, 'a1.x1_with_b1.y1.nc'), read_only=True
+    )
     ts = ds.read_ts(0)
     assert ts.loc['2000-01-02', 'tvar'] == 2
     df = ds.read_loc(None)
