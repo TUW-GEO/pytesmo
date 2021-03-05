@@ -1770,7 +1770,6 @@ static Py_ssize_t __Pyx_zeros[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 /* BufferFallbackError.proto */
 static void __Pyx_RaiseBufferFallbackError(void);
 
-#define __Pyx_BufPtrStrided2d(type, buf, i0, s0, i1, s1) (type)((char*)buf + i0 * s0 + i1 * s1)
 /* GetTopmostException.proto */
 #if CYTHON_USE_EXC_INFO_STACK
 static _PyErr_StackItem * __Pyx_PyErr_GetTopmostException(PyThreadState *tstate);
@@ -2823,7 +2822,7 @@ static PyObject *__pyx_codeobj__49;
 
 /* Python wrapper */
 static PyObject *__pyx_pw_7pytesmo_7metrics_5_fast_1_moments_welford(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_7pytesmo_7metrics_5_fast__moments_welford[] = "_moments_welford(signatures, args, kwargs, defaults)\n\n    Calculates means, variances, and covariance of the given input array using\n    Welford's algorithm.\n    \n    Parameters\n    ----------\n    x : numpy.ndarray\n        First input vector.\n    y : numpy.ndarray\n        Second input vector.\n\n    Returns\n    -------\n    mx, my, varx, vary, cov : floating\n    ";
+static char __pyx_doc_7pytesmo_7metrics_5_fast__moments_welford[] = "_moments_welford(signatures, args, kwargs, defaults)\n\n    Calculates means, variances, and covariance of the given input array using\n    Welford's algorithm.\n\n    Parameters\n    ----------\n    x : numpy.ndarray\n        First input vector.\n    y : numpy.ndarray\n        Second input vector.\n\n    Returns\n    -------\n    mx, my, varx, vary, cov : floating\n    ";
 static PyMethodDef __pyx_mdef_7pytesmo_7metrics_5_fast_1_moments_welford = {"_moments_welford", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_7pytesmo_7metrics_5_fast_1_moments_welford, METH_VARARGS|METH_KEYWORDS, __pyx_doc_7pytesmo_7metrics_5_fast__moments_welford};
 static PyObject *__pyx_pw_7pytesmo_7metrics_5_fast_1_moments_welford(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_signatures = 0;
@@ -11533,7 +11532,6 @@ static PyObject *__pyx_fuse_0__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
   int __pyx_v_upper;
   int __pyx_v_lold;
   int __pyx_v_uold;
-  int __pyx_v_rolling_nobs;
   float __pyx_v_mx;
   float __pyx_v_my;
   float __pyx_v_mxold;
@@ -11545,6 +11543,7 @@ static PyObject *__pyx_fuse_0__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
   float __pyx_v_t_squared;
   float __pyx_v_z;
   float __pyx_v_msd;
+  float __pyx_v_rolling_nobs;
   PyArrayObject *__pyx_v_pr_arr = 0;
   PyArrayObject *__pyx_v_rmsd_arr = 0;
   __Pyx_memviewslice __pyx_v_pr_view = { 0, 0, { 0 }, { 0 }, { 0 } };
@@ -11577,9 +11576,9 @@ static PyObject *__pyx_fuse_0__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
   int __pyx_t_20;
   Py_ssize_t __pyx_t_21;
   Py_ssize_t __pyx_t_22;
-  int __pyx_t_23;
+  long __pyx_t_23;
   long __pyx_t_24;
-  long __pyx_t_25;
+  int __pyx_t_25;
   double __pyx_t_26;
   double __pyx_t_27;
   double __pyx_t_28;
@@ -11598,7 +11597,7 @@ static PyObject *__pyx_fuse_0__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
   __pyx_pybuffernd_rmsd_arr.data = NULL;
   __pyx_pybuffernd_rmsd_arr.rcbuffer = &__pyx_pybuffer_rmsd_arr;
 
-  /* "pytesmo/metrics/_fast.pyx":342
+  /* "pytesmo/metrics/_fast.pyx":343
  *     cdef floating [:] rmsd_view
  *
  *     n_ts = len(timestamps)             # <<<<<<<<<<<<<<
@@ -11608,21 +11607,21 @@ static PyObject *__pyx_fuse_0__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
   __pyx_t_1 = __Pyx_MemoryView_Len(__pyx_v_timestamps);
   __pyx_v_n_ts = __pyx_t_1;
 
-  /* "pytesmo/metrics/_fast.pyx":345
+  /* "pytesmo/metrics/_fast.pyx":346
  *     # allocate numpy arrays of the correct dtype for returning
  *     if floating is float:
  *         pr_arr = np.empty((n_ts, 2), dtype=np.float32)             # <<<<<<<<<<<<<<
  *         rmsd_arr = np.empty(n_ts, dtype=np.float32)
  *     elif floating is double:
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 345, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 346, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_empty); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 345, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_empty); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 346, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_n_ts); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 345, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_n_ts); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 346, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_4 = PyTuple_New(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 345, __pyx_L1_error)
+  __pyx_t_4 = PyTuple_New(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 346, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_GIVEREF(__pyx_t_2);
   PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_2);
@@ -11630,34 +11629,34 @@ static PyObject *__pyx_fuse_0__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
   __Pyx_GIVEREF(__pyx_int_2);
   PyTuple_SET_ITEM(__pyx_t_4, 1, __pyx_int_2);
   __pyx_t_2 = 0;
-  __pyx_t_2 = PyTuple_New(1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 345, __pyx_L1_error)
+  __pyx_t_2 = PyTuple_New(1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 346, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_GIVEREF(__pyx_t_4);
   PyTuple_SET_ITEM(__pyx_t_2, 0, __pyx_t_4);
   __pyx_t_4 = 0;
-  __pyx_t_4 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 345, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 346, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __Pyx_GetModuleGlobalName(__pyx_t_5, __pyx_n_s_np); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 345, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_5, __pyx_n_s_np); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 346, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
-  __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_float32); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 345, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_float32); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 346, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_dtype, __pyx_t_6) < 0) __PYX_ERR(0, 345, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_dtype, __pyx_t_6) < 0) __PYX_ERR(0, 346, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-  __pyx_t_6 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_2, __pyx_t_4); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 345, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_2, __pyx_t_4); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 346, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  if (!(likely(((__pyx_t_6) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_6, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 345, __pyx_L1_error)
+  if (!(likely(((__pyx_t_6) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_6, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 346, __pyx_L1_error)
   __pyx_t_7 = ((PyArrayObject *)__pyx_t_6);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_pr_arr.rcbuffer->pybuffer);
-    __pyx_t_8 = __Pyx_GetBufferAndValidate(&__pyx_pybuffernd_pr_arr.rcbuffer->pybuffer, (PyObject*)__pyx_t_7, &__Pyx_TypeInfo_float, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 2, 0, __pyx_stack);
+    __pyx_t_8 = __Pyx_GetBufferAndValidate(&__pyx_pybuffernd_pr_arr.rcbuffer->pybuffer, (PyObject*)__pyx_t_7, &__Pyx_TypeInfo_float, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack);
     if (unlikely(__pyx_t_8 < 0)) {
       PyErr_Fetch(&__pyx_t_9, &__pyx_t_10, &__pyx_t_11);
-      if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_pr_arr.rcbuffer->pybuffer, (PyObject*)__pyx_v_pr_arr, &__Pyx_TypeInfo_float, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 2, 0, __pyx_stack) == -1)) {
+      if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_pr_arr.rcbuffer->pybuffer, (PyObject*)__pyx_v_pr_arr, &__Pyx_TypeInfo_float, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) {
         Py_XDECREF(__pyx_t_9); Py_XDECREF(__pyx_t_10); Py_XDECREF(__pyx_t_11);
         __Pyx_RaiseBufferFallbackError();
       } else {
@@ -11666,46 +11665,46 @@ static PyObject *__pyx_fuse_0__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
       __pyx_t_9 = __pyx_t_10 = __pyx_t_11 = 0;
     }
     __pyx_pybuffernd_pr_arr.diminfo[0].strides = __pyx_pybuffernd_pr_arr.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_pr_arr.diminfo[0].shape = __pyx_pybuffernd_pr_arr.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_pr_arr.diminfo[1].strides = __pyx_pybuffernd_pr_arr.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_pr_arr.diminfo[1].shape = __pyx_pybuffernd_pr_arr.rcbuffer->pybuffer.shape[1];
-    if (unlikely(__pyx_t_8 < 0)) __PYX_ERR(0, 345, __pyx_L1_error)
+    if (unlikely(__pyx_t_8 < 0)) __PYX_ERR(0, 346, __pyx_L1_error)
   }
   __pyx_t_7 = 0;
   __pyx_v_pr_arr = ((PyArrayObject *)__pyx_t_6);
   __pyx_t_6 = 0;
 
-  /* "pytesmo/metrics/_fast.pyx":346
+  /* "pytesmo/metrics/_fast.pyx":347
  *     if floating is float:
  *         pr_arr = np.empty((n_ts, 2), dtype=np.float32)
  *         rmsd_arr = np.empty(n_ts, dtype=np.float32)             # <<<<<<<<<<<<<<
  *     elif floating is double:
  *         pr_arr = np.empty((n_ts, 2), dtype=np.float64)
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_6, __pyx_n_s_np); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 346, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_6, __pyx_n_s_np); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 347, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_n_s_empty); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 346, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_n_s_empty); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 347, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-  __pyx_t_6 = __Pyx_PyInt_From_int(__pyx_v_n_ts); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 346, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyInt_From_int(__pyx_v_n_ts); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 347, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
-  __pyx_t_2 = PyTuple_New(1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 346, __pyx_L1_error)
+  __pyx_t_2 = PyTuple_New(1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 347, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_GIVEREF(__pyx_t_6);
   PyTuple_SET_ITEM(__pyx_t_2, 0, __pyx_t_6);
   __pyx_t_6 = 0;
-  __pyx_t_6 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 346, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 347, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
-  __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 346, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 347, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_float32); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 346, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_float32); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 347, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  if (PyDict_SetItem(__pyx_t_6, __pyx_n_s_dtype, __pyx_t_5) < 0) __PYX_ERR(0, 346, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_6, __pyx_n_s_dtype, __pyx_t_5) < 0) __PYX_ERR(0, 347, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_2, __pyx_t_6); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 346, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_2, __pyx_t_6); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 347, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-  if (!(likely(((__pyx_t_5) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_5, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 346, __pyx_L1_error)
+  if (!(likely(((__pyx_t_5) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_5, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 347, __pyx_L1_error)
   __pyx_t_12 = ((PyArrayObject *)__pyx_t_5);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
@@ -11722,37 +11721,37 @@ static PyObject *__pyx_fuse_0__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
       __pyx_t_11 = __pyx_t_10 = __pyx_t_9 = 0;
     }
     __pyx_pybuffernd_rmsd_arr.diminfo[0].strides = __pyx_pybuffernd_rmsd_arr.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_rmsd_arr.diminfo[0].shape = __pyx_pybuffernd_rmsd_arr.rcbuffer->pybuffer.shape[0];
-    if (unlikely(__pyx_t_8 < 0)) __PYX_ERR(0, 346, __pyx_L1_error)
+    if (unlikely(__pyx_t_8 < 0)) __PYX_ERR(0, 347, __pyx_L1_error)
   }
   __pyx_t_12 = 0;
   __pyx_v_rmsd_arr = ((PyArrayObject *)__pyx_t_5);
   __pyx_t_5 = 0;
 
-  /* "pytesmo/metrics/_fast.pyx":353
+  /* "pytesmo/metrics/_fast.pyx":354
  *         raise ValueError("Unkown floating type")
  *     # work on memoryviews instead of on arrays directly
  *     pr_view = pr_arr             # <<<<<<<<<<<<<<
  *     rmsd_view = rmsd_arr
  *
  */
-  __pyx_t_13 = __Pyx_PyObject_to_MemoryviewSlice_dsds_float(((PyObject *)__pyx_v_pr_arr), PyBUF_WRITABLE); if (unlikely(!__pyx_t_13.memview)) __PYX_ERR(0, 353, __pyx_L1_error)
+  __pyx_t_13 = __Pyx_PyObject_to_MemoryviewSlice_dsds_float(((PyObject *)__pyx_v_pr_arr), PyBUF_WRITABLE); if (unlikely(!__pyx_t_13.memview)) __PYX_ERR(0, 354, __pyx_L1_error)
   __pyx_v_pr_view = __pyx_t_13;
   __pyx_t_13.memview = NULL;
   __pyx_t_13.data = NULL;
 
-  /* "pytesmo/metrics/_fast.pyx":354
+  /* "pytesmo/metrics/_fast.pyx":355
  *     # work on memoryviews instead of on arrays directly
  *     pr_view = pr_arr
  *     rmsd_view = rmsd_arr             # <<<<<<<<<<<<<<
  *
  *     mx = my = msd = M2x = M2y = C = 0
  */
-  __pyx_t_14 = __Pyx_PyObject_to_MemoryviewSlice_ds_float(((PyObject *)__pyx_v_rmsd_arr), PyBUF_WRITABLE); if (unlikely(!__pyx_t_14.memview)) __PYX_ERR(0, 354, __pyx_L1_error)
+  __pyx_t_14 = __Pyx_PyObject_to_MemoryviewSlice_ds_float(((PyObject *)__pyx_v_rmsd_arr), PyBUF_WRITABLE); if (unlikely(!__pyx_t_14.memview)) __PYX_ERR(0, 355, __pyx_L1_error)
   __pyx_v_rmsd_view = __pyx_t_14;
   __pyx_t_14.memview = NULL;
   __pyx_t_14.data = NULL;
 
-  /* "pytesmo/metrics/_fast.pyx":356
+  /* "pytesmo/metrics/_fast.pyx":357
  *     rmsd_view = rmsd_arr
  *
  *     mx = my = msd = M2x = M2y = C = 0             # <<<<<<<<<<<<<<
@@ -11766,7 +11765,7 @@ static PyObject *__pyx_fuse_0__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
   __pyx_v_M2y = 0.0;
   __pyx_v_C = 0.0;
 
-  /* "pytesmo/metrics/_fast.pyx":357
+  /* "pytesmo/metrics/_fast.pyx":358
  *
  *     mx = my = msd = M2x = M2y = C = 0
  *     lower = 0             # <<<<<<<<<<<<<<
@@ -11775,7 +11774,7 @@ static PyObject *__pyx_fuse_0__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
  */
   __pyx_v_lower = 0;
 
-  /* "pytesmo/metrics/_fast.pyx":358
+  /* "pytesmo/metrics/_fast.pyx":359
  *     mx = my = msd = M2x = M2y = C = 0
  *     lower = 0
  *     upper = -1             # <<<<<<<<<<<<<<
@@ -11784,16 +11783,16 @@ static PyObject *__pyx_fuse_0__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
  */
   __pyx_v_upper = -1;
 
-  /* "pytesmo/metrics/_fast.pyx":359
+  /* "pytesmo/metrics/_fast.pyx":360
  *     lower = 0
  *     upper = -1
  *     rolling_nobs = 0             # <<<<<<<<<<<<<<
  *     for i in range(n_ts):
  *         lold = lower
  */
-  __pyx_v_rolling_nobs = 0;
+  __pyx_v_rolling_nobs = 0.0;
 
-  /* "pytesmo/metrics/_fast.pyx":360
+  /* "pytesmo/metrics/_fast.pyx":361
  *     upper = -1
  *     rolling_nobs = 0
  *     for i in range(n_ts):             # <<<<<<<<<<<<<<
@@ -11805,7 +11804,7 @@ static PyObject *__pyx_fuse_0__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
   for (__pyx_t_16 = 0; __pyx_t_16 < __pyx_t_15; __pyx_t_16+=1) {
     __pyx_v_i = __pyx_t_16;
 
-    /* "pytesmo/metrics/_fast.pyx":361
+    /* "pytesmo/metrics/_fast.pyx":362
  *     rolling_nobs = 0
  *     for i in range(n_ts):
  *         lold = lower             # <<<<<<<<<<<<<<
@@ -11814,16 +11813,16 @@ static PyObject *__pyx_fuse_0__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
  */
     __pyx_v_lold = __pyx_v_lower;
 
-    /* "pytesmo/metrics/_fast.pyx":362
+    /* "pytesmo/metrics/_fast.pyx":363
  *     for i in range(n_ts):
  *         lold = lower
  *         uold = upper             # <<<<<<<<<<<<<<
  *
- *         # find interval
+ *
  */
     __pyx_v_uold = __pyx_v_upper;
 
-    /* "pytesmo/metrics/_fast.pyx":365
+    /* "pytesmo/metrics/_fast.pyx":367
  *
  *         # find interval
  *         if center:             # <<<<<<<<<<<<<<
@@ -11833,7 +11832,7 @@ static PyObject *__pyx_fuse_0__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
     __pyx_t_17 = (__pyx_v_center != 0);
     if (__pyx_t_17) {
 
-      /* "pytesmo/metrics/_fast.pyx":367
+      /* "pytesmo/metrics/_fast.pyx":369
  *         if center:
  *             # find new start
  *             for j in range(lower, n_ts):             # <<<<<<<<<<<<<<
@@ -11845,7 +11844,7 @@ static PyObject *__pyx_fuse_0__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
       for (__pyx_t_20 = __pyx_v_lower; __pyx_t_20 < __pyx_t_19; __pyx_t_20+=1) {
         __pyx_v_j = __pyx_t_20;
 
-        /* "pytesmo/metrics/_fast.pyx":368
+        /* "pytesmo/metrics/_fast.pyx":370
  *             # find new start
  *             for j in range(lower, n_ts):
  *                 lower = j             # <<<<<<<<<<<<<<
@@ -11854,73 +11853,101 @@ static PyObject *__pyx_fuse_0__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
  */
         __pyx_v_lower = __pyx_v_j;
 
-        /* "pytesmo/metrics/_fast.pyx":369
+        /* "pytesmo/metrics/_fast.pyx":371
  *             for j in range(lower, n_ts):
  *                 lower = j
  *                 if timestamps[j] >= timestamps[i] - window_size:             # <<<<<<<<<<<<<<
  *                     break
- *             # find new end
+ *
  */
         __pyx_t_21 = __pyx_v_j;
         __pyx_t_22 = __pyx_v_i;
         __pyx_t_17 = (((*((float *) ( /* dim=0 */ (__pyx_v_timestamps.data + __pyx_t_21 * __pyx_v_timestamps.strides[0]) ))) >= ((*((float *) ( /* dim=0 */ (__pyx_v_timestamps.data + __pyx_t_22 * __pyx_v_timestamps.strides[0]) ))) - __pyx_v_window_size)) != 0);
         if (__pyx_t_17) {
 
-          /* "pytesmo/metrics/_fast.pyx":370
+          /* "pytesmo/metrics/_fast.pyx":372
  *                 lower = j
  *                 if timestamps[j] >= timestamps[i] - window_size:
  *                     break             # <<<<<<<<<<<<<<
- *             # find new end
- *             # we have to check separately whether the last entry is outside
+ *
+ *             # find new end:
  */
           goto __pyx_L7_break;
 
-          /* "pytesmo/metrics/_fast.pyx":369
+          /* "pytesmo/metrics/_fast.pyx":371
  *             for j in range(lower, n_ts):
  *                 lower = j
  *                 if timestamps[j] >= timestamps[i] - window_size:             # <<<<<<<<<<<<<<
  *                     break
- *             # find new end
+ *
  */
         }
       }
       __pyx_L7_break:;
 
-      /* "pytesmo/metrics/_fast.pyx":374
- *             # we have to check separately whether the last entry is outside
- *             # the window, otherwise we will always get n_ts - 2 as result
+      /* "pytesmo/metrics/_fast.pyx":379
+ *
+ *             # if we're not at the end yet
  *             if timestamps[n_ts - 1] > timestamps[i] + window_size:             # <<<<<<<<<<<<<<
- *                 for j in range(upper, n_ts):
- *                     upper = j - 1
+ *                 if i == 0:
+ *                     # in the first iteration upper was -1 in order to set uold
  */
       __pyx_t_22 = (__pyx_v_n_ts - 1);
       __pyx_t_21 = __pyx_v_i;
       __pyx_t_17 = (((*((float *) ( /* dim=0 */ (__pyx_v_timestamps.data + __pyx_t_22 * __pyx_v_timestamps.strides[0]) ))) > ((*((float *) ( /* dim=0 */ (__pyx_v_timestamps.data + __pyx_t_21 * __pyx_v_timestamps.strides[0]) ))) + __pyx_v_window_size)) != 0);
       if (__pyx_t_17) {
 
-        /* "pytesmo/metrics/_fast.pyx":375
- *             # the window, otherwise we will always get n_ts - 2 as result
+        /* "pytesmo/metrics/_fast.pyx":380
+ *             # if we're not at the end yet
  *             if timestamps[n_ts - 1] > timestamps[i] + window_size:
+ *                 if i == 0:             # <<<<<<<<<<<<<<
+ *                     # in the first iteration upper was -1 in order to set uold
+ *                     # correctly, but in the following upper must be at least 1,
+ */
+        __pyx_t_17 = ((__pyx_v_i == 0) != 0);
+        if (__pyx_t_17) {
+
+          /* "pytesmo/metrics/_fast.pyx":384
+ *                     # correctly, but in the following upper must be at least 1,
+ *                     # so we don't access an invalid index
+ *                     upper = 1             # <<<<<<<<<<<<<<
+ *                 for j in range(upper, n_ts):
+ *                     # j - 1 because we want the index that is still inside the
+ */
+          __pyx_v_upper = 1;
+
+          /* "pytesmo/metrics/_fast.pyx":380
+ *             # if we're not at the end yet
+ *             if timestamps[n_ts - 1] > timestamps[i] + window_size:
+ *                 if i == 0:             # <<<<<<<<<<<<<<
+ *                     # in the first iteration upper was -1 in order to set uold
+ *                     # correctly, but in the following upper must be at least 1,
+ */
+        }
+
+        /* "pytesmo/metrics/_fast.pyx":385
+ *                     # so we don't access an invalid index
+ *                     upper = 1
  *                 for j in range(upper, n_ts):             # <<<<<<<<<<<<<<
- *                     upper = j - 1
- *                     if timestamps[j] > timestamps[i] + window_size:
+ *                     # j - 1 because we want the index that is still inside the
+ *                     # window
  */
         __pyx_t_18 = __pyx_v_n_ts;
         __pyx_t_19 = __pyx_t_18;
         for (__pyx_t_20 = __pyx_v_upper; __pyx_t_20 < __pyx_t_19; __pyx_t_20+=1) {
           __pyx_v_j = __pyx_t_20;
 
-          /* "pytesmo/metrics/_fast.pyx":376
- *             if timestamps[n_ts - 1] > timestamps[i] + window_size:
- *                 for j in range(upper, n_ts):
+          /* "pytesmo/metrics/_fast.pyx":388
+ *                     # j - 1 because we want the index that is still inside the
+ *                     # window
  *                     upper = j - 1             # <<<<<<<<<<<<<<
  *                     if timestamps[j] > timestamps[i] + window_size:
  *                         break
  */
           __pyx_v_upper = (__pyx_v_j - 1);
 
-          /* "pytesmo/metrics/_fast.pyx":377
- *                 for j in range(upper, n_ts):
+          /* "pytesmo/metrics/_fast.pyx":389
+ *                     # window
  *                     upper = j - 1
  *                     if timestamps[j] > timestamps[i] + window_size:             # <<<<<<<<<<<<<<
  *                         break
@@ -11931,17 +11958,17 @@ static PyObject *__pyx_fuse_0__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
           __pyx_t_17 = (((*((float *) ( /* dim=0 */ (__pyx_v_timestamps.data + __pyx_t_21 * __pyx_v_timestamps.strides[0]) ))) > ((*((float *) ( /* dim=0 */ (__pyx_v_timestamps.data + __pyx_t_22 * __pyx_v_timestamps.strides[0]) ))) + __pyx_v_window_size)) != 0);
           if (__pyx_t_17) {
 
-            /* "pytesmo/metrics/_fast.pyx":378
+            /* "pytesmo/metrics/_fast.pyx":390
  *                     upper = j - 1
  *                     if timestamps[j] > timestamps[i] + window_size:
  *                         break             # <<<<<<<<<<<<<<
  *             else:
  *                 upper = n_ts - 1
  */
-            goto __pyx_L11_break;
+            goto __pyx_L12_break;
 
-            /* "pytesmo/metrics/_fast.pyx":377
- *                 for j in range(upper, n_ts):
+            /* "pytesmo/metrics/_fast.pyx":389
+ *                     # window
  *                     upper = j - 1
  *                     if timestamps[j] > timestamps[i] + window_size:             # <<<<<<<<<<<<<<
  *                         break
@@ -11949,19 +11976,19 @@ static PyObject *__pyx_fuse_0__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
  */
           }
         }
-        __pyx_L11_break:;
+        __pyx_L12_break:;
 
-        /* "pytesmo/metrics/_fast.pyx":374
- *             # we have to check separately whether the last entry is outside
- *             # the window, otherwise we will always get n_ts - 2 as result
+        /* "pytesmo/metrics/_fast.pyx":379
+ *
+ *             # if we're not at the end yet
  *             if timestamps[n_ts - 1] > timestamps[i] + window_size:             # <<<<<<<<<<<<<<
- *                 for j in range(upper, n_ts):
- *                     upper = j - 1
+ *                 if i == 0:
+ *                     # in the first iteration upper was -1 in order to set uold
  */
         goto __pyx_L9;
       }
 
-      /* "pytesmo/metrics/_fast.pyx":380
+      /* "pytesmo/metrics/_fast.pyx":392
  *                         break
  *             else:
  *                 upper = n_ts - 1             # <<<<<<<<<<<<<<
@@ -11973,7 +12000,7 @@ static PyObject *__pyx_fuse_0__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
       }
       __pyx_L9:;
 
-      /* "pytesmo/metrics/_fast.pyx":365
+      /* "pytesmo/metrics/_fast.pyx":367
  *
  *         # find interval
  *         if center:             # <<<<<<<<<<<<<<
@@ -11983,7 +12010,7 @@ static PyObject *__pyx_fuse_0__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
       goto __pyx_L5;
     }
 
-    /* "pytesmo/metrics/_fast.pyx":383
+    /* "pytesmo/metrics/_fast.pyx":395
  *
  *         else:
  *             for j in range(lower, n_ts):             # <<<<<<<<<<<<<<
@@ -11996,7 +12023,7 @@ static PyObject *__pyx_fuse_0__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
       for (__pyx_t_20 = __pyx_v_lower; __pyx_t_20 < __pyx_t_19; __pyx_t_20+=1) {
         __pyx_v_j = __pyx_t_20;
 
-        /* "pytesmo/metrics/_fast.pyx":384
+        /* "pytesmo/metrics/_fast.pyx":396
  *         else:
  *             for j in range(lower, n_ts):
  *                 lower = j             # <<<<<<<<<<<<<<
@@ -12005,7 +12032,7 @@ static PyObject *__pyx_fuse_0__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
  */
         __pyx_v_lower = __pyx_v_j;
 
-        /* "pytesmo/metrics/_fast.pyx":385
+        /* "pytesmo/metrics/_fast.pyx":397
  *             for j in range(lower, n_ts):
  *                 lower = j
  *                 if timestamps[j] > timestamps[i] - window_size:             # <<<<<<<<<<<<<<
@@ -12017,16 +12044,16 @@ static PyObject *__pyx_fuse_0__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
         __pyx_t_17 = (((*((float *) ( /* dim=0 */ (__pyx_v_timestamps.data + __pyx_t_22 * __pyx_v_timestamps.strides[0]) ))) > ((*((float *) ( /* dim=0 */ (__pyx_v_timestamps.data + __pyx_t_21 * __pyx_v_timestamps.strides[0]) ))) - __pyx_v_window_size)) != 0);
         if (__pyx_t_17) {
 
-          /* "pytesmo/metrics/_fast.pyx":386
+          /* "pytesmo/metrics/_fast.pyx":398
  *                 lower = j
  *                 if timestamps[j] > timestamps[i] - window_size:
  *                     break             # <<<<<<<<<<<<<<
  *             upper = i
  *
  */
-          goto __pyx_L14_break;
+          goto __pyx_L15_break;
 
-          /* "pytesmo/metrics/_fast.pyx":385
+          /* "pytesmo/metrics/_fast.pyx":397
  *             for j in range(lower, n_ts):
  *                 lower = j
  *                 if timestamps[j] > timestamps[i] - window_size:             # <<<<<<<<<<<<<<
@@ -12035,297 +12062,307 @@ static PyObject *__pyx_fuse_0__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
  */
         }
       }
-      __pyx_L14_break:;
+      __pyx_L15_break:;
 
-      /* "pytesmo/metrics/_fast.pyx":387
+      /* "pytesmo/metrics/_fast.pyx":399
  *                 if timestamps[j] > timestamps[i] - window_size:
  *                     break
  *             upper = i             # <<<<<<<<<<<<<<
  *
- *         # check if we have enough observations
+ *
  */
       __pyx_v_upper = __pyx_v_i;
     }
     __pyx_L5:;
 
-    /* "pytesmo/metrics/_fast.pyx":390
+    /* "pytesmo/metrics/_fast.pyx":407
+ *
+ *         # first, add the new terms with Welford's algorithm
+ *         for j in range(uold+1, upper+1):             # <<<<<<<<<<<<<<
+ *             mxold = mx
+ *             myold = my
+ */
+    __pyx_t_23 = (__pyx_v_upper + 1);
+    __pyx_t_24 = __pyx_t_23;
+    for (__pyx_t_18 = (__pyx_v_uold + 1); __pyx_t_18 < __pyx_t_24; __pyx_t_18+=1) {
+      __pyx_v_j = __pyx_t_18;
+
+      /* "pytesmo/metrics/_fast.pyx":408
+ *         # first, add the new terms with Welford's algorithm
+ *         for j in range(uold+1, upper+1):
+ *             mxold = mx             # <<<<<<<<<<<<<<
+ *             myold = my
+ *             rolling_nobs += 1
+ */
+      __pyx_v_mxold = __pyx_v_mx;
+
+      /* "pytesmo/metrics/_fast.pyx":409
+ *         for j in range(uold+1, upper+1):
+ *             mxold = mx
+ *             myold = my             # <<<<<<<<<<<<<<
+ *             rolling_nobs += 1
+ *             mx += (x[j] - mx) / rolling_nobs
+ */
+      __pyx_v_myold = __pyx_v_my;
+
+      /* "pytesmo/metrics/_fast.pyx":410
+ *             mxold = mx
+ *             myold = my
+ *             rolling_nobs += 1             # <<<<<<<<<<<<<<
+ *             mx += (x[j] - mx) / rolling_nobs
+ *             my += (y[j] - my) / rolling_nobs
+ */
+      __pyx_v_rolling_nobs = (__pyx_v_rolling_nobs + 1.0);
+
+      /* "pytesmo/metrics/_fast.pyx":411
+ *             myold = my
+ *             rolling_nobs += 1
+ *             mx += (x[j] - mx) / rolling_nobs             # <<<<<<<<<<<<<<
+ *             my += (y[j] - my) / rolling_nobs
+ *             msd += ((x[j] - y[j])**2 - msd) / rolling_nobs
+ */
+      __pyx_t_21 = __pyx_v_j;
+      __pyx_v_mx = (__pyx_v_mx + (((*((float *) ( /* dim=0 */ (__pyx_v_x.data + __pyx_t_21 * __pyx_v_x.strides[0]) ))) - __pyx_v_mx) / __pyx_v_rolling_nobs));
+
+      /* "pytesmo/metrics/_fast.pyx":412
+ *             rolling_nobs += 1
+ *             mx += (x[j] - mx) / rolling_nobs
+ *             my += (y[j] - my) / rolling_nobs             # <<<<<<<<<<<<<<
+ *             msd += ((x[j] - y[j])**2 - msd) / rolling_nobs
+ *             M2x += (x[j] - mx) * (x[j] - mxold)
+ */
+      __pyx_t_21 = __pyx_v_j;
+      __pyx_v_my = (__pyx_v_my + (((*((float *) ( /* dim=0 */ (__pyx_v_y.data + __pyx_t_21 * __pyx_v_y.strides[0]) ))) - __pyx_v_my) / __pyx_v_rolling_nobs));
+
+      /* "pytesmo/metrics/_fast.pyx":413
+ *             mx += (x[j] - mx) / rolling_nobs
+ *             my += (y[j] - my) / rolling_nobs
+ *             msd += ((x[j] - y[j])**2 - msd) / rolling_nobs             # <<<<<<<<<<<<<<
+ *             M2x += (x[j] - mx) * (x[j] - mxold)
+ *             M2y += (y[j] - my) * (y[j] - myold)
+ */
+      __pyx_t_21 = __pyx_v_j;
+      __pyx_t_22 = __pyx_v_j;
+      __pyx_v_msd = (__pyx_v_msd + ((powf(((*((float *) ( /* dim=0 */ (__pyx_v_x.data + __pyx_t_21 * __pyx_v_x.strides[0]) ))) - (*((float *) ( /* dim=0 */ (__pyx_v_y.data + __pyx_t_22 * __pyx_v_y.strides[0]) )))), 2.0) - __pyx_v_msd) / __pyx_v_rolling_nobs));
+
+      /* "pytesmo/metrics/_fast.pyx":414
+ *             my += (y[j] - my) / rolling_nobs
+ *             msd += ((x[j] - y[j])**2 - msd) / rolling_nobs
+ *             M2x += (x[j] - mx) * (x[j] - mxold)             # <<<<<<<<<<<<<<
+ *             M2y += (y[j] - my) * (y[j] - myold)
+ *             C += (x[j] - mx) * (y[j] - myold)
+ */
+      __pyx_t_22 = __pyx_v_j;
+      __pyx_t_21 = __pyx_v_j;
+      __pyx_v_M2x = (__pyx_v_M2x + (((*((float *) ( /* dim=0 */ (__pyx_v_x.data + __pyx_t_22 * __pyx_v_x.strides[0]) ))) - __pyx_v_mx) * ((*((float *) ( /* dim=0 */ (__pyx_v_x.data + __pyx_t_21 * __pyx_v_x.strides[0]) ))) - __pyx_v_mxold)));
+
+      /* "pytesmo/metrics/_fast.pyx":415
+ *             msd += ((x[j] - y[j])**2 - msd) / rolling_nobs
+ *             M2x += (x[j] - mx) * (x[j] - mxold)
+ *             M2y += (y[j] - my) * (y[j] - myold)             # <<<<<<<<<<<<<<
+ *             C += (x[j] - mx) * (y[j] - myold)
+ *
+ */
+      __pyx_t_21 = __pyx_v_j;
+      __pyx_t_22 = __pyx_v_j;
+      __pyx_v_M2y = (__pyx_v_M2y + (((*((float *) ( /* dim=0 */ (__pyx_v_y.data + __pyx_t_21 * __pyx_v_y.strides[0]) ))) - __pyx_v_my) * ((*((float *) ( /* dim=0 */ (__pyx_v_y.data + __pyx_t_22 * __pyx_v_y.strides[0]) ))) - __pyx_v_myold)));
+
+      /* "pytesmo/metrics/_fast.pyx":416
+ *             M2x += (x[j] - mx) * (x[j] - mxold)
+ *             M2y += (y[j] - my) * (y[j] - myold)
+ *             C += (x[j] - mx) * (y[j] - myold)             # <<<<<<<<<<<<<<
+ *
+ *         # now subtract the ones that fell out the window
+ */
+      __pyx_t_22 = __pyx_v_j;
+      __pyx_t_21 = __pyx_v_j;
+      __pyx_v_C = (__pyx_v_C + (((*((float *) ( /* dim=0 */ (__pyx_v_x.data + __pyx_t_22 * __pyx_v_x.strides[0]) ))) - __pyx_v_mx) * ((*((float *) ( /* dim=0 */ (__pyx_v_y.data + __pyx_t_21 * __pyx_v_y.strides[0]) ))) - __pyx_v_myold)));
+    }
+
+    /* "pytesmo/metrics/_fast.pyx":421
+ *         # the old values here correspond to the m_n values in the formula,
+ *         # that's why the order is different here
+ *         for j in range(lold, lower):             # <<<<<<<<<<<<<<
+ *             mxold = mx
+ *             myold = my
+ */
+    __pyx_t_18 = __pyx_v_lower;
+    __pyx_t_19 = __pyx_t_18;
+    for (__pyx_t_20 = __pyx_v_lold; __pyx_t_20 < __pyx_t_19; __pyx_t_20+=1) {
+      __pyx_v_j = __pyx_t_20;
+
+      /* "pytesmo/metrics/_fast.pyx":422
+ *         # that's why the order is different here
+ *         for j in range(lold, lower):
+ *             mxold = mx             # <<<<<<<<<<<<<<
+ *             myold = my
+ *             rolling_nobs -= 1
+ */
+      __pyx_v_mxold = __pyx_v_mx;
+
+      /* "pytesmo/metrics/_fast.pyx":423
+ *         for j in range(lold, lower):
+ *             mxold = mx
+ *             myold = my             # <<<<<<<<<<<<<<
+ *             rolling_nobs -= 1
+ *             mx -= (x[j] - mx) / rolling_nobs
+ */
+      __pyx_v_myold = __pyx_v_my;
+
+      /* "pytesmo/metrics/_fast.pyx":424
+ *             mxold = mx
+ *             myold = my
+ *             rolling_nobs -= 1             # <<<<<<<<<<<<<<
+ *             mx -= (x[j] - mx) / rolling_nobs
+ *             my -= (y[j] - my) / rolling_nobs
+ */
+      __pyx_v_rolling_nobs = (__pyx_v_rolling_nobs - 1.0);
+
+      /* "pytesmo/metrics/_fast.pyx":425
+ *             myold = my
+ *             rolling_nobs -= 1
+ *             mx -= (x[j] - mx) / rolling_nobs             # <<<<<<<<<<<<<<
+ *             my -= (y[j] - my) / rolling_nobs
+ *             msd -= ((x[j] - y[j])**2 - msd) / rolling_nobs
+ */
+      __pyx_t_21 = __pyx_v_j;
+      __pyx_v_mx = (__pyx_v_mx - (((*((float *) ( /* dim=0 */ (__pyx_v_x.data + __pyx_t_21 * __pyx_v_x.strides[0]) ))) - __pyx_v_mx) / __pyx_v_rolling_nobs));
+
+      /* "pytesmo/metrics/_fast.pyx":426
+ *             rolling_nobs -= 1
+ *             mx -= (x[j] - mx) / rolling_nobs
+ *             my -= (y[j] - my) / rolling_nobs             # <<<<<<<<<<<<<<
+ *             msd -= ((x[j] - y[j])**2 - msd) / rolling_nobs
+ *             M2x -= (x[j] - mxold) * (x[j] - mx)
+ */
+      __pyx_t_21 = __pyx_v_j;
+      __pyx_v_my = (__pyx_v_my - (((*((float *) ( /* dim=0 */ (__pyx_v_y.data + __pyx_t_21 * __pyx_v_y.strides[0]) ))) - __pyx_v_my) / __pyx_v_rolling_nobs));
+
+      /* "pytesmo/metrics/_fast.pyx":427
+ *             mx -= (x[j] - mx) / rolling_nobs
+ *             my -= (y[j] - my) / rolling_nobs
+ *             msd -= ((x[j] - y[j])**2 - msd) / rolling_nobs             # <<<<<<<<<<<<<<
+ *             M2x -= (x[j] - mxold) * (x[j] - mx)
+ *             M2y -= (y[j] - myold) * (y[j] - my)
+ */
+      __pyx_t_21 = __pyx_v_j;
+      __pyx_t_22 = __pyx_v_j;
+      __pyx_v_msd = (__pyx_v_msd - ((powf(((*((float *) ( /* dim=0 */ (__pyx_v_x.data + __pyx_t_21 * __pyx_v_x.strides[0]) ))) - (*((float *) ( /* dim=0 */ (__pyx_v_y.data + __pyx_t_22 * __pyx_v_y.strides[0]) )))), 2.0) - __pyx_v_msd) / __pyx_v_rolling_nobs));
+
+      /* "pytesmo/metrics/_fast.pyx":428
+ *             my -= (y[j] - my) / rolling_nobs
+ *             msd -= ((x[j] - y[j])**2 - msd) / rolling_nobs
+ *             M2x -= (x[j] - mxold) * (x[j] - mx)             # <<<<<<<<<<<<<<
+ *             M2y -= (y[j] - myold) * (y[j] - my)
+ *             C -= (x[j] - mxold) * (y[j] - my)
+ */
+      __pyx_t_22 = __pyx_v_j;
+      __pyx_t_21 = __pyx_v_j;
+      __pyx_v_M2x = (__pyx_v_M2x - (((*((float *) ( /* dim=0 */ (__pyx_v_x.data + __pyx_t_22 * __pyx_v_x.strides[0]) ))) - __pyx_v_mxold) * ((*((float *) ( /* dim=0 */ (__pyx_v_x.data + __pyx_t_21 * __pyx_v_x.strides[0]) ))) - __pyx_v_mx)));
+
+      /* "pytesmo/metrics/_fast.pyx":429
+ *             msd -= ((x[j] - y[j])**2 - msd) / rolling_nobs
+ *             M2x -= (x[j] - mxold) * (x[j] - mx)
+ *             M2y -= (y[j] - myold) * (y[j] - my)             # <<<<<<<<<<<<<<
+ *             C -= (x[j] - mxold) * (y[j] - my)
+ *
+ */
+      __pyx_t_21 = __pyx_v_j;
+      __pyx_t_22 = __pyx_v_j;
+      __pyx_v_M2y = (__pyx_v_M2y - (((*((float *) ( /* dim=0 */ (__pyx_v_y.data + __pyx_t_21 * __pyx_v_y.strides[0]) ))) - __pyx_v_myold) * ((*((float *) ( /* dim=0 */ (__pyx_v_y.data + __pyx_t_22 * __pyx_v_y.strides[0]) ))) - __pyx_v_my)));
+
+      /* "pytesmo/metrics/_fast.pyx":430
+ *             M2x -= (x[j] - mxold) * (x[j] - mx)
+ *             M2y -= (y[j] - myold) * (y[j] - my)
+ *             C -= (x[j] - mxold) * (y[j] - my)             # <<<<<<<<<<<<<<
+ *
+ *         # check if we have enough observations
+ */
+      __pyx_t_22 = __pyx_v_j;
+      __pyx_t_21 = __pyx_v_j;
+      __pyx_v_C = (__pyx_v_C - (((*((float *) ( /* dim=0 */ (__pyx_v_x.data + __pyx_t_22 * __pyx_v_x.strides[0]) ))) - __pyx_v_mxold) * ((*((float *) ( /* dim=0 */ (__pyx_v_y.data + __pyx_t_21 * __pyx_v_y.strides[0]) ))) - __pyx_v_my)));
+    }
+
+    /* "pytesmo/metrics/_fast.pyx":433
  *
  *         # check if we have enough observations
  *         num_obs = upper - lower + 1             # <<<<<<<<<<<<<<
  *         if num_obs == 0 or num_obs < min_periods:
- *             pr_arr[i, 0] = NAN
+ *             pr_view[i, 0] = NAN
  */
     __pyx_v_num_obs = ((__pyx_v_upper - __pyx_v_lower) + 1);
 
-    /* "pytesmo/metrics/_fast.pyx":391
+    /* "pytesmo/metrics/_fast.pyx":434
  *         # check if we have enough observations
  *         num_obs = upper - lower + 1
  *         if num_obs == 0 or num_obs < min_periods:             # <<<<<<<<<<<<<<
- *             pr_arr[i, 0] = NAN
- *             pr_arr[i, 1] = NAN
+ *             pr_view[i, 0] = NAN
+ *             pr_view[i, 1] = NAN
  */
-    __pyx_t_23 = ((__pyx_v_num_obs == 0) != 0);
-    if (!__pyx_t_23) {
+    __pyx_t_25 = ((__pyx_v_num_obs == 0) != 0);
+    if (!__pyx_t_25) {
     } else {
-      __pyx_t_17 = __pyx_t_23;
-      goto __pyx_L17_bool_binop_done;
+      __pyx_t_17 = __pyx_t_25;
+      goto __pyx_L22_bool_binop_done;
     }
-    __pyx_t_23 = ((__pyx_v_num_obs < __pyx_v_min_periods) != 0);
-    __pyx_t_17 = __pyx_t_23;
-    __pyx_L17_bool_binop_done:;
+    __pyx_t_25 = ((__pyx_v_num_obs < __pyx_v_min_periods) != 0);
+    __pyx_t_17 = __pyx_t_25;
+    __pyx_L22_bool_binop_done:;
     if (__pyx_t_17) {
 
-      /* "pytesmo/metrics/_fast.pyx":392
+      /* "pytesmo/metrics/_fast.pyx":435
  *         num_obs = upper - lower + 1
  *         if num_obs == 0 or num_obs < min_periods:
- *             pr_arr[i, 0] = NAN             # <<<<<<<<<<<<<<
- *             pr_arr[i, 1] = NAN
- *         else:
+ *             pr_view[i, 0] = NAN             # <<<<<<<<<<<<<<
+ *             pr_view[i, 1] = NAN
+ *             rmsd_view[i] = NAN
  */
       __pyx_t_21 = __pyx_v_i;
       __pyx_t_22 = 0;
-      *__Pyx_BufPtrStrided2d(float *, __pyx_pybuffernd_pr_arr.rcbuffer->pybuffer.buf, __pyx_t_21, __pyx_pybuffernd_pr_arr.diminfo[0].strides, __pyx_t_22, __pyx_pybuffernd_pr_arr.diminfo[1].strides) = NPY_NAN;
+      *((float *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_pr_view.data + __pyx_t_21 * __pyx_v_pr_view.strides[0]) ) + __pyx_t_22 * __pyx_v_pr_view.strides[1]) )) = NPY_NAN;
 
-      /* "pytesmo/metrics/_fast.pyx":393
+      /* "pytesmo/metrics/_fast.pyx":436
  *         if num_obs == 0 or num_obs < min_periods:
- *             pr_arr[i, 0] = NAN
- *             pr_arr[i, 1] = NAN             # <<<<<<<<<<<<<<
+ *             pr_view[i, 0] = NAN
+ *             pr_view[i, 1] = NAN             # <<<<<<<<<<<<<<
+ *             rmsd_view[i] = NAN
  *         else:
- *
  */
       __pyx_t_22 = __pyx_v_i;
       __pyx_t_21 = 1;
-      *__Pyx_BufPtrStrided2d(float *, __pyx_pybuffernd_pr_arr.rcbuffer->pybuffer.buf, __pyx_t_22, __pyx_pybuffernd_pr_arr.diminfo[0].strides, __pyx_t_21, __pyx_pybuffernd_pr_arr.diminfo[1].strides) = NPY_NAN;
+      *((float *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_pr_view.data + __pyx_t_22 * __pyx_v_pr_view.strides[0]) ) + __pyx_t_21 * __pyx_v_pr_view.strides[1]) )) = NPY_NAN;
 
-      /* "pytesmo/metrics/_fast.pyx":391
+      /* "pytesmo/metrics/_fast.pyx":437
+ *             pr_view[i, 0] = NAN
+ *             pr_view[i, 1] = NAN
+ *             rmsd_view[i] = NAN             # <<<<<<<<<<<<<<
+ *         else:
+ *             # to get var and cov we would need to divide by n, but since
+ */
+      __pyx_t_21 = __pyx_v_i;
+      *((float *) ( /* dim=0 */ (__pyx_v_rmsd_view.data + __pyx_t_21 * __pyx_v_rmsd_view.strides[0]) )) = NPY_NAN;
+
+      /* "pytesmo/metrics/_fast.pyx":434
  *         # check if we have enough observations
  *         num_obs = upper - lower + 1
  *         if num_obs == 0 or num_obs < min_periods:             # <<<<<<<<<<<<<<
- *             pr_arr[i, 0] = NAN
- *             pr_arr[i, 1] = NAN
+ *             pr_view[i, 0] = NAN
+ *             pr_view[i, 1] = NAN
  */
-      goto __pyx_L16;
+      goto __pyx_L21;
     }
 
-    /* "pytesmo/metrics/_fast.pyx":397
- *
- *             # first, add the new terms with Welford's algorithm
- *             for j in range(uold+1, upper+1):             # <<<<<<<<<<<<<<
- *                 mxold = mx
- *                 myold = my
- */
-    /*else*/ {
-      __pyx_t_24 = (__pyx_v_upper + 1);
-      __pyx_t_25 = __pyx_t_24;
-      for (__pyx_t_18 = (__pyx_v_uold + 1); __pyx_t_18 < __pyx_t_25; __pyx_t_18+=1) {
-        __pyx_v_j = __pyx_t_18;
-
-        /* "pytesmo/metrics/_fast.pyx":398
- *             # first, add the new terms with Welford's algorithm
- *             for j in range(uold+1, upper+1):
- *                 mxold = mx             # <<<<<<<<<<<<<<
- *                 myold = my
- *                 rolling_nobs += 1
- */
-        __pyx_v_mxold = __pyx_v_mx;
-
-        /* "pytesmo/metrics/_fast.pyx":399
- *             for j in range(uold+1, upper+1):
- *                 mxold = mx
- *                 myold = my             # <<<<<<<<<<<<<<
- *                 rolling_nobs += 1
- *                 mx += (x[j] - mx) / rolling_nobs
- */
-        __pyx_v_myold = __pyx_v_my;
-
-        /* "pytesmo/metrics/_fast.pyx":400
- *                 mxold = mx
- *                 myold = my
- *                 rolling_nobs += 1             # <<<<<<<<<<<<<<
- *                 mx += (x[j] - mx) / rolling_nobs
- *                 my += (y[j] - my) / rolling_nobs
- */
-        __pyx_v_rolling_nobs = (__pyx_v_rolling_nobs + 1);
-
-        /* "pytesmo/metrics/_fast.pyx":401
- *                 myold = my
- *                 rolling_nobs += 1
- *                 mx += (x[j] - mx) / rolling_nobs             # <<<<<<<<<<<<<<
- *                 my += (y[j] - my) / rolling_nobs
- *                 msd += ((x[j] - y[j])**2 - msd) / rolling_nobs
- */
-        __pyx_t_21 = __pyx_v_j;
-        __pyx_v_mx = (__pyx_v_mx + (((*((float *) ( /* dim=0 */ (__pyx_v_x.data + __pyx_t_21 * __pyx_v_x.strides[0]) ))) - __pyx_v_mx) / ((float)__pyx_v_rolling_nobs)));
-
-        /* "pytesmo/metrics/_fast.pyx":402
- *                 rolling_nobs += 1
- *                 mx += (x[j] - mx) / rolling_nobs
- *                 my += (y[j] - my) / rolling_nobs             # <<<<<<<<<<<<<<
- *                 msd += ((x[j] - y[j])**2 - msd) / rolling_nobs
- *                 M2x += (x[j] - mx) * (x[j] - mxold)
- */
-        __pyx_t_21 = __pyx_v_j;
-        __pyx_v_my = (__pyx_v_my + (((*((float *) ( /* dim=0 */ (__pyx_v_y.data + __pyx_t_21 * __pyx_v_y.strides[0]) ))) - __pyx_v_my) / ((float)__pyx_v_rolling_nobs)));
-
-        /* "pytesmo/metrics/_fast.pyx":403
- *                 mx += (x[j] - mx) / rolling_nobs
- *                 my += (y[j] - my) / rolling_nobs
- *                 msd += ((x[j] - y[j])**2 - msd) / rolling_nobs             # <<<<<<<<<<<<<<
- *                 M2x += (x[j] - mx) * (x[j] - mxold)
- *                 M2y += (y[j] - my) * (y[j] - myold)
- */
-        __pyx_t_21 = __pyx_v_j;
-        __pyx_t_22 = __pyx_v_j;
-        __pyx_v_msd = (__pyx_v_msd + ((powf(((*((float *) ( /* dim=0 */ (__pyx_v_x.data + __pyx_t_21 * __pyx_v_x.strides[0]) ))) - (*((float *) ( /* dim=0 */ (__pyx_v_y.data + __pyx_t_22 * __pyx_v_y.strides[0]) )))), 2.0) - __pyx_v_msd) / ((float)__pyx_v_rolling_nobs)));
-
-        /* "pytesmo/metrics/_fast.pyx":404
- *                 my += (y[j] - my) / rolling_nobs
- *                 msd += ((x[j] - y[j])**2 - msd) / rolling_nobs
- *                 M2x += (x[j] - mx) * (x[j] - mxold)             # <<<<<<<<<<<<<<
- *                 M2y += (y[j] - my) * (y[j] - myold)
- *                 C += (x[j] - mx) * (y[j] - myold)
- */
-        __pyx_t_22 = __pyx_v_j;
-        __pyx_t_21 = __pyx_v_j;
-        __pyx_v_M2x = (__pyx_v_M2x + (((*((float *) ( /* dim=0 */ (__pyx_v_x.data + __pyx_t_22 * __pyx_v_x.strides[0]) ))) - __pyx_v_mx) * ((*((float *) ( /* dim=0 */ (__pyx_v_x.data + __pyx_t_21 * __pyx_v_x.strides[0]) ))) - __pyx_v_mxold)));
-
-        /* "pytesmo/metrics/_fast.pyx":405
- *                 msd += ((x[j] - y[j])**2 - msd) / rolling_nobs
- *                 M2x += (x[j] - mx) * (x[j] - mxold)
- *                 M2y += (y[j] - my) * (y[j] - myold)             # <<<<<<<<<<<<<<
- *                 C += (x[j] - mx) * (y[j] - myold)
- *
- */
-        __pyx_t_21 = __pyx_v_j;
-        __pyx_t_22 = __pyx_v_j;
-        __pyx_v_M2y = (__pyx_v_M2y + (((*((float *) ( /* dim=0 */ (__pyx_v_y.data + __pyx_t_21 * __pyx_v_y.strides[0]) ))) - __pyx_v_my) * ((*((float *) ( /* dim=0 */ (__pyx_v_y.data + __pyx_t_22 * __pyx_v_y.strides[0]) ))) - __pyx_v_myold)));
-
-        /* "pytesmo/metrics/_fast.pyx":406
- *                 M2x += (x[j] - mx) * (x[j] - mxold)
- *                 M2y += (y[j] - my) * (y[j] - myold)
- *                 C += (x[j] - mx) * (y[j] - myold)             # <<<<<<<<<<<<<<
- *
- *             # now subtract the ones that fell out the window
- */
-        __pyx_t_22 = __pyx_v_j;
-        __pyx_t_21 = __pyx_v_j;
-        __pyx_v_C = (__pyx_v_C + (((*((float *) ( /* dim=0 */ (__pyx_v_x.data + __pyx_t_22 * __pyx_v_x.strides[0]) ))) - __pyx_v_mx) * ((*((float *) ( /* dim=0 */ (__pyx_v_y.data + __pyx_t_21 * __pyx_v_y.strides[0]) ))) - __pyx_v_myold)));
-      }
-
-      /* "pytesmo/metrics/_fast.pyx":411
- *             # the old values here correspond to the m_n values in the formula,
- *             # that's why the order is different here
- *             for j in range(lold, lower):             # <<<<<<<<<<<<<<
- *                 mxold = mx
- *                 myold = my
- */
-      __pyx_t_18 = __pyx_v_lower;
-      __pyx_t_19 = __pyx_t_18;
-      for (__pyx_t_20 = __pyx_v_lold; __pyx_t_20 < __pyx_t_19; __pyx_t_20+=1) {
-        __pyx_v_j = __pyx_t_20;
-
-        /* "pytesmo/metrics/_fast.pyx":412
- *             # that's why the order is different here
- *             for j in range(lold, lower):
- *                 mxold = mx             # <<<<<<<<<<<<<<
- *                 myold = my
- *                 rolling_nobs -= 1
- */
-        __pyx_v_mxold = __pyx_v_mx;
-
-        /* "pytesmo/metrics/_fast.pyx":413
- *             for j in range(lold, lower):
- *                 mxold = mx
- *                 myold = my             # <<<<<<<<<<<<<<
- *                 rolling_nobs -= 1
- *                 mx -= (x[j] - mx) / rolling_nobs
- */
-        __pyx_v_myold = __pyx_v_my;
-
-        /* "pytesmo/metrics/_fast.pyx":414
- *                 mxold = mx
- *                 myold = my
- *                 rolling_nobs -= 1             # <<<<<<<<<<<<<<
- *                 mx -= (x[j] - mx) / rolling_nobs
- *                 my -= (y[j] - my) / rolling_nobs
- */
-        __pyx_v_rolling_nobs = (__pyx_v_rolling_nobs - 1);
-
-        /* "pytesmo/metrics/_fast.pyx":415
- *                 myold = my
- *                 rolling_nobs -= 1
- *                 mx -= (x[j] - mx) / rolling_nobs             # <<<<<<<<<<<<<<
- *                 my -= (y[j] - my) / rolling_nobs
- *                 msd -= ((x[j] - y[j])**2 - msd) / rolling_nobs
- */
-        __pyx_t_21 = __pyx_v_j;
-        __pyx_v_mx = (__pyx_v_mx - (((*((float *) ( /* dim=0 */ (__pyx_v_x.data + __pyx_t_21 * __pyx_v_x.strides[0]) ))) - __pyx_v_mx) / ((float)__pyx_v_rolling_nobs)));
-
-        /* "pytesmo/metrics/_fast.pyx":416
- *                 rolling_nobs -= 1
- *                 mx -= (x[j] - mx) / rolling_nobs
- *                 my -= (y[j] - my) / rolling_nobs             # <<<<<<<<<<<<<<
- *                 msd -= ((x[j] - y[j])**2 - msd) / rolling_nobs
- *                 M2x -= (x[j] - mxold) * (x[j] - mx)
- */
-        __pyx_t_21 = __pyx_v_j;
-        __pyx_v_my = (__pyx_v_my - (((*((float *) ( /* dim=0 */ (__pyx_v_y.data + __pyx_t_21 * __pyx_v_y.strides[0]) ))) - __pyx_v_my) / ((float)__pyx_v_rolling_nobs)));
-
-        /* "pytesmo/metrics/_fast.pyx":417
- *                 mx -= (x[j] - mx) / rolling_nobs
- *                 my -= (y[j] - my) / rolling_nobs
- *                 msd -= ((x[j] - y[j])**2 - msd) / rolling_nobs             # <<<<<<<<<<<<<<
- *                 M2x -= (x[j] - mxold) * (x[j] - mx)
- *                 M2y -= (y[j] - myold) * (y[j] - my)
- */
-        __pyx_t_21 = __pyx_v_j;
-        __pyx_t_22 = __pyx_v_j;
-        __pyx_v_msd = (__pyx_v_msd - ((powf(((*((float *) ( /* dim=0 */ (__pyx_v_x.data + __pyx_t_21 * __pyx_v_x.strides[0]) ))) - (*((float *) ( /* dim=0 */ (__pyx_v_y.data + __pyx_t_22 * __pyx_v_y.strides[0]) )))), 2.0) - __pyx_v_msd) / ((float)__pyx_v_rolling_nobs)));
-
-        /* "pytesmo/metrics/_fast.pyx":418
- *                 my -= (y[j] - my) / rolling_nobs
- *                 msd -= ((x[j] - y[j])**2 - msd) / rolling_nobs
- *                 M2x -= (x[j] - mxold) * (x[j] - mx)             # <<<<<<<<<<<<<<
- *                 M2y -= (y[j] - myold) * (y[j] - my)
- *                 C -= (x[j] - mxold) * (y[j] - my)
- */
-        __pyx_t_22 = __pyx_v_j;
-        __pyx_t_21 = __pyx_v_j;
-        __pyx_v_M2x = (__pyx_v_M2x - (((*((float *) ( /* dim=0 */ (__pyx_v_x.data + __pyx_t_22 * __pyx_v_x.strides[0]) ))) - __pyx_v_mxold) * ((*((float *) ( /* dim=0 */ (__pyx_v_x.data + __pyx_t_21 * __pyx_v_x.strides[0]) ))) - __pyx_v_mx)));
-
-        /* "pytesmo/metrics/_fast.pyx":419
- *                 msd -= ((x[j] - y[j])**2 - msd) / rolling_nobs
- *                 M2x -= (x[j] - mxold) * (x[j] - mx)
- *                 M2y -= (y[j] - myold) * (y[j] - my)             # <<<<<<<<<<<<<<
- *                 C -= (x[j] - mxold) * (y[j] - my)
- *
- */
-        __pyx_t_21 = __pyx_v_j;
-        __pyx_t_22 = __pyx_v_j;
-        __pyx_v_M2y = (__pyx_v_M2y - (((*((float *) ( /* dim=0 */ (__pyx_v_y.data + __pyx_t_21 * __pyx_v_y.strides[0]) ))) - __pyx_v_myold) * ((*((float *) ( /* dim=0 */ (__pyx_v_y.data + __pyx_t_22 * __pyx_v_y.strides[0]) ))) - __pyx_v_my)));
-
-        /* "pytesmo/metrics/_fast.pyx":420
- *                 M2x -= (x[j] - mxold) * (x[j] - mx)
- *                 M2y -= (y[j] - myold) * (y[j] - my)
- *                 C -= (x[j] - mxold) * (y[j] - my)             # <<<<<<<<<<<<<<
- *
- *
- */
-        __pyx_t_22 = __pyx_v_j;
-        __pyx_t_21 = __pyx_v_j;
-        __pyx_v_C = (__pyx_v_C - (((*((float *) ( /* dim=0 */ (__pyx_v_x.data + __pyx_t_22 * __pyx_v_x.strides[0]) ))) - __pyx_v_mxold) * ((*((float *) ( /* dim=0 */ (__pyx_v_y.data + __pyx_t_21 * __pyx_v_y.strides[0]) ))) - __pyx_v_my)));
-      }
-
-      /* "pytesmo/metrics/_fast.pyx":425
+    /* "pytesmo/metrics/_fast.pyx":441
  *             # to get var and cov we would need to divide by n, but since
  *             # we're only interested in the ratio that's not necessary
  *             r = C / (sqrt(M2x * M2y))             # <<<<<<<<<<<<<<
  *             pr_view[i, 0] = r
  *             rmsd_view[i] = sqrt(msd)
  */
+    /*else*/ {
       __pyx_v_r = (((double)__pyx_v_C) / sqrt((__pyx_v_M2x * __pyx_v_M2y)));
 
-      /* "pytesmo/metrics/_fast.pyx":426
+      /* "pytesmo/metrics/_fast.pyx":442
  *             # we're only interested in the ratio that's not necessary
  *             r = C / (sqrt(M2x * M2y))
  *             pr_view[i, 0] = r             # <<<<<<<<<<<<<<
@@ -12336,7 +12373,7 @@ static PyObject *__pyx_fuse_0__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
       __pyx_t_22 = 0;
       *((float *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_pr_view.data + __pyx_t_21 * __pyx_v_pr_view.strides[0]) ) + __pyx_t_22 * __pyx_v_pr_view.strides[1]) )) = __pyx_v_r;
 
-      /* "pytesmo/metrics/_fast.pyx":427
+      /* "pytesmo/metrics/_fast.pyx":443
  *             r = C / (sqrt(M2x * M2y))
  *             pr_view[i, 0] = r
  *             rmsd_view[i] = sqrt(msd)             # <<<<<<<<<<<<<<
@@ -12346,7 +12383,7 @@ static PyObject *__pyx_fuse_0__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
       __pyx_t_22 = __pyx_v_i;
       *((float *) ( /* dim=0 */ (__pyx_v_rmsd_view.data + __pyx_t_22 * __pyx_v_rmsd_view.strides[0]) )) = sqrt(__pyx_v_msd);
 
-      /* "pytesmo/metrics/_fast.pyx":430
+      /* "pytesmo/metrics/_fast.pyx":446
  *
  *             # p-value
  *             if fabs(r) == 1.0:             # <<<<<<<<<<<<<<
@@ -12356,7 +12393,7 @@ static PyObject *__pyx_fuse_0__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
       __pyx_t_17 = ((fabs(__pyx_v_r) == 1.0) != 0);
       if (__pyx_t_17) {
 
-        /* "pytesmo/metrics/_fast.pyx":431
+        /* "pytesmo/metrics/_fast.pyx":447
  *             # p-value
  *             if fabs(r) == 1.0:
  *                 pr_view[i, 1] = 0.0             # <<<<<<<<<<<<<<
@@ -12367,17 +12404,17 @@ static PyObject *__pyx_fuse_0__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
         __pyx_t_21 = 1;
         *((float *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_pr_view.data + __pyx_t_22 * __pyx_v_pr_view.strides[0]) ) + __pyx_t_21 * __pyx_v_pr_view.strides[1]) )) = 0.0;
 
-        /* "pytesmo/metrics/_fast.pyx":430
+        /* "pytesmo/metrics/_fast.pyx":446
  *
  *             # p-value
  *             if fabs(r) == 1.0:             # <<<<<<<<<<<<<<
  *                 pr_view[i, 1] = 0.0
  *             else:
  */
-        goto __pyx_L23;
+        goto __pyx_L24;
       }
 
-      /* "pytesmo/metrics/_fast.pyx":433
+      /* "pytesmo/metrics/_fast.pyx":449
  *                 pr_view[i, 1] = 0.0
  *             else:
  *                 df = num_obs - 2             # <<<<<<<<<<<<<<
@@ -12387,7 +12424,7 @@ static PyObject *__pyx_fuse_0__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
       /*else*/ {
         __pyx_v_df = (__pyx_v_num_obs - 2);
 
-        /* "pytesmo/metrics/_fast.pyx":434
+        /* "pytesmo/metrics/_fast.pyx":450
  *             else:
  *                 df = num_obs - 2
  *                 t_squared = r * r * (df / ((1.0 - r) * (1.0 + r)))             # <<<<<<<<<<<<<<
@@ -12396,7 +12433,7 @@ static PyObject *__pyx_fuse_0__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
  */
         __pyx_v_t_squared = ((__pyx_v_r * __pyx_v_r) * (((double)__pyx_v_df) / ((1.0 - __pyx_v_r) * (1.0 + __pyx_v_r))));
 
-        /* "pytesmo/metrics/_fast.pyx":435
+        /* "pytesmo/metrics/_fast.pyx":451
  *                 df = num_obs - 2
  *                 t_squared = r * r * (df / ((1.0 - r) * (1.0 + r)))
  *                 z = min(float(df) / (df + t_squared), 1.0)             # <<<<<<<<<<<<<<
@@ -12412,18 +12449,18 @@ static PyObject *__pyx_fuse_0__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
         }
         __pyx_v_z = __pyx_t_28;
 
-        /* "pytesmo/metrics/_fast.pyx":436
+        /* "pytesmo/metrics/_fast.pyx":452
  *                 t_squared = r * r * (df / ((1.0 - r) * (1.0 + r)))
  *                 z = min(float(df) / (df + t_squared), 1.0)
  *                 pr_view[i, 1] = betainc(0.5*df, 0.5, z)             # <<<<<<<<<<<<<<
  *
  *     return pr_arr, rmsd_arr
  */
-        __Pyx_GetModuleGlobalName(__pyx_t_6, __pyx_n_s_betainc); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 436, __pyx_L1_error)
+        __Pyx_GetModuleGlobalName(__pyx_t_6, __pyx_n_s_betainc); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 452, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_6);
-        __pyx_t_2 = PyFloat_FromDouble((0.5 * __pyx_v_df)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 436, __pyx_L1_error)
+        __pyx_t_2 = PyFloat_FromDouble((0.5 * __pyx_v_df)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 452, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_2);
-        __pyx_t_4 = PyFloat_FromDouble(__pyx_v_z); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 436, __pyx_L1_error)
+        __pyx_t_4 = PyFloat_FromDouble(__pyx_v_z); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 452, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_4);
         __pyx_t_3 = NULL;
         __pyx_t_18 = 0;
@@ -12440,7 +12477,7 @@ static PyObject *__pyx_fuse_0__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
         #if CYTHON_FAST_PYCALL
         if (PyFunction_Check(__pyx_t_6)) {
           PyObject *__pyx_temp[4] = {__pyx_t_3, __pyx_t_2, __pyx_float_0_5, __pyx_t_4};
-          __pyx_t_5 = __Pyx_PyFunction_FastCall(__pyx_t_6, __pyx_temp+1-__pyx_t_18, 3+__pyx_t_18); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 436, __pyx_L1_error)
+          __pyx_t_5 = __Pyx_PyFunction_FastCall(__pyx_t_6, __pyx_temp+1-__pyx_t_18, 3+__pyx_t_18); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 452, __pyx_L1_error)
           __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
           __Pyx_GOTREF(__pyx_t_5);
           __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
@@ -12450,7 +12487,7 @@ static PyObject *__pyx_fuse_0__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
         #if CYTHON_FAST_PYCCALL
         if (__Pyx_PyFastCFunction_Check(__pyx_t_6)) {
           PyObject *__pyx_temp[4] = {__pyx_t_3, __pyx_t_2, __pyx_float_0_5, __pyx_t_4};
-          __pyx_t_5 = __Pyx_PyCFunction_FastCall(__pyx_t_6, __pyx_temp+1-__pyx_t_18, 3+__pyx_t_18); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 436, __pyx_L1_error)
+          __pyx_t_5 = __Pyx_PyCFunction_FastCall(__pyx_t_6, __pyx_temp+1-__pyx_t_18, 3+__pyx_t_18); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 452, __pyx_L1_error)
           __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
           __Pyx_GOTREF(__pyx_t_5);
           __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
@@ -12458,7 +12495,7 @@ static PyObject *__pyx_fuse_0__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
         } else
         #endif
         {
-          __pyx_t_29 = PyTuple_New(3+__pyx_t_18); if (unlikely(!__pyx_t_29)) __PYX_ERR(0, 436, __pyx_L1_error)
+          __pyx_t_29 = PyTuple_New(3+__pyx_t_18); if (unlikely(!__pyx_t_29)) __PYX_ERR(0, 452, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_29);
           if (__pyx_t_3) {
             __Pyx_GIVEREF(__pyx_t_3); PyTuple_SET_ITEM(__pyx_t_29, 0, __pyx_t_3); __pyx_t_3 = NULL;
@@ -12472,29 +12509,29 @@ static PyObject *__pyx_fuse_0__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
           PyTuple_SET_ITEM(__pyx_t_29, 2+__pyx_t_18, __pyx_t_4);
           __pyx_t_2 = 0;
           __pyx_t_4 = 0;
-          __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_6, __pyx_t_29, NULL); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 436, __pyx_L1_error)
+          __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_6, __pyx_t_29, NULL); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 452, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_5);
           __Pyx_DECREF(__pyx_t_29); __pyx_t_29 = 0;
         }
         __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-        __pyx_t_30 = __pyx_PyFloat_AsFloat(__pyx_t_5); if (unlikely((__pyx_t_30 == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 436, __pyx_L1_error)
+        __pyx_t_30 = __pyx_PyFloat_AsFloat(__pyx_t_5); if (unlikely((__pyx_t_30 == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 452, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
         __pyx_t_21 = __pyx_v_i;
         __pyx_t_22 = 1;
         *((float *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_pr_view.data + __pyx_t_21 * __pyx_v_pr_view.strides[0]) ) + __pyx_t_22 * __pyx_v_pr_view.strides[1]) )) = __pyx_t_30;
       }
-      __pyx_L23:;
+      __pyx_L24:;
     }
-    __pyx_L16:;
+    __pyx_L21:;
   }
 
-  /* "pytesmo/metrics/_fast.pyx":438
+  /* "pytesmo/metrics/_fast.pyx":454
  *                 pr_view[i, 1] = betainc(0.5*df, 0.5, z)
  *
  *     return pr_arr, rmsd_arr             # <<<<<<<<<<<<<<
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_5 = PyTuple_New(2); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 438, __pyx_L1_error)
+  __pyx_t_5 = PyTuple_New(2); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 454, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_INCREF(((PyObject *)__pyx_v_pr_arr));
   __Pyx_GIVEREF(((PyObject *)__pyx_v_pr_arr));
@@ -12700,7 +12737,6 @@ static PyObject *__pyx_fuse_1__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
   int __pyx_v_upper;
   int __pyx_v_lold;
   int __pyx_v_uold;
-  int __pyx_v_rolling_nobs;
   double __pyx_v_mx;
   double __pyx_v_my;
   double __pyx_v_mxold;
@@ -12712,6 +12748,7 @@ static PyObject *__pyx_fuse_1__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
   double __pyx_v_t_squared;
   double __pyx_v_z;
   double __pyx_v_msd;
+  double __pyx_v_rolling_nobs;
   PyArrayObject *__pyx_v_pr_arr = 0;
   PyArrayObject *__pyx_v_rmsd_arr = 0;
   __Pyx_memviewslice __pyx_v_pr_view = { 0, 0, { 0 }, { 0 }, { 0 } };
@@ -12744,9 +12781,9 @@ static PyObject *__pyx_fuse_1__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
   int __pyx_t_20;
   Py_ssize_t __pyx_t_21;
   Py_ssize_t __pyx_t_22;
-  int __pyx_t_23;
+  long __pyx_t_23;
   long __pyx_t_24;
-  long __pyx_t_25;
+  int __pyx_t_25;
   double __pyx_t_26;
   double __pyx_t_27;
   double __pyx_t_28;
@@ -12764,7 +12801,7 @@ static PyObject *__pyx_fuse_1__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
   __pyx_pybuffernd_rmsd_arr.data = NULL;
   __pyx_pybuffernd_rmsd_arr.rcbuffer = &__pyx_pybuffer_rmsd_arr;
 
-  /* "pytesmo/metrics/_fast.pyx":342
+  /* "pytesmo/metrics/_fast.pyx":343
  *     cdef floating [:] rmsd_view
  *
  *     n_ts = len(timestamps)             # <<<<<<<<<<<<<<
@@ -12774,21 +12811,21 @@ static PyObject *__pyx_fuse_1__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
   __pyx_t_1 = __Pyx_MemoryView_Len(__pyx_v_timestamps);
   __pyx_v_n_ts = __pyx_t_1;
 
-  /* "pytesmo/metrics/_fast.pyx":348
+  /* "pytesmo/metrics/_fast.pyx":349
  *         rmsd_arr = np.empty(n_ts, dtype=np.float32)
  *     elif floating is double:
  *         pr_arr = np.empty((n_ts, 2), dtype=np.float64)             # <<<<<<<<<<<<<<
  *         rmsd_arr = np.empty(n_ts, dtype=np.float64)
  *     else:
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 348, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 349, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_empty); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 348, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_empty); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 349, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_n_ts); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 348, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_n_ts); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 349, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_4 = PyTuple_New(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 348, __pyx_L1_error)
+  __pyx_t_4 = PyTuple_New(2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 349, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_GIVEREF(__pyx_t_2);
   PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_2);
@@ -12796,34 +12833,34 @@ static PyObject *__pyx_fuse_1__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
   __Pyx_GIVEREF(__pyx_int_2);
   PyTuple_SET_ITEM(__pyx_t_4, 1, __pyx_int_2);
   __pyx_t_2 = 0;
-  __pyx_t_2 = PyTuple_New(1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 348, __pyx_L1_error)
+  __pyx_t_2 = PyTuple_New(1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 349, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_GIVEREF(__pyx_t_4);
   PyTuple_SET_ITEM(__pyx_t_2, 0, __pyx_t_4);
   __pyx_t_4 = 0;
-  __pyx_t_4 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 348, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 349, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __Pyx_GetModuleGlobalName(__pyx_t_5, __pyx_n_s_np); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 348, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_5, __pyx_n_s_np); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 349, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
-  __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_float64); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 348, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_float64); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 349, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_dtype, __pyx_t_6) < 0) __PYX_ERR(0, 348, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_dtype, __pyx_t_6) < 0) __PYX_ERR(0, 349, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-  __pyx_t_6 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_2, __pyx_t_4); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 348, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_2, __pyx_t_4); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 349, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  if (!(likely(((__pyx_t_6) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_6, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 348, __pyx_L1_error)
+  if (!(likely(((__pyx_t_6) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_6, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 349, __pyx_L1_error)
   __pyx_t_7 = ((PyArrayObject *)__pyx_t_6);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_pr_arr.rcbuffer->pybuffer);
-    __pyx_t_8 = __Pyx_GetBufferAndValidate(&__pyx_pybuffernd_pr_arr.rcbuffer->pybuffer, (PyObject*)__pyx_t_7, &__Pyx_TypeInfo_double, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 2, 0, __pyx_stack);
+    __pyx_t_8 = __Pyx_GetBufferAndValidate(&__pyx_pybuffernd_pr_arr.rcbuffer->pybuffer, (PyObject*)__pyx_t_7, &__Pyx_TypeInfo_double, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack);
     if (unlikely(__pyx_t_8 < 0)) {
       PyErr_Fetch(&__pyx_t_9, &__pyx_t_10, &__pyx_t_11);
-      if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_pr_arr.rcbuffer->pybuffer, (PyObject*)__pyx_v_pr_arr, &__Pyx_TypeInfo_double, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 2, 0, __pyx_stack) == -1)) {
+      if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_pr_arr.rcbuffer->pybuffer, (PyObject*)__pyx_v_pr_arr, &__Pyx_TypeInfo_double, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) {
         Py_XDECREF(__pyx_t_9); Py_XDECREF(__pyx_t_10); Py_XDECREF(__pyx_t_11);
         __Pyx_RaiseBufferFallbackError();
       } else {
@@ -12832,46 +12869,46 @@ static PyObject *__pyx_fuse_1__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
       __pyx_t_9 = __pyx_t_10 = __pyx_t_11 = 0;
     }
     __pyx_pybuffernd_pr_arr.diminfo[0].strides = __pyx_pybuffernd_pr_arr.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_pr_arr.diminfo[0].shape = __pyx_pybuffernd_pr_arr.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_pr_arr.diminfo[1].strides = __pyx_pybuffernd_pr_arr.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_pr_arr.diminfo[1].shape = __pyx_pybuffernd_pr_arr.rcbuffer->pybuffer.shape[1];
-    if (unlikely(__pyx_t_8 < 0)) __PYX_ERR(0, 348, __pyx_L1_error)
+    if (unlikely(__pyx_t_8 < 0)) __PYX_ERR(0, 349, __pyx_L1_error)
   }
   __pyx_t_7 = 0;
   __pyx_v_pr_arr = ((PyArrayObject *)__pyx_t_6);
   __pyx_t_6 = 0;
 
-  /* "pytesmo/metrics/_fast.pyx":349
+  /* "pytesmo/metrics/_fast.pyx":350
  *     elif floating is double:
  *         pr_arr = np.empty((n_ts, 2), dtype=np.float64)
  *         rmsd_arr = np.empty(n_ts, dtype=np.float64)             # <<<<<<<<<<<<<<
  *     else:
  *         raise ValueError("Unkown floating type")
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_6, __pyx_n_s_np); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 349, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_6, __pyx_n_s_np); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 350, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_n_s_empty); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 349, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_n_s_empty); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 350, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-  __pyx_t_6 = __Pyx_PyInt_From_int(__pyx_v_n_ts); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 349, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyInt_From_int(__pyx_v_n_ts); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 350, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
-  __pyx_t_2 = PyTuple_New(1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 349, __pyx_L1_error)
+  __pyx_t_2 = PyTuple_New(1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 350, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_GIVEREF(__pyx_t_6);
   PyTuple_SET_ITEM(__pyx_t_2, 0, __pyx_t_6);
   __pyx_t_6 = 0;
-  __pyx_t_6 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 349, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 350, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
-  __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 349, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 350, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_float64); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 349, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_float64); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 350, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  if (PyDict_SetItem(__pyx_t_6, __pyx_n_s_dtype, __pyx_t_5) < 0) __PYX_ERR(0, 349, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_6, __pyx_n_s_dtype, __pyx_t_5) < 0) __PYX_ERR(0, 350, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_2, __pyx_t_6); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 349, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_2, __pyx_t_6); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 350, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-  if (!(likely(((__pyx_t_5) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_5, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 349, __pyx_L1_error)
+  if (!(likely(((__pyx_t_5) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_5, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 350, __pyx_L1_error)
   __pyx_t_12 = ((PyArrayObject *)__pyx_t_5);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
@@ -12888,37 +12925,37 @@ static PyObject *__pyx_fuse_1__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
       __pyx_t_11 = __pyx_t_10 = __pyx_t_9 = 0;
     }
     __pyx_pybuffernd_rmsd_arr.diminfo[0].strides = __pyx_pybuffernd_rmsd_arr.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_rmsd_arr.diminfo[0].shape = __pyx_pybuffernd_rmsd_arr.rcbuffer->pybuffer.shape[0];
-    if (unlikely(__pyx_t_8 < 0)) __PYX_ERR(0, 349, __pyx_L1_error)
+    if (unlikely(__pyx_t_8 < 0)) __PYX_ERR(0, 350, __pyx_L1_error)
   }
   __pyx_t_12 = 0;
   __pyx_v_rmsd_arr = ((PyArrayObject *)__pyx_t_5);
   __pyx_t_5 = 0;
 
-  /* "pytesmo/metrics/_fast.pyx":353
+  /* "pytesmo/metrics/_fast.pyx":354
  *         raise ValueError("Unkown floating type")
  *     # work on memoryviews instead of on arrays directly
  *     pr_view = pr_arr             # <<<<<<<<<<<<<<
  *     rmsd_view = rmsd_arr
  *
  */
-  __pyx_t_13 = __Pyx_PyObject_to_MemoryviewSlice_dsds_double(((PyObject *)__pyx_v_pr_arr), PyBUF_WRITABLE); if (unlikely(!__pyx_t_13.memview)) __PYX_ERR(0, 353, __pyx_L1_error)
+  __pyx_t_13 = __Pyx_PyObject_to_MemoryviewSlice_dsds_double(((PyObject *)__pyx_v_pr_arr), PyBUF_WRITABLE); if (unlikely(!__pyx_t_13.memview)) __PYX_ERR(0, 354, __pyx_L1_error)
   __pyx_v_pr_view = __pyx_t_13;
   __pyx_t_13.memview = NULL;
   __pyx_t_13.data = NULL;
 
-  /* "pytesmo/metrics/_fast.pyx":354
+  /* "pytesmo/metrics/_fast.pyx":355
  *     # work on memoryviews instead of on arrays directly
  *     pr_view = pr_arr
  *     rmsd_view = rmsd_arr             # <<<<<<<<<<<<<<
  *
  *     mx = my = msd = M2x = M2y = C = 0
  */
-  __pyx_t_14 = __Pyx_PyObject_to_MemoryviewSlice_ds_double(((PyObject *)__pyx_v_rmsd_arr), PyBUF_WRITABLE); if (unlikely(!__pyx_t_14.memview)) __PYX_ERR(0, 354, __pyx_L1_error)
+  __pyx_t_14 = __Pyx_PyObject_to_MemoryviewSlice_ds_double(((PyObject *)__pyx_v_rmsd_arr), PyBUF_WRITABLE); if (unlikely(!__pyx_t_14.memview)) __PYX_ERR(0, 355, __pyx_L1_error)
   __pyx_v_rmsd_view = __pyx_t_14;
   __pyx_t_14.memview = NULL;
   __pyx_t_14.data = NULL;
 
-  /* "pytesmo/metrics/_fast.pyx":356
+  /* "pytesmo/metrics/_fast.pyx":357
  *     rmsd_view = rmsd_arr
  *
  *     mx = my = msd = M2x = M2y = C = 0             # <<<<<<<<<<<<<<
@@ -12932,7 +12969,7 @@ static PyObject *__pyx_fuse_1__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
   __pyx_v_M2y = 0.0;
   __pyx_v_C = 0.0;
 
-  /* "pytesmo/metrics/_fast.pyx":357
+  /* "pytesmo/metrics/_fast.pyx":358
  *
  *     mx = my = msd = M2x = M2y = C = 0
  *     lower = 0             # <<<<<<<<<<<<<<
@@ -12941,7 +12978,7 @@ static PyObject *__pyx_fuse_1__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
  */
   __pyx_v_lower = 0;
 
-  /* "pytesmo/metrics/_fast.pyx":358
+  /* "pytesmo/metrics/_fast.pyx":359
  *     mx = my = msd = M2x = M2y = C = 0
  *     lower = 0
  *     upper = -1             # <<<<<<<<<<<<<<
@@ -12950,16 +12987,16 @@ static PyObject *__pyx_fuse_1__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
  */
   __pyx_v_upper = -1;
 
-  /* "pytesmo/metrics/_fast.pyx":359
+  /* "pytesmo/metrics/_fast.pyx":360
  *     lower = 0
  *     upper = -1
  *     rolling_nobs = 0             # <<<<<<<<<<<<<<
  *     for i in range(n_ts):
  *         lold = lower
  */
-  __pyx_v_rolling_nobs = 0;
+  __pyx_v_rolling_nobs = 0.0;
 
-  /* "pytesmo/metrics/_fast.pyx":360
+  /* "pytesmo/metrics/_fast.pyx":361
  *     upper = -1
  *     rolling_nobs = 0
  *     for i in range(n_ts):             # <<<<<<<<<<<<<<
@@ -12971,7 +13008,7 @@ static PyObject *__pyx_fuse_1__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
   for (__pyx_t_16 = 0; __pyx_t_16 < __pyx_t_15; __pyx_t_16+=1) {
     __pyx_v_i = __pyx_t_16;
 
-    /* "pytesmo/metrics/_fast.pyx":361
+    /* "pytesmo/metrics/_fast.pyx":362
  *     rolling_nobs = 0
  *     for i in range(n_ts):
  *         lold = lower             # <<<<<<<<<<<<<<
@@ -12980,16 +13017,16 @@ static PyObject *__pyx_fuse_1__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
  */
     __pyx_v_lold = __pyx_v_lower;
 
-    /* "pytesmo/metrics/_fast.pyx":362
+    /* "pytesmo/metrics/_fast.pyx":363
  *     for i in range(n_ts):
  *         lold = lower
  *         uold = upper             # <<<<<<<<<<<<<<
  *
- *         # find interval
+ *
  */
     __pyx_v_uold = __pyx_v_upper;
 
-    /* "pytesmo/metrics/_fast.pyx":365
+    /* "pytesmo/metrics/_fast.pyx":367
  *
  *         # find interval
  *         if center:             # <<<<<<<<<<<<<<
@@ -12999,7 +13036,7 @@ static PyObject *__pyx_fuse_1__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
     __pyx_t_17 = (__pyx_v_center != 0);
     if (__pyx_t_17) {
 
-      /* "pytesmo/metrics/_fast.pyx":367
+      /* "pytesmo/metrics/_fast.pyx":369
  *         if center:
  *             # find new start
  *             for j in range(lower, n_ts):             # <<<<<<<<<<<<<<
@@ -13011,7 +13048,7 @@ static PyObject *__pyx_fuse_1__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
       for (__pyx_t_20 = __pyx_v_lower; __pyx_t_20 < __pyx_t_19; __pyx_t_20+=1) {
         __pyx_v_j = __pyx_t_20;
 
-        /* "pytesmo/metrics/_fast.pyx":368
+        /* "pytesmo/metrics/_fast.pyx":370
  *             # find new start
  *             for j in range(lower, n_ts):
  *                 lower = j             # <<<<<<<<<<<<<<
@@ -13020,73 +13057,101 @@ static PyObject *__pyx_fuse_1__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
  */
         __pyx_v_lower = __pyx_v_j;
 
-        /* "pytesmo/metrics/_fast.pyx":369
+        /* "pytesmo/metrics/_fast.pyx":371
  *             for j in range(lower, n_ts):
  *                 lower = j
  *                 if timestamps[j] >= timestamps[i] - window_size:             # <<<<<<<<<<<<<<
  *                     break
- *             # find new end
+ *
  */
         __pyx_t_21 = __pyx_v_j;
         __pyx_t_22 = __pyx_v_i;
         __pyx_t_17 = (((*((double *) ( /* dim=0 */ (__pyx_v_timestamps.data + __pyx_t_21 * __pyx_v_timestamps.strides[0]) ))) >= ((*((double *) ( /* dim=0 */ (__pyx_v_timestamps.data + __pyx_t_22 * __pyx_v_timestamps.strides[0]) ))) - __pyx_v_window_size)) != 0);
         if (__pyx_t_17) {
 
-          /* "pytesmo/metrics/_fast.pyx":370
+          /* "pytesmo/metrics/_fast.pyx":372
  *                 lower = j
  *                 if timestamps[j] >= timestamps[i] - window_size:
  *                     break             # <<<<<<<<<<<<<<
- *             # find new end
- *             # we have to check separately whether the last entry is outside
+ *
+ *             # find new end:
  */
           goto __pyx_L7_break;
 
-          /* "pytesmo/metrics/_fast.pyx":369
+          /* "pytesmo/metrics/_fast.pyx":371
  *             for j in range(lower, n_ts):
  *                 lower = j
  *                 if timestamps[j] >= timestamps[i] - window_size:             # <<<<<<<<<<<<<<
  *                     break
- *             # find new end
+ *
  */
         }
       }
       __pyx_L7_break:;
 
-      /* "pytesmo/metrics/_fast.pyx":374
- *             # we have to check separately whether the last entry is outside
- *             # the window, otherwise we will always get n_ts - 2 as result
+      /* "pytesmo/metrics/_fast.pyx":379
+ *
+ *             # if we're not at the end yet
  *             if timestamps[n_ts - 1] > timestamps[i] + window_size:             # <<<<<<<<<<<<<<
- *                 for j in range(upper, n_ts):
- *                     upper = j - 1
+ *                 if i == 0:
+ *                     # in the first iteration upper was -1 in order to set uold
  */
       __pyx_t_22 = (__pyx_v_n_ts - 1);
       __pyx_t_21 = __pyx_v_i;
       __pyx_t_17 = (((*((double *) ( /* dim=0 */ (__pyx_v_timestamps.data + __pyx_t_22 * __pyx_v_timestamps.strides[0]) ))) > ((*((double *) ( /* dim=0 */ (__pyx_v_timestamps.data + __pyx_t_21 * __pyx_v_timestamps.strides[0]) ))) + __pyx_v_window_size)) != 0);
       if (__pyx_t_17) {
 
-        /* "pytesmo/metrics/_fast.pyx":375
- *             # the window, otherwise we will always get n_ts - 2 as result
+        /* "pytesmo/metrics/_fast.pyx":380
+ *             # if we're not at the end yet
  *             if timestamps[n_ts - 1] > timestamps[i] + window_size:
+ *                 if i == 0:             # <<<<<<<<<<<<<<
+ *                     # in the first iteration upper was -1 in order to set uold
+ *                     # correctly, but in the following upper must be at least 1,
+ */
+        __pyx_t_17 = ((__pyx_v_i == 0) != 0);
+        if (__pyx_t_17) {
+
+          /* "pytesmo/metrics/_fast.pyx":384
+ *                     # correctly, but in the following upper must be at least 1,
+ *                     # so we don't access an invalid index
+ *                     upper = 1             # <<<<<<<<<<<<<<
+ *                 for j in range(upper, n_ts):
+ *                     # j - 1 because we want the index that is still inside the
+ */
+          __pyx_v_upper = 1;
+
+          /* "pytesmo/metrics/_fast.pyx":380
+ *             # if we're not at the end yet
+ *             if timestamps[n_ts - 1] > timestamps[i] + window_size:
+ *                 if i == 0:             # <<<<<<<<<<<<<<
+ *                     # in the first iteration upper was -1 in order to set uold
+ *                     # correctly, but in the following upper must be at least 1,
+ */
+        }
+
+        /* "pytesmo/metrics/_fast.pyx":385
+ *                     # so we don't access an invalid index
+ *                     upper = 1
  *                 for j in range(upper, n_ts):             # <<<<<<<<<<<<<<
- *                     upper = j - 1
- *                     if timestamps[j] > timestamps[i] + window_size:
+ *                     # j - 1 because we want the index that is still inside the
+ *                     # window
  */
         __pyx_t_18 = __pyx_v_n_ts;
         __pyx_t_19 = __pyx_t_18;
         for (__pyx_t_20 = __pyx_v_upper; __pyx_t_20 < __pyx_t_19; __pyx_t_20+=1) {
           __pyx_v_j = __pyx_t_20;
 
-          /* "pytesmo/metrics/_fast.pyx":376
- *             if timestamps[n_ts - 1] > timestamps[i] + window_size:
- *                 for j in range(upper, n_ts):
+          /* "pytesmo/metrics/_fast.pyx":388
+ *                     # j - 1 because we want the index that is still inside the
+ *                     # window
  *                     upper = j - 1             # <<<<<<<<<<<<<<
  *                     if timestamps[j] > timestamps[i] + window_size:
  *                         break
  */
           __pyx_v_upper = (__pyx_v_j - 1);
 
-          /* "pytesmo/metrics/_fast.pyx":377
- *                 for j in range(upper, n_ts):
+          /* "pytesmo/metrics/_fast.pyx":389
+ *                     # window
  *                     upper = j - 1
  *                     if timestamps[j] > timestamps[i] + window_size:             # <<<<<<<<<<<<<<
  *                         break
@@ -13097,17 +13162,17 @@ static PyObject *__pyx_fuse_1__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
           __pyx_t_17 = (((*((double *) ( /* dim=0 */ (__pyx_v_timestamps.data + __pyx_t_21 * __pyx_v_timestamps.strides[0]) ))) > ((*((double *) ( /* dim=0 */ (__pyx_v_timestamps.data + __pyx_t_22 * __pyx_v_timestamps.strides[0]) ))) + __pyx_v_window_size)) != 0);
           if (__pyx_t_17) {
 
-            /* "pytesmo/metrics/_fast.pyx":378
+            /* "pytesmo/metrics/_fast.pyx":390
  *                     upper = j - 1
  *                     if timestamps[j] > timestamps[i] + window_size:
  *                         break             # <<<<<<<<<<<<<<
  *             else:
  *                 upper = n_ts - 1
  */
-            goto __pyx_L11_break;
+            goto __pyx_L12_break;
 
-            /* "pytesmo/metrics/_fast.pyx":377
- *                 for j in range(upper, n_ts):
+            /* "pytesmo/metrics/_fast.pyx":389
+ *                     # window
  *                     upper = j - 1
  *                     if timestamps[j] > timestamps[i] + window_size:             # <<<<<<<<<<<<<<
  *                         break
@@ -13115,19 +13180,19 @@ static PyObject *__pyx_fuse_1__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
  */
           }
         }
-        __pyx_L11_break:;
+        __pyx_L12_break:;
 
-        /* "pytesmo/metrics/_fast.pyx":374
- *             # we have to check separately whether the last entry is outside
- *             # the window, otherwise we will always get n_ts - 2 as result
+        /* "pytesmo/metrics/_fast.pyx":379
+ *
+ *             # if we're not at the end yet
  *             if timestamps[n_ts - 1] > timestamps[i] + window_size:             # <<<<<<<<<<<<<<
- *                 for j in range(upper, n_ts):
- *                     upper = j - 1
+ *                 if i == 0:
+ *                     # in the first iteration upper was -1 in order to set uold
  */
         goto __pyx_L9;
       }
 
-      /* "pytesmo/metrics/_fast.pyx":380
+      /* "pytesmo/metrics/_fast.pyx":392
  *                         break
  *             else:
  *                 upper = n_ts - 1             # <<<<<<<<<<<<<<
@@ -13139,7 +13204,7 @@ static PyObject *__pyx_fuse_1__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
       }
       __pyx_L9:;
 
-      /* "pytesmo/metrics/_fast.pyx":365
+      /* "pytesmo/metrics/_fast.pyx":367
  *
  *         # find interval
  *         if center:             # <<<<<<<<<<<<<<
@@ -13149,7 +13214,7 @@ static PyObject *__pyx_fuse_1__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
       goto __pyx_L5;
     }
 
-    /* "pytesmo/metrics/_fast.pyx":383
+    /* "pytesmo/metrics/_fast.pyx":395
  *
  *         else:
  *             for j in range(lower, n_ts):             # <<<<<<<<<<<<<<
@@ -13162,7 +13227,7 @@ static PyObject *__pyx_fuse_1__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
       for (__pyx_t_20 = __pyx_v_lower; __pyx_t_20 < __pyx_t_19; __pyx_t_20+=1) {
         __pyx_v_j = __pyx_t_20;
 
-        /* "pytesmo/metrics/_fast.pyx":384
+        /* "pytesmo/metrics/_fast.pyx":396
  *         else:
  *             for j in range(lower, n_ts):
  *                 lower = j             # <<<<<<<<<<<<<<
@@ -13171,7 +13236,7 @@ static PyObject *__pyx_fuse_1__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
  */
         __pyx_v_lower = __pyx_v_j;
 
-        /* "pytesmo/metrics/_fast.pyx":385
+        /* "pytesmo/metrics/_fast.pyx":397
  *             for j in range(lower, n_ts):
  *                 lower = j
  *                 if timestamps[j] > timestamps[i] - window_size:             # <<<<<<<<<<<<<<
@@ -13183,16 +13248,16 @@ static PyObject *__pyx_fuse_1__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
         __pyx_t_17 = (((*((double *) ( /* dim=0 */ (__pyx_v_timestamps.data + __pyx_t_22 * __pyx_v_timestamps.strides[0]) ))) > ((*((double *) ( /* dim=0 */ (__pyx_v_timestamps.data + __pyx_t_21 * __pyx_v_timestamps.strides[0]) ))) - __pyx_v_window_size)) != 0);
         if (__pyx_t_17) {
 
-          /* "pytesmo/metrics/_fast.pyx":386
+          /* "pytesmo/metrics/_fast.pyx":398
  *                 lower = j
  *                 if timestamps[j] > timestamps[i] - window_size:
  *                     break             # <<<<<<<<<<<<<<
  *             upper = i
  *
  */
-          goto __pyx_L14_break;
+          goto __pyx_L15_break;
 
-          /* "pytesmo/metrics/_fast.pyx":385
+          /* "pytesmo/metrics/_fast.pyx":397
  *             for j in range(lower, n_ts):
  *                 lower = j
  *                 if timestamps[j] > timestamps[i] - window_size:             # <<<<<<<<<<<<<<
@@ -13201,297 +13266,307 @@ static PyObject *__pyx_fuse_1__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
  */
         }
       }
-      __pyx_L14_break:;
+      __pyx_L15_break:;
 
-      /* "pytesmo/metrics/_fast.pyx":387
+      /* "pytesmo/metrics/_fast.pyx":399
  *                 if timestamps[j] > timestamps[i] - window_size:
  *                     break
  *             upper = i             # <<<<<<<<<<<<<<
  *
- *         # check if we have enough observations
+ *
  */
       __pyx_v_upper = __pyx_v_i;
     }
     __pyx_L5:;
 
-    /* "pytesmo/metrics/_fast.pyx":390
+    /* "pytesmo/metrics/_fast.pyx":407
+ *
+ *         # first, add the new terms with Welford's algorithm
+ *         for j in range(uold+1, upper+1):             # <<<<<<<<<<<<<<
+ *             mxold = mx
+ *             myold = my
+ */
+    __pyx_t_23 = (__pyx_v_upper + 1);
+    __pyx_t_24 = __pyx_t_23;
+    for (__pyx_t_18 = (__pyx_v_uold + 1); __pyx_t_18 < __pyx_t_24; __pyx_t_18+=1) {
+      __pyx_v_j = __pyx_t_18;
+
+      /* "pytesmo/metrics/_fast.pyx":408
+ *         # first, add the new terms with Welford's algorithm
+ *         for j in range(uold+1, upper+1):
+ *             mxold = mx             # <<<<<<<<<<<<<<
+ *             myold = my
+ *             rolling_nobs += 1
+ */
+      __pyx_v_mxold = __pyx_v_mx;
+
+      /* "pytesmo/metrics/_fast.pyx":409
+ *         for j in range(uold+1, upper+1):
+ *             mxold = mx
+ *             myold = my             # <<<<<<<<<<<<<<
+ *             rolling_nobs += 1
+ *             mx += (x[j] - mx) / rolling_nobs
+ */
+      __pyx_v_myold = __pyx_v_my;
+
+      /* "pytesmo/metrics/_fast.pyx":410
+ *             mxold = mx
+ *             myold = my
+ *             rolling_nobs += 1             # <<<<<<<<<<<<<<
+ *             mx += (x[j] - mx) / rolling_nobs
+ *             my += (y[j] - my) / rolling_nobs
+ */
+      __pyx_v_rolling_nobs = (__pyx_v_rolling_nobs + 1.0);
+
+      /* "pytesmo/metrics/_fast.pyx":411
+ *             myold = my
+ *             rolling_nobs += 1
+ *             mx += (x[j] - mx) / rolling_nobs             # <<<<<<<<<<<<<<
+ *             my += (y[j] - my) / rolling_nobs
+ *             msd += ((x[j] - y[j])**2 - msd) / rolling_nobs
+ */
+      __pyx_t_21 = __pyx_v_j;
+      __pyx_v_mx = (__pyx_v_mx + (((*((double *) ( /* dim=0 */ (__pyx_v_x.data + __pyx_t_21 * __pyx_v_x.strides[0]) ))) - __pyx_v_mx) / __pyx_v_rolling_nobs));
+
+      /* "pytesmo/metrics/_fast.pyx":412
+ *             rolling_nobs += 1
+ *             mx += (x[j] - mx) / rolling_nobs
+ *             my += (y[j] - my) / rolling_nobs             # <<<<<<<<<<<<<<
+ *             msd += ((x[j] - y[j])**2 - msd) / rolling_nobs
+ *             M2x += (x[j] - mx) * (x[j] - mxold)
+ */
+      __pyx_t_21 = __pyx_v_j;
+      __pyx_v_my = (__pyx_v_my + (((*((double *) ( /* dim=0 */ (__pyx_v_y.data + __pyx_t_21 * __pyx_v_y.strides[0]) ))) - __pyx_v_my) / __pyx_v_rolling_nobs));
+
+      /* "pytesmo/metrics/_fast.pyx":413
+ *             mx += (x[j] - mx) / rolling_nobs
+ *             my += (y[j] - my) / rolling_nobs
+ *             msd += ((x[j] - y[j])**2 - msd) / rolling_nobs             # <<<<<<<<<<<<<<
+ *             M2x += (x[j] - mx) * (x[j] - mxold)
+ *             M2y += (y[j] - my) * (y[j] - myold)
+ */
+      __pyx_t_21 = __pyx_v_j;
+      __pyx_t_22 = __pyx_v_j;
+      __pyx_v_msd = (__pyx_v_msd + ((pow(((*((double *) ( /* dim=0 */ (__pyx_v_x.data + __pyx_t_21 * __pyx_v_x.strides[0]) ))) - (*((double *) ( /* dim=0 */ (__pyx_v_y.data + __pyx_t_22 * __pyx_v_y.strides[0]) )))), 2.0) - __pyx_v_msd) / __pyx_v_rolling_nobs));
+
+      /* "pytesmo/metrics/_fast.pyx":414
+ *             my += (y[j] - my) / rolling_nobs
+ *             msd += ((x[j] - y[j])**2 - msd) / rolling_nobs
+ *             M2x += (x[j] - mx) * (x[j] - mxold)             # <<<<<<<<<<<<<<
+ *             M2y += (y[j] - my) * (y[j] - myold)
+ *             C += (x[j] - mx) * (y[j] - myold)
+ */
+      __pyx_t_22 = __pyx_v_j;
+      __pyx_t_21 = __pyx_v_j;
+      __pyx_v_M2x = (__pyx_v_M2x + (((*((double *) ( /* dim=0 */ (__pyx_v_x.data + __pyx_t_22 * __pyx_v_x.strides[0]) ))) - __pyx_v_mx) * ((*((double *) ( /* dim=0 */ (__pyx_v_x.data + __pyx_t_21 * __pyx_v_x.strides[0]) ))) - __pyx_v_mxold)));
+
+      /* "pytesmo/metrics/_fast.pyx":415
+ *             msd += ((x[j] - y[j])**2 - msd) / rolling_nobs
+ *             M2x += (x[j] - mx) * (x[j] - mxold)
+ *             M2y += (y[j] - my) * (y[j] - myold)             # <<<<<<<<<<<<<<
+ *             C += (x[j] - mx) * (y[j] - myold)
+ *
+ */
+      __pyx_t_21 = __pyx_v_j;
+      __pyx_t_22 = __pyx_v_j;
+      __pyx_v_M2y = (__pyx_v_M2y + (((*((double *) ( /* dim=0 */ (__pyx_v_y.data + __pyx_t_21 * __pyx_v_y.strides[0]) ))) - __pyx_v_my) * ((*((double *) ( /* dim=0 */ (__pyx_v_y.data + __pyx_t_22 * __pyx_v_y.strides[0]) ))) - __pyx_v_myold)));
+
+      /* "pytesmo/metrics/_fast.pyx":416
+ *             M2x += (x[j] - mx) * (x[j] - mxold)
+ *             M2y += (y[j] - my) * (y[j] - myold)
+ *             C += (x[j] - mx) * (y[j] - myold)             # <<<<<<<<<<<<<<
+ *
+ *         # now subtract the ones that fell out the window
+ */
+      __pyx_t_22 = __pyx_v_j;
+      __pyx_t_21 = __pyx_v_j;
+      __pyx_v_C = (__pyx_v_C + (((*((double *) ( /* dim=0 */ (__pyx_v_x.data + __pyx_t_22 * __pyx_v_x.strides[0]) ))) - __pyx_v_mx) * ((*((double *) ( /* dim=0 */ (__pyx_v_y.data + __pyx_t_21 * __pyx_v_y.strides[0]) ))) - __pyx_v_myold)));
+    }
+
+    /* "pytesmo/metrics/_fast.pyx":421
+ *         # the old values here correspond to the m_n values in the formula,
+ *         # that's why the order is different here
+ *         for j in range(lold, lower):             # <<<<<<<<<<<<<<
+ *             mxold = mx
+ *             myold = my
+ */
+    __pyx_t_18 = __pyx_v_lower;
+    __pyx_t_19 = __pyx_t_18;
+    for (__pyx_t_20 = __pyx_v_lold; __pyx_t_20 < __pyx_t_19; __pyx_t_20+=1) {
+      __pyx_v_j = __pyx_t_20;
+
+      /* "pytesmo/metrics/_fast.pyx":422
+ *         # that's why the order is different here
+ *         for j in range(lold, lower):
+ *             mxold = mx             # <<<<<<<<<<<<<<
+ *             myold = my
+ *             rolling_nobs -= 1
+ */
+      __pyx_v_mxold = __pyx_v_mx;
+
+      /* "pytesmo/metrics/_fast.pyx":423
+ *         for j in range(lold, lower):
+ *             mxold = mx
+ *             myold = my             # <<<<<<<<<<<<<<
+ *             rolling_nobs -= 1
+ *             mx -= (x[j] - mx) / rolling_nobs
+ */
+      __pyx_v_myold = __pyx_v_my;
+
+      /* "pytesmo/metrics/_fast.pyx":424
+ *             mxold = mx
+ *             myold = my
+ *             rolling_nobs -= 1             # <<<<<<<<<<<<<<
+ *             mx -= (x[j] - mx) / rolling_nobs
+ *             my -= (y[j] - my) / rolling_nobs
+ */
+      __pyx_v_rolling_nobs = (__pyx_v_rolling_nobs - 1.0);
+
+      /* "pytesmo/metrics/_fast.pyx":425
+ *             myold = my
+ *             rolling_nobs -= 1
+ *             mx -= (x[j] - mx) / rolling_nobs             # <<<<<<<<<<<<<<
+ *             my -= (y[j] - my) / rolling_nobs
+ *             msd -= ((x[j] - y[j])**2 - msd) / rolling_nobs
+ */
+      __pyx_t_21 = __pyx_v_j;
+      __pyx_v_mx = (__pyx_v_mx - (((*((double *) ( /* dim=0 */ (__pyx_v_x.data + __pyx_t_21 * __pyx_v_x.strides[0]) ))) - __pyx_v_mx) / __pyx_v_rolling_nobs));
+
+      /* "pytesmo/metrics/_fast.pyx":426
+ *             rolling_nobs -= 1
+ *             mx -= (x[j] - mx) / rolling_nobs
+ *             my -= (y[j] - my) / rolling_nobs             # <<<<<<<<<<<<<<
+ *             msd -= ((x[j] - y[j])**2 - msd) / rolling_nobs
+ *             M2x -= (x[j] - mxold) * (x[j] - mx)
+ */
+      __pyx_t_21 = __pyx_v_j;
+      __pyx_v_my = (__pyx_v_my - (((*((double *) ( /* dim=0 */ (__pyx_v_y.data + __pyx_t_21 * __pyx_v_y.strides[0]) ))) - __pyx_v_my) / __pyx_v_rolling_nobs));
+
+      /* "pytesmo/metrics/_fast.pyx":427
+ *             mx -= (x[j] - mx) / rolling_nobs
+ *             my -= (y[j] - my) / rolling_nobs
+ *             msd -= ((x[j] - y[j])**2 - msd) / rolling_nobs             # <<<<<<<<<<<<<<
+ *             M2x -= (x[j] - mxold) * (x[j] - mx)
+ *             M2y -= (y[j] - myold) * (y[j] - my)
+ */
+      __pyx_t_21 = __pyx_v_j;
+      __pyx_t_22 = __pyx_v_j;
+      __pyx_v_msd = (__pyx_v_msd - ((pow(((*((double *) ( /* dim=0 */ (__pyx_v_x.data + __pyx_t_21 * __pyx_v_x.strides[0]) ))) - (*((double *) ( /* dim=0 */ (__pyx_v_y.data + __pyx_t_22 * __pyx_v_y.strides[0]) )))), 2.0) - __pyx_v_msd) / __pyx_v_rolling_nobs));
+
+      /* "pytesmo/metrics/_fast.pyx":428
+ *             my -= (y[j] - my) / rolling_nobs
+ *             msd -= ((x[j] - y[j])**2 - msd) / rolling_nobs
+ *             M2x -= (x[j] - mxold) * (x[j] - mx)             # <<<<<<<<<<<<<<
+ *             M2y -= (y[j] - myold) * (y[j] - my)
+ *             C -= (x[j] - mxold) * (y[j] - my)
+ */
+      __pyx_t_22 = __pyx_v_j;
+      __pyx_t_21 = __pyx_v_j;
+      __pyx_v_M2x = (__pyx_v_M2x - (((*((double *) ( /* dim=0 */ (__pyx_v_x.data + __pyx_t_22 * __pyx_v_x.strides[0]) ))) - __pyx_v_mxold) * ((*((double *) ( /* dim=0 */ (__pyx_v_x.data + __pyx_t_21 * __pyx_v_x.strides[0]) ))) - __pyx_v_mx)));
+
+      /* "pytesmo/metrics/_fast.pyx":429
+ *             msd -= ((x[j] - y[j])**2 - msd) / rolling_nobs
+ *             M2x -= (x[j] - mxold) * (x[j] - mx)
+ *             M2y -= (y[j] - myold) * (y[j] - my)             # <<<<<<<<<<<<<<
+ *             C -= (x[j] - mxold) * (y[j] - my)
+ *
+ */
+      __pyx_t_21 = __pyx_v_j;
+      __pyx_t_22 = __pyx_v_j;
+      __pyx_v_M2y = (__pyx_v_M2y - (((*((double *) ( /* dim=0 */ (__pyx_v_y.data + __pyx_t_21 * __pyx_v_y.strides[0]) ))) - __pyx_v_myold) * ((*((double *) ( /* dim=0 */ (__pyx_v_y.data + __pyx_t_22 * __pyx_v_y.strides[0]) ))) - __pyx_v_my)));
+
+      /* "pytesmo/metrics/_fast.pyx":430
+ *             M2x -= (x[j] - mxold) * (x[j] - mx)
+ *             M2y -= (y[j] - myold) * (y[j] - my)
+ *             C -= (x[j] - mxold) * (y[j] - my)             # <<<<<<<<<<<<<<
+ *
+ *         # check if we have enough observations
+ */
+      __pyx_t_22 = __pyx_v_j;
+      __pyx_t_21 = __pyx_v_j;
+      __pyx_v_C = (__pyx_v_C - (((*((double *) ( /* dim=0 */ (__pyx_v_x.data + __pyx_t_22 * __pyx_v_x.strides[0]) ))) - __pyx_v_mxold) * ((*((double *) ( /* dim=0 */ (__pyx_v_y.data + __pyx_t_21 * __pyx_v_y.strides[0]) ))) - __pyx_v_my)));
+    }
+
+    /* "pytesmo/metrics/_fast.pyx":433
  *
  *         # check if we have enough observations
  *         num_obs = upper - lower + 1             # <<<<<<<<<<<<<<
  *         if num_obs == 0 or num_obs < min_periods:
- *             pr_arr[i, 0] = NAN
+ *             pr_view[i, 0] = NAN
  */
     __pyx_v_num_obs = ((__pyx_v_upper - __pyx_v_lower) + 1);
 
-    /* "pytesmo/metrics/_fast.pyx":391
+    /* "pytesmo/metrics/_fast.pyx":434
  *         # check if we have enough observations
  *         num_obs = upper - lower + 1
  *         if num_obs == 0 or num_obs < min_periods:             # <<<<<<<<<<<<<<
- *             pr_arr[i, 0] = NAN
- *             pr_arr[i, 1] = NAN
+ *             pr_view[i, 0] = NAN
+ *             pr_view[i, 1] = NAN
  */
-    __pyx_t_23 = ((__pyx_v_num_obs == 0) != 0);
-    if (!__pyx_t_23) {
+    __pyx_t_25 = ((__pyx_v_num_obs == 0) != 0);
+    if (!__pyx_t_25) {
     } else {
-      __pyx_t_17 = __pyx_t_23;
-      goto __pyx_L17_bool_binop_done;
+      __pyx_t_17 = __pyx_t_25;
+      goto __pyx_L22_bool_binop_done;
     }
-    __pyx_t_23 = ((__pyx_v_num_obs < __pyx_v_min_periods) != 0);
-    __pyx_t_17 = __pyx_t_23;
-    __pyx_L17_bool_binop_done:;
+    __pyx_t_25 = ((__pyx_v_num_obs < __pyx_v_min_periods) != 0);
+    __pyx_t_17 = __pyx_t_25;
+    __pyx_L22_bool_binop_done:;
     if (__pyx_t_17) {
 
-      /* "pytesmo/metrics/_fast.pyx":392
+      /* "pytesmo/metrics/_fast.pyx":435
  *         num_obs = upper - lower + 1
  *         if num_obs == 0 or num_obs < min_periods:
- *             pr_arr[i, 0] = NAN             # <<<<<<<<<<<<<<
- *             pr_arr[i, 1] = NAN
- *         else:
+ *             pr_view[i, 0] = NAN             # <<<<<<<<<<<<<<
+ *             pr_view[i, 1] = NAN
+ *             rmsd_view[i] = NAN
  */
       __pyx_t_21 = __pyx_v_i;
       __pyx_t_22 = 0;
-      *__Pyx_BufPtrStrided2d(double *, __pyx_pybuffernd_pr_arr.rcbuffer->pybuffer.buf, __pyx_t_21, __pyx_pybuffernd_pr_arr.diminfo[0].strides, __pyx_t_22, __pyx_pybuffernd_pr_arr.diminfo[1].strides) = NPY_NAN;
+      *((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_pr_view.data + __pyx_t_21 * __pyx_v_pr_view.strides[0]) ) + __pyx_t_22 * __pyx_v_pr_view.strides[1]) )) = NPY_NAN;
 
-      /* "pytesmo/metrics/_fast.pyx":393
+      /* "pytesmo/metrics/_fast.pyx":436
  *         if num_obs == 0 or num_obs < min_periods:
- *             pr_arr[i, 0] = NAN
- *             pr_arr[i, 1] = NAN             # <<<<<<<<<<<<<<
+ *             pr_view[i, 0] = NAN
+ *             pr_view[i, 1] = NAN             # <<<<<<<<<<<<<<
+ *             rmsd_view[i] = NAN
  *         else:
- *
  */
       __pyx_t_22 = __pyx_v_i;
       __pyx_t_21 = 1;
-      *__Pyx_BufPtrStrided2d(double *, __pyx_pybuffernd_pr_arr.rcbuffer->pybuffer.buf, __pyx_t_22, __pyx_pybuffernd_pr_arr.diminfo[0].strides, __pyx_t_21, __pyx_pybuffernd_pr_arr.diminfo[1].strides) = NPY_NAN;
+      *((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_pr_view.data + __pyx_t_22 * __pyx_v_pr_view.strides[0]) ) + __pyx_t_21 * __pyx_v_pr_view.strides[1]) )) = NPY_NAN;
 
-      /* "pytesmo/metrics/_fast.pyx":391
+      /* "pytesmo/metrics/_fast.pyx":437
+ *             pr_view[i, 0] = NAN
+ *             pr_view[i, 1] = NAN
+ *             rmsd_view[i] = NAN             # <<<<<<<<<<<<<<
+ *         else:
+ *             # to get var and cov we would need to divide by n, but since
+ */
+      __pyx_t_21 = __pyx_v_i;
+      *((double *) ( /* dim=0 */ (__pyx_v_rmsd_view.data + __pyx_t_21 * __pyx_v_rmsd_view.strides[0]) )) = NPY_NAN;
+
+      /* "pytesmo/metrics/_fast.pyx":434
  *         # check if we have enough observations
  *         num_obs = upper - lower + 1
  *         if num_obs == 0 or num_obs < min_periods:             # <<<<<<<<<<<<<<
- *             pr_arr[i, 0] = NAN
- *             pr_arr[i, 1] = NAN
+ *             pr_view[i, 0] = NAN
+ *             pr_view[i, 1] = NAN
  */
-      goto __pyx_L16;
+      goto __pyx_L21;
     }
 
-    /* "pytesmo/metrics/_fast.pyx":397
- *
- *             # first, add the new terms with Welford's algorithm
- *             for j in range(uold+1, upper+1):             # <<<<<<<<<<<<<<
- *                 mxold = mx
- *                 myold = my
- */
-    /*else*/ {
-      __pyx_t_24 = (__pyx_v_upper + 1);
-      __pyx_t_25 = __pyx_t_24;
-      for (__pyx_t_18 = (__pyx_v_uold + 1); __pyx_t_18 < __pyx_t_25; __pyx_t_18+=1) {
-        __pyx_v_j = __pyx_t_18;
-
-        /* "pytesmo/metrics/_fast.pyx":398
- *             # first, add the new terms with Welford's algorithm
- *             for j in range(uold+1, upper+1):
- *                 mxold = mx             # <<<<<<<<<<<<<<
- *                 myold = my
- *                 rolling_nobs += 1
- */
-        __pyx_v_mxold = __pyx_v_mx;
-
-        /* "pytesmo/metrics/_fast.pyx":399
- *             for j in range(uold+1, upper+1):
- *                 mxold = mx
- *                 myold = my             # <<<<<<<<<<<<<<
- *                 rolling_nobs += 1
- *                 mx += (x[j] - mx) / rolling_nobs
- */
-        __pyx_v_myold = __pyx_v_my;
-
-        /* "pytesmo/metrics/_fast.pyx":400
- *                 mxold = mx
- *                 myold = my
- *                 rolling_nobs += 1             # <<<<<<<<<<<<<<
- *                 mx += (x[j] - mx) / rolling_nobs
- *                 my += (y[j] - my) / rolling_nobs
- */
-        __pyx_v_rolling_nobs = (__pyx_v_rolling_nobs + 1);
-
-        /* "pytesmo/metrics/_fast.pyx":401
- *                 myold = my
- *                 rolling_nobs += 1
- *                 mx += (x[j] - mx) / rolling_nobs             # <<<<<<<<<<<<<<
- *                 my += (y[j] - my) / rolling_nobs
- *                 msd += ((x[j] - y[j])**2 - msd) / rolling_nobs
- */
-        __pyx_t_21 = __pyx_v_j;
-        __pyx_v_mx = (__pyx_v_mx + (((*((double *) ( /* dim=0 */ (__pyx_v_x.data + __pyx_t_21 * __pyx_v_x.strides[0]) ))) - __pyx_v_mx) / ((double)__pyx_v_rolling_nobs)));
-
-        /* "pytesmo/metrics/_fast.pyx":402
- *                 rolling_nobs += 1
- *                 mx += (x[j] - mx) / rolling_nobs
- *                 my += (y[j] - my) / rolling_nobs             # <<<<<<<<<<<<<<
- *                 msd += ((x[j] - y[j])**2 - msd) / rolling_nobs
- *                 M2x += (x[j] - mx) * (x[j] - mxold)
- */
-        __pyx_t_21 = __pyx_v_j;
-        __pyx_v_my = (__pyx_v_my + (((*((double *) ( /* dim=0 */ (__pyx_v_y.data + __pyx_t_21 * __pyx_v_y.strides[0]) ))) - __pyx_v_my) / ((double)__pyx_v_rolling_nobs)));
-
-        /* "pytesmo/metrics/_fast.pyx":403
- *                 mx += (x[j] - mx) / rolling_nobs
- *                 my += (y[j] - my) / rolling_nobs
- *                 msd += ((x[j] - y[j])**2 - msd) / rolling_nobs             # <<<<<<<<<<<<<<
- *                 M2x += (x[j] - mx) * (x[j] - mxold)
- *                 M2y += (y[j] - my) * (y[j] - myold)
- */
-        __pyx_t_21 = __pyx_v_j;
-        __pyx_t_22 = __pyx_v_j;
-        __pyx_v_msd = (__pyx_v_msd + ((pow(((*((double *) ( /* dim=0 */ (__pyx_v_x.data + __pyx_t_21 * __pyx_v_x.strides[0]) ))) - (*((double *) ( /* dim=0 */ (__pyx_v_y.data + __pyx_t_22 * __pyx_v_y.strides[0]) )))), 2.0) - __pyx_v_msd) / ((double)__pyx_v_rolling_nobs)));
-
-        /* "pytesmo/metrics/_fast.pyx":404
- *                 my += (y[j] - my) / rolling_nobs
- *                 msd += ((x[j] - y[j])**2 - msd) / rolling_nobs
- *                 M2x += (x[j] - mx) * (x[j] - mxold)             # <<<<<<<<<<<<<<
- *                 M2y += (y[j] - my) * (y[j] - myold)
- *                 C += (x[j] - mx) * (y[j] - myold)
- */
-        __pyx_t_22 = __pyx_v_j;
-        __pyx_t_21 = __pyx_v_j;
-        __pyx_v_M2x = (__pyx_v_M2x + (((*((double *) ( /* dim=0 */ (__pyx_v_x.data + __pyx_t_22 * __pyx_v_x.strides[0]) ))) - __pyx_v_mx) * ((*((double *) ( /* dim=0 */ (__pyx_v_x.data + __pyx_t_21 * __pyx_v_x.strides[0]) ))) - __pyx_v_mxold)));
-
-        /* "pytesmo/metrics/_fast.pyx":405
- *                 msd += ((x[j] - y[j])**2 - msd) / rolling_nobs
- *                 M2x += (x[j] - mx) * (x[j] - mxold)
- *                 M2y += (y[j] - my) * (y[j] - myold)             # <<<<<<<<<<<<<<
- *                 C += (x[j] - mx) * (y[j] - myold)
- *
- */
-        __pyx_t_21 = __pyx_v_j;
-        __pyx_t_22 = __pyx_v_j;
-        __pyx_v_M2y = (__pyx_v_M2y + (((*((double *) ( /* dim=0 */ (__pyx_v_y.data + __pyx_t_21 * __pyx_v_y.strides[0]) ))) - __pyx_v_my) * ((*((double *) ( /* dim=0 */ (__pyx_v_y.data + __pyx_t_22 * __pyx_v_y.strides[0]) ))) - __pyx_v_myold)));
-
-        /* "pytesmo/metrics/_fast.pyx":406
- *                 M2x += (x[j] - mx) * (x[j] - mxold)
- *                 M2y += (y[j] - my) * (y[j] - myold)
- *                 C += (x[j] - mx) * (y[j] - myold)             # <<<<<<<<<<<<<<
- *
- *             # now subtract the ones that fell out the window
- */
-        __pyx_t_22 = __pyx_v_j;
-        __pyx_t_21 = __pyx_v_j;
-        __pyx_v_C = (__pyx_v_C + (((*((double *) ( /* dim=0 */ (__pyx_v_x.data + __pyx_t_22 * __pyx_v_x.strides[0]) ))) - __pyx_v_mx) * ((*((double *) ( /* dim=0 */ (__pyx_v_y.data + __pyx_t_21 * __pyx_v_y.strides[0]) ))) - __pyx_v_myold)));
-      }
-
-      /* "pytesmo/metrics/_fast.pyx":411
- *             # the old values here correspond to the m_n values in the formula,
- *             # that's why the order is different here
- *             for j in range(lold, lower):             # <<<<<<<<<<<<<<
- *                 mxold = mx
- *                 myold = my
- */
-      __pyx_t_18 = __pyx_v_lower;
-      __pyx_t_19 = __pyx_t_18;
-      for (__pyx_t_20 = __pyx_v_lold; __pyx_t_20 < __pyx_t_19; __pyx_t_20+=1) {
-        __pyx_v_j = __pyx_t_20;
-
-        /* "pytesmo/metrics/_fast.pyx":412
- *             # that's why the order is different here
- *             for j in range(lold, lower):
- *                 mxold = mx             # <<<<<<<<<<<<<<
- *                 myold = my
- *                 rolling_nobs -= 1
- */
-        __pyx_v_mxold = __pyx_v_mx;
-
-        /* "pytesmo/metrics/_fast.pyx":413
- *             for j in range(lold, lower):
- *                 mxold = mx
- *                 myold = my             # <<<<<<<<<<<<<<
- *                 rolling_nobs -= 1
- *                 mx -= (x[j] - mx) / rolling_nobs
- */
-        __pyx_v_myold = __pyx_v_my;
-
-        /* "pytesmo/metrics/_fast.pyx":414
- *                 mxold = mx
- *                 myold = my
- *                 rolling_nobs -= 1             # <<<<<<<<<<<<<<
- *                 mx -= (x[j] - mx) / rolling_nobs
- *                 my -= (y[j] - my) / rolling_nobs
- */
-        __pyx_v_rolling_nobs = (__pyx_v_rolling_nobs - 1);
-
-        /* "pytesmo/metrics/_fast.pyx":415
- *                 myold = my
- *                 rolling_nobs -= 1
- *                 mx -= (x[j] - mx) / rolling_nobs             # <<<<<<<<<<<<<<
- *                 my -= (y[j] - my) / rolling_nobs
- *                 msd -= ((x[j] - y[j])**2 - msd) / rolling_nobs
- */
-        __pyx_t_21 = __pyx_v_j;
-        __pyx_v_mx = (__pyx_v_mx - (((*((double *) ( /* dim=0 */ (__pyx_v_x.data + __pyx_t_21 * __pyx_v_x.strides[0]) ))) - __pyx_v_mx) / ((double)__pyx_v_rolling_nobs)));
-
-        /* "pytesmo/metrics/_fast.pyx":416
- *                 rolling_nobs -= 1
- *                 mx -= (x[j] - mx) / rolling_nobs
- *                 my -= (y[j] - my) / rolling_nobs             # <<<<<<<<<<<<<<
- *                 msd -= ((x[j] - y[j])**2 - msd) / rolling_nobs
- *                 M2x -= (x[j] - mxold) * (x[j] - mx)
- */
-        __pyx_t_21 = __pyx_v_j;
-        __pyx_v_my = (__pyx_v_my - (((*((double *) ( /* dim=0 */ (__pyx_v_y.data + __pyx_t_21 * __pyx_v_y.strides[0]) ))) - __pyx_v_my) / ((double)__pyx_v_rolling_nobs)));
-
-        /* "pytesmo/metrics/_fast.pyx":417
- *                 mx -= (x[j] - mx) / rolling_nobs
- *                 my -= (y[j] - my) / rolling_nobs
- *                 msd -= ((x[j] - y[j])**2 - msd) / rolling_nobs             # <<<<<<<<<<<<<<
- *                 M2x -= (x[j] - mxold) * (x[j] - mx)
- *                 M2y -= (y[j] - myold) * (y[j] - my)
- */
-        __pyx_t_21 = __pyx_v_j;
-        __pyx_t_22 = __pyx_v_j;
-        __pyx_v_msd = (__pyx_v_msd - ((pow(((*((double *) ( /* dim=0 */ (__pyx_v_x.data + __pyx_t_21 * __pyx_v_x.strides[0]) ))) - (*((double *) ( /* dim=0 */ (__pyx_v_y.data + __pyx_t_22 * __pyx_v_y.strides[0]) )))), 2.0) - __pyx_v_msd) / ((double)__pyx_v_rolling_nobs)));
-
-        /* "pytesmo/metrics/_fast.pyx":418
- *                 my -= (y[j] - my) / rolling_nobs
- *                 msd -= ((x[j] - y[j])**2 - msd) / rolling_nobs
- *                 M2x -= (x[j] - mxold) * (x[j] - mx)             # <<<<<<<<<<<<<<
- *                 M2y -= (y[j] - myold) * (y[j] - my)
- *                 C -= (x[j] - mxold) * (y[j] - my)
- */
-        __pyx_t_22 = __pyx_v_j;
-        __pyx_t_21 = __pyx_v_j;
-        __pyx_v_M2x = (__pyx_v_M2x - (((*((double *) ( /* dim=0 */ (__pyx_v_x.data + __pyx_t_22 * __pyx_v_x.strides[0]) ))) - __pyx_v_mxold) * ((*((double *) ( /* dim=0 */ (__pyx_v_x.data + __pyx_t_21 * __pyx_v_x.strides[0]) ))) - __pyx_v_mx)));
-
-        /* "pytesmo/metrics/_fast.pyx":419
- *                 msd -= ((x[j] - y[j])**2 - msd) / rolling_nobs
- *                 M2x -= (x[j] - mxold) * (x[j] - mx)
- *                 M2y -= (y[j] - myold) * (y[j] - my)             # <<<<<<<<<<<<<<
- *                 C -= (x[j] - mxold) * (y[j] - my)
- *
- */
-        __pyx_t_21 = __pyx_v_j;
-        __pyx_t_22 = __pyx_v_j;
-        __pyx_v_M2y = (__pyx_v_M2y - (((*((double *) ( /* dim=0 */ (__pyx_v_y.data + __pyx_t_21 * __pyx_v_y.strides[0]) ))) - __pyx_v_myold) * ((*((double *) ( /* dim=0 */ (__pyx_v_y.data + __pyx_t_22 * __pyx_v_y.strides[0]) ))) - __pyx_v_my)));
-
-        /* "pytesmo/metrics/_fast.pyx":420
- *                 M2x -= (x[j] - mxold) * (x[j] - mx)
- *                 M2y -= (y[j] - myold) * (y[j] - my)
- *                 C -= (x[j] - mxold) * (y[j] - my)             # <<<<<<<<<<<<<<
- *
- *
- */
-        __pyx_t_22 = __pyx_v_j;
-        __pyx_t_21 = __pyx_v_j;
-        __pyx_v_C = (__pyx_v_C - (((*((double *) ( /* dim=0 */ (__pyx_v_x.data + __pyx_t_22 * __pyx_v_x.strides[0]) ))) - __pyx_v_mxold) * ((*((double *) ( /* dim=0 */ (__pyx_v_y.data + __pyx_t_21 * __pyx_v_y.strides[0]) ))) - __pyx_v_my)));
-      }
-
-      /* "pytesmo/metrics/_fast.pyx":425
+    /* "pytesmo/metrics/_fast.pyx":441
  *             # to get var and cov we would need to divide by n, but since
  *             # we're only interested in the ratio that's not necessary
  *             r = C / (sqrt(M2x * M2y))             # <<<<<<<<<<<<<<
  *             pr_view[i, 0] = r
  *             rmsd_view[i] = sqrt(msd)
  */
+    /*else*/ {
       __pyx_v_r = (__pyx_v_C / sqrt((__pyx_v_M2x * __pyx_v_M2y)));
 
-      /* "pytesmo/metrics/_fast.pyx":426
+      /* "pytesmo/metrics/_fast.pyx":442
  *             # we're only interested in the ratio that's not necessary
  *             r = C / (sqrt(M2x * M2y))
  *             pr_view[i, 0] = r             # <<<<<<<<<<<<<<
@@ -13502,7 +13577,7 @@ static PyObject *__pyx_fuse_1__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
       __pyx_t_22 = 0;
       *((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_pr_view.data + __pyx_t_21 * __pyx_v_pr_view.strides[0]) ) + __pyx_t_22 * __pyx_v_pr_view.strides[1]) )) = __pyx_v_r;
 
-      /* "pytesmo/metrics/_fast.pyx":427
+      /* "pytesmo/metrics/_fast.pyx":443
  *             r = C / (sqrt(M2x * M2y))
  *             pr_view[i, 0] = r
  *             rmsd_view[i] = sqrt(msd)             # <<<<<<<<<<<<<<
@@ -13512,7 +13587,7 @@ static PyObject *__pyx_fuse_1__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
       __pyx_t_22 = __pyx_v_i;
       *((double *) ( /* dim=0 */ (__pyx_v_rmsd_view.data + __pyx_t_22 * __pyx_v_rmsd_view.strides[0]) )) = sqrt(__pyx_v_msd);
 
-      /* "pytesmo/metrics/_fast.pyx":430
+      /* "pytesmo/metrics/_fast.pyx":446
  *
  *             # p-value
  *             if fabs(r) == 1.0:             # <<<<<<<<<<<<<<
@@ -13522,7 +13597,7 @@ static PyObject *__pyx_fuse_1__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
       __pyx_t_17 = ((fabs(__pyx_v_r) == 1.0) != 0);
       if (__pyx_t_17) {
 
-        /* "pytesmo/metrics/_fast.pyx":431
+        /* "pytesmo/metrics/_fast.pyx":447
  *             # p-value
  *             if fabs(r) == 1.0:
  *                 pr_view[i, 1] = 0.0             # <<<<<<<<<<<<<<
@@ -13533,17 +13608,17 @@ static PyObject *__pyx_fuse_1__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
         __pyx_t_21 = 1;
         *((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_pr_view.data + __pyx_t_22 * __pyx_v_pr_view.strides[0]) ) + __pyx_t_21 * __pyx_v_pr_view.strides[1]) )) = 0.0;
 
-        /* "pytesmo/metrics/_fast.pyx":430
+        /* "pytesmo/metrics/_fast.pyx":446
  *
  *             # p-value
  *             if fabs(r) == 1.0:             # <<<<<<<<<<<<<<
  *                 pr_view[i, 1] = 0.0
  *             else:
  */
-        goto __pyx_L23;
+        goto __pyx_L24;
       }
 
-      /* "pytesmo/metrics/_fast.pyx":433
+      /* "pytesmo/metrics/_fast.pyx":449
  *                 pr_view[i, 1] = 0.0
  *             else:
  *                 df = num_obs - 2             # <<<<<<<<<<<<<<
@@ -13553,7 +13628,7 @@ static PyObject *__pyx_fuse_1__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
       /*else*/ {
         __pyx_v_df = (__pyx_v_num_obs - 2);
 
-        /* "pytesmo/metrics/_fast.pyx":434
+        /* "pytesmo/metrics/_fast.pyx":450
  *             else:
  *                 df = num_obs - 2
  *                 t_squared = r * r * (df / ((1.0 - r) * (1.0 + r)))             # <<<<<<<<<<<<<<
@@ -13562,7 +13637,7 @@ static PyObject *__pyx_fuse_1__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
  */
         __pyx_v_t_squared = ((__pyx_v_r * __pyx_v_r) * (((double)__pyx_v_df) / ((1.0 - __pyx_v_r) * (1.0 + __pyx_v_r))));
 
-        /* "pytesmo/metrics/_fast.pyx":435
+        /* "pytesmo/metrics/_fast.pyx":451
  *                 df = num_obs - 2
  *                 t_squared = r * r * (df / ((1.0 - r) * (1.0 + r)))
  *                 z = min(float(df) / (df + t_squared), 1.0)             # <<<<<<<<<<<<<<
@@ -13578,18 +13653,18 @@ static PyObject *__pyx_fuse_1__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
         }
         __pyx_v_z = __pyx_t_28;
 
-        /* "pytesmo/metrics/_fast.pyx":436
+        /* "pytesmo/metrics/_fast.pyx":452
  *                 t_squared = r * r * (df / ((1.0 - r) * (1.0 + r)))
  *                 z = min(float(df) / (df + t_squared), 1.0)
  *                 pr_view[i, 1] = betainc(0.5*df, 0.5, z)             # <<<<<<<<<<<<<<
  *
  *     return pr_arr, rmsd_arr
  */
-        __Pyx_GetModuleGlobalName(__pyx_t_6, __pyx_n_s_betainc); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 436, __pyx_L1_error)
+        __Pyx_GetModuleGlobalName(__pyx_t_6, __pyx_n_s_betainc); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 452, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_6);
-        __pyx_t_2 = PyFloat_FromDouble((0.5 * __pyx_v_df)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 436, __pyx_L1_error)
+        __pyx_t_2 = PyFloat_FromDouble((0.5 * __pyx_v_df)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 452, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_2);
-        __pyx_t_4 = PyFloat_FromDouble(__pyx_v_z); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 436, __pyx_L1_error)
+        __pyx_t_4 = PyFloat_FromDouble(__pyx_v_z); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 452, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_4);
         __pyx_t_3 = NULL;
         __pyx_t_18 = 0;
@@ -13606,7 +13681,7 @@ static PyObject *__pyx_fuse_1__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
         #if CYTHON_FAST_PYCALL
         if (PyFunction_Check(__pyx_t_6)) {
           PyObject *__pyx_temp[4] = {__pyx_t_3, __pyx_t_2, __pyx_float_0_5, __pyx_t_4};
-          __pyx_t_5 = __Pyx_PyFunction_FastCall(__pyx_t_6, __pyx_temp+1-__pyx_t_18, 3+__pyx_t_18); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 436, __pyx_L1_error)
+          __pyx_t_5 = __Pyx_PyFunction_FastCall(__pyx_t_6, __pyx_temp+1-__pyx_t_18, 3+__pyx_t_18); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 452, __pyx_L1_error)
           __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
           __Pyx_GOTREF(__pyx_t_5);
           __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
@@ -13616,7 +13691,7 @@ static PyObject *__pyx_fuse_1__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
         #if CYTHON_FAST_PYCCALL
         if (__Pyx_PyFastCFunction_Check(__pyx_t_6)) {
           PyObject *__pyx_temp[4] = {__pyx_t_3, __pyx_t_2, __pyx_float_0_5, __pyx_t_4};
-          __pyx_t_5 = __Pyx_PyCFunction_FastCall(__pyx_t_6, __pyx_temp+1-__pyx_t_18, 3+__pyx_t_18); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 436, __pyx_L1_error)
+          __pyx_t_5 = __Pyx_PyCFunction_FastCall(__pyx_t_6, __pyx_temp+1-__pyx_t_18, 3+__pyx_t_18); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 452, __pyx_L1_error)
           __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
           __Pyx_GOTREF(__pyx_t_5);
           __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
@@ -13624,7 +13699,7 @@ static PyObject *__pyx_fuse_1__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
         } else
         #endif
         {
-          __pyx_t_29 = PyTuple_New(3+__pyx_t_18); if (unlikely(!__pyx_t_29)) __PYX_ERR(0, 436, __pyx_L1_error)
+          __pyx_t_29 = PyTuple_New(3+__pyx_t_18); if (unlikely(!__pyx_t_29)) __PYX_ERR(0, 452, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_29);
           if (__pyx_t_3) {
             __Pyx_GIVEREF(__pyx_t_3); PyTuple_SET_ITEM(__pyx_t_29, 0, __pyx_t_3); __pyx_t_3 = NULL;
@@ -13638,29 +13713,29 @@ static PyObject *__pyx_fuse_1__pyx_f_7pytesmo_7metrics_5_fast_rolling_pr_rmsd(__
           PyTuple_SET_ITEM(__pyx_t_29, 2+__pyx_t_18, __pyx_t_4);
           __pyx_t_2 = 0;
           __pyx_t_4 = 0;
-          __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_6, __pyx_t_29, NULL); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 436, __pyx_L1_error)
+          __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_6, __pyx_t_29, NULL); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 452, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_5);
           __Pyx_DECREF(__pyx_t_29); __pyx_t_29 = 0;
         }
         __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-        __pyx_t_28 = __pyx_PyFloat_AsDouble(__pyx_t_5); if (unlikely((__pyx_t_28 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 436, __pyx_L1_error)
+        __pyx_t_28 = __pyx_PyFloat_AsDouble(__pyx_t_5); if (unlikely((__pyx_t_28 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 452, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
         __pyx_t_21 = __pyx_v_i;
         __pyx_t_22 = 1;
         *((double *) ( /* dim=1 */ (( /* dim=0 */ (__pyx_v_pr_view.data + __pyx_t_21 * __pyx_v_pr_view.strides[0]) ) + __pyx_t_22 * __pyx_v_pr_view.strides[1]) )) = __pyx_t_28;
       }
-      __pyx_L23:;
+      __pyx_L24:;
     }
-    __pyx_L16:;
+    __pyx_L21:;
   }
 
-  /* "pytesmo/metrics/_fast.pyx":438
+  /* "pytesmo/metrics/_fast.pyx":454
  *                 pr_view[i, 1] = betainc(0.5*df, 0.5, z)
  *
  *     return pr_arr, rmsd_arr             # <<<<<<<<<<<<<<
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_5 = PyTuple_New(2); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 438, __pyx_L1_error)
+  __pyx_t_5 = PyTuple_New(2); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 454, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_INCREF(((PyObject *)__pyx_v_pr_arr));
   __Pyx_GIVEREF(((PyObject *)__pyx_v_pr_arr));

@@ -332,8 +332,9 @@ cpdef rolling_pr_rmsd(floating [:] timestamps,
     """
     # This uses an adapted Welford's algorithm to calculate the rolling mean,
     # variance, covariance, and mean squared difference.
-    cdef int i, j, n_ts, num_obs, df, lower, upper, lold, uold, rolling_nobs
-    cdef floating mx, my, mxold, myold, M2x, M2y, C, r, t_squared, z, msd
+    cdef int i, j, n_ts, num_obs, df, lower, upper, lold, uold
+    cdef floating mx, my, mxold, myold, M2x, M2y, C, r, t_squared, z, msd,
+    cdef floating rolling_nobs  # a float because we divide by it
     cdef cnp.ndarray[floating, ndim=2] pr_arr
     cdef cnp.ndarray[floating, ndim=1] rmsd_arr
     cdef floating [:,:] pr_view
@@ -361,6 +362,7 @@ cpdef rolling_pr_rmsd(floating [:] timestamps,
         lold = lower
         uold = upper
 
+
         # find interval
         if center:
             # find new start
@@ -368,11 +370,21 @@ cpdef rolling_pr_rmsd(floating [:] timestamps,
                 lower = j
                 if timestamps[j] >= timestamps[i] - window_size:
                     break
-            # find new end
+
+            # find new end:
             # we have to check separately whether the last entry is outside
             # the window, otherwise we will always get n_ts - 2 as result
+
+            # if we're not at the end yet
             if timestamps[n_ts - 1] > timestamps[i] + window_size:
+                if i == 0:
+                    # in the first iteration upper was -1 in order to set uold
+                    # correctly, but in the following upper must be at least 1,
+                    # so we don't access an invalid index
+                    upper = 1
                 for j in range(upper, n_ts):
+                    # j - 1 because we want the index that is still inside the
+                    # window
                     upper = j - 1
                     if timestamps[j] > timestamps[i] + window_size:
                         break
@@ -386,40 +398,44 @@ cpdef rolling_pr_rmsd(floating [:] timestamps,
                     break
             upper = i
 
+
+
+        # Regardless of the number of observations we calculate the moments
+        # here, because we need to update them at one point anyway
+
+        # first, add the new terms with Welford's algorithm
+        for j in range(uold+1, upper+1):
+            mxold = mx
+            myold = my
+            rolling_nobs += 1
+            mx += (x[j] - mx) / rolling_nobs
+            my += (y[j] - my) / rolling_nobs
+            msd += ((x[j] - y[j])**2 - msd) / rolling_nobs
+            M2x += (x[j] - mx) * (x[j] - mxold)
+            M2y += (y[j] - my) * (y[j] - myold)
+            C += (x[j] - mx) * (y[j] - myold)
+
+        # now subtract the ones that fell out the window
+        # the old values here correspond to the m_n values in the formula,
+        # that's why the order is different here
+        for j in range(lold, lower):
+            mxold = mx
+            myold = my
+            rolling_nobs -= 1
+            mx -= (x[j] - mx) / rolling_nobs
+            my -= (y[j] - my) / rolling_nobs
+            msd -= ((x[j] - y[j])**2 - msd) / rolling_nobs
+            M2x -= (x[j] - mxold) * (x[j] - mx)
+            M2y -= (y[j] - myold) * (y[j] - my)
+            C -= (x[j] - mxold) * (y[j] - my)
+
         # check if we have enough observations
         num_obs = upper - lower + 1
         if num_obs == 0 or num_obs < min_periods:
-            pr_arr[i, 0] = NAN
-            pr_arr[i, 1] = NAN
+            pr_view[i, 0] = NAN
+            pr_view[i, 1] = NAN
+            rmsd_view[i] = NAN
         else:
-
-            # first, add the new terms with Welford's algorithm
-            for j in range(uold+1, upper+1):
-                mxold = mx
-                myold = my
-                rolling_nobs += 1
-                mx += (x[j] - mx) / rolling_nobs
-                my += (y[j] - my) / rolling_nobs
-                msd += ((x[j] - y[j])**2 - msd) / rolling_nobs
-                M2x += (x[j] - mx) * (x[j] - mxold)
-                M2y += (y[j] - my) * (y[j] - myold)
-                C += (x[j] - mx) * (y[j] - myold)
-
-            # now subtract the ones that fell out the window
-            # the old values here correspond to the m_n values in the formula,
-            # that's why the order is different here
-            for j in range(lold, lower):
-                mxold = mx
-                myold = my
-                rolling_nobs -= 1
-                mx -= (x[j] - mx) / rolling_nobs
-                my -= (y[j] - my) / rolling_nobs
-                msd -= ((x[j] - y[j])**2 - msd) / rolling_nobs
-                M2x -= (x[j] - mxold) * (x[j] - mx)
-                M2y -= (y[j] - myold) * (y[j] - my)
-                C -= (x[j] - mxold) * (y[j] - my)
-
-
             # to get var and cov we would need to divide by n, but since
             # we're only interested in the ratio that's not necessary
             r = C / (sqrt(M2x * M2y))

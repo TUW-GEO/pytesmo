@@ -232,8 +232,7 @@ def test_lin_cdf_match_stored_params():
     # this also tests scaling of data outside of the original range
     src = np.arange(25)
 
-    with pytest.deprecated_call():
-        o = scaling.lin_cdf_match_stored_params(src, perc_src, perc_ref)
+    o = scaling.lin_cdf_match_stored_params(src, perc_src, perc_ref)
     nptest.assert_almost_equal(o, src * 10)
 
 
@@ -249,12 +248,11 @@ def test_lin_cdf_match_stored_params_min_max():
     # this also tests scaling of data outside of the original range
     src = np.arange(25)
 
-    with pytest.deprecated_call():
-        o = scaling.lin_cdf_match_stored_params(src,
-                                                perc_src,
-                                                perc_ref,
-                                                max_val=230,
-                                                min_val=85)
+    o = scaling.lin_cdf_match_stored_params(src,
+                                            perc_src,
+                                            perc_ref,
+                                            max_val=230,
+                                            min_val=85)
 
     o_should = np.array([85, 85, 85, 85, 85, 85,
                          85, 85, 85, 90, 100,
