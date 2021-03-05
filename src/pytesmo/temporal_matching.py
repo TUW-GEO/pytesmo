@@ -260,7 +260,7 @@ def temporal_collocation(reference, other, window, method="nearest",
             raise ValueError(
                 "Flag must have same length as reference"
             )
-        flagged = flag.astype(np.bool)
+        flagged = flag.astype(bool)
         has_invalid = np.any(flagged)
     else:
         has_invalid = False
