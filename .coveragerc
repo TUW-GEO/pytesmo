@@ -1,12 +1,7 @@
 # .coveragerc to control coverage.py
 [run]
 branch = True
-# source = pytesmo
-
-[paths]
-source =
-    src/
-    */site-packages/
+source = pytesmo
 
 [report]
 # Regexes for lines to exclude from consideration

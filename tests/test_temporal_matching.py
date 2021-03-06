@@ -62,7 +62,8 @@ def test_df_match_borders():
             datetime(2007, 1, 5, 9),
         ],
     )
-    matched = tmatching.df_match(ref_df, match_df)
+    with pytest.deprecated_call():
+        matched = tmatching.df_match(ref_df, match_df)
 
     nptest.assert_allclose(
         np.array([0.375, 0.375, 0.375, 0.375, 0.375]), matched.distance.values
@@ -88,7 +89,8 @@ def test_df_match_match_on_window_border():
             datetime(2007, 1, 5, 9),
         ],
     )
-    matched = tmatching.df_match(ref_df, match_df, window=0.5)
+    with pytest.deprecated_call():
+        matched = tmatching.df_match(ref_df, match_df, window=0.5)
 
     nptest.assert_allclose(
         np.array([0.375, 0.375, 0.5, -0.5, 0.375]), matched.distance.values
@@ -96,18 +98,20 @@ def test_df_match_match_on_window_border():
     nptest.assert_allclose([0, 1, 2, 2, 3], matched.matched_data)
 
     # test asym_window keyword
-    matched = tmatching.df_match(
-        ref_df, match_df, window=0.5, asym_window="<="
-    )
+    with pytest.deprecated_call():
+        matched = tmatching.df_match(
+            ref_df, match_df, window=0.5, asym_window="<="
+        )
 
     nptest.assert_allclose(
         np.array([0.375, 0.375, 0.5, np.nan, 0.375]), matched.distance.values
     )
     nptest.assert_allclose([0, 1, 2, np.nan, 3], matched.matched_data)
 
-    matched = tmatching.df_match(
-        ref_df, match_df, window=0.5, asym_window=">="
-    )
+    with pytest.deprecated_call():
+        matched = tmatching.df_match(
+            ref_df, match_df, window=0.5, asym_window=">="
+        )
 
     nptest.assert_allclose(
         np.array([0.375, 0.375, np.nan, -0.5, 0.375]), matched.distance.values
@@ -135,7 +139,8 @@ def test_df_match_borders_unequal_query_points():
             datetime(2007, 1, 5, 9),
         ],
     )
-    matched = tmatching.df_match(ref_df, match_df)
+    with pytest.deprecated_call():
+        matched = tmatching.df_match(ref_df, match_df)
 
     nptest.assert_allclose(
         np.array([0.375, 0.375, -0.625, 0.375, 0.375]), matched.distance.values
@@ -164,7 +169,8 @@ def test_matching():
             datetime(2007, 1, 5, 9),
         ],
     )
-    matched = tmatching.matching(ref_df, match_df)
+    with pytest.deprecated_call():
+        matched = tmatching.matching(ref_df, match_df)
 
     nptest.assert_allclose(np.array([0, 1, 2, 4]), matched.matched_data)
     assert len(matched) == 4
@@ -193,7 +199,8 @@ def test_matching_series():
         name="matched_data",
     )
 
-    matched = tmatching.matching(ref_ser, match_ser)
+    with pytest.deprecated_call():
+        matched = tmatching.matching(ref_ser, match_ser)
 
     nptest.assert_allclose(np.array([0, 1, 2, 4]), matched.matched_data)
     assert len(matched) == 4
@@ -494,6 +501,3 @@ def test_warning_on_no_match(test_data):
         tmatching.temporal_collocation(
             ref_frame, test_frame, pd.Timedelta(6, "H"), checkna=True
         )
-
-
-

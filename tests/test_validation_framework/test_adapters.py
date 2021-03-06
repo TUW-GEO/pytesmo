@@ -246,6 +246,9 @@ class TestTimezoneReader(object):
         return self.read(*args, **kwargs)
 
 
+@pytest.mark.filterwarnings(
+    "ignore:Dropping timezone information:UserWarning"
+)
 def test_timezone_removal():
     tz_reader = TestTimezoneReader()
 

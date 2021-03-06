@@ -26,6 +26,7 @@ dependencies:
     - repurpose
     - pytest
     - pytest-cov
+    - pytest-mpl
     - more_itertools
     - cadati
     - pre-commit

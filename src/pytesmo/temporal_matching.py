@@ -76,7 +76,7 @@ def df_match(reference, *args, **kwds):
         dist, i = tree.query(np.atleast_2d(ref_step).T)
         matched = values[i]
 
-        distance = np.zeros_like(matched, dtype=np.float)
+        distance = np.zeros_like(matched, dtype=float)
         distance.fill(np.nan)
         valid_match = np.invert(np.isnan(matched))
 
