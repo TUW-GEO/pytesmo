@@ -76,7 +76,7 @@ def test_analytical_cis(testdata):
 
 
 def test_CIs():
-    np.random.seed()
+    np.random.seed(313)
     # a test case with bias where we have analytical CIs to compare and
     # convergence should work if everything is implemented correctly
     x = np.random.randn(20000) + 5
