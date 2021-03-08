@@ -1,6 +1,4 @@
 include *.txt *.rst
 recursive-include pytesmo *.pyx *.cmap
-recursive-include tests *.py 
+recursive-include tests *.py
 recursive-include examples *.py
-include versioneer.py
-include pytesmo/_version.py

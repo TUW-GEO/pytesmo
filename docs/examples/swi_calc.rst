@@ -17,12 +17,11 @@ Import all necessary dependencies:
     import os
     import matplotlib.pyplot as plt
 
-    from pytesmo import testdata_path
-
 Set up the ascat reader:
 
 .. code:: python
 
+    testdata_path = os.path.join('..', '..', 'tests', 'test-data')
     ascat_data_folder = os.path.join(testdata_path, 'sat', 'ascat', 'netcdf', '55R22')
     ascat_grid_folder = os.path.join(testdata_path, 'sat', 'ascat', 'netcdf', 'grid')
     static_layers_folder = os.path.join(testdata_path, 'sat', 'h_saf', 'static_layer')

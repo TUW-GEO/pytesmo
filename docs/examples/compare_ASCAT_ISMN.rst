@@ -13,16 +13,15 @@ Import all necessary functions
     import pytesmo.scaling as scaling
     import pytesmo.df_metrics as df_metrics
     import pytesmo.metrics as metrics
-    
+
     import os
     import matplotlib.pyplot as plt
-
-    from pytesmo import testdata_path
 
 Create the ascat reader:
 
 .. code:: python
 
+    testdata_path = os.path.join('..', '..', 'tests', 'test-data')
     ascat_data_folder = os.path.join(testdata_path, 'sat', 'ascat', 'netcdf', '55R22')
     ascat_grid_folder = os.path.join(testdata_path, 'sat', 'ascat', 'netcdf', 'grid')
     static_layers_folder = os.path.join(testdata_path, 'sat', 'h_saf', 'static_layer')
@@ -66,32 +65,32 @@ Temporal matching is then performed and the data is scaled (bias correction).
 
     # this loops through all stations that measure soil moisture
     for station in ISMN_reader.stations_that_measure('soil moisture'):
-        
+
         # this loops through all time series of this station that measure soil moisture
         # between 0 and 0.1 meters
         for t, ISMN_time_series in enumerate(station.data_for_variable('soil moisture',
                                                 min_depth=0, max_depth=0.1)):
-            
+
             ascat_time_series = ascat_reader.read(ISMN_time_series.longitude,
                                                   ISMN_time_series.latitude,
                                                   mask_ssf=True,
                                                   mask_frozen_prob = 5,
                                                   mask_snow_prob = 5)
-            
+
             # drop nan values before doing any matching
             ascat_sm = ascat_time_series.data[['sm']].dropna()
             ismn_sm = ISMN_time_series.data[['soil moisture']].dropna()
-            
+
             # rename the soil moisture column in ISMN_time_series.data to insitu_sm
             # to clearly differentiate the time series when they are plotted together
             ismn_sm.rename(columns={'soil moisture':label_insitu}, inplace=True)
-            
+
             # get ISMN data that was observerd within +- 1 hour(1/24. day) of the ASCAT observation
             # do not include those indexes where no observation was found
             matched_data = temp_match.matching(ascat_sm,ismn_sm, window=1/24.)
             # matched ISMN data is now a dataframe with the same datetime index
             # as ascat_time_series.data and the nearest insitu observation
-            
+
             # the plot shows that ISMN and ASCAT are observed in different units
             fig1, ax1 = plt.subplots()
             matched_data.plot(figsize=(15,5),secondary_y=[label_ascat],
@@ -99,12 +98,12 @@ Temporal matching is then performed and the data is scaled (bias correction).
             fig1.show()
             fig1.savefig(os.path.join(out_path, f'compare_ASCAT_ISMN_{i}_{t}_1.png'))
 
-            
+
             # this takes the matched_data DataFrame and scales all columns to the
             # column with the given reference_index, in this case in situ
             scaled_data = scaling.scale(matched_data, method='lin_cdf_match',
                                         reference_index=1)
-            
+
             # now the scaled ascat data and insitu_sm are in the same space
             fig2, ax2 = plt.subplots()
             scaled_data.plot(figsize=(15,5), title='scaled data', ax=ax2)
@@ -117,14 +116,14 @@ Temporal matching is then performed and the data is scaled (bias correction).
             ax3.set_ylabel(label_insitu)
             fig3.show()
             fig3.savefig(os.path.join(out_path, f'compare_ASCAT_ISMN_{i}_{t}_3.png'))
-            
+
             # calculate correlation coefficients, RMSD, bias, Nash Sutcliffe
             x, y = scaled_data[label_ascat].values, scaled_data[label_insitu].values
-            
+
             print("ISMN time series:", ISMN_time_series)
             print("compared to", ascat_time_series)
             print("Results:")
-            
+
             # df_metrics takes a DataFrame as input and automatically
             # calculates the metric on all combinations of columns
             # returns a named tuple for easy printing
@@ -139,14 +138,14 @@ Temporal matching is then performed and the data is scaled (bias correction).
             plt.close('all')
 
             print('-----------------------------------------')
-            
-            
+
+
         i += 1
-        
+
         #only show the first 2 stations, otherwise this program would run a long time
         #and produce a lot of plots
         if i >= 2:
-            break    
+            break
 
 
 .. image:: /_static/images/compare_ASCAT_ISMN/compare_ASCAT_ISMN_0_0_1.png
@@ -197,5 +196,3 @@ Temporal matching is then performed and the data is scaled (bias correction).
     rmsd(sm_and_insitu_sm=0.05307874498167096)
     Bias -0.00046688712522047204
     Nash Sutcliffe 0.46408936677107304
-
-    

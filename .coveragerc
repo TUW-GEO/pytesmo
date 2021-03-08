@@ -2,12 +2,6 @@
 [run]
 branch = True
 source = pytesmo
-# omit = bad_file.py
-
-[paths]
-source =
-    src/
-    */site-packages/
 
 [report]
 # Regexes for lines to exclude from consideration

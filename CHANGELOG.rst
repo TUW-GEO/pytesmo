@@ -29,6 +29,7 @@ Unreleased
     components can be calculated with :py:func:`pytesmo.metrics.mse`,
     :py:func:`pytesmo.metrics.mse_corr`, func:`pytesmo.metrics.mse_bias`,
     :py:func:`pytesmo.metrics.mse_var`.
+- Removed dependency on deprecated Numpy API
 
 
 Version 0.10.0, 2021-02-15
@@ -87,7 +88,7 @@ Version 0.7.0, 2019-05-15
 - Default behavior of climatology calculation will now fill no_data values
   Nothing is changing if there are no no_data values in the time series
 
-Version 0.6.11, 2019-05-15 
+Version 0.6.11, 2019-05-15
 ==========================
 
 - Add more metrics calculators

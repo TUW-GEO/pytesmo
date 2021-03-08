@@ -6,6 +6,7 @@ import pytest
 
 import pytesmo.metrics
 from pytesmo.metrics import *
+from pytesmo.metrics._fast import _moments_welford
 import pytesmo.metrics.deprecated as deprecated
 
 
@@ -382,4 +383,16 @@ def test_rolling_pr_rmsd():
     # close to 1
     nptest.assert_almost_equal(pr[:, 1], prnew[:, 1], 4)
     nptest.assert_almost_equal(rmsd, rmsdnew)
-    
+
+
+def test_moments_welford():
+    x = np.random.randn(1000)
+    y = np.random.randn(1000)
+
+    mx, my, varx, vary, cov = _moments_welford(x, y)
+
+    nptest.assert_almost_equal(np.mean(x), mx, 14)
+    nptest.assert_almost_equal(np.mean(y), my, 14)
+    nptest.assert_almost_equal(np.var(x), varx, 14)
+    nptest.assert_almost_equal(np.var(y), vary, 14)
+    nptest.assert_almost_equal(np.cov(x, y, ddof=0)[0, 1], cov, 14)

@@ -31,12 +31,14 @@ Tests for the validation framework
 Created on Mon Jul  6 12:49:07 2015
 '''
 
-import os
-import tempfile
+from datetime import datetime
 import netCDF4 as nc
 import numpy as np
 import numpy.testing as nptest
+import os
 import pytest
+import tempfile
+import warnings
 
 import pygeogrids.grids as grids
 from pygeobase.io_base import GriddedTsBase
@@ -46,21 +48,20 @@ import pytesmo.validation_framework.metric_calculators as metrics_calculators
 from pytesmo.validation_framework.results_manager import netcdf_results_manager
 from pytesmo.validation_framework.data_manager import DataManager
 from pytesmo.validation_framework.results_manager import PointDataResults
-
-from datetime import datetime
-
-from ascat.read_native.cdr import AscatSsmCdr
-from ismn.interface import ISMN_Interface
-
 from pytesmo.validation_framework.validation import Validation
 from pytesmo.validation_framework.validation import args_to_iterable
 
-from tests.test_validation_framework.test_datasets import setup_TestDatasets
-from tests.test_validation_framework.test_datasets import setup_two_without_overlap
-from tests.test_validation_framework.test_datasets import setup_three_with_two_overlapping
-from tests.test_validation_framework.test_datasets import MaskingTestDataset
+from tests.test_validation_framework.test_datasets import (
+    setup_TestDatasets,
+    setup_two_without_overlap,
+    setup_three_with_two_overlapping,
+    MaskingTestDataset,
+)
 
-import warnings
+from ismn.interface import ISMN_Interface
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore")
+    from ascat.read_native.cdr import AscatSsmCdr
 
 
 @pytest.mark.slow
