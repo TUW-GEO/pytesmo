@@ -3,6 +3,7 @@ import numpy as np
 import numpy.testing as nptest
 import pandas as pd
 import pytest
+from scipy import stats
 
 import pytesmo.metrics
 from pytesmo.metrics import *
