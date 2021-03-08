@@ -208,11 +208,11 @@ def temporal_collocation(
     reference : pd.DataFrame, pd.Series, or pd.DatetimeIndex
         The reference onto which `other` should be collocated. If this is a
         DataFrame or a Series, the index must be a DatetimeIndex. If the index
-        is timezone-naive, UTC will be assumed.
+        is timezone-naive and `other` is not, UTC will be assumed.
     other : pd.DataFrame or pd.Series
         Data to be collocated. Must have a pd.DatetimeIndex as index. If the
-        index is timezone-naive, the timezone of the reference data will be
-        assumed.
+        index is timezone-naive and `reference` is not, the timezone of the
+        reference data will be assumed.
     window : pd.Timedelta or float
         Window around reference timestamps in which to look for data. Floats
         are interpreted as number of days.
@@ -284,12 +284,17 @@ def temporal_collocation(
 
     # preprocessing
     # ------------
-    if ref_dr.tz is None:
-        ref_dr = ref_dr.tz_localize("UTC")
-    if other.index.tz is None:
-        other = other.tz_localize(ref_dr.tz)
-    if other.index.tz != ref_dr.tz:
-        other = other.tz_convert(ref_dr.tz)
+    if ref_dr.tz is None and other.index.tz is None:
+        # no timezone info provided for any of the inputs, so we will continue
+        # to use timezone naive frames
+        pass
+    else:
+        if ref_dr.tz is None:
+            ref_dr = ref_dr.tz_localize("UTC")
+        if other.index.tz is None:
+            other = other.tz_localize(ref_dr.tz)
+        if other.index.tz != ref_dr.tz:
+            other = other.tz_convert(ref_dr.tz)
     if dropduplicates or method == "nearest":
         other = other[~other.index.duplicated(keep="first")]
 
