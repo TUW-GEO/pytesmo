@@ -187,11 +187,6 @@ def calc_climatology(Ser,
     clim_ser = pd.Series(clim.values.flatten(),
                          index=clim.index.values)
 
-    if interpolate_leapday and not respect_leap_years:
-        clim_ser[60] = np.mean((clim_ser[59], clim_ser[61]))
-    elif interpolate_leapday and respect_leap_years:
-        clim_ser[366] = np.mean((clim_ser[365], clim_ser[1]))
-
     if wraparound:
         index_old = clim_ser.index.copy()
         left_mirror = clim_ser.iloc[-moving_avg_clim:]
@@ -211,5 +206,12 @@ def calc_climatology(Ser,
         clim_ser = moving_average(clim_ser, window_size=moving_avg_clim, fillna=fillna, min_obs=min_obs_clim)
 
     clim_ser = clim_ser.reindex(np.arange(366) + 1)
+
+    if interpolate_leapday and not respect_leap_years:
+        clim_ser[60] = np.mean((clim_ser[59], clim_ser[61]))
+    elif interpolate_leapday and respect_leap_years:
+        clim_ser[366] = np.mean((clim_ser[365], clim_ser[1]))
+
     clim_ser = clim_ser.fillna(fill)
+
     return clim_ser
