@@ -75,7 +75,8 @@ def test_analytical_cis(testdata):
         assert ub > ub10
 
 
-def test_CIs():
+@pytest.mark.parametrize("method", ["BCa", "basic", "percentile"])
+def test_bootstrap_cis_simple(method):
     np.random.seed(313)
     # a test case with bias where we have analytical CIs to compare and
     # convergence should work if everything is implemented correctly
@@ -95,7 +96,10 @@ def test_CIs():
     assert b - lb == ub - b
 
     # test bootstrapped CIs
-    bs_b, bs_lb, bs_ub = with_bootstrapped_ci(pytesmo.metrics.bias, x, y, alpha=0.1)
+    bs_b, bs_lb, bs_ub = with_bootstrapped_ci(
+        pytesmo.metrics.bias, x, y, alpha=0.1,
+        method=method
+    )
     assert bs_b == b  # this is the same function call
     # The difference in CIs is based on experience values, and not quite as
     # good as with analytical estimates
