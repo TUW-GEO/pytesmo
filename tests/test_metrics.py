@@ -3,6 +3,7 @@ import numpy as np
 import numpy.testing as nptest
 import pandas as pd
 import pytest
+from scipy import stats
 
 import pytesmo.metrics
 from pytesmo.metrics import *
@@ -75,6 +76,38 @@ def test_analytical_cis(testdata):
         assert ub > ub10
 
 
+@pytest.mark.parametrize("method", ["BCa", "basic", "percentile"])
+def test_bootstrap_cis_simple(method):
+    np.random.seed(313)
+    # a test case with bias where we have analytical CIs to compare and
+    # convergence should work if everything is implemented correctly
+    x = np.random.randn(20000) + 5
+    y = np.random.randn(20000)
+    b, lb, ub = with_analytical_ci(pytesmo.metrics.bias, x, y, alpha=0.1)
+    # x and y have variance 1, so x - y has variance 2.
+    # Therefore, b ~ N(5, 2/n)
+    rv = stats.norm(loc=5, scale=np.sqrt(2/len(x)))
+    # Approximate 95% intervals are therefore
+    # 5 +- 2 * sqrt(2/n) = 5 +- 2 * sqrt(2/20000) ~ 5 +- 0.02
+    assert abs(b - 5) < 0.02
+    # The difference in CIs is based on experience values
+    nptest.assert_almost_equal(b - lb, 5 - rv.ppf(0.05), 4)
+    nptest.assert_almost_equal(ub - b, rv.ppf(0.95) - 5, 4)
+    # bias CIs are symmetric
+    assert b - lb == ub - b
+
+    # test bootstrapped CIs
+    bs_b, bs_lb, bs_ub = with_bootstrapped_ci(
+        pytesmo.metrics.bias, x, y, alpha=0.1,
+        method=method
+    )
+    assert bs_b == b  # this is the same function call
+    # The difference in CIs is based on experience values, and not quite as
+    # good as with analytical estimates
+    nptest.assert_almost_equal(bs_lb, lb, 2)
+    nptest.assert_almost_equal(bs_ub, rv.ppf(0.95), 2)
+
+
 @pytest.mark.slow
 def test_bootstrapped_cis(testdata):
     x, y = testdata
@@ -82,20 +115,22 @@ def test_bootstrapped_cis(testdata):
         func = getattr(pytesmo.metrics, funcname)
         m, lb, ub = with_analytical_ci(func, x, y, alpha=0.1)
         m_bs, lb_bs, ub_bs = with_bootstrapped_ci(
-            func, x, y, alpha=0.1, nsamples=1000
+            func, x, y, alpha=0.1, nsamples=1000, method="BCa"
         )
         assert m == m_bs
         assert lb_bs < ub_bs
         if funcname != "nrmsd":
             # nrmsd is a bit unstable when bootstrapping, due to the data
             # dependent normalization that is applied
-            assert abs(ub - ub_bs) < 1e-2
-            assert abs(lb - lb_bs) < 1e-2
+            assert abs(ub - ub_bs) < 2e-2
+            assert abs(lb - lb_bs) < 2e-2
         else:
             assert abs(ub - ub_bs) < 1e-1
             assert abs(lb - lb_bs) < 1e-1
     for funcname in no_ci:
-        m, lb, ub = with_bootstrapped_ci(func, x, y, alpha=0.1, nsamples=1000)
+        m, lb, ub = with_bootstrapped_ci(
+            func, x, y, alpha=0.1, nsamples=1000, method="BCa"
+        )
         assert lb < m
         assert m < ub
 

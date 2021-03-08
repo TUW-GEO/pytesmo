@@ -1,4 +1,5 @@
 import numpy as np
+from scipy import stats
 
 from pytesmo.metrics import pairwise
 
@@ -67,7 +68,7 @@ def with_analytical_ci(metric_func, x, y, alpha=0.05):
     return m, ci[0], ci[1]
 
 
-def with_bootstrapped_ci(metric_func, x, y, alpha=0.05,
+def with_bootstrapped_ci(metric_func, x, y, alpha=0.05, method="BCa",
                          nsamples=1000, minimum_data_length=100):
     """
     Evaluates metric and bootstraps confidence interval.
@@ -90,6 +91,18 @@ def with_bootstrapped_ci(metric_func, x, y, alpha=0.05,
         metric).
     alpha : float, optional
         Confidence level, default is 0.05.
+    method : str, optional
+        The method to use to calculate confidence intervals. Available methods
+        are:
+
+        - "BCa" (default): Bias-corrected and accelerated bootstrap.
+        - "percentile": Uses the percentiles of the bootstrapped metric
+          distribution.
+        - "basic": Uses the percentiles of the differences to the original
+          metric value.
+
+        For more info and a comparison of the methods, see [1]_, especially
+        Table 6 on page 38.
     nsamples : int, optional
         Number of bootstrap samples, default is 1000.
     minimum_data_length : int, optional
@@ -103,8 +116,17 @@ def with_bootstrapped_ci(metric_func, x, y, alpha=0.05,
         Lower bound of confidence interval
     upper : float or array of floats
         Upper bound of confidence interval
+
+    References
+    ----------
+    .. [1] Gilleland, E. (2010). *Confidence Intervals for Forecast
+    Verification* (No. NCAR/TN-479+STR). University Corporation for Atmospheric
+    Research. doi:10.5065/D6WD3XJM
     """
-    # prototype, probably inefficient
+    # Prototype, might be better to implement this in Cython if it's too slow.
+    # Then it would probably be best to make this function only a lookup table
+    # which calls a cpdef'd method, which itself calls the cdef'd metric
+    # function with a cdef'd bootstrap implementation.
     n = len(x)
     if n < minimum_data_length:
         raise ValueError(
@@ -113,12 +135,80 @@ def with_bootstrapped_ci(metric_func, x, y, alpha=0.05,
             f"You can pass 'minimum_data_length={n}' if you want to do"
             "bootstrapping nevertheless."
         )
-    mvals = np.empty(n, dtype=float)
+    orig_metric = metric_func(x, y)
+    bootstrapped_metric = np.empty(nsamples, dtype=float)
+    if method == "BCa":
+        orig_jk = _jackknife(metric_func, x, y)
     for i in range(nsamples):
         idx = np.random.choice(n, size=n)
         _x, _y = x[idx], y[idx]
-        mvals[i] = metric_func(_x, _y)
-    lower = np.quantile(mvals, alpha / 2)
-    upper = np.quantile(mvals, 1 - alpha / 2)
-    m = metric_func(x, y)
-    return m, lower, upper
+        bootstrapped_metric[i] = metric_func(_x, _y)
+    if method == "percentile":
+        lower, upper = _percentile_bs_ci(
+            bootstrapped_metric, orig_metric, alpha
+        )
+    elif method == "basic":
+        lower, upper = _basic_bs_ci(bootstrapped_metric, orig_metric, alpha)
+    elif method == "BCa":
+        lower, upper = _BCa_bs_ci(
+            bootstrapped_metric,
+            orig_metric,
+            alpha,
+            orig_jk
+        )
+    return orig_metric, lower, upper
+
+
+def _jackknife(metric_func, x, y):
+    jk = np.empty_like(x)
+    mask = np.ones(len(x), dtype=bool)
+    for i in range(len(x)):
+        mask[i] = False
+        jk[i] = metric_func(x[mask], y[mask])
+        mask[i] = True
+    return jk
+
+
+def _percentile_bs_ci(bs_m, m, alpha):
+    """Calculates the CI using percentiles"""
+    lower = np.quantile(bs_m, alpha / 2)
+    upper = np.quantile(bs_m, 1 - alpha / 2)
+    return lower, upper
+
+
+def _basic_bs_ci(bs_m, m, alpha):
+    """Basic bootstrap"""
+    lower = 2 * m - np.quantile(bs_m, 1 - alpha / 2)
+    upper = 2 * m - np.quantile(bs_m, alpha / 2)
+    return lower, upper
+
+
+def _BCa_bs_ci(bs_m, m, alpha, jk):
+    """BCa bootstrap"""
+    # see also here regarding implementation:
+    # https://www.erikdrysdale.com/bca_python/
+    z_alpha = stats.norm.ppf(alpha)
+    z_1_alpha = stats.norm.ppf(1-alpha)
+
+    # bias correction
+    z0 = stats.norm.ppf(
+        np.mean(bs_m <= m)
+    )
+
+    # acceleration
+    jk_mean = np.mean(jk)
+    a = (
+        np.sum((jk_mean - jk)**3)
+        / (6 * (np.sum((jk_mean - jk)**2))**(1.5))
+    )
+
+    # calculate adjusted percentiles
+    alpha_lower = stats.norm.cdf(
+        z0 + (z0 + z_alpha) / (1 - a * (z0 + z_alpha))
+    )
+    alpha_upper = stats.norm.cdf(
+        z0 + (z0 + z_1_alpha) / (1 - a * (z0 + z_1_alpha))
+    )
+    lower = np.quantile(bs_m, alpha_lower)
+    upper = np.quantile(bs_m, alpha_upper)
+    return lower, upper
