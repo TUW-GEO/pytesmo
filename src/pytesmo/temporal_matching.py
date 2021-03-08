@@ -43,16 +43,16 @@ def df_match(reference, *args, **kwds):
     warnings.warn(
         "'pytesmo.temporal_matching.df_match' is deprecated. Use"
         "'pytesmo.temporal_matching.temporal_collocation' instead!",
-        DeprecationWarning
+        DeprecationWarning,
     )
 
     if "window" in kwds:
-        window = kwds['window']
+        window = kwds["window"]
     else:
         window = None
 
     if "asym_window" in kwds:
-        asym_window = kwds['asym_window']
+        asym_window = kwds["asym_window"]
     else:
         asym_window = None
 
@@ -80,52 +80,63 @@ def df_match(reference, *args, **kwds):
         distance.fill(np.nan)
         valid_match = np.invert(np.isnan(matched))
 
-        distance[valid_match] = \
-            (arg.index.values[np.int32(matched[valid_match])] -
-             reference.index.values[valid_match]) / np.timedelta64(1, 'D')
+        distance[valid_match] = (
+            arg.index.values[np.int32(matched[valid_match])]
+            - reference.index.values[valid_match]
+        ) / np.timedelta64(1, "D")
 
-        arg = arg.assign(index=arg.index.values,
-                         merge_key=np.arange(len(arg)))
+        arg = arg.assign(index=arg.index.values, merge_key=np.arange(len(arg)))
 
-        arg_matched = pd.DataFrame({'merge_key': matched,
-                                    'distance': distance,
-                                    'ref_index': reference.index.values})
+        arg_matched = pd.DataFrame(
+            {
+                "merge_key": matched,
+                "distance": distance,
+                "ref_index": reference.index.values,
+            }
+        )
         arg_matched = arg_matched.merge(arg, on="merge_key", how="left")
-        arg_matched.index = arg_matched['ref_index'].values
+        arg_matched.index = arg_matched["ref_index"].values
         arg_matched = arg_matched.sort_index()
 
         if window is not None:
             if asym_window is None:
-                invalid_dist = arg_matched['distance'].abs() > window
+                invalid_dist = arg_matched["distance"].abs() > window
             if asym_window == "<=":
                 # this means that only distance in the interval [distance[ are
                 # taken
-                valid_dist = (((arg_matched['distance'] >= 0.0)
-                               & (arg_matched['distance'] <= window))
-                              | ((arg_matched['distance'] <= 0.0)
-                                 & (arg_matched['distance'] > -window)))
+                valid_dist = (
+                    (arg_matched["distance"] >= 0.0)
+                    & (arg_matched["distance"] <= window)
+                ) | (
+                    (arg_matched["distance"] <= 0.0)
+                    & (arg_matched["distance"] > -window)
+                )
                 invalid_dist = ~valid_dist
             if asym_window == ">=":
                 # this means that only distance in the interval ]distance] are
                 # taken
-                valid_dist = (((arg_matched['distance'] >= 0.0)
-                               & (arg_matched['distance'] < window))
-                              | ((arg_matched['distance'] <= 0.0)
-                                 & (arg_matched['distance'] >= -window)))
+                valid_dist = (
+                    (arg_matched["distance"] >= 0.0)
+                    & (arg_matched["distance"] < window)
+                ) | (
+                    (arg_matched["distance"] <= 0.0)
+                    & (arg_matched["distance"] >= -window)
+                )
                 invalid_dist = ~valid_dist
             arg_matched.loc[invalid_dist] = np.nan
 
-        if "dropna" in kwds and kwds['dropna']:
-            arg_matched = arg_matched.dropna(how='all')
+        if "dropna" in kwds and kwds["dropna"]:
+            arg_matched = arg_matched.dropna(how="all")
 
-        if "dropduplicates" in kwds and kwds['dropduplicates']:
-            arg_matched = arg_matched.dropna(how='all')
-            g = arg_matched.groupby('merge_key')
+        if "dropduplicates" in kwds and kwds["dropduplicates"]:
+            arg_matched = arg_matched.dropna(how="all")
+            g = arg_matched.groupby("merge_key")
             min_dists = g.distance.apply(lambda x: x.abs().idxmin())
             arg_matched = arg_matched.loc[min_dists]
 
         temporal_matched_args.append(
-            arg_matched.drop(['merge_key', 'ref_index'], axis=1))
+            arg_matched.drop(["merge_key", "ref_index"], axis=1)
+        )
 
     if len(temporal_matched_args) == 1:
         return temporal_matched_args[0]
@@ -158,10 +169,11 @@ def matching(reference, *args, **kwargs):
     warnings.warn(
         "'pytesmo.temporal_matching.matching' is deprecated. Use"
         "'pytesmo.temporal_matching.temporal_collocation' instead!",
-        DeprecationWarning
+        DeprecationWarning,
     )
-    matched_datasets = df_match(reference, *args, dropna=True,
-                                dropduplicates=True, **kwargs)
+    matched_datasets = df_match(
+        reference, *args, dropna=True, dropduplicates=True, **kwargs
+    )
 
     if type(matched_datasets) != tuple:
         matched_datasets = [matched_datasets]
@@ -169,16 +181,25 @@ def matching(reference, *args, **kwargs):
     matched_data = pd.DataFrame(reference)
 
     for match in matched_datasets:
-        match = match.drop(['distance', 'index'], axis=1)
+        match = match.drop(["distance", "index"], axis=1)
         matched_data = matched_data.join(match)
 
     return matched_data.dropna()
 
 
-def temporal_collocation(reference, other, window, method="nearest",
-                         return_index=False, return_distance=False,
-                         dropduplicates=False, dropna=False, checkna=False,
-                         flag=None, use_invalid=False):
+def temporal_collocation(
+    reference,
+    other,
+    window,
+    method="nearest",
+    return_index=False,
+    return_distance=False,
+    dropduplicates=False,
+    dropna=False,
+    checkna=False,
+    flag=None,
+    use_invalid=False,
+):
     """
     Temporally collocates values to reference.
 
@@ -248,18 +269,14 @@ def temporal_collocation(reference, other, window, method="nearest",
             "'reference' must be pd.DataFrame, pd.Series, or pd.DatetimeIndex."
         )
     if not isinstance(other, (pd.Series, pd.DataFrame)):  # pragma: no cover
-        raise ValueError(
-            "'other' must be pd.DataFrame or pd.Series."
-        )
+        raise ValueError("'other' must be pd.DataFrame or pd.Series.")
     if not isinstance(window, pd.Timedelta):
         window = pd.Timedelta(days=window)
     if flag is not None:
         if isinstance(flag, str):
             flag = other[flag].values
         if len(flag) != len(ref_dr):  # pragma: no cover
-            raise ValueError(
-                "Flag must have same length as reference"
-            )
+            raise ValueError("Flag must have same length as reference")
         flagged = flag.astype(bool)
         has_invalid = np.any(flagged)
     else:
@@ -318,3 +335,97 @@ def temporal_collocation(reference, other, window, method="nearest",
         collocated.dropna(inplace=True)
 
     return collocated
+
+
+def combined_temporal_collocation(
+    reference,
+    others,
+    window,
+    method="nearest",
+    dropduplicates=False,
+    dropna=False,
+    combined_dropna=False,
+    flag=None,
+    checkna=False,
+    use_invalid=False,
+    add_ref_data=False,
+):
+    """
+    Temporally collocates multiple dataframes to reference times.
+
+    Parameters
+    ----------
+    reference : pd.DataFrame, pd.Series, or pd.DatetimeIndex
+        The reference onto which `other` should be collocated. If this is a
+        DataFrame or a Series, the index must be a DatetimeIndex. If the index
+        is timezone-naive, UTC will be assumed.
+    others : list/tuple of pd.DataFrame or pd.Series
+        DataFrames/Series to be collocated. Each entry must have a
+        pd.DatetimeIndex as index. If the index is timezone-naive, the timezone
+        of the reference data will be assumed.
+    window : pd.Timedelta or float
+        Window around reference timestamps in which to look for data. Floats
+        are interpreted as number of days.
+    method : str, optional
+        Which method to use for the temporal collocation:
+
+        - "nearest" (default): Uses the nearest valid neighbour. When this
+          method is used, entries with duplicate index values in `other` will
+          be dropped, and only the first of the duplicates is kept.
+
+    dropduplicates : bool, optional
+        Whether to drop duplicated timestamps in `others`. Default is
+        ``False``, except when ``method="nearest"``, in which case this is
+        enforced to be ``True``.
+    dropna : bool, optional
+        Whether to drop NaNs from the resulting dataframe (arising for example
+        from duplicates with ``duplicates_nan=True`` or from missing values).
+        Default is ``False``.
+    combined_dropna : bool, optional
+        Whether to drop NaNs from the resulting combined DataFrame. This makes
+        sure that the output dataframe only has values at times where all input
+        frames had values.
+    checkna: bool, optional
+        Whether to check if only NaNs are returned (i.e. no match has been
+        found). If set to ``True``, raises a ``UserWarning`` in case no match
+        has been found. Default is ``False``.
+    flag : np.ndarray or None, optional
+        Flag column as array. If this is given, the column will be interpreted
+        as validity indicator. Any nonzero values mark the row as invalid.
+        Default is ``None``.
+    use_invalid : bool, optional
+        Whether to use invalid values marked by `flag` in case no valid values
+        are available. Default is ``False``.
+    add_ref_data : bool, optional
+        If `reference` is a DataFrame or Series, add the data to the final
+        collocated dataframe.
+
+    Returns
+    -------
+    collocated : pd.DataFrame or pd.Series
+        Temporally collocated DataFrame with variables from all input frames
+        merged together.
+    """
+    dfs = [
+        temporal_collocation(
+            reference,
+            other,
+            window,
+            method=method,
+            return_index=False,
+            return_distance=False,
+            dropduplicates=dropduplicates,
+            dropna=dropna,
+            checkna=checkna,
+            flag=flag,
+            use_invalid=use_invalid,
+        )
+        for other in others
+    ]
+    if isinstance(reference, (pd.DataFrame, pd.Series)) and add_ref_data:
+        dfs.append(reference)
+
+    merged = pd.concat(dfs, axis=1)
+    if combined_dropna:
+        merged.dropna(inplace=True)
+    return merged
