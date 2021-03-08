@@ -2,10 +2,10 @@
 Changelog
 =========
 
-Unreleased
-==========
+Version 0.10.1, 2021-03-08
+==========================
 
--
+- Fix climatology calculation with interpolate_leapday if less than 1 year of input data was given
 
 Version 0.10.0, 2021-02-15
 =========================
