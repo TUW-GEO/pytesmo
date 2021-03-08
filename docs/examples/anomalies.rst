@@ -13,12 +13,11 @@ Import all necessary dependencies:
     import os
     import matplotlib.pyplot as plt
 
-    from pytesmo import testdata_path
-
 Set up reading ascat data (from pytesmo test data, make sure to clone it!)
 
 .. code:: python
 
+    testdata_path = os.path.join('..', '..', 'tests', 'test-data')
     ascat_data_folder = os.path.join(testdata_path, 'sat', 'ascat', 'netcdf', '55R22')
     ascat_grid_folder = os.path.join(testdata_path, 'sat', 'ascat', 'netcdf', 'grid')
     static_layers_folder = os.path.join(testdata_path, 'sat', 'h_saf', 'static_layer')
@@ -74,6 +73,3 @@ Calculate anomaly based on climatology
 You will get an anomaly time series which was found using a climatology:
 
 .. image:: /_static/images/anomalies/anomalies_5_1.png
-
-
-    
