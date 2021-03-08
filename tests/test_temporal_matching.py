@@ -501,3 +501,87 @@ def test_warning_on_no_match(test_data):
         tmatching.temporal_collocation(
             ref_frame, test_frame, pd.Timedelta(6, "H"), checkna=True
         )
+
+
+def test_combined_matching():
+    index = pd.DatetimeIndex([datetime(2007, 1, i + 1, 0) for i in range(10)])
+    ref = pd.DatetimeIndex([datetime(2007, 1, i + 1, 5) for i in range(10)])
+
+    data = {
+        "data1": np.random.randn(10),
+        "data2": np.random.randn(10),
+        "missing": np.random.randn(10),
+    }
+    data["missing"][2] = np.nan
+    frames = {
+        name: pd.DataFrame({name: data[name]}, index=index)
+        for name in data
+    }
+
+    # everything together
+    merged = tmatching.combined_temporal_collocation(
+        ref,
+        (frames[name] for name in frames),
+        pd.Timedelta(6, "H"),
+        combined_dropna=False,
+    )
+
+    assert len(merged) == 10
+    for name in frames:
+        assert name in merged.columns
+        nptest.assert_equal(merged[name].values.ravel(),
+                            frames[name].values.ravel())
+
+    # test with dropna but not combined_dropna
+    merged = tmatching.combined_temporal_collocation(
+        ref,
+        (frames[name] for name in frames),
+        pd.Timedelta(6, "H"),
+        combined_dropna=False,
+        dropna=True,
+    )
+
+    assert len(merged) == 10
+    for name in frames:
+        assert name in merged.columns
+        nptest.assert_equal(merged[name].values.ravel(),
+                            frames[name].values.ravel())
+
+    # test with combined_dropna
+    merged = tmatching.combined_temporal_collocation(
+        ref,
+        (frames[name] for name in frames),
+        pd.Timedelta(6, "H"),
+        combined_dropna=True,
+        dropna=True,
+    )
+
+    assert len(merged) == 9
+    for name in frames:
+        assert name in merged.columns
+        nptest.assert_equal(merged[name].values.ravel()[2:],
+                            frames[name].values.ravel()[3:])
+
+    # test with 2d-dataframe
+    df2d = pd.DataFrame(
+        {"2d1": np.random.randn(10), "2d2": np.random.randn(10)},
+        index=index
+    )
+    merged = tmatching.combined_temporal_collocation(
+        ref,
+        (frames["missing"], df2d),
+        pd.Timedelta(6, "H"),
+        combined_dropna=False,
+    )
+    assert len(merged) == 10
+
+    # test without match
+    for comb_drop in [True, False]:
+        merged = tmatching.combined_temporal_collocation(
+            ref,
+            (frames["missing"], df2d),
+            pd.Timedelta(1, "H"),
+            combined_dropna=comb_drop,
+            dropna=True,
+        )
+        assert len(merged) == 0
