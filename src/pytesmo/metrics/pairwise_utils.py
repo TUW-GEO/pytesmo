@@ -1,5 +1,5 @@
 import numpy as np
-from scpiy import stats
+from scipy import stats
 
 from pytesmo.metrics import pairwise
 
