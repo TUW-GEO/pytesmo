@@ -434,3 +434,28 @@ def combined_temporal_collocation(
     if combined_dropna:
         merged.dropna(inplace=True)
     return merged
+
+
+def dfdict_combined_temporal_collocation(dfs, refname, window, **kwargs):
+    """
+    Applies :py:func:`combined_temporal_collocation` on a dictionary of
+    dataframes.
+
+    Parameters
+    ----------
+    dfs : dict
+        Dictionary of pd.DataFrames containing the dataframes to be collocated.
+    refname : str
+        Name of the reference frame in `dfs`.
+    window : pd.Timedelta or float
+        Window around reference timestamps in which to look for data. Floats
+        are interpreted as number of days.
+    **kwargs :
+        Keyword arguments passed to :py:func:`combined_temporal_collocation`.
+    """
+    others = []
+    for name in dfs:
+        if name != refname:
+            others.append(dfs[name])
+    ref = dfs[refname]
+    return combined_temporal_collocation(ref, others, window, **kwargs)
