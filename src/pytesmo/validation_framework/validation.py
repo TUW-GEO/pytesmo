@@ -298,7 +298,7 @@ class Validation(object):
                 # Rename the columns to 'ref', 'k1', 'k2', ...
                 rename_dict = {}
                 for i, r in enumerate(result_key):
-                    rename_dict[r[0]] = "k{i}" if i > 0 else "ref"
+                    rename_dict[r[0]] = f"k{i}" if i > 0 else "ref"
                 data.rename(columns=rename_dict, inplace=True)
 
                 if result_key not in results.keys():
