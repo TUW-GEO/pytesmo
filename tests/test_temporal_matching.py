@@ -552,7 +552,7 @@ def test_combined_matching():
         ref,
         (frames[name] for name in frames),
         pd.Timedelta(6, "H"),
-        combined_dropna=True,
+        combined_dropna="any",
         dropna=True,
     )
 
@@ -585,3 +585,84 @@ def test_combined_matching():
             dropna=True,
         )
         assert len(merged) == 0
+
+
+def test_timezone_warning():
+    dr = pd.date_range("2000-01-01", "2000-01-31", freq="D")
+    dr_berlin = pd.date_range("2000-01-01", "2000-01-31", freq="D",
+                              tz="Europe/Berlin")
+    n = len(dr)
+    with pytest.warns(UserWarning, match="No timezone given"):
+        matched = tmatching.temporal_collocation(
+            pd.DataFrame(np.random.randn(n), index=dr),
+            pd.DataFrame(np.random.randn(n), index=dr_berlin),
+            pd.Timedelta(6, "H"),
+        )
+        assert str(matched.index.tz) == "Europe/Berlin"
+
+
+def test_combined_timezones():
+    dr = pd.date_range("2000-01-01", "2000-01-31", freq="D")
+    dr_utc = pd.date_range("2000-01-01", "2000-01-31", freq="D",
+                           tz="UTC")
+    dr_berlin = pd.date_range("2000-01-01", "2000-01-31", freq="D",
+                              tz="Europe/Berlin")
+    n = len(dr)
+
+    # test timezone naive
+    merged = tmatching.combined_temporal_collocation(
+        pd.DataFrame(np.random.randn(n), index=dr),
+        (pd.DataFrame(np.random.randn(n), index=dr),
+         pd.DataFrame(np.random.randn(n), index=dr)),
+        pd.Timedelta(6, "H"),
+        add_ref_data=True
+    )
+    assert merged.index.tz is None
+
+    # test with same timezone
+    merged = tmatching.combined_temporal_collocation(
+        pd.DataFrame(np.random.randn(n), index=dr_berlin),
+        (pd.DataFrame(np.random.randn(n), index=dr_berlin),
+         pd.DataFrame(np.random.randn(n), index=dr_berlin)),
+        pd.Timedelta(6, "H"),
+        add_ref_data=True
+    )
+    assert str(merged.index.tz) == "Europe/Berlin"
+
+    # test with missing timezone
+    with pytest.warns(UserWarning, match="No timezone given"):
+        merged = tmatching.combined_temporal_collocation(
+            pd.DataFrame(np.random.randn(n), index=dr),
+            (pd.DataFrame(np.random.randn(n), index=dr_berlin),
+             pd.DataFrame(np.random.randn(n), index=dr)),
+            pd.Timedelta(6, "H"),
+            add_ref_data=True
+        )
+        assert str(merged.index.tz) == "Europe/Berlin"
+
+    # test with different timezones and no ref timezone
+    with pytest.warns(UserWarning) as warn_record:
+        merged = tmatching.combined_temporal_collocation(
+            pd.DataFrame(np.random.randn(n), index=dr),
+            (pd.DataFrame(np.random.randn(n), index=dr_berlin),
+             pd.DataFrame(np.random.randn(n), index=dr_utc)),
+            pd.Timedelta(6, "H"),
+            add_ref_data=True
+        )
+        assert str(merged.index.tz) == "UTC"
+    assert len(warn_record) == 3
+    assert "No timezone given" in warn_record[0].message.args[0]
+    assert "Europe/Berlin" in warn_record[0].message.args[0]
+    assert "No timezone given" in warn_record[1].message.args[0]
+    assert "UTC" in warn_record[1].message.args[0]
+    assert "mixed timezones" in warn_record[2].message.args[0]
+
+    # test with different timezones and ref timezone
+    merged = tmatching.combined_temporal_collocation(
+        pd.DataFrame(np.random.randn(n), index=dr_berlin),
+        (pd.DataFrame(np.random.randn(n), index=dr_berlin),
+         pd.DataFrame(np.random.randn(n), index=dr_utc)),
+        pd.Timedelta(6, "H"),
+        add_ref_data=True
+    )
+    assert str(merged.index.tz) == "Europe/Berlin"

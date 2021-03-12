@@ -51,17 +51,18 @@ from pytesmo.validation_framework.results_manager import PointDataResults
 from pytesmo.validation_framework.validation import Validation
 from pytesmo.validation_framework.validation import args_to_iterable
 
-from tests.test_validation_framework.test_datasets import (
-    setup_TestDatasets,
-    setup_two_without_overlap,
-    setup_three_with_two_overlapping,
-    MaskingTestDataset,
-)
-
 from ismn.interface import ISMN_Interface
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore")
     from ascat.read_native.cdr import AscatSsmCdr
+
+if __name__ != '__main__':
+    from tests.test_validation_framework.test_datasets import (
+        setup_TestDatasets,
+        setup_two_without_overlap,
+        setup_three_with_two_overlapping,
+        MaskingTestDataset,
+    )
 
 
 @pytest.mark.slow
@@ -892,3 +893,13 @@ def test_args_to_iterable_mixed_strings():
     assert lons_ == lons
     assert lats_ == [lats]
     assert args == [arg1]
+
+
+if __name__ == '__main__':
+    # for profiling with cProfile, on the command line run
+    # python -m cProfile -o ascat_ismn_validation.profile test_validation.py
+    # output can be investigated with snakeviz
+    test_ascat_ismn_validation()
+    # profiling result: most of the time is spend loading the data (110s), next
+    # bigger chunk of computation time is temporal matching (6.7s, old
+    # implementation, 0.3s new implementation)
