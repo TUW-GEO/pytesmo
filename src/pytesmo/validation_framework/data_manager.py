@@ -414,6 +414,7 @@ def get_result_combinations(ds_dict, n=2):
         combis.extend(get_result_names(ds_dict, key, n=n))
     return sorted(list(set(combis)))
 
+
 def get_result_names(ds_dict, refkey, n=2):
     """
     Return result names based on all possible combinations based on a

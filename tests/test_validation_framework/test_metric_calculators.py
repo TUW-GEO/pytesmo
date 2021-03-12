@@ -28,6 +28,7 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 
+from pytesmo.validation_framework.validation import Validation
 from pytesmo.validation_framework.metric_calculators import (
     MetadataMetrics,
     BasicMetrics,
@@ -38,8 +39,10 @@ from pytesmo.validation_framework.metric_calculators import (
     HSAF_Metrics,
     RollingMetrics,
     MonthsMetricsAdapter,
+    PairwiseIntercomparisonMetrics,
 )
 import pytesmo.metrics as metrics
+import pytesmo.temporal_matching as temporal_matching
 
 
 def make_some_data():
@@ -194,6 +197,7 @@ def test_BasicMetricsPlusMSE_calculator_metadata():
     assert np.isnan(res['R'])
     # depends on scipy version changed after v1.2.1
     assert res['p_R'] == np.array([1.]) or np.isnan(res['R'])
+
 
 def test_IntercompMetrics_calculator():
     """
@@ -492,3 +496,90 @@ def test_RollingMetrics():
 
     rmsd_arr = np.array(rmsd_arr)
     np.testing.assert_almost_equal(dataset['RMSD'][0][29:-1], rmsd_arr)
+
+
+def test_PairwiseIntercomparisonMetrics():
+    # compare whether PairwiseIntercomparisonMetrics with (n, 2) does the same
+    # as IntercomparisonMetrics with (n, n)
+    class DummyReader:
+        def __init__(self, df, name):
+            self.data = pd.DataFrame(df[name])
+
+        def read_ts(self, *args, **kwargs):
+            return self.data
+
+    def make_datasets(df):
+        datasets = {}
+        for key in df:
+            ds = {"columns": [key], "class": DummyReader(df, key)}
+            datasets[key+"name"] = ds
+        return datasets
+
+    df = make_some_data()
+    df.rename({"k1": "c1", "k2": "c2", "k3": "c3"}, axis=1, inplace=True)
+    print(df)
+    datasets = make_datasets(df)
+
+    # preparation of IntercomparisonMetrics run
+    ds_names = list(datasets.keys())
+    metrics = IntercomparisonMetrics(
+        dataset_names=ds_names,
+        # other_names=["c1", "c2", "c3"]
+    )
+
+    val = Validation(
+        datasets,
+        "refname",
+        temporal_ref="refname",
+        scaling=None,
+        temporal_matcher=None,  # use default here
+        metrics_calculators={(4, 4): metrics.calc_metrics}
+    )
+
+    results = val.calc([1], [1], [1])
+    # results is a dictionary with one entry and key
+    # (('c1name', 'k1'), ('c2name', 'k2'), ('c3name', 'k3'), ('refname',
+    # 'ref')), the value is a list of length 0, which contains a dictionary
+    # with all the results, where the metrics are joined with "_between_" with
+    # the combination of datasets, which is joined with "_and_", e.g. for R
+    # between ``refname`` and ``c1name`` the key is
+    # "R_between_refname_and_c1name"
+    result_old = list(results.values())[0]
+    assert result_old["gpi"][0] == 1
+    assert result_old["lat"][0] == 1
+    assert result_old["lon"][0] == 1
+    assert result_old["n_obs"][0] == 366
+
+    # now do the same with the new metrics calculator
+    val = Validation(
+        datasets,
+        "refname",
+        temporal_ref="refname",
+        scaling=None,
+        temporal_matcher=(
+            temporal_matching.dfdict_combined_temporal_collocation
+        ),
+        metrics_calculators={
+            (4, 2): PairwiseIntercomparisonMetrics().calc_metrics
+        }
+    )
+    results_pw = val.calc([1], [1], [1])
+
+    # in results_pw, there are four entries with keys (("c1name", "c1"),
+    # ("refname", "ref"), and so on.
+    # Each value is a single dictionary with the values of the metrics
+
+    metrics = ['R', 'p_R', 'BIAS', 'RMSD', 'mse', 'RSS',
+               'mse_corr', 'mse_bias', 'urmsd', 'mse_var',
+               'tau', 'p_tau', 'rho', 'p_rho']
+    for key in results_pw:
+        othername = key[0][0]
+        refname = key[1][0]
+        old_suffix = "_between_" + refname + "_and_" + othername
+        result = results_pw[key]
+        assert result["n_obs"][0] == result_old["n_obs"][0]
+        assert result["gpi"][0] == result_old["gpi"][0]
+        assert result["lat"][0] == result_old["lat"][0]
+        assert result["lon"][0] == result_old["lon"][0]
+        for m in metrics:
+            np.testing.assert_equal(result[m][0], result_old[m+old_suffix][0])

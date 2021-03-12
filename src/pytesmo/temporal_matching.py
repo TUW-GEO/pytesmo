@@ -490,7 +490,9 @@ def combined_temporal_collocation(
     return merged
 
 
-def dfdict_combined_temporal_collocation(dfs, refname, window, **kwargs):
+def dfdict_combined_temporal_collocation(
+    dfs, refname, window=None, n=None, **kwargs
+):
     """
     Applies :py:func:`combined_temporal_collocation` on a dictionary of
     dataframes.
@@ -501,17 +503,33 @@ def dfdict_combined_temporal_collocation(dfs, refname, window, **kwargs):
         Dictionary of pd.DataFrames containing the dataframes to be collocated.
     refname : str
         Name of the reference frame in `dfs`.
-    window : pd.Timedelta or float
+    window : pd.Timedelta or float, optional
         Window around reference timestamps in which to look for data. Floats
-        are interpreted as number of days.
+        are interpreted as number of days. If it is not given, defaults to 1
+        hour to mimick the behaviour of
+        ``BasicTemporalMatching.combinatory_matcher``.
+    n : dummy argument
+        Will be ignored.
     **kwargs :
         Keyword arguments passed to :py:func:`combined_temporal_collocation`.
+
+    Returns:
+    --------
+    matched_dict : dict
+        Dictionary where the keys are tuples of ``(other_name, refname)`` for
+        each other key in `dfs`, and values are the matched dataframes.
+        The column names of the dataframes are again tuples of ``(name, col)``
+        where `name` is the key from `dfs` and `col` is the original column
+        name in the input dataframe.
     """
+    if window is None:
+        window = pd.Timedelta(hours=1)
+
     others = []
     for name in dfs:
         if name != refname:
             others.append(df_name_multiindex(dfs[name], name))
-    ref = dfs[refname]
+    ref = df_name_multiindex(dfs[refname], refname)
     matched_df = combined_temporal_collocation(
         ref, others, window, add_ref_data=True, combined_dropna=True, **kwargs
     )
@@ -521,10 +539,11 @@ def dfdict_combined_temporal_collocation(dfs, refname, window, **kwargs):
     for name in dfs:
         if name != refname:
             tuple_keys = list(product((name,), dfs[name].columns))
-            keep = list(dfs[refname].columns) + tuple_keys
-            matched_dict[name] = matched_df[keep]
-            rename_dict = {tk: tk[1] for tk in tuple_keys}
-            matched_dict[name].rename(rename_dict, axis=1, inplace=True)
+            keep = list(ref.columns) + tuple_keys
+            matched_dict[(name, refname)] = matched_df[keep]
+            # rename_dict = {tk: tk[1] for tk in tuple_keys}
+            # matched_dict[(refname, name)].rename(rename_dict, axis=1,
+            # inplace=True)
     return matched_dict
 
 

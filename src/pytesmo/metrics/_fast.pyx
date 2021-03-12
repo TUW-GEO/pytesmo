@@ -452,3 +452,74 @@ cpdef rolling_pr_rmsd(floating [:] timestamps,
                 pr_view[i, 1] = betainc(0.5*df, 0.5, z)
 
     return pr_arr, rmsd_arr
+
+
+cpdef pairwise_metrics(floating [:] x, floating [:] y):
+    """
+    Calculates pairwise metrics that are based on first and second moments and
+    RSS in one go, to reduce recalculation of moments or RSS with every metric.
+
+    Parameters
+    ----------
+    x : numpy.ndarray
+        First input vector.
+    y : numpy.ndarray
+        Second input vector.
+
+    Returns
+    -------
+    bias : float
+        Bias between x and y.
+    RSS : float
+        Residual sum of squares
+    rmsd : float
+        Root mean square deviation
+    ubRMSD : float
+        Unbiased root mean square deviation
+    mse : float
+        Mean square deviation
+    mse_corr : float
+        Correlation component of MSE.
+    mse_bias : float
+        Bias component of the MSE.
+    mse_var : float
+        Variance component of the MSE.
+    R : float
+        Pearson correlation coefficent.
+    p_R : float
+        p-value for Pearson correlation coefficent.
+    """
+    cdef int i, n, df
+    cdef floating mx, my, varx, vary, cov, n_float, sum
+    cdef floating bias, rss, rmsd, ubRMSD, mse, mse_corr, mse_bias, mse_var
+    cdef floating R, p_R, t_squared, z
+
+    n = len(x)
+    n_float = n
+    mx, my, varx, vary, cov = _moments_welford(x, y)
+
+    bias = mx - my
+    rss = RSS(x, y)
+    rmsd = sqrt(rss/n_float)
+    mse_corr = 2 * sqrt(varx) * sqrt(vary) - 2 * cov
+    mse_var = (sqrt(varx) - sqrt(vary)) ** 2
+    mse_bias = bias ** 2
+    mse = mse_corr + mse_var + mse_bias
+    R = cov / sqrt(varx * vary)
+
+    # p-value for R
+    if fabs(R) == 1.0:
+        p_R = 0.0
+    else:
+        df = n - 2
+        t_squared = R * R * (df / ((1.0 - R) * (1.0 + R)))
+        z = min(float(df) / (df + t_squared), 1.0)
+        p_R = betainc(0.5*df, 0.5, z)
+
+    # ubRMSD
+    sum = 0
+    for i in range(n):
+        sum += ((x[i] - mx) - (y[i] - my))**2
+    ubRMSD = sqrt(sum / n_float)
+
+    return bias, rss, rmsd, ubRMSD, mse, mse_corr, mse_bias, mse_var, R, p_R

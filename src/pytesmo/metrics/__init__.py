@@ -87,6 +87,7 @@ from pytesmo.metrics._fast import (
     mse_decomposition,
     RSS,
     rolling_pr_rmsd,
+    pairwise_metrics,
 )
 from pytesmo.metrics.pairwise_utils import (
     has_analytical_ci,
