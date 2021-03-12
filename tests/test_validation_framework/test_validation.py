@@ -26,10 +26,10 @@
 # ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-'''
+"""
 Tests for the validation framework
 Created on Mon Jul  6 12:49:07 2015
-'''
+"""
 
 from datetime import datetime
 import netCDF4 as nc
@@ -52,11 +52,12 @@ from pytesmo.validation_framework.validation import Validation
 from pytesmo.validation_framework.validation import args_to_iterable
 
 from ismn.interface import ISMN_Interface
+
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore")
     from ascat.read_native.cdr import AscatSsmCdr
 
-if __name__ != '__main__':
+if __name__ != "__main__":
     from tests.test_validation_framework.test_datasets import (
         setup_TestDatasets,
         setup_two_without_overlap,
@@ -65,42 +66,75 @@ if __name__ != '__main__':
     )
 
 
+# test temporal matcher that uses the deprecated matching with df_match
+class TestTemporalMatching(temporal_matchers.BasicTemporalMatching):
+    def match(self, reference, *args):
+        return self._match_deprecated(reference, *args)
+
+
 @pytest.mark.slow
 @pytest.mark.full_framework
 def test_ascat_ismn_validation():
     """
     Test processing framework with some ISMN and ASCAT sample data
     """
-    ascat_data_folder = os.path.join(os.path.dirname(__file__), '..', 'test-data',
-                                     'sat', 'ascat', 'netcdf', '55R22')
+    ascat_data_folder = os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        "test-data",
+        "sat",
+        "ascat",
+        "netcdf",
+        "55R22",
+    )
 
-    ascat_grid_folder = os.path.join(os.path.dirname(__file__), '..', 'test-data',
-                                     'sat', 'ascat', 'netcdf', 'grid')
+    ascat_grid_folder = os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        "test-data",
+        "sat",
+        "ascat",
+        "netcdf",
+        "grid",
+    )
 
-    static_layers_folder = os.path.join(os.path.dirname(__file__),
-                                        '..', 'test-data', 'sat',
-                                        'h_saf', 'static_layer')
+    static_layers_folder = os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        "test-data",
+        "sat",
+        "h_saf",
+        "static_layer",
+    )
 
-    ascat_reader = AscatSsmCdr(ascat_data_folder, ascat_grid_folder,
-                               grid_filename='TUW_WARP5_grid_info_2_1.nc',
-                               static_layer_path=static_layers_folder)
+    ascat_reader = AscatSsmCdr(
+        ascat_data_folder,
+        ascat_grid_folder,
+        grid_filename="TUW_WARP5_grid_info_2_1.nc",
+        static_layer_path=static_layers_folder,
+    )
     ascat_reader.read_bulk = True
 
     # Initialize ISMN reader
 
-    ismn_data_folder = os.path.join(os.path.dirname(__file__), '..', 'test-data',
-                                    'ismn', 'multinetwork', 'header_values')
+    ismn_data_folder = os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        "test-data",
+        "ismn",
+        "multinetwork",
+        "header_values",
+    )
     ismn_reader = ISMN_Interface(ismn_data_folder)
 
     jobs = []
 
     ids = ismn_reader.get_dataset_ids(
-        variable='soil moisture',
-        min_depth=0,
-        max_depth=0.1)
+        variable="soil moisture", min_depth=0, max_depth=0.1
+    )
     for idx in ids:
         metadata = ismn_reader.metadata[idx]
-        jobs.append((idx, metadata['longitude'], metadata['latitude']))
+        jobs.append((idx, metadata["longitude"], metadata["latitude"]))
 
     # Create the variable ***save_path*** which is a string representing the
     # path where the results will be saved. **DO NOT CHANGE** the name
@@ -112,62 +146,108 @@ def test_ascat_ismn_validation():
     # Create the validation object.
 
     datasets = {
-        'ISMN': {
-            'class': ismn_reader,
-            'columns': ['soil moisture']
+        "ISMN": {"class": ismn_reader, "columns": ["soil moisture"]},
+        "ASCAT": {
+            "class": ascat_reader,
+            "columns": ["sm"],
+            "kwargs": {
+                "mask_frozen_prob": 80,
+                "mask_snow_prob": 80,
+                "mask_ssf": True,
+            },
         },
-        'ASCAT': {
-            'class': ascat_reader,
-            'columns': ['sm'],
-            'kwargs': {'mask_frozen_prob': 80,
-                       'mask_snow_prob': 80,
-                       'mask_ssf': True}
-        }}
+    }
 
-    read_ts_names = {'ASCAT': 'read', 'ISMN': 'read_ts'}
+    read_ts_names = {"ASCAT": "read", "ISMN": "read_ts"}
     period = [datetime(2007, 1, 1), datetime(2014, 12, 31)]
 
-    datasets = DataManager(datasets, 'ISMN', period, read_ts_names=read_ts_names)
+    datasets = DataManager(
+        datasets, "ISMN", period, read_ts_names=read_ts_names
+    )
 
     process = Validation(
-        datasets, 'ISMN',
-        temporal_ref='ASCAT',
-        scaling='lin_cdf_match',
-        scaling_ref='ASCAT',
+        datasets,
+        "ISMN",
+        temporal_ref="ASCAT",
+        temporal_matcher=TestTemporalMatching(
+            window=1 / 24
+        ).combinatory_matcher,
+        scaling="lin_cdf_match",
+        scaling_ref="ASCAT",
         metrics_calculators={
-            (2, 2): metrics_calculators.BasicMetrics(other_name='k1').calc_metrics},
-        period=period)
+            (2, 2): metrics_calculators.BasicMetrics(
+                other_name="k1"
+            ).calc_metrics
+        },
+        period=period,
+    )
 
     for job in jobs:
         results = process.calc(*job)
         netcdf_results_manager(results, save_path)
 
     results_fname = os.path.join(
-        save_path, 'ASCAT.sm_with_ISMN.soil moisture.nc')
+        save_path, "ASCAT.sm_with_ISMN.soil moisture.nc"
+    )
 
-    vars_should = [u'n_obs', u'tau', u'gpi', u'RMSD', u'lon', u'p_tau',
-                   u'BIAS', u'p_rho', u'rho', u'lat', u'R', u'p_R', u'time',
-                   u'idx', u'_row_size']
-    n_obs_should = [384,  357,  482,  141,  251, 1927, 1887, 1652]
-    rho_should = np.array([0.70022893, 0.53934574,
-                           0.69356072, 0.84189808,
-                           0.74206454, 0.30299741,
-                           0.53143877, 0.62204134], dtype=np.float32)
+    vars_should = [
+        u"n_obs",
+        u"tau",
+        u"gpi",
+        u"RMSD",
+        u"lon",
+        u"p_tau",
+        u"BIAS",
+        u"p_rho",
+        u"rho",
+        u"lat",
+        u"R",
+        u"p_R",
+        u"time",
+        u"idx",
+        u"_row_size",
+    ]
+    n_obs_should = [384, 357, 482, 141, 251, 1927, 1887, 1652]
+    rho_should = np.array(
+        [
+            0.70022893,
+            0.53934574,
+            0.69356072,
+            0.84189808,
+            0.74206454,
+            0.30299741,
+            0.53143877,
+            0.62204134,
+        ],
+        dtype=np.float32,
+    )
 
-    rmsd_should = np.array([7.72966719, 11.58347607,
-                            14.57700157, 13.06224251,
-                            12.90389824, 14.24668026,
-                            21.19682884, 17.3883934], dtype=np.float32)
-    with nc.Dataset(results_fname, mode='r') as results:
+    rmsd_should = np.array(
+        [
+            7.72966719,
+            11.58347607,
+            14.57700157,
+            13.06224251,
+            12.90389824,
+            14.24668026,
+            21.19682884,
+            17.3883934,
+        ],
+        dtype=np.float32,
+    )
+    with nc.Dataset(results_fname, mode="r") as results:
         assert sorted(list(results.variables.keys())) == sorted(vars_should)
-        assert sorted(results.variables['n_obs'][:].tolist()) == sorted(
-            n_obs_should)
-        nptest.assert_allclose(sorted(rho_should),
-                               sorted(results.variables['rho'][:]),
-                               rtol=1e-4)
-        nptest.assert_allclose(sorted(rmsd_should),
-                               sorted(results.variables['RMSD'][:]),
-                               rtol=1e-4)
+        assert sorted(results.variables["n_obs"][:].tolist()) == sorted(
+            n_obs_should
+        )
+        nptest.assert_allclose(
+            sorted(rho_should), sorted(results.variables["rho"][:]), rtol=1e-4
+        )
+        nptest.assert_allclose(
+            sorted(rmsd_should),
+            sorted(results.variables["RMSD"][:]),
+            rtol=1e-4,
+        )
 
 
 @pytest.mark.slow
@@ -176,47 +256,81 @@ def test_ascat_ismn_validation_metadata():
     """
     Test processing framework with some ISMN and ASCAT sample data
     """
-    ascat_data_folder = os.path.join(os.path.dirname(__file__), '..', 'test-data',
-                                     'sat', 'ascat', 'netcdf', '55R22')
+    ascat_data_folder = os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        "test-data",
+        "sat",
+        "ascat",
+        "netcdf",
+        "55R22",
+    )
 
-    ascat_grid_folder = os.path.join(os.path.dirname(__file__), '..', 'test-data',
-                                     'sat', 'ascat', 'netcdf', 'grid')
+    ascat_grid_folder = os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        "test-data",
+        "sat",
+        "ascat",
+        "netcdf",
+        "grid",
+    )
 
-    static_layers_folder = os.path.join(os.path.dirname(__file__),
-                                        '..', 'test-data', 'sat',
-                                        'h_saf', 'static_layer')
+    static_layers_folder = os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        "test-data",
+        "sat",
+        "h_saf",
+        "static_layer",
+    )
 
-    ascat_reader = AscatSsmCdr(ascat_data_folder, ascat_grid_folder,
-                               grid_filename='TUW_WARP5_grid_info_2_1.nc',
-                               static_layer_path=static_layers_folder)
+    ascat_reader = AscatSsmCdr(
+        ascat_data_folder,
+        ascat_grid_folder,
+        grid_filename="TUW_WARP5_grid_info_2_1.nc",
+        static_layer_path=static_layers_folder,
+    )
     ascat_reader.read_bulk = True
 
     # Initialize ISMN reader
 
-    ismn_data_folder = os.path.join(os.path.dirname(__file__), '..', 'test-data',
-                                    'ismn', 'multinetwork', 'header_values')
+    ismn_data_folder = os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        "test-data",
+        "ismn",
+        "multinetwork",
+        "header_values",
+    )
     ismn_reader = ISMN_Interface(ismn_data_folder)
 
     jobs = []
 
     ids = ismn_reader.get_dataset_ids(
-        variable='soil moisture',
-        min_depth=0,
-        max_depth=0.1)
+        variable="soil moisture", min_depth=0, max_depth=0.1
+    )
 
-    metadata_dict_template = {'network': np.array(['None'], dtype='U256'),
-                              'station': np.array(['None'], dtype='U256'),
-                              'landcover': np.float32([np.nan]),
-                              'climate': np.array(['None'], dtype='U4')}
+    metadata_dict_template = {
+        "network": np.array(["None"], dtype="U256"),
+        "station": np.array(["None"], dtype="U256"),
+        "landcover": np.float32([np.nan]),
+        "climate": np.array(["None"], dtype="U4"),
+    }
 
     for idx in ids:
         metadata = ismn_reader.metadata[idx]
-        metadata_dict = [{'network': metadata['network'],
-                          'station': metadata['station'],
-                          'landcover': metadata['landcover_2010'],
-                          'climate': metadata['climate']}]
-        jobs.append((idx, metadata['longitude'],
-                     metadata['latitude'], metadata_dict))
+        metadata_dict = [
+            {
+                "network": metadata["network"],
+                "station": metadata["station"],
+                "landcover": metadata["landcover_2010"],
+                "climate": metadata["climate"],
+            }
+        ]
+        jobs.append(
+            (idx, metadata["longitude"], metadata["latitude"], metadata_dict)
+        )
 
     # Create the variable ***save_path*** which is a string representing the
     # path where the results will be saved. **DO NOT CHANGE** the name
@@ -228,88 +342,160 @@ def test_ascat_ismn_validation_metadata():
     # Create the validation object.
 
     datasets = {
-        'ISMN': {
-            'class': ismn_reader,
-            'columns': ['soil moisture'],
+        "ISMN": {
+            "class": ismn_reader,
+            "columns": ["soil moisture"],
         },
-        'ASCAT': {
-            'class': ascat_reader,
-            'columns': ['sm'],
-            'kwargs': {'mask_frozen_prob': 80,
-                       'mask_snow_prob': 80,
-                       'mask_ssf': True},
-        }}
+        "ASCAT": {
+            "class": ascat_reader,
+            "columns": ["sm"],
+            "kwargs": {
+                "mask_frozen_prob": 80,
+                "mask_snow_prob": 80,
+                "mask_ssf": True,
+            },
+        },
+    }
 
-    read_ts_names = {'ASCAT': 'read', 'ISMN': 'read_ts'}
+    read_ts_names = {"ASCAT": "read", "ISMN": "read_ts"}
     period = [datetime(2007, 1, 1), datetime(2014, 12, 31)]
 
-    datasets = DataManager(datasets, 'ISMN', period, read_ts_names=read_ts_names)
+    datasets = DataManager(
+        datasets, "ISMN", period, read_ts_names=read_ts_names
+    )
     process = Validation(
-        datasets, 'ISMN',
-        temporal_ref='ASCAT',
-        scaling='lin_cdf_match',
-        scaling_ref='ASCAT',
+        datasets,
+        "ISMN",
+        temporal_ref="ASCAT",
+        temporal_matcher=TestTemporalMatching(
+            window=1 / 24
+        ).combinatory_matcher,
+        scaling="lin_cdf_match",
+        scaling_ref="ASCAT",
         metrics_calculators={
-            (2, 2): metrics_calculators.BasicMetrics(other_name='k1', metadata_template=metadata_dict_template).calc_metrics},
-        period=period)
+            (2, 2): metrics_calculators.BasicMetrics(
+                other_name="k1", metadata_template=metadata_dict_template
+            ).calc_metrics
+        },
+        period=period,
+    )
 
     for job in jobs:
         results = process.calc(*job)
         netcdf_results_manager(results, save_path)
 
     results_fname = os.path.join(
-        save_path, 'ASCAT.sm_with_ISMN.soil moisture.nc')
+        save_path, "ASCAT.sm_with_ISMN.soil moisture.nc"
+    )
 
-    vars_should = [u'n_obs', u'tau', u'gpi', u'RMSD', u'lon', u'p_tau',
-                   u'BIAS', u'p_rho', u'rho', u'lat', u'R', u'p_R', u'time',
-                   u'idx', u'_row_size']
+    vars_should = [
+        u"n_obs",
+        u"tau",
+        u"gpi",
+        u"RMSD",
+        u"lon",
+        u"p_tau",
+        u"BIAS",
+        u"p_rho",
+        u"rho",
+        u"lat",
+        u"R",
+        u"p_R",
+        u"time",
+        u"idx",
+        u"_row_size",
+    ]
     for key, value in metadata_dict_template.items():
         vars_should.append(key)
 
-    n_obs_should = [384,  357,  482,  141,  251, 1927, 1887, 1652]
-    rho_should = np.array([0.70022893, 0.53934574,
-                           0.69356072, 0.84189808,
-                           0.74206454, 0.30299741,
-                           0.53143877, 0.62204134], dtype=np.float32)
+    n_obs_should = [384, 357, 482, 141, 251, 1927, 1887, 1652]
+    rho_should = np.array(
+        [
+            0.70022893,
+            0.53934574,
+            0.69356072,
+            0.84189808,
+            0.74206454,
+            0.30299741,
+            0.53143877,
+            0.62204134,
+        ],
+        dtype=np.float32,
+    )
 
-    rmsd_should = np.array([7.72966719, 11.58347607,
-                            14.57700157, 13.06224251,
-                            12.90389824, 14.24668026,
-                            21.19682884, 17.3883934], dtype=np.float32)
+    rmsd_should = np.array(
+        [
+            7.72966719,
+            11.58347607,
+            14.57700157,
+            13.06224251,
+            12.90389824,
+            14.24668026,
+            21.19682884,
+            17.3883934,
+        ],
+        dtype=np.float32,
+    )
 
-    network_should = np.array(['MAQU', 'MAQU', 'SCAN', 'SCAN', 'SCAN',
-                               'SOILSCAPE', 'SOILSCAPE', 'SOILSCAPE'], dtype='U256')
+    network_should = np.array(
+        [
+            "MAQU",
+            "MAQU",
+            "SCAN",
+            "SCAN",
+            "SCAN",
+            "SOILSCAPE",
+            "SOILSCAPE",
+            "SOILSCAPE",
+        ],
+        dtype="U256",
+    )
 
-    with nc.Dataset(results_fname, mode='r') as results:
+    with nc.Dataset(results_fname, mode="r") as results:
         assert sorted(results.variables.keys()) == sorted(vars_should)
-        assert sorted(results.variables['n_obs'][:].tolist()) == sorted(
-            n_obs_should)
+        assert sorted(results.variables["n_obs"][:].tolist()) == sorted(
+            n_obs_should
+        )
 
-        nptest.assert_allclose(sorted(rho_should),
-                               sorted(results.variables['rho'][:]),
-                               rtol=1e-4)
-        nptest.assert_allclose(sorted(rmsd_should),
-                               sorted(results.variables['RMSD'][:]),
-                               rtol=1e-4)
-        nptest.assert_equal(sorted(network_should),
-                            sorted(results.variables['network'][:]))
+        nptest.assert_allclose(
+            sorted(rho_should), sorted(results.variables["rho"][:]), rtol=1e-4
+        )
+        nptest.assert_allclose(
+            sorted(rmsd_should),
+            sorted(results.variables["RMSD"][:]),
+            rtol=1e-4,
+        )
+        nptest.assert_equal(
+            sorted(network_should), sorted(results.variables["network"][:])
+        )
 
 
 def test_validation_error_n2_k2():
 
     datasets = setup_TestDatasets()
 
-    dm = DataManager(datasets, 'DS1', read_ts_names={d: 'read' for d in ['DS1', 'DS2', 'DS3']})
+    dm = DataManager(
+        datasets,
+        "DS1",
+        read_ts_names={d: "read" for d in ["DS1", "DS2", "DS3"]},
+    )
 
     # n less than number of datasets is no longer allowed
     with pytest.raises(ValueError):
-        process = Validation(
-            dm, 'DS1',
+        Validation(
+            dm,
+            "DS1",
             temporal_matcher=temporal_matchers.BasicTemporalMatching(
-                window=1 / 24.0).combinatory_matcher,
-            scaling='lin_cdf_match',
+                window=1 / 24.0
+            ).combinatory_matcher,
+            scaling="lin_cdf_match",
             metrics_calculators={
-                (2, 2): metrics_calculators.BasicMetrics(other_name='k1').calc_metrics})
+                (2, 2): metrics_calculators.BasicMetrics(
+                    other_name="k1"
+                ).calc_metrics
+            },
+        )
+
 
 def test_validation_n3_k2_temporal_matching_no_matches():
 
@@ -317,16 +503,25 @@ def test_validation_n3_k2_temporal_matching_no_matches():
 
     datasets = setup_two_without_overlap()
 
-    dm = DataManager(datasets, 'DS1', read_ts_names={d: 'read' for d in ['DS1', 'DS2', 'DS3']})
-
+    dm = DataManager(
+        datasets,
+        "DS1",
+        read_ts_names={d: "read" for d in ["DS1", "DS2", "DS3"]},
+    )
 
     process = Validation(
-        dm, 'DS1',
+        dm,
+        "DS1",
         temporal_matcher=temporal_matchers.BasicTemporalMatching(
-            window=1 / 24.0).combinatory_matcher,
-        scaling='lin_cdf_match',
+            window=1 / 24.0
+        ).combinatory_matcher,
+        scaling="lin_cdf_match",
         metrics_calculators={
-            (3, 2): metrics_calculators.BasicMetrics(other_name='k1').calc_metrics})
+            (3, 2): metrics_calculators.BasicMetrics(
+                other_name="k1"
+            ).calc_metrics
+        },
+    )
 
     jobs = process.get_processing_jobs()
     for job in jobs:
@@ -337,82 +532,98 @@ def test_validation_n3_k2_temporal_matching_no_matches():
 def test_validation_n3_k2_data_manager_argument():
 
     tst_results = {
-        (('DS1', 'x'), ('DS3', 'y')): {
-            'n_obs': np.array([1000], dtype=np.int32),
-            'tau': np.array([np.nan], dtype=np.float32),
-            'gpi': np.array([4], dtype=np.int32),
-            'RMSD': np.array([0.], dtype=np.float32),
-            'lon': np.array([4.]),
-            'p_tau': np.array([np.nan], dtype=np.float32),
-            'BIAS': np.array([0.], dtype=np.float32),
-            'p_rho': np.array([0.], dtype=np.float32),
-            'rho': np.array([1.], dtype=np.float32),
-            'lat': np.array([4.]),
-            'R': np.array([1.], dtype=np.float32),
-            'p_R': np.array([0.], dtype=np.float32)},
-        (('DS1', 'x'), ('DS2', 'y')): {
-            'n_obs': np.array([1000], dtype=np.int32),
-            'tau': np.array([np.nan], dtype=np.float32),
-            'gpi': np.array([4], dtype=np.int32),
-            'RMSD': np.array([0.], dtype=np.float32),
-            'lon': np.array([4.]),
-            'p_tau': np.array([np.nan], dtype=np.float32),
-            'BIAS': np.array([0.], dtype=np.float32),
-            'p_rho': np.array([0.], dtype=np.float32),
-            'rho': np.array([1.], dtype=np.float32),
-            'lat': np.array([4.]),
-            'R': np.array([1.], dtype=np.float32),
-            'p_R': np.array([0.], dtype=np.float32)},
-        (('DS1', 'x'), ('DS3', 'x')): {
-            'n_obs': np.array([1000], dtype=np.int32),
-            'tau': np.array([np.nan], dtype=np.float32),
-            'gpi': np.array([4], dtype=np.int32),
-            'RMSD': np.array([0.], dtype=np.float32),
-            'lon': np.array([4.]),
-            'p_tau': np.array([np.nan], dtype=np.float32),
-            'BIAS': np.array([0.], dtype=np.float32),
-            'p_rho': np.array([0.], dtype=np.float32),
-            'rho': np.array([1.], dtype=np.float32),
-            'lat': np.array([4.]),
-            'R': np.array([1.], dtype=np.float32),
-            'p_R': np.array([0.], dtype=np.float32)},
-        (('DS2', 'y'), ('DS3', 'x')): {
-            'gpi': np.array([4], dtype=np.int32),
-            'lon': np.array([4.]),
-            'lat': np.array([4.]),
-            'n_obs': np.array([1000], dtype=np.int32),
-            'R': np.array([1.], dtype=np.float32),
-            'p_R': np.array([0.], dtype=np.float32),
-            'rho': np.array([1.], dtype=np.float32),
-            'p_rho': np.array([0.], dtype=np.float32),
-            'RMSD': np.array([0.], dtype=np.float32),
-            'BIAS': np.array([0.], dtype=np.float32),
-            'tau': np.array([np.nan], dtype=np.float32),
-            'p_tau': np.array([np.nan], dtype=np.float32)},
-        (('DS2', 'y'), ('DS3', 'y')): {
-            'gpi': np.array([4], dtype=np.int32),
-            'lon': np.array([4.]),
-            'lat': np.array([4.]),
-            'n_obs': np.array([1000], dtype=np.int32),
-            'R': np.array([1.], dtype=np.float32),
-            'p_R': np.array([0.], dtype=np.float32),
-            'rho': np.array([1.], dtype=np.float32),
-            'p_rho': np.array([0.], dtype=np.float32),
-            'RMSD': np.array([0.], dtype=np.float32),
-            'BIAS': np.array([0.], dtype=np.float32),
-            'tau': np.array([np.nan], dtype=np.float32),
-            'p_tau': np.array([np.nan], dtype=np.float32)}}
+        (("DS1", "x"), ("DS3", "y")): {
+            "n_obs": np.array([1000], dtype=np.int32),
+            "tau": np.array([np.nan], dtype=np.float32),
+            "gpi": np.array([4], dtype=np.int32),
+            "RMSD": np.array([0.0], dtype=np.float32),
+            "lon": np.array([4.0]),
+            "p_tau": np.array([np.nan], dtype=np.float32),
+            "BIAS": np.array([0.0], dtype=np.float32),
+            "p_rho": np.array([0.0], dtype=np.float32),
+            "rho": np.array([1.0], dtype=np.float32),
+            "lat": np.array([4.0]),
+            "R": np.array([1.0], dtype=np.float32),
+            "p_R": np.array([0.0], dtype=np.float32),
+        },
+        (("DS1", "x"), ("DS2", "y")): {
+            "n_obs": np.array([1000], dtype=np.int32),
+            "tau": np.array([np.nan], dtype=np.float32),
+            "gpi": np.array([4], dtype=np.int32),
+            "RMSD": np.array([0.0], dtype=np.float32),
+            "lon": np.array([4.0]),
+            "p_tau": np.array([np.nan], dtype=np.float32),
+            "BIAS": np.array([0.0], dtype=np.float32),
+            "p_rho": np.array([0.0], dtype=np.float32),
+            "rho": np.array([1.0], dtype=np.float32),
+            "lat": np.array([4.0]),
+            "R": np.array([1.0], dtype=np.float32),
+            "p_R": np.array([0.0], dtype=np.float32),
+        },
+        (("DS1", "x"), ("DS3", "x")): {
+            "n_obs": np.array([1000], dtype=np.int32),
+            "tau": np.array([np.nan], dtype=np.float32),
+            "gpi": np.array([4], dtype=np.int32),
+            "RMSD": np.array([0.0], dtype=np.float32),
+            "lon": np.array([4.0]),
+            "p_tau": np.array([np.nan], dtype=np.float32),
+            "BIAS": np.array([0.0], dtype=np.float32),
+            "p_rho": np.array([0.0], dtype=np.float32),
+            "rho": np.array([1.0], dtype=np.float32),
+            "lat": np.array([4.0]),
+            "R": np.array([1.0], dtype=np.float32),
+            "p_R": np.array([0.0], dtype=np.float32),
+        },
+        (("DS2", "y"), ("DS3", "x")): {
+            "gpi": np.array([4], dtype=np.int32),
+            "lon": np.array([4.0]),
+            "lat": np.array([4.0]),
+            "n_obs": np.array([1000], dtype=np.int32),
+            "R": np.array([1.0], dtype=np.float32),
+            "p_R": np.array([0.0], dtype=np.float32),
+            "rho": np.array([1.0], dtype=np.float32),
+            "p_rho": np.array([0.0], dtype=np.float32),
+            "RMSD": np.array([0.0], dtype=np.float32),
+            "BIAS": np.array([0.0], dtype=np.float32),
+            "tau": np.array([np.nan], dtype=np.float32),
+            "p_tau": np.array([np.nan], dtype=np.float32),
+        },
+        (("DS2", "y"), ("DS3", "y")): {
+            "gpi": np.array([4], dtype=np.int32),
+            "lon": np.array([4.0]),
+            "lat": np.array([4.0]),
+            "n_obs": np.array([1000], dtype=np.int32),
+            "R": np.array([1.0], dtype=np.float32),
+            "p_R": np.array([0.0], dtype=np.float32),
+            "rho": np.array([1.0], dtype=np.float32),
+            "p_rho": np.array([0.0], dtype=np.float32),
+            "RMSD": np.array([0.0], dtype=np.float32),
+            "BIAS": np.array([0.0], dtype=np.float32),
+            "tau": np.array([np.nan], dtype=np.float32),
+            "p_tau": np.array([np.nan], dtype=np.float32),
+        },
+    }
 
     datasets = setup_TestDatasets()
-    dm = DataManager(datasets, 'DS1', read_ts_names={d: 'read' for d in ['DS1', 'DS2', 'DS3']})
+    dm = DataManager(
+        datasets,
+        "DS1",
+        read_ts_names={d: "read" for d in ["DS1", "DS2", "DS3"]},
+    )
 
     process = Validation(
-        dm, 'DS1',
+        dm,
+        "DS1",
         temporal_matcher=temporal_matchers.BasicTemporalMatching(
-            window=1 / 24.0).combinatory_matcher,
-        scaling='lin_cdf_match',
+            window=1 / 24.0
+        ).combinatory_matcher,
+        scaling="lin_cdf_match",
         metrics_calculators={
-            (3, 2): metrics_calculators.BasicMetrics(other_name='k1').calc_metrics})
+            (3, 2): metrics_calculators.BasicMetrics(
+                other_name="k1"
+            ).calc_metrics
+        },
+    )
 
     jobs = process.get_processing_jobs()
     for job in jobs:
@@ -420,14 +631,25 @@ def test_validation_n3_k2_data_manager_argument():
         assert sorted(list(results)) == sorted(list(tst_results))
 
     datasets = setup_TestDatasets()
-    dm = DataManager(datasets, 'DS1', read_ts_names={d: 'read' for d in ['DS1', 'DS2', 'DS3']})
+    dm = DataManager(
+        datasets,
+        "DS1",
+        read_ts_names={d: "read" for d in ["DS1", "DS2", "DS3"]},
+    )
 
-    process = Validation(dm, 'DS1',
-                         temporal_matcher=temporal_matchers.BasicTemporalMatching(
-                             window=1 / 24.0).combinatory_matcher,
-                         scaling='lin_cdf_match',
-                         metrics_calculators={
-                             (3, 2): metrics_calculators.BasicMetrics(other_name='k1').calc_metrics})
+    process = Validation(
+        dm,
+        "DS1",
+        temporal_matcher=temporal_matchers.BasicTemporalMatching(
+            window=1 / 24.0
+        ).combinatory_matcher,
+        scaling="lin_cdf_match",
+        metrics_calculators={
+            (3, 2): metrics_calculators.BasicMetrics(
+                other_name="k1"
+            ).calc_metrics
+        },
+    )
 
     jobs = process.get_processing_jobs()
     for job in jobs:
@@ -438,82 +660,98 @@ def test_validation_n3_k2_data_manager_argument():
 def test_validation_n3_k2():
 
     tst_results = {
-        (('DS1', 'x'), ('DS3', 'y')): {
-            'n_obs': np.array([1000], dtype=np.int32),
-            'tau': np.array([np.nan], dtype=np.float32),
-            'gpi': np.array([4], dtype=np.int32),
-            'RMSD': np.array([0.], dtype=np.float32),
-            'lon': np.array([4.]),
-            'p_tau': np.array([np.nan], dtype=np.float32),
-            'BIAS': np.array([0.], dtype=np.float32),
-            'p_rho': np.array([0.], dtype=np.float32),
-            'rho': np.array([1.], dtype=np.float32),
-            'lat': np.array([4.]),
-            'R': np.array([1.], dtype=np.float32),
-            'p_R': np.array([0.], dtype=np.float32)},
-        (('DS1', 'x'), ('DS2', 'y')): {
-            'n_obs': np.array([1000], dtype=np.int32),
-            'tau': np.array([np.nan], dtype=np.float32),
-            'gpi': np.array([4], dtype=np.int32),
-            'RMSD': np.array([0.], dtype=np.float32),
-            'lon': np.array([4.]),
-            'p_tau': np.array([np.nan], dtype=np.float32),
-            'BIAS': np.array([0.], dtype=np.float32),
-            'p_rho': np.array([0.], dtype=np.float32),
-            'rho': np.array([1.], dtype=np.float32),
-            'lat': np.array([4.]),
-            'R': np.array([1.], dtype=np.float32),
-            'p_R': np.array([0.], dtype=np.float32)},
-        (('DS1', 'x'), ('DS3', 'x')): {
-            'n_obs': np.array([1000], dtype=np.int32),
-            'tau': np.array([np.nan], dtype=np.float32),
-            'gpi': np.array([4], dtype=np.int32),
-            'RMSD': np.array([0.], dtype=np.float32),
-            'lon': np.array([4.]),
-            'p_tau': np.array([np.nan], dtype=np.float32),
-            'BIAS': np.array([0.], dtype=np.float32),
-            'p_rho': np.array([0.], dtype=np.float32),
-            'rho': np.array([1.], dtype=np.float32),
-            'lat': np.array([4.]),
-            'R': np.array([1.], dtype=np.float32),
-            'p_R': np.array([0.], dtype=np.float32)},
-        (('DS2', 'y'), ('DS3', 'x')): {
-            'gpi': np.array([4], dtype=np.int32),
-            'lon': np.array([4.]),
-            'lat': np.array([4.]),
-            'n_obs': np.array([1000], dtype=np.int32),
-            'R': np.array([1.], dtype=np.float32),
-            'p_R': np.array([0.], dtype=np.float32),
-            'rho': np.array([1.], dtype=np.float32),
-            'p_rho': np.array([0.], dtype=np.float32),
-            'RMSD': np.array([0.], dtype=np.float32),
-            'BIAS': np.array([0.], dtype=np.float32),
-            'tau': np.array([np.nan], dtype=np.float32),
-            'p_tau': np.array([np.nan], dtype=np.float32)},
-        (('DS2', 'y'), ('DS3', 'y')): {
-            'gpi': np.array([4], dtype=np.int32),
-            'lon': np.array([4.]),
-            'lat': np.array([4.]),
-            'n_obs': np.array([1000], dtype=np.int32),
-            'R': np.array([1.], dtype=np.float32),
-            'p_R': np.array([0.], dtype=np.float32),
-            'rho': np.array([1.], dtype=np.float32),
-            'p_rho': np.array([0.], dtype=np.float32),
-            'RMSD': np.array([0.], dtype=np.float32),
-            'BIAS': np.array([0.], dtype=np.float32),
-            'tau': np.array([np.nan], dtype=np.float32),
-            'p_tau': np.array([np.nan], dtype=np.float32)}}
+        (("DS1", "x"), ("DS3", "y")): {
+            "n_obs": np.array([1000], dtype=np.int32),
+            "tau": np.array([np.nan], dtype=np.float32),
+            "gpi": np.array([4], dtype=np.int32),
+            "RMSD": np.array([0.0], dtype=np.float32),
+            "lon": np.array([4.0]),
+            "p_tau": np.array([np.nan], dtype=np.float32),
+            "BIAS": np.array([0.0], dtype=np.float32),
+            "p_rho": np.array([0.0], dtype=np.float32),
+            "rho": np.array([1.0], dtype=np.float32),
+            "lat": np.array([4.0]),
+            "R": np.array([1.0], dtype=np.float32),
+            "p_R": np.array([0.0], dtype=np.float32),
+        },
+        (("DS1", "x"), ("DS2", "y")): {
+            "n_obs": np.array([1000], dtype=np.int32),
+            "tau": np.array([np.nan], dtype=np.float32),
+            "gpi": np.array([4], dtype=np.int32),
+            "RMSD": np.array([0.0], dtype=np.float32),
+            "lon": np.array([4.0]),
+            "p_tau": np.array([np.nan], dtype=np.float32),
+            "BIAS": np.array([0.0], dtype=np.float32),
+            "p_rho": np.array([0.0], dtype=np.float32),
+            "rho": np.array([1.0], dtype=np.float32),
+            "lat": np.array([4.0]),
+            "R": np.array([1.0], dtype=np.float32),
+            "p_R": np.array([0.0], dtype=np.float32),
+        },
+        (("DS1", "x"), ("DS3", "x")): {
+            "n_obs": np.array([1000], dtype=np.int32),
+            "tau": np.array([np.nan], dtype=np.float32),
+            "gpi": np.array([4], dtype=np.int32),
+            "RMSD": np.array([0.0], dtype=np.float32),
+            "lon": np.array([4.0]),
+            "p_tau": np.array([np.nan], dtype=np.float32),
+            "BIAS": np.array([0.0], dtype=np.float32),
+            "p_rho": np.array([0.0], dtype=np.float32),
+            "rho": np.array([1.0], dtype=np.float32),
+            "lat": np.array([4.0]),
+            "R": np.array([1.0], dtype=np.float32),
+            "p_R": np.array([0.0], dtype=np.float32),
+        },
+        (("DS2", "y"), ("DS3", "x")): {
+            "gpi": np.array([4], dtype=np.int32),
+            "lon": np.array([4.0]),
+            "lat": np.array([4.0]),
+            "n_obs": np.array([1000], dtype=np.int32),
+            "R": np.array([1.0], dtype=np.float32),
+            "p_R": np.array([0.0], dtype=np.float32),
+            "rho": np.array([1.0], dtype=np.float32),
+            "p_rho": np.array([0.0], dtype=np.float32),
+            "RMSD": np.array([0.0], dtype=np.float32),
+            "BIAS": np.array([0.0], dtype=np.float32),
+            "tau": np.array([np.nan], dtype=np.float32),
+            "p_tau": np.array([np.nan], dtype=np.float32),
+        },
+        (("DS2", "y"), ("DS3", "y")): {
+            "gpi": np.array([4], dtype=np.int32),
+            "lon": np.array([4.0]),
+            "lat": np.array([4.0]),
+            "n_obs": np.array([1000], dtype=np.int32),
+            "R": np.array([1.0], dtype=np.float32),
+            "p_R": np.array([0.0], dtype=np.float32),
+            "rho": np.array([1.0], dtype=np.float32),
+            "p_rho": np.array([0.0], dtype=np.float32),
+            "RMSD": np.array([0.0], dtype=np.float32),
+            "BIAS": np.array([0.0], dtype=np.float32),
+            "tau": np.array([np.nan], dtype=np.float32),
+            "p_tau": np.array([np.nan], dtype=np.float32),
+        },
+    }
 
     datasets = setup_TestDatasets()
-    dm = DataManager(datasets, 'DS1', read_ts_names={d: 'read' for d in ['DS1', 'DS2', 'DS3']})
+    dm = DataManager(
+        datasets,
+        "DS1",
+        read_ts_names={d: "read" for d in ["DS1", "DS2", "DS3"]},
+    )
 
     process = Validation(
-        dm, 'DS1',
+        dm,
+        "DS1",
         temporal_matcher=temporal_matchers.BasicTemporalMatching(
-            window=1 / 24.0).combinatory_matcher,
-        scaling='lin_cdf_match',
+            window=1 / 24.0
+        ).combinatory_matcher,
+        scaling="lin_cdf_match",
         metrics_calculators={
-            (3, 2): metrics_calculators.BasicMetrics(other_name='k1').calc_metrics})
+            (3, 2): metrics_calculators.BasicMetrics(
+                other_name="k1"
+            ).calc_metrics
+        },
+    )
 
     jobs = process.get_processing_jobs()
     for job in jobs:
@@ -521,46 +759,59 @@ def test_validation_n3_k2():
         assert sorted(list(results)) == sorted(list(tst_results))
 
 
-def test_validation_n3_k2_temporal_matching_no_matches():
+def test_validation_n3_k2_temporal_matching_no_matches2():
 
     tst_results = {
-        (('DS1', 'x'), ('DS3', 'y')): {
-            'n_obs': np.array([1000], dtype=np.int32),
-            'tau': np.array([np.nan], dtype=np.float32),
-            'gpi': np.array([4], dtype=np.int32),
-            'RMSD': np.array([0.], dtype=np.float32),
-            'lon': np.array([4.]),
-            'p_tau': np.array([np.nan], dtype=np.float32),
-            'BIAS': np.array([0.], dtype=np.float32),
-            'p_rho': np.array([0.], dtype=np.float32),
-            'rho': np.array([1.], dtype=np.float32),
-            'lat': np.array([4.]),
-            'R': np.array([1.], dtype=np.float32),
-            'p_R': np.array([0.], dtype=np.float32)},
-        (('DS1', 'x'), ('DS3', 'x')): {
-            'n_obs': np.array([1000], dtype=np.int32),
-            'tau': np.array([np.nan], dtype=np.float32),
-            'gpi': np.array([4], dtype=np.int32),
-            'RMSD': np.array([0.], dtype=np.float32),
-            'lon': np.array([4.]),
-            'p_tau': np.array([np.nan], dtype=np.float32),
-            'BIAS': np.array([0.], dtype=np.float32),
-            'p_rho': np.array([0.], dtype=np.float32),
-            'rho': np.array([1.], dtype=np.float32),
-            'lat': np.array([4.]),
-            'R': np.array([1.], dtype=np.float32),
-            'p_R': np.array([0.], dtype=np.float32)}}
+        (("DS1", "x"), ("DS3", "y")): {
+            "n_obs": np.array([1000], dtype=np.int32),
+            "tau": np.array([np.nan], dtype=np.float32),
+            "gpi": np.array([4], dtype=np.int32),
+            "RMSD": np.array([0.0], dtype=np.float32),
+            "lon": np.array([4.0]),
+            "p_tau": np.array([np.nan], dtype=np.float32),
+            "BIAS": np.array([0.0], dtype=np.float32),
+            "p_rho": np.array([0.0], dtype=np.float32),
+            "rho": np.array([1.0], dtype=np.float32),
+            "lat": np.array([4.0]),
+            "R": np.array([1.0], dtype=np.float32),
+            "p_R": np.array([0.0], dtype=np.float32),
+        },
+        (("DS1", "x"), ("DS3", "x")): {
+            "n_obs": np.array([1000], dtype=np.int32),
+            "tau": np.array([np.nan], dtype=np.float32),
+            "gpi": np.array([4], dtype=np.int32),
+            "RMSD": np.array([0.0], dtype=np.float32),
+            "lon": np.array([4.0]),
+            "p_tau": np.array([np.nan], dtype=np.float32),
+            "BIAS": np.array([0.0], dtype=np.float32),
+            "p_rho": np.array([0.0], dtype=np.float32),
+            "rho": np.array([1.0], dtype=np.float32),
+            "lat": np.array([4.0]),
+            "R": np.array([1.0], dtype=np.float32),
+            "p_R": np.array([0.0], dtype=np.float32),
+        },
+    }
 
     datasets = setup_three_with_two_overlapping()
-    dm = DataManager(datasets, 'DS1', read_ts_names={d: 'read' for d in ['DS1', 'DS2', 'DS3']})
+    dm = DataManager(
+        datasets,
+        "DS1",
+        read_ts_names={d: "read" for d in ["DS1", "DS2", "DS3"]},
+    )
 
     process = Validation(
-        dm, 'DS1',
+        dm,
+        "DS1",
         temporal_matcher=temporal_matchers.BasicTemporalMatching(
-            window=1 / 24.0).combinatory_matcher,
-        scaling='lin_cdf_match',
+            window=1 / 24.0
+        ).combinatory_matcher,
+        scaling="lin_cdf_match",
         metrics_calculators={
-            (3, 2): metrics_calculators.BasicMetrics(other_name='k1').calc_metrics})
+            (3, 2): metrics_calculators.BasicMetrics(
+                other_name="k1"
+            ).calc_metrics
+        },
+    )
 
     jobs = process.get_processing_jobs()
     for job in jobs:
@@ -574,132 +825,167 @@ def test_validation_n3_k2_masking_no_data_remains():
 
     # setup masking datasets
 
-    grid = grids.CellGrid(np.array([1, 2, 3, 4]), np.array([1, 2, 3, 4]),
-                          np.array([4, 4, 2, 1]), gpis=np.array([1, 2, 3, 4]))
+    grid = grids.CellGrid(
+        np.array([1, 2, 3, 4]),
+        np.array([1, 2, 3, 4]),
+        np.array([4, 4, 2, 1]),
+        gpis=np.array([1, 2, 3, 4]),
+    )
 
     mds1 = GriddedTsBase("", grid, MaskingTestDataset)
     mds2 = GriddedTsBase("", grid, MaskingTestDataset)
 
     mds = {
-        'masking1': {
-            'class': mds1,
-            'columns': ['x'],
-            'args': [],
-            'kwargs': {'limit': 500},
-            'use_lut': False,
-            'grids_compatible': True},
-        'masking2': {
-            'class': mds2,
-            'columns': ['x'],
-            'args': [],
-            'kwargs': {'limit': 1000},
-            'use_lut': False,
-            'grids_compatible': True}
+        "masking1": {
+            "class": mds1,
+            "columns": ["x"],
+            "args": [],
+            "kwargs": {"limit": 500},
+            "use_lut": False,
+            "grids_compatible": True,
+        },
+        "masking2": {
+            "class": mds2,
+            "columns": ["x"],
+            "args": [],
+            "kwargs": {"limit": 1000},
+            "use_lut": False,
+            "grids_compatible": True,
+        },
     }
 
     process = Validation(
-        datasets, 'DS1',
+        datasets,
+        "DS1",
         temporal_matcher=temporal_matchers.BasicTemporalMatching(
-            window=1 / 24.0).combinatory_matcher,
-        scaling='lin_cdf_match',
+            window=1 / 24.0
+        ).combinatory_matcher,
+        scaling="lin_cdf_match",
         metrics_calculators={
-            (3, 2): metrics_calculators.BasicMetrics(other_name='k1').calc_metrics},
-        masking_datasets=mds)
+            (3, 2): metrics_calculators.BasicMetrics(
+                other_name="k1"
+            ).calc_metrics
+        },
+        masking_datasets=mds,
+    )
 
     gpi_info = (1, 1, 1)
-    ref_df = datasets['DS1']['class'].read(1)
+    ref_df = datasets["DS1"]["class"].read(1)
     with warnings.catch_warnings():
-        warnings.filterwarnings('ignore', category=DeprecationWarning)
+        warnings.filterwarnings("ignore", category=DeprecationWarning)
         new_ref_df = process.mask_dataset(ref_df, gpi_info)
     assert len(new_ref_df) == 0
     nptest.assert_allclose(new_ref_df.x.values, np.arange(1000, 1000))
     jobs = process.get_processing_jobs()
     for job in jobs:
         with warnings.catch_warnings():
-            warnings.filterwarnings('ignore', category=DeprecationWarning)
+            warnings.filterwarnings("ignore", category=DeprecationWarning)
             results = process.calc(*job)
         tst = []
         assert sorted(list(results)) == sorted(list(tst))
-        for key, tst_key in zip(sorted(results),
-                                sorted(tst)):
-            nptest.assert_almost_equal(results[key]['n_obs'],
-                                       tst[tst_key]['n_obs'])
+        for key, tst_key in zip(sorted(results), sorted(tst)):
+            nptest.assert_almost_equal(
+                results[key]["n_obs"], tst[tst_key]["n_obs"]
+            )
 
 
 def test_validation_n3_k2_masking():
 
     # test result for one gpi in a cell
     tst_results_one = {
-        (('DS1', 'x'), ('DS3', 'y')): {
-            'n_obs': np.array([250], dtype=np.int32)},
-        (('DS1', 'x'), ('DS2', 'y')): {
-            'n_obs': np.array([250], dtype=np.int32)},
-        (('DS1', 'x'), ('DS3', 'x')): {
-            'n_obs': np.array([250], dtype=np.int32)},
-        (('DS2', 'y'), ('DS3', 'x')): {
-            'n_obs': np.array([250], dtype=np.int32)},
-        (('DS2', 'y'), ('DS3', 'y')): {
-            'n_obs': np.array([250], dtype=np.int32)}}
+        (("DS1", "x"), ("DS3", "y")): {
+            "n_obs": np.array([250], dtype=np.int32)
+        },
+        (("DS1", "x"), ("DS2", "y")): {
+            "n_obs": np.array([250], dtype=np.int32)
+        },
+        (("DS1", "x"), ("DS3", "x")): {
+            "n_obs": np.array([250], dtype=np.int32)
+        },
+        (("DS2", "y"), ("DS3", "x")): {
+            "n_obs": np.array([250], dtype=np.int32)
+        },
+        (("DS2", "y"), ("DS3", "y")): {
+            "n_obs": np.array([250], dtype=np.int32)
+        },
+    }
 
     # test result for two gpis in a cell
     tst_results_two = {
-        (('DS1', 'x'), ('DS3', 'y')): {
-            'n_obs': np.array([250, 250], dtype=np.int32)},
-        (('DS1', 'x'), ('DS2', 'y')): {
-            'n_obs': np.array([250, 250], dtype=np.int32)},
-        (('DS1', 'x'), ('DS3', 'x')): {
-            'n_obs': np.array([250, 250], dtype=np.int32)},
-        (('DS2', 'y'), ('DS3', 'x')): {
-            'n_obs': np.array([250, 250], dtype=np.int32)},
-        (('DS2', 'y'), ('DS3', 'y')): {
-            'n_obs': np.array([250, 250], dtype=np.int32)}}
+        (("DS1", "x"), ("DS3", "y")): {
+            "n_obs": np.array([250, 250], dtype=np.int32)
+        },
+        (("DS1", "x"), ("DS2", "y")): {
+            "n_obs": np.array([250, 250], dtype=np.int32)
+        },
+        (("DS1", "x"), ("DS3", "x")): {
+            "n_obs": np.array([250, 250], dtype=np.int32)
+        },
+        (("DS2", "y"), ("DS3", "x")): {
+            "n_obs": np.array([250, 250], dtype=np.int32)
+        },
+        (("DS2", "y"), ("DS3", "y")): {
+            "n_obs": np.array([250, 250], dtype=np.int32)
+        },
+    }
 
     # cell 4 in this example has two gpis so it returns different results.
-    tst_results = {1: tst_results_one,
-                   1: tst_results_one,
-                   2: tst_results_two}
+    tst_results = {1: tst_results_one, 1: tst_results_one, 2: tst_results_two}
 
     datasets = setup_TestDatasets()
 
     # setup masking datasets
 
-    grid = grids.CellGrid(np.array([1, 2, 3, 4]), np.array([1, 2, 3, 4]),
-                          np.array([4, 4, 2, 1]), gpis=np.array([1, 2, 3, 4]))
+    grid = grids.CellGrid(
+        np.array([1, 2, 3, 4]),
+        np.array([1, 2, 3, 4]),
+        np.array([4, 4, 2, 1]),
+        gpis=np.array([1, 2, 3, 4]),
+    )
 
     mds1 = GriddedTsBase("", grid, MaskingTestDataset)
     mds2 = GriddedTsBase("", grid, MaskingTestDataset)
 
     mds = {
-        'masking1': {
-            'class': mds1,
-            'columns': ['x'],
-            'args': [],
-            'kwargs': {'limit': 500},
-            'use_lut': False,
-            'grids_compatible': True},
-        'masking2': {
-            'class': mds2,
-            'columns': ['x'],
-            'args': [],
-            'kwargs': {'limit': 750},
-            'use_lut': False,
-            'grids_compatible': True}
+        "masking1": {
+            "class": mds1,
+            "columns": ["x"],
+            "args": [],
+            "kwargs": {"limit": 500},
+            "use_lut": False,
+            "grids_compatible": True,
+        },
+        "masking2": {
+            "class": mds2,
+            "columns": ["x"],
+            "args": [],
+            "kwargs": {"limit": 750},
+            "use_lut": False,
+            "grids_compatible": True,
+        },
     }
 
-
     process = Validation(
-        datasets, 'DS1',
+        datasets,
+        "DS1",
         temporal_matcher=temporal_matchers.BasicTemporalMatching(
-            window=1 / 24.0).combinatory_matcher,
-        scaling='lin_cdf_match',
+            window=1 / 24.0
+        ).combinatory_matcher,
+        scaling="lin_cdf_match",
         metrics_calculators={
-            (3, 2): metrics_calculators.BasicMetrics(other_name='k1').calc_metrics},
-        masking_datasets=mds)
+            (3, 2): metrics_calculators.BasicMetrics(
+                other_name="k1"
+            ).calc_metrics
+        },
+        masking_datasets=mds,
+    )
 
     gpi_info = (1, 1, 1)
-    ref_df = datasets['DS1']['class'].read(1)
+    ref_df = datasets["DS1"]["class"].read(1)
     with warnings.catch_warnings():
-        warnings.simplefilter('ignore', category=DeprecationWarning) # read_ts is hard coded when using mask_data
+        warnings.simplefilter(
+            "ignore", category=DeprecationWarning
+        )  # read_ts is hard coded when using mask_data
         new_ref_df = process.mask_dataset(ref_df, gpi_info)
     assert len(new_ref_df) == 250
     nptest.assert_allclose(new_ref_df.x.values, np.arange(750, 1000))
@@ -709,15 +995,15 @@ def test_validation_n3_k2_masking():
         with warnings.catch_warnings():
             # most warnings here are caused by the read_ts function that cannot
             # be changed when using a masking data set
-            warnings.simplefilter('ignore', category=DeprecationWarning)
+            warnings.simplefilter("ignore", category=DeprecationWarning)
             results = process.calc(*job)
 
         tst = tst_results[len(job[0])]
         assert sorted(list(results)) == sorted(list(tst))
-        for key, tst_key in zip(sorted(results),
-                                sorted(tst)):
-            nptest.assert_almost_equal(results[key]['n_obs'],
-                                       tst[tst_key]['n_obs'])
+        for key, tst_key in zip(sorted(results), sorted(tst)):
+            nptest.assert_almost_equal(
+                results[key]["n_obs"], tst[tst_key]["n_obs"]
+            )
 
 
 @pytest.mark.slow
@@ -726,104 +1012,167 @@ def test_ascat_ismn_validation_metadata_rolling():
     """
     Test processing framework with some ISMN and ASCAT sample data
     """
-    ascat_data_folder = os.path.join(os.path.dirname(__file__), '..', 'test-data',
-                                     'sat', 'ascat', 'netcdf', '55R22')
+    ascat_data_folder = os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        "test-data",
+        "sat",
+        "ascat",
+        "netcdf",
+        "55R22",
+    )
 
-    ascat_grid_folder = os.path.join(os.path.dirname(__file__), '..', 'test-data',
-                                     'sat', 'ascat', 'netcdf', 'grid')
+    ascat_grid_folder = os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        "test-data",
+        "sat",
+        "ascat",
+        "netcdf",
+        "grid",
+    )
 
-    static_layers_folder = os.path.join(os.path.dirname(__file__),
-                                        '..', 'test-data', 'sat',
-                                        'h_saf', 'static_layer')
+    static_layers_folder = os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        "test-data",
+        "sat",
+        "h_saf",
+        "static_layer",
+    )
 
-    ascat_reader = AscatSsmCdr(ascat_data_folder, ascat_grid_folder,
-                               grid_filename='TUW_WARP5_grid_info_2_1.nc',
-                               static_layer_path=static_layers_folder)
+    ascat_reader = AscatSsmCdr(
+        ascat_data_folder,
+        ascat_grid_folder,
+        grid_filename="TUW_WARP5_grid_info_2_1.nc",
+        static_layer_path=static_layers_folder,
+    )
     ascat_reader.read_bulk = True
 
     # Initialize ISMN reader
 
-    ismn_data_folder = os.path.join(os.path.dirname(__file__), '..', 'test-data',
-                                    'ismn', 'multinetwork', 'header_values')
+    ismn_data_folder = os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        "test-data",
+        "ismn",
+        "multinetwork",
+        "header_values",
+    )
     ismn_reader = ISMN_Interface(ismn_data_folder)
 
     jobs = []
 
     ids = ismn_reader.get_dataset_ids(
-        variable='soil moisture',
-        min_depth=0,
-        max_depth=0.1)
+        variable="soil moisture", min_depth=0, max_depth=0.1
+    )
 
-    metadata_dict_template = {'network': np.array(['None'], dtype='U256'),
-                              'station': np.array(['None'], dtype='U256'),
-                              'landcover': np.float32([np.nan]),
-                              'climate': np.array(['None'], dtype='U4')}
+    metadata_dict_template = {
+        "network": np.array(["None"], dtype="U256"),
+        "station": np.array(["None"], dtype="U256"),
+        "landcover": np.float32([np.nan]),
+        "climate": np.array(["None"], dtype="U4"),
+    }
 
     for idx in ids:
         metadata = ismn_reader.metadata[idx]
-        metadata_dict = [{'network': metadata['network'],
-                          'station': metadata['station'],
-                          'landcover': metadata['landcover_2010'],
-                          'climate': metadata['climate']}]
-        jobs.append((idx, metadata['longitude'],
-                     metadata['latitude'], metadata_dict))
+        metadata_dict = [
+            {
+                "network": metadata["network"],
+                "station": metadata["station"],
+                "landcover": metadata["landcover_2010"],
+                "climate": metadata["climate"],
+            }
+        ]
+        jobs.append(
+            (idx, metadata["longitude"], metadata["latitude"], metadata_dict)
+        )
 
     save_path = tempfile.mkdtemp()
 
     # Create the validation object.
 
     datasets = {
-        'ISMN': {
-            'class': ismn_reader,
-            'columns': ['soil moisture']
+        "ISMN": {"class": ismn_reader, "columns": ["soil moisture"]},
+        "ASCAT": {
+            "class": ascat_reader,
+            "columns": ["sm"],
+            "kwargs": {
+                "mask_frozen_prob": 80,
+                "mask_snow_prob": 80,
+                "mask_ssf": True,
+            },
         },
-        'ASCAT': {
-            'class': ascat_reader,
-            'columns': ['sm'],
-            'kwargs': {'mask_frozen_prob': 80,
-                       'mask_snow_prob': 80,
-                       'mask_ssf': True}
-        }}
+    }
 
-    read_ts_names = {'ASCAT': 'read', 'ISMN': 'read_ts'}
+    read_ts_names = {"ASCAT": "read", "ISMN": "read_ts"}
     period = [datetime(2007, 1, 1), datetime(2014, 12, 31)]
 
-    datasets = DataManager(datasets, 'ISMN', period, read_ts_names=read_ts_names)
+    datasets = DataManager(
+        datasets, "ISMN", period, read_ts_names=read_ts_names
+    )
 
     process = Validation(
-        datasets, 'ISMN',
-        temporal_ref='ASCAT',
-        scaling='lin_cdf_match',
-        scaling_ref='ASCAT',
+        datasets,
+        "ISMN",
+        temporal_ref="ASCAT",
+        scaling="lin_cdf_match",
+        scaling_ref="ASCAT",
         metrics_calculators={
-            (2, 2): metrics_calculators.RollingMetrics(other_name='k1',
-                                                       metadata_template=metadata_dict_template).calc_metrics},
-        period=period)
+            (2, 2): metrics_calculators.RollingMetrics(
+                other_name="k1", metadata_template=metadata_dict_template
+            ).calc_metrics
+        },
+        period=period,
+    )
 
     for job in jobs:
         results = process.calc(*job)
-        netcdf_results_manager(results, save_path, ts_vars=[
-                               'R', 'p_R', 'RMSD'])
+        netcdf_results_manager(
+            results, save_path, ts_vars=["R", "p_R", "RMSD"]
+        )
 
     results_fname = os.path.join(
-        save_path, 'ASCAT.sm_with_ISMN.soil moisture.nc')
+        save_path, "ASCAT.sm_with_ISMN.soil moisture.nc"
+    )
 
-    vars_should = [u'gpi', u'lon',  u'lat', u'R', u'p_R', u'time',
-                   u'idx', u'_row_size']
+    vars_should = [
+        u"gpi",
+        u"lon",
+        u"lat",
+        u"R",
+        u"p_R",
+        u"time",
+        u"idx",
+        u"_row_size",
+    ]
 
     for key, value in metadata_dict_template.items():
         vars_should.append(key)
 
-    network_should = np.array(['MAQU', 'MAQU', 'SCAN', 'SCAN', 'SCAN',
-                               'SOILSCAPE', 'SOILSCAPE', 'SOILSCAPE'], dtype='U256')
+    network_should = np.array(
+        [
+            "MAQU",
+            "MAQU",
+            "SCAN",
+            "SCAN",
+            "SCAN",
+            "SOILSCAPE",
+            "SOILSCAPE",
+            "SOILSCAPE",
+        ],
+        dtype="U256",
+    )
 
     reader = PointDataResults(results_fname, read_only=True)
     df = reader.read_loc(None)
-    nptest.assert_equal(sorted(network_should), sorted(df['network'].values))
+    nptest.assert_equal(sorted(network_should), sorted(df["network"].values))
     assert np.all(df.gpi.values == np.arange(8))
-    assert(reader.read_ts(0).index.size == 357)
-    assert np.all(reader.read_ts(1).columns.values ==
-                  np.array(['R', 'p_R', 'RMSD']))
+    assert reader.read_ts(0).index.size == 357
+    assert np.all(
+        reader.read_ts(1).columns.values == np.array(["R", "p_R", "RMSD"])
+    )
+
 
 def test_args_to_iterable_non_iterables():
 
@@ -833,8 +1182,9 @@ def test_args_to_iterable_non_iterables():
     arg1 = 1
     arg2 = 2
     arg3 = 3
-    gpis_, lons_, lats_, args = args_to_iterable(gpis, lons, lats,
-                                                 arg1, arg2, arg3, n=3)
+    gpis_, lons_, lats_, args = args_to_iterable(
+        gpis, lons, lats, arg1, arg2, arg3, n=3
+    )
 
     assert gpis_ == [gpis]
     assert lons_ == [lons]
@@ -849,17 +1199,16 @@ def test_args_to_iterable_n3():
     lats = [3, 4, 5]
     arg1 = [1, 1, 1]
     arg2 = [1, 1, 1]
-    gpis_, lons_, lats_, args = args_to_iterable(gpis, lons, lats,
-                                                 arg1, arg2, n=3)
+    gpis_, lons_, lats_, args = args_to_iterable(
+        gpis, lons, lats, arg1, arg2, n=3
+    )
 
     assert gpis_ == gpis
     assert lons_ == lons
     assert lats_ == lats
     assert args == (arg1, arg2)
 
-    zipped_should = [(1, 2, 3, 1, 1),
-                     (2, 3, 4, 1, 1),
-                     (3, 4, 5, 1, 1)]
+    zipped_should = [(1, 2, 3, 1, 1), (2, 3, 4, 1, 1), (3, 4, 5, 1, 1)]
 
     for i, t in enumerate(zip(gpis_, lons_, lats_, *args)):
         assert zipped_should[i] == t
@@ -871,8 +1220,7 @@ def test_args_to_iterable_mixed():
     lons = [2, 3, 4]
     lats = 1
     arg1 = 1
-    gpis_, lons_, lats_, args = args_to_iterable(gpis, lons, lats,
-                                                 arg1)
+    gpis_, lons_, lats_, args = args_to_iterable(gpis, lons, lats, arg1)
 
     assert gpis_ == gpis
     assert lons_ == lons
@@ -885,9 +1233,8 @@ def test_args_to_iterable_mixed_strings():
     gpis = [1, 2, 3]
     lons = [2, 3, 4]
     lats = 1
-    arg1 = 'test'
-    gpis_, lons_, lats_, args = args_to_iterable(gpis, lons, lats,
-                                                 arg1)
+    arg1 = "test"
+    gpis_, lons_, lats_, args = args_to_iterable(gpis, lons, lats, arg1)
 
     assert gpis_ == gpis
     assert lons_ == lons
@@ -895,7 +1242,177 @@ def test_args_to_iterable_mixed_strings():
     assert args == [arg1]
 
 
-if __name__ == '__main__':
+@pytest.mark.slow
+@pytest.mark.full_framework
+def test_ascat_ismn_validation_without_duplicates():
+    """
+    Test processing framework with some ISMN and ASCAT sample data
+    """
+    ascat_data_folder = os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        "test-data",
+        "sat",
+        "ascat",
+        "netcdf",
+        "55R22",
+    )
+
+    ascat_grid_folder = os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        "test-data",
+        "sat",
+        "ascat",
+        "netcdf",
+        "grid",
+    )
+
+    static_layers_folder = os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        "test-data",
+        "sat",
+        "h_saf",
+        "static_layer",
+    )
+
+    ascat_reader = AscatSsmCdr(
+        ascat_data_folder,
+        ascat_grid_folder,
+        grid_filename="TUW_WARP5_grid_info_2_1.nc",
+        static_layer_path=static_layers_folder,
+    )
+    ascat_reader.read_bulk = True
+
+    # Initialize ISMN reader
+
+    ismn_data_folder = os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        "test-data",
+        "ismn",
+        "multinetwork",
+        "header_values",
+    )
+    ismn_reader = ISMN_Interface(ismn_data_folder)
+
+    jobs = []
+
+    ids = ismn_reader.get_dataset_ids(
+        variable="soil moisture", min_depth=0, max_depth=0.1
+    )
+    for idx in ids:
+        metadata = ismn_reader.metadata[idx]
+        jobs.append((idx, metadata["longitude"], metadata["latitude"]))
+
+    # Create the variable ***save_path*** which is a string representing the
+    # path where the results will be saved. **DO NOT CHANGE** the name
+    # ***save_path*** because it will be searched during the parallel
+    # processing!
+
+    save_path = tempfile.mkdtemp()
+
+    # Create the validation object.
+
+    datasets = {
+        "ISMN": {"class": ismn_reader, "columns": ["soil moisture"]},
+        "ASCAT": {
+            "class": ascat_reader,
+            "columns": ["sm"],
+            "kwargs": {
+                "mask_frozen_prob": 80,
+                "mask_snow_prob": 80,
+                "mask_ssf": True,
+            },
+        },
+    }
+
+    read_ts_names = {"ASCAT": "read", "ISMN": "read_ts"}
+    period = [datetime(2007, 1, 1), datetime(2014, 12, 31)]
+
+    datasets = DataManager(
+        datasets, "ISMN", period, read_ts_names=read_ts_names
+    )
+
+    # first, run with old deprecated implementation, but remove duplicates in
+    # ASCAT
+    class TempMatchingNoDuplicates(temporal_matchers.BasicTemporalMatching):
+        def match(self, reference, *args):
+            duplicated = reference.index.duplicated(keep="first")
+            reference = reference[~duplicated]
+            return self._match_deprecated(reference, *args)
+
+    process = Validation(
+        datasets,
+        "ISMN",
+        temporal_ref="ASCAT",
+        temporal_matcher=TempMatchingNoDuplicates(
+            window=1 / 24
+        ).combinatory_matcher,
+        scaling="lin_cdf_match",
+        scaling_ref="ASCAT",
+        metrics_calculators={
+            (2, 2): metrics_calculators.BasicMetrics(
+                other_name="k1"
+            ).calc_metrics
+        },
+        period=period,
+    )
+
+    for job in jobs:
+        results = process.calc(*job)
+        netcdf_results_manager(results, save_path)
+
+    results_fname = os.path.join(
+        save_path, "ASCAT.sm_with_ISMN.soil moisture.nc"
+    )
+
+    with nc.Dataset(results_fname, mode="r") as results:
+        vars_should = list(results.variables.keys())
+        n_obs_should = results.variables["n_obs"][:].tolist()
+        rho_should = results.variables["rho"][:]
+        rmsd_should = results.variables["RMSD"][:]
+
+    os.remove(results_fname)
+
+    print("Starting with new implementation")
+    # now redo validation with new implementation and compare with old one
+    process = Validation(
+        datasets,
+        "ISMN",
+        temporal_ref="ASCAT",
+        scaling="lin_cdf_match",
+        scaling_ref="ASCAT",
+        metrics_calculators={
+            (2, 2): metrics_calculators.BasicMetrics(
+                other_name="k1"
+            ).calc_metrics
+        },
+        period=period,
+    )
+
+    for job in jobs:
+        results = process.calc(*job)
+        netcdf_results_manager(results, save_path)
+
+    results_fname = os.path.join(
+        save_path, "ASCAT.sm_with_ISMN.soil moisture.nc"
+    )
+
+    with nc.Dataset(results_fname, mode="r") as results:
+        vars = results.variables.keys()
+        n_obs = results.variables["n_obs"][:].tolist()
+        rho = results.variables["rho"][:]
+        rmsd = results.variables["RMSD"][:]
+
+    assert sorted(vars) == sorted(vars_should)
+    assert sorted(n_obs) == sorted(n_obs_should)
+    nptest.assert_allclose(sorted(rho), sorted(rho_should), rtol=1e-4)
+    nptest.assert_allclose(sorted(rmsd), sorted(rmsd_should), rtol=1e-4)
+
+
+if __name__ == "__main__":
     # for profiling with cProfile, on the command line run
     # python -m cProfile -o ascat_ismn_validation.profile test_validation.py
     # output can be investigated with snakeviz
