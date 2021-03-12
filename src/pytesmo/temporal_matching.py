@@ -240,7 +240,8 @@ def temporal_collocation(
     dropna : bool, optional
         Whether to drop NaNs from the resulting dataframe (arising for example
         from duplicates with ``duplicates_nan=True`` or from missing values).
-        Default is ``False``.
+        This uses ``how="all"``, that is, only rows where all values are NaN
+        are dropped. Default is ``False``.
     checkna: bool, optional
         Whether to check if only NaNs are returned (i.e. no match has been
         found). If set to ``True``, raises a ``UserWarning`` in case no match
@@ -308,7 +309,13 @@ def temporal_collocation(
             other = other.tz_convert(ref_dr.tz)
     if dropduplicates or method == "nearest":
         other = other[~other.index.duplicated(keep="first")]
-        ref_dr = ref_dr[~ref_dr.duplicated(keep="first")]
+        ref_duplicated = ref_dr.duplicated(keep="first")
+        if np.any(ref_duplicated):
+            warnings.warn(
+                "Dropping duplicated indices in reference."
+                " This might indicate issues with your data."
+            )
+            ref_dr = ref_dr[~ref_dr.duplicated(keep="first")]
 
     # collocation
     # -----------
@@ -349,7 +356,7 @@ def temporal_collocation(
         if np.any(collocated.isnull().apply(np.all)):
             warnings.warn("No match has been found")
     if dropna:
-        collocated.dropna(inplace=True)
+        collocated.dropna(inplace=True, how="all")
 
     return collocated
 
@@ -443,6 +450,10 @@ def combined_temporal_collocation(
         for other in others
     ]
     if isinstance(reference, (pd.DataFrame, pd.Series)) and add_ref_data:
+        # first, check if we have to remove duplicates
+        if dropduplicates:
+            duplicated = reference.index.duplicated(keep="first")
+            reference = reference[~duplicated]
         dfs.insert(0, reference)
 
     # Before merging we have to check if the timezones are consistent.

@@ -76,17 +76,20 @@ class BasicTemporalMatching(object):
         matched = matched_data.dropna(how='all')
         return matched
 
+    def _new_match(self, reference, *args):
+        ref_df = pd.DataFrame(reference)
+        return temp_match.combined_temporal_collocation(
+            ref_df, args, self.window, dropna=True, dropduplicates=True,
+            add_ref_data=True, combined_dropna="all"
+        )
+
     def match(self, reference, *args):
         """
         takes reference and other dataframe and returnes a joined Dataframe
         in this case the reference dataset for the grid is also the
         temporal reference dataset
         """
-        ref_df = pd.DataFrame(reference)
-        return temp_match.combined_temporal_collocation(
-            ref_df, args, self.window, dropna=True, dropduplicates=True,
-            add_ref_data=True, combined_dropna="all"
-        )
+        return self._new_match(reference, *args)
 
     def combinatory_matcher(self, df_dict, refkey, n=2):
         """
