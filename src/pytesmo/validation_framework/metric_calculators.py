@@ -12,17 +12,17 @@
 #     the names of its contributors may be used to endorse or promote products
 #     derived from this software without specific prior written permission.
 
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-# DISCLAIMED. IN NO EVENT SHALL VIENNA UNIVERSITY OF TECHNOLOGY,
-# DEPARTMENT OF GEODESY AND GEOINFORMATION BE LIABLE FOR ANY
-# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL VIENNA UNIVERSITY OF TECHNOLOGY, DEPARTMENT
+# OF GEODESY AND GEOINFORMATION BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+# OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+# OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+# ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
 Metric calculators implement combinations of metrics and structure the output.
@@ -30,10 +30,10 @@ Metric calculators implement combinations of metrics and structure the output.
 
 import copy
 import itertools
-
 import numpy as np
 import pandas as pd
 from scipy import stats
+import warnings
 
 import pytesmo.metrics as metrics
 import pytesmo.df_metrics as df_metrics
@@ -54,7 +54,7 @@ def _get_tc_metric_template(metr, ds_names):
 
     in_lut = np.isin(np.array(metr), np.array(list(met_thds_template.keys())))
     if not all(in_lut):
-        unknown = np.take(metr, np.where(in_lut == False)[0])
+        unknown = np.take(metr, np.where(in_lut is False)[0])
         raise ValueError('Unknown metric(s): {}'.format(' '.join(unknown)))
 
     met_thds = {}
@@ -94,17 +94,22 @@ def _get_metric_template(metr):
 
     in_lut = np.isin(np.array(metr), np.array(list(lut.keys())))
     if not all(in_lut):
-        unknown = np.take(metr, np.where(in_lut == False)[0])
+        unknown = np.take(metr, np.where(in_lut is False)[0])
         raise ValueError('Unknown metric(s): {}'.format(' '.join(unknown)))
 
     return {m: lut[m] for m in metr}
 
+
 class MonthsMetricsAdapter(object):
-    """ Adapt MetricCalculators to calculate metrics for groups across months """
+    """
+    Adapt MetricCalculators to calculate metrics for groups across months
+    """
+
     def __init__(self, calculator, sets=None):
         """
-        Add functionality to a metric calculator to calculate validation metrics
-        for subsets of certain months in a time series (e.g. seasonal).
+        Add functionality to a metric calculator to calculate validation
+        metrics for subsets of certain months in a time series (e.g. seasonal).
+
         Parameters
         ----------
         calculator : MetadataMetrics or any child of it
@@ -118,11 +123,12 @@ class MonthsMetricsAdapter(object):
         if sets is None:
             sets = {'DJF': [12, 1, 2], 'MAM': [3, 4, 5],
                     'JJA': [6, 7, 8], 'SON': [9, 10, 11],
-                    'ALL': list(range(1,13))}
+                    'ALL': list(range(1, 13))}
 
         self.sets = sets
 
-        # metadata metrics and lon, lat, gpi are excluded from applying seasonally
+        # metadata metrics and lon, lat, gpi are excluded from applying
+        # seasonally
         self.non_seas_metrics = ['gpi', 'lon', 'lat']
         if self.cls.metadata_template is not None:
             self.non_seas_metrics += list(self.cls.metadata_template.keys())
@@ -150,10 +156,12 @@ class MonthsMetricsAdapter(object):
         df : pd.DataFrame
             Time series (index.month must exist) that is filtered
         months : list
-            Months for which data is kept, e.g. [12,1,2] to keep data for winter
+            Months for which data is kept, e.g. [12,1,2] to keep data for
+            winter
         dropna : bool, optional (default: False)
-            Drop lines for months that are not to be kept, if this is false, the
-            original index is not changed, but filtered values are replaced with nan.
+            Drop lines for months that are not to be kept, if this is false,
+            the original index is not changed, but filtered values are replaced
+            with nan.
 
         Returns
         -------
@@ -198,11 +206,12 @@ class MonthsMetricsAdapter(object):
                 dataset[k] = res
 
         return dataset
-                
+
 
 class MetadataMetrics(object):
     """
-    This class sets up the gpi info and metadata (if used) in the results template.
+    This class sets up the gpi info and metadata (if used) in the results
+    template.
     This is used as the basis for all other metric calculators.
 
     Parameters
@@ -212,8 +221,9 @@ class MetadataMetrics(object):
         pandas DataFrame
     metadata_template: dictionary, optional
         A dictionary containing additional fields (and types) of the form
-        dict = {'field': np.float32([np.nan]}. Allows users to specify information in the job tuple,
-        i.e. jobs.append((idx, metadata['longitude'], metadata['latitude'], metadata_dict)) which
+        dict = {'field': np.float32([np.nan]}. Allows users to specify
+        information in the job tuple, i.e. jobs.append((idx,
+        metadata['longitude'], metadata['latitude'], metadata_dict)) which
         is then propagated to the end netCDF results file.
     min_obs : int, optional
         Minium number of observations required t calculate metrics. Default is
@@ -227,7 +237,7 @@ class MetadataMetrics(object):
                                 'lat': np.float64([np.nan])}
 
         self.metadata_template = metadata_template
-        if self.metadata_template != None:
+        if self.metadata_template is not None:
             self.result_template.update(metadata_template)
 
         self.other_name = other_name
@@ -240,10 +250,11 @@ class MetadataMetrics(object):
         Parameters
         ----------
         data : pandas.DataFrame
-            see individual calculators for more information. not directly used here.
+            see individual calculators for more information. not directly used
+            here.
         gpi_info : tuple
-            of (gpi, lon, lat)
-            or, optionally, (gpi, lon, lat, metadata) where metadata is a dictionary
+            of (gpi, lon, lat) or, optionally, (gpi, lon, lat, metadata) where
+            metadata is a dictionary
         """
 
         dataset = copy.deepcopy(self.result_template)
@@ -252,7 +263,7 @@ class MetadataMetrics(object):
         dataset['lon'][0] = gpi_info[1]
         dataset['lat'][0] = gpi_info[2]
 
-        if self.metadata_template != None:
+        if self.metadata_template is not None:
             for key, value in self.metadata_template.items():
                 try:
                     dataset[key][0] = gpi_info[3][key]
@@ -283,8 +294,8 @@ class BasicMetrics(MetadataMetrics):
         pandas DataFrame
     calc_tau: boolean, optional
         if True then also tau is calculated. This is set to False by default
-        since the calculation of Kendalls tau is rather slow and can significantly
-        impact performance of e.g. global validation studies
+        since the calculation of Kendalls tau is rather slow and can
+        significantly impact performance of e.g. global validation studies
     metadata_template: dictionary, optional
         A dictionary containing additional fields (and types) of the form
         dict = {'field': np.float32([np.nan]}. Allows users to specify
@@ -1226,11 +1237,106 @@ def get_dataset_names(ref_key, datasets, n=3):
 
     return dataset_names
 
-if __name__ == '__main__':
+
+class PairwiseIntercomparisonMetrics(MetadataMetrics):
+    """
+    Basic metrics for comparison of two datasets:
+
+    - RMSD
+    - BIAS
+    - ubRMSD
+    - mse and decomposition
+    - RSS
+    - Pearson's R and p
+    - Spearman's rho and p (optional)
+    - Kendall's tau and p (optional)
+
+    Parameters
+    ----------
+    min_obs : int, optional
+        Minimum number of observations required to calculate metrics. Default
+        is 10.
+    calc_spearman : bool, optional
+        Whether to calculate Spearman's rank correlation coefficient. Default
+        is True.
+    calc_kendall : bool, optional
+        Whether to calculate Kendall's rank correlation coefficient. Default is
+        True.
+    """
+
+    def __init__(self, min_obs=10, calc_spearman=True, calc_kendall=True):
+
+        self.min_obs = min_obs
+        # metrics that are calculated between dataset pairs
+        metrics = ['n_obs', 'R', 'p_R', 'BIAS', 'RMSD', 'mse', 'RSS',
+                   'mse_corr', 'mse_bias', 'urmsd', 'mse_var']
+        self.calc_spearman = calc_spearman
+        if calc_spearman:
+            metrics += ["rho", "p_rho"]
+        self.calc_kendall = calc_kendall
+        if calc_kendall:
+            metrics += ["tau", "p_tau"]
+
+        self.result_template = _get_metric_template(metrics)
+        self.result_template.update({'gpi': np.int32([-1]),
+                                     'lon': np.float64([np.nan]),
+                                     'lat': np.float64([np.nan])})
+
+    def calc_metrics(self, data, gpi_info):
+        """
+        Calculates pairwise metrics.
+
+        Parameters
+        ----------
+        data : pd.DataFrame
+            DataFrame with 2 columns between which metrics should be
+            calculated.
+        gpi_info : tuple
+            (gpi, lon, lat)
+        """
+        result = copy.deepcopy(self.result_template)
+
+        n_obs = len(data)
+        result["n_obs"][0] = n_obs
+        result["gpi"][0] = gpi_info[0]
+        result["lon"][0] = gpi_info[1]
+        result["lat"][0] = gpi_info[2]
+        if n_obs < self.min_obs:
+            warnings.warn(
+                "Not enough observations to calculate metrics.",
+                UserWarning
+            )
+            return result
+
+        x = data.iloc[:, 0]
+        y = data.iloc[:, 1]
+
+        if self.calc_spearman:
+            result["rho"][0], result["p_rho"][0] = stats.spearmanr(x, y)
+        if self.calc_kendall:
+            result["tau"][0], result["p_tau"][0] = stats.kendalltau(x, y)
+
+        (
+            result["BIAS"][0],
+            result["RSS"][0],
+            result["RMSD"][0],
+            result["urmsd"][0],
+            result["mse"][0],
+            result["mse_corr"][0],
+            result["mse_bias"][0],
+            result["mse_var"][0],
+            result["R"][0],
+            result["p_R"][0],
+        ) = metrics.pairwise_metrics(x.values, y.values)
+
+        return result
+
+
+if __name__ == '__main__':  # pragma: no cover
     calc = TCMetrics(other_names=('k1', 'k2', 'k3'),
-                                  calc_tau=False,
-                                  metadata_template=dict(meta1=np.array(['TBD']),
-                                                         meta2=np.float32([np.nan])))
+                     calc_tau=False,
+                     metadata_template=dict(meta1=np.array(['TBD']),
+                                            meta2=np.float32([np.nan])))
 
     adapted = MonthsMetricsAdapter(calc)
 
@@ -1241,4 +1347,4 @@ if __name__ == '__main__':
                             'k2': np.random.rand(idx.size),
                             'k3': np.random.rand(idx.size)})
 
-    calc.calc_metrics(df, (0,1,2,{'meta1':'meta', 'meta2':12}))
+    calc.calc_metrics(df, (0, 1, 2, {'meta1': 'meta', 'meta2': 12}))

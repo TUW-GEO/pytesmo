@@ -114,7 +114,7 @@ class Validation(object):
                  period=None,
                  scaling='lin_cdf_match', scaling_ref=None):
 
-        if type(datasets) is DataManager:
+        if isinstance(datasets, DataManager):
             self.data_manager = datasets
         else:
             self.data_manager = DataManager(datasets, spatial_ref, period)

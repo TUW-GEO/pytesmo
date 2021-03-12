@@ -707,20 +707,20 @@ def test_dfdict_combined_temporal_collocation():
     )
 
     # keys are the same, only refkey is missing
-    assert sorted(list(matched.keys()) + ["refkey"]) == sorted(
-        list(dfs.keys())
+    assert sorted(list(matched.keys())) == sorted([
+        ("df1key", "refkey"), ("df2key", "refkey")
+    ])
+    assert sorted(list(matched[("df1key", "refkey")].columns)) == sorted(
+        [("refkey", "ref"), ("df1key", "k1"), ("df1key", "k2")]
     )
-    assert sorted(list(matched["df1key"].columns)) == sorted(
-        ["ref", "k1", "k2"]
-    )
-    assert sorted(list(matched["df2key"].columns)) == sorted(
-        ["ref", "k1", "k2"]
+    assert sorted(list(matched[("df2key", "refkey")].columns)) == sorted(
+        [("refkey", "ref"), ("df2key", "k1"), ("df2key", "k2")]
     )
 
     # overlap is only 11 timestamps
-    assert matched["df1key"].shape == (11, 3)
-    assert matched["df2key"].shape == (11, 3)
+    assert matched[("df1key", "refkey")].shape == (11, 3)
+    assert matched[("df2key", "refkey")].shape == (11, 3)
 
     overlap_dr = pd.date_range("2005", "2015", freq="YS")
-    assert np.all(matched["df1key"].index == overlap_dr)
-    assert np.all(matched["df2key"].index == overlap_dr)
+    assert np.all(matched[("df1key", "refkey")].index == overlap_dr)
+    assert np.all(matched[("df2key", "refkey")].index == overlap_dr)
