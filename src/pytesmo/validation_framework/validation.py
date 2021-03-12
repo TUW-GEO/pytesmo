@@ -295,12 +295,10 @@ class Validation(object):
                     if self.scaling_ref not in [key[0] for key in result_key]:
                         data = data.drop(columns=[self.scaling_ref])
 
-
                 # Rename the columns to 'ref', 'k1', 'k2', ...
                 rename_dict = {}
-                f = lambda x: "k{}".format(x) if x > 0 else 'ref'
                 for i, r in enumerate(result_key):
-                    rename_dict[r[0]] = f(i)
+                    rename_dict[r[0]] = "k{i}" if i > 0 else "ref"
                 data.rename(columns=rename_dict, inplace=True)
 
                 if result_key not in results.keys():

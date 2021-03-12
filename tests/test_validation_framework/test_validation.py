@@ -66,12 +66,6 @@ if __name__ != "__main__":
     )
 
 
-# test temporal matcher that uses the deprecated matching with df_match
-class TestTemporalMatching(temporal_matchers.BasicTemporalMatching):
-    def match(self, reference, *args):
-        return self._match_deprecated(reference, *args)
-
-
 @pytest.mark.slow
 @pytest.mark.full_framework
 def test_ascat_ismn_validation():
@@ -169,9 +163,6 @@ def test_ascat_ismn_validation():
         datasets,
         "ISMN",
         temporal_ref="ASCAT",
-        temporal_matcher=TestTemporalMatching(
-            window=1 / 24
-        ).combinatory_matcher,
         scaling="lin_cdf_match",
         scaling_ref="ASCAT",
         metrics_calculators={
@@ -207,47 +198,44 @@ def test_ascat_ismn_validation():
         u"idx",
         u"_row_size",
     ]
-    n_obs_should = [384, 357, 482, 141, 251, 1927, 1887, 1652]
+    n_obs_should = [357, 384, 1646, 1875, 1915, 467, 141, 251]
     rho_should = np.array(
         [
-            0.70022893,
             0.53934574,
-            0.69356072,
-            0.84189808,
+            0.7002289,
+            0.62200236,
+            0.53647155,
+            0.30413666,
+            0.6740655,
+            0.8418981,
             0.74206454,
-            0.30299741,
-            0.53143877,
-            0.62204134,
+        ],
+        dtype=np.float32,
+    )
+    rmsd_should = np.array(
+        [
+            11.583476,
+            7.729667,
+            17.441547,
+            21.125721,
+            14.31557,
+            14.187225,
+            13.0622425,
+            12.903898,
         ],
         dtype=np.float32,
     )
 
-    rmsd_should = np.array(
-        [
-            7.72966719,
-            11.58347607,
-            14.57700157,
-            13.06224251,
-            12.90389824,
-            14.24668026,
-            21.19682884,
-            17.3883934,
-        ],
-        dtype=np.float32,
-    )
     with nc.Dataset(results_fname, mode="r") as results:
-        assert sorted(list(results.variables.keys())) == sorted(vars_should)
-        assert sorted(results.variables["n_obs"][:].tolist()) == sorted(
-            n_obs_should
-        )
-        nptest.assert_allclose(
-            sorted(rho_should), sorted(results.variables["rho"][:]), rtol=1e-4
-        )
-        nptest.assert_allclose(
-            sorted(rmsd_should),
-            sorted(results.variables["RMSD"][:]),
-            rtol=1e-4,
-        )
+        vars = results.variables.keys()
+        n_obs = results.variables["n_obs"][:].tolist()
+        rho = results.variables["rho"][:]
+        rmsd = results.variables["RMSD"][:]
+
+    assert sorted(vars) == sorted(vars_should)
+    assert sorted(n_obs) == sorted(n_obs_should)
+    nptest.assert_allclose(sorted(rho), sorted(rho_should), rtol=1e-4)
+    nptest.assert_allclose(sorted(rmsd), sorted(rmsd_should), rtol=1e-4)
 
 
 @pytest.mark.slow
@@ -367,9 +355,6 @@ def test_ascat_ismn_validation_metadata():
         datasets,
         "ISMN",
         temporal_ref="ASCAT",
-        temporal_matcher=TestTemporalMatching(
-            window=1 / 24
-        ).combinatory_matcher,
         scaling="lin_cdf_match",
         scaling_ref="ASCAT",
         metrics_calculators={
@@ -408,31 +393,30 @@ def test_ascat_ismn_validation_metadata():
     for key, value in metadata_dict_template.items():
         vars_should.append(key)
 
-    n_obs_should = [384, 357, 482, 141, 251, 1927, 1887, 1652]
+    n_obs_should = [357, 384, 1646, 1875, 1915, 467, 141, 251]
     rho_should = np.array(
         [
-            0.70022893,
             0.53934574,
-            0.69356072,
-            0.84189808,
+            0.7002289,
+            0.62200236,
+            0.53647155,
+            0.30413666,
+            0.6740655,
+            0.8418981,
             0.74206454,
-            0.30299741,
-            0.53143877,
-            0.62204134,
         ],
         dtype=np.float32,
     )
-
     rmsd_should = np.array(
         [
-            7.72966719,
-            11.58347607,
-            14.57700157,
-            13.06224251,
-            12.90389824,
-            14.24668026,
-            21.19682884,
-            17.3883934,
+            11.583476,
+            7.729667,
+            17.441547,
+            21.125721,
+            14.31557,
+            14.187225,
+            13.0622425,
+            12.903898,
         ],
         dtype=np.float32,
     )
@@ -452,22 +436,17 @@ def test_ascat_ismn_validation_metadata():
     )
 
     with nc.Dataset(results_fname, mode="r") as results:
-        assert sorted(results.variables.keys()) == sorted(vars_should)
-        assert sorted(results.variables["n_obs"][:].tolist()) == sorted(
-            n_obs_should
-        )
+        vars = results.variables.keys()
+        n_obs = results.variables["n_obs"][:].tolist()
+        rho = results.variables["rho"][:]
+        rmsd = results.variables["RMSD"][:]
+        network = results.variables["network"][:]
 
-        nptest.assert_allclose(
-            sorted(rho_should), sorted(results.variables["rho"][:]), rtol=1e-4
-        )
-        nptest.assert_allclose(
-            sorted(rmsd_should),
-            sorted(results.variables["RMSD"][:]),
-            rtol=1e-4,
-        )
-        nptest.assert_equal(
-            sorted(network_should), sorted(results.variables["network"][:])
-        )
+    assert sorted(vars) == sorted(vars_should)
+    assert sorted(n_obs) == sorted(n_obs_should)
+    nptest.assert_allclose(sorted(rho), sorted(rho_should), rtol=1e-4)
+    nptest.assert_allclose(sorted(rmsd), sorted(rmsd_should), rtol=1e-4)
+    nptest.assert_equal(sorted(network), sorted(network_should))
 
 
 def test_validation_error_n2_k2():
@@ -1240,176 +1219,6 @@ def test_args_to_iterable_mixed_strings():
     assert lons_ == lons
     assert lats_ == [lats]
     assert args == [arg1]
-
-
-@pytest.mark.slow
-@pytest.mark.full_framework
-def test_ascat_ismn_validation_without_duplicates():
-    """
-    Test processing framework with some ISMN and ASCAT sample data
-    """
-    ascat_data_folder = os.path.join(
-        os.path.dirname(__file__),
-        "..",
-        "test-data",
-        "sat",
-        "ascat",
-        "netcdf",
-        "55R22",
-    )
-
-    ascat_grid_folder = os.path.join(
-        os.path.dirname(__file__),
-        "..",
-        "test-data",
-        "sat",
-        "ascat",
-        "netcdf",
-        "grid",
-    )
-
-    static_layers_folder = os.path.join(
-        os.path.dirname(__file__),
-        "..",
-        "test-data",
-        "sat",
-        "h_saf",
-        "static_layer",
-    )
-
-    ascat_reader = AscatSsmCdr(
-        ascat_data_folder,
-        ascat_grid_folder,
-        grid_filename="TUW_WARP5_grid_info_2_1.nc",
-        static_layer_path=static_layers_folder,
-    )
-    ascat_reader.read_bulk = True
-
-    # Initialize ISMN reader
-
-    ismn_data_folder = os.path.join(
-        os.path.dirname(__file__),
-        "..",
-        "test-data",
-        "ismn",
-        "multinetwork",
-        "header_values",
-    )
-    ismn_reader = ISMN_Interface(ismn_data_folder)
-
-    jobs = []
-
-    ids = ismn_reader.get_dataset_ids(
-        variable="soil moisture", min_depth=0, max_depth=0.1
-    )
-    for idx in ids:
-        metadata = ismn_reader.metadata[idx]
-        jobs.append((idx, metadata["longitude"], metadata["latitude"]))
-
-    # Create the variable ***save_path*** which is a string representing the
-    # path where the results will be saved. **DO NOT CHANGE** the name
-    # ***save_path*** because it will be searched during the parallel
-    # processing!
-
-    save_path = tempfile.mkdtemp()
-
-    # Create the validation object.
-
-    datasets = {
-        "ISMN": {"class": ismn_reader, "columns": ["soil moisture"]},
-        "ASCAT": {
-            "class": ascat_reader,
-            "columns": ["sm"],
-            "kwargs": {
-                "mask_frozen_prob": 80,
-                "mask_snow_prob": 80,
-                "mask_ssf": True,
-            },
-        },
-    }
-
-    read_ts_names = {"ASCAT": "read", "ISMN": "read_ts"}
-    period = [datetime(2007, 1, 1), datetime(2014, 12, 31)]
-
-    datasets = DataManager(
-        datasets, "ISMN", period, read_ts_names=read_ts_names
-    )
-
-    # first, run with old deprecated implementation, but remove duplicates in
-    # ASCAT
-    class TempMatchingNoDuplicates(temporal_matchers.BasicTemporalMatching):
-        def match(self, reference, *args):
-            duplicated = reference.index.duplicated(keep="first")
-            reference = reference[~duplicated]
-            return self._match_deprecated(reference, *args)
-
-    process = Validation(
-        datasets,
-        "ISMN",
-        temporal_ref="ASCAT",
-        temporal_matcher=TempMatchingNoDuplicates(
-            window=1 / 24
-        ).combinatory_matcher,
-        scaling="lin_cdf_match",
-        scaling_ref="ASCAT",
-        metrics_calculators={
-            (2, 2): metrics_calculators.BasicMetrics(
-                other_name="k1"
-            ).calc_metrics
-        },
-        period=period,
-    )
-
-    for job in jobs:
-        results = process.calc(*job)
-        netcdf_results_manager(results, save_path)
-
-    results_fname = os.path.join(
-        save_path, "ASCAT.sm_with_ISMN.soil moisture.nc"
-    )
-
-    with nc.Dataset(results_fname, mode="r") as results:
-        vars_should = list(results.variables.keys())
-        n_obs_should = results.variables["n_obs"][:].tolist()
-        rho_should = results.variables["rho"][:]
-        rmsd_should = results.variables["RMSD"][:]
-
-    os.remove(results_fname)
-
-    print("Starting with new implementation")
-    # now redo validation with new implementation and compare with old one
-    process = Validation(
-        datasets,
-        "ISMN",
-        temporal_ref="ASCAT",
-        scaling="lin_cdf_match",
-        scaling_ref="ASCAT",
-        metrics_calculators={
-            (2, 2): metrics_calculators.BasicMetrics(
-                other_name="k1"
-            ).calc_metrics
-        },
-        period=period,
-    )
-
-    for job in jobs:
-        results = process.calc(*job)
-        netcdf_results_manager(results, save_path)
-
-    results_fname = os.path.join(
-        save_path, "ASCAT.sm_with_ISMN.soil moisture.nc"
-    )
-
-    with nc.Dataset(results_fname, mode="r") as results:
-        vars = results.variables.keys()
-        n_obs = results.variables["n_obs"][:].tolist()
-        rho = results.variables["rho"][:]
-        rmsd = results.variables["RMSD"][:]
-
-    assert sorted(vars) == sorted(vars_should)
-    assert sorted(n_obs) == sorted(n_obs_should)
-    nptest.assert_allclose(sorted(rho), sorted(rho_should), rtol=1e-4)
-    nptest.assert_allclose(sorted(rmsd), sorted(rmsd_should), rtol=1e-4)
 
 
 if __name__ == "__main__":
