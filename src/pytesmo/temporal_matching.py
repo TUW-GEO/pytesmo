@@ -208,7 +208,8 @@ def temporal_collocation(
     reference : pd.DataFrame, pd.Series, or pd.DatetimeIndex
         The reference onto which `other` should be collocated. If this is a
         DataFrame or a Series, the index must be a DatetimeIndex. If the index
-        is timezone-naive and `other` is not, UTC will be assumed.
+        is timezone-naive and `other` is not, the timezone of `other` will be
+        assumed.
     other : pd.DataFrame or pd.Series
         Data to be collocated. Must have a pd.DatetimeIndex as index. If the
         index is timezone-naive and `reference` is not, the timezone of the
@@ -290,13 +291,24 @@ def temporal_collocation(
         pass
     else:
         if ref_dr.tz is None:
-            ref_dr = ref_dr.tz_localize("UTC")
-        if other.index.tz is None:
+            ref_dr = ref_dr.tz_localize(other.index.tz)
+            warnings.warn(
+                "No timezone given for reference, assuming it's in the same"
+                f" timezone as other, {other.index.tz}.",
+                UserWarning
+            )
+        elif other.index.tz is None:
             other = other.tz_localize(ref_dr.tz)
+            warnings.warn(
+                "No timezone given for other, assuming it's in the same"
+                f" timezone as reference, {other.index.tz}.",
+                UserWarning
+            )
         if other.index.tz != ref_dr.tz:
             other = other.tz_convert(ref_dr.tz)
     if dropduplicates or method == "nearest":
         other = other[~other.index.duplicated(keep="first")]
+        ref_dr = ref_dr[~ref_dr.duplicated(keep="first")]
 
     # collocation
     # -----------
@@ -386,10 +398,13 @@ def combined_temporal_collocation(
         Whether to drop NaNs from the resulting dataframe (arising for example
         from duplicates with ``duplicates_nan=True`` or from missing values).
         Default is ``False``.
-    combined_dropna : bool, optional
-        Whether to drop NaNs from the resulting combined DataFrame. This makes
-        sure that the output dataframe only has values at times where all input
-        frames had values.
+    combined_dropna : str or bool, optional
+        Whether and how to drop NaNs from the resulting combined DataFrame. Can
+        be ``"any"``, ``"all"``, ``True`` or ``False``. "any" makes sure that
+        the output dataframe only has values at times where all input frames
+        had values, while "all" only drops lines where all values are NaN.
+        ``True`` is the same as "any", and ``False`` (default) disables
+        dropping NaNs.
     checkna: bool, optional
         Whether to check if only NaNs are returned (i.e. no match has been
         found). If set to ``True``, raises a ``UserWarning`` in case no match
@@ -428,9 +443,36 @@ def combined_temporal_collocation(
         for other in others
     ]
     if isinstance(reference, (pd.DataFrame, pd.Series)) and add_ref_data:
-        dfs.append(reference)
+        dfs.insert(0, reference)
+
+    # Before merging we have to check if the timezones are consistent.
+    timezones = [d.index.tz for d in dfs]
+    uniq_tzs = set(timezones)
+    if len(uniq_tzs) == 1:
+        pass
+    else:
+        actual_tzs = set(tz for tz in timezones if tz is not None)
+        if len(actual_tzs) == 1:
+            # convert all to common tz
+            tz = list(actual_tzs)[0]
+        else:
+            # Multiple different timezones, convert all to UTC and raise a
+            # warning
+            tz = "UTC"
+            warnings.warn(
+                "Input DataFrames have mixed timezones, converting everything"
+                " to UTC.",
+                UserWarning
+            )
+        for d in dfs:
+            if d.index.tz is None:
+                d.index = d.index.tz_localize(tz)
+            else:
+                d.index = d.index.tz_convert(tz)
 
     merged = pd.concat(dfs, axis=1)
     if combined_dropna:
-        merged.dropna(inplace=True)
+        if combined_dropna is True:
+            combined_dropna = "any"
+        merged = merged.dropna(how=combined_dropna)
     return merged
