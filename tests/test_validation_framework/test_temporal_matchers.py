@@ -34,6 +34,7 @@ import numpy as np
 import pandas as pd
 
 import pytesmo.validation_framework.temporal_matchers as temporal_matchers
+import pytesmo.temporal_matching as tmatching
 
 
 def test_combinatory_matcher_n2():
@@ -124,5 +125,5 @@ def test_add_name_to_df_columns():
     index = pd.date_range(start="2000-01-01", periods=n, freq="D")
 
     df = pd.DataFrame({'x': x, 'y': y}, columns=['x', 'y'], index=index)
-    df = temporal_matchers.df_name_multiindex(df, 'test')
+    df = tmatching.df_name_multiindex(df, 'test')
     assert list(df.columns) == [('test', 'x'), ('test', 'y')]

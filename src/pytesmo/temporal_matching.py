@@ -2,6 +2,7 @@
 Provides a temporal matching function
 """
 
+from itertools import product
 import numpy as np
 import pandas as pd
 from pykdtree.kdtree import KDTree
@@ -296,14 +297,14 @@ def temporal_collocation(
             warnings.warn(
                 "No timezone given for reference, assuming it's in the same"
                 f" timezone as other, {other.index.tz}.",
-                UserWarning
+                UserWarning,
             )
         elif other.index.tz is None:
             other = other.tz_localize(ref_dr.tz)
             warnings.warn(
                 "No timezone given for other, assuming it's in the same"
                 f" timezone as reference, {other.index.tz}.",
-                UserWarning
+                UserWarning,
             )
         if other.index.tz != ref_dr.tz:
             other = other.tz_convert(ref_dr.tz)
@@ -473,7 +474,7 @@ def combined_temporal_collocation(
             warnings.warn(
                 "Input DataFrames have mixed timezones, converting everything"
                 " to UTC.",
-                UserWarning
+                UserWarning,
             )
         for d in dfs:
             if d.index.tz is None:
@@ -509,6 +510,32 @@ def dfdict_combined_temporal_collocation(dfs, refname, window, **kwargs):
     others = []
     for name in dfs:
         if name != refname:
-            others.append(dfs[name])
+            others.append(df_name_multiindex(dfs[name], name))
     ref = dfs[refname]
-    return combined_temporal_collocation(ref, others, window, **kwargs)
+    matched_df = combined_temporal_collocation(
+        ref, others, window, add_ref_data=True, combined_dropna=True, **kwargs
+    )
+
+    # unpack again to dictionary
+    matched_dict = {}
+    for name in dfs:
+        if name != refname:
+            tuple_keys = list(product((name,), dfs[name].columns))
+            keep = list(dfs[refname].columns) + tuple_keys
+            matched_dict[name] = matched_df[keep]
+            rename_dict = {tk: tk[1] for tk in tuple_keys}
+            matched_dict[name].rename(rename_dict, axis=1, inplace=True)
+    return matched_dict
+
+
+def df_name_multiindex(df, name):
+    """
+    Rename columns of a DataFrame by using new column names that
+    are tuples of (name, column_name) to ensure unique column names
+    that can also be split again. This transforms the columns to a MultiIndex.
+    """
+    d = {}
+    for c in df.columns:
+        d[c] = (name, c)
+
+    return df.rename(columns=d)

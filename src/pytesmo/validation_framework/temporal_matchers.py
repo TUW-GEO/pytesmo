@@ -32,11 +32,11 @@ Created on Sep 24, 2013
 @author: Christoph.Paulik@geo.tuwien.ac.at
 '''
 
-from distutils.version import LooseVersion
 import itertools
 import pandas as pd
 
 import pytesmo.temporal_matching as temp_match
+from pytesmo.temporal_matching import df_name_multiindex
 
 
 class BasicTemporalMatching(object):
@@ -53,43 +53,17 @@ class BasicTemporalMatching(object):
     def __init__(self, window=0.5):
         self.window = window
 
-    def _match_deprecated(self, reference, *args):
-
-        matched_datasets = temp_match.df_match(reference, *args, dropna=True,
-                                               dropduplicates=True,
-                                               window=self.window)
-
-        if type(matched_datasets) != tuple:
-            matched_datasets = [matched_datasets]
-
-        matched_data = pd.DataFrame(reference)
-
-        for match in matched_datasets:
-            if LooseVersion(pd.__version__) < LooseVersion('0.23'):
-                match = match.drop(('index', ''), axis=1)
-            else:
-                match = match.drop('index', axis=1)
-
-            match = match.drop('distance', axis=1)
-            matched_data = matched_data.join(match)
-
-        matched = matched_data.dropna(how='all')
-        return matched
-
-    def _new_match(self, reference, *args):
-        ref_df = pd.DataFrame(reference)
-        return temp_match.combined_temporal_collocation(
-            ref_df, args, self.window, dropna=True, dropduplicates=True,
-            add_ref_data=True, combined_dropna="all"
-        )
-
     def match(self, reference, *args):
         """
         takes reference and other dataframe and returnes a joined Dataframe
         in this case the reference dataset for the grid is also the
         temporal reference dataset
         """
-        return self._new_match(reference, *args)
+        ref_df = pd.DataFrame(reference)
+        return temp_match.combined_temporal_collocation(
+            ref_df, args, self.window, dropna=True, dropduplicates=True,
+            add_ref_data=True, combined_dropna="all"
+        )
 
     def combinatory_matcher(self, df_dict, refkey, n=2):
         """
@@ -143,16 +117,3 @@ class BasicTemporalMatching(object):
                 matched[matched_key] = joined
 
         return matched
-
-
-def df_name_multiindex(df, name):
-    """
-    Rename columns of a DataFrame by using new column names that
-    are tuples of (name, column_name) to ensure unique column names
-    that can also be split again. This transforms the columns to a MultiIndex.
-    """
-    d = {}
-    for c in df.columns:
-        d[c] = (name, c)
-
-    return df.rename(columns=d)

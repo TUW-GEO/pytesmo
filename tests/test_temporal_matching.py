@@ -478,16 +478,21 @@ def test_timezone_handling():
             datetime(2007, 1, 1, 0), "2007-01-05", freq="D", tz="UTC"
         ),
     )
-    index = pd.DatetimeIndex([
-        datetime(2007, 1, 1, 9),
-        datetime(2007, 1, 2, 9),
-        datetime(2007, 1, 3, 9),
-        datetime(2007, 1, 4, 9),
-        datetime(2007, 1, 5, 9),
-    ]).tz_localize("utc")
+    index = pd.DatetimeIndex(
+        [
+            datetime(2007, 1, 1, 9),
+            datetime(2007, 1, 2, 9),
+            datetime(2007, 1, 3, 9),
+            datetime(2007, 1, 4, 9),
+            datetime(2007, 1, 5, 9),
+        ]
+    ).tz_localize("utc")
     ref_df = pd.DataFrame({"data": np.arange(5)}, index=index)
     matched = tmatching.temporal_collocation(
-        ref_df, match_df, pd.Timedelta(12, "H"), dropna=True,
+        ref_df,
+        match_df,
+        pd.Timedelta(12, "H"),
+        dropna=True,
     )
 
     nptest.assert_allclose(np.array([0, 1, 2, 4]), matched.matched_data)
@@ -514,8 +519,7 @@ def test_combined_matching():
     }
     data["missing"][2] = np.nan
     frames = {
-        name: pd.DataFrame({name: data[name]}, index=index)
-        for name in data
+        name: pd.DataFrame({name: data[name]}, index=index) for name in data
     }
 
     # everything together
@@ -529,8 +533,9 @@ def test_combined_matching():
     assert len(merged) == 10
     for name in frames:
         assert name in merged.columns
-        nptest.assert_equal(merged[name].values.ravel(),
-                            frames[name].values.ravel())
+        nptest.assert_equal(
+            merged[name].values.ravel(), frames[name].values.ravel()
+        )
 
     # test with dropna but not combined_dropna
     merged = tmatching.combined_temporal_collocation(
@@ -544,8 +549,9 @@ def test_combined_matching():
     assert len(merged) == 10
     for name in frames:
         assert name in merged.columns
-        nptest.assert_equal(merged[name].values.ravel(),
-                            frames[name].values.ravel())
+        nptest.assert_equal(
+            merged[name].values.ravel(), frames[name].values.ravel()
+        )
 
     # test with combined_dropna
     merged = tmatching.combined_temporal_collocation(
@@ -559,13 +565,13 @@ def test_combined_matching():
     assert len(merged) == 9
     for name in frames:
         assert name in merged.columns
-        nptest.assert_equal(merged[name].values.ravel()[2:],
-                            frames[name].values.ravel()[3:])
+        nptest.assert_equal(
+            merged[name].values.ravel()[2:], frames[name].values.ravel()[3:]
+        )
 
     # test with 2d-dataframe
     df2d = pd.DataFrame(
-        {"2d1": np.random.randn(10), "2d2": np.random.randn(10)},
-        index=index
+        {"2d1": np.random.randn(10), "2d2": np.random.randn(10)}, index=index
     )
     merged = tmatching.combined_temporal_collocation(
         ref,
@@ -589,8 +595,9 @@ def test_combined_matching():
 
 def test_timezone_warning():
     dr = pd.date_range("2000-01-01", "2000-01-31", freq="D")
-    dr_berlin = pd.date_range("2000-01-01", "2000-01-31", freq="D",
-                              tz="Europe/Berlin")
+    dr_berlin = pd.date_range(
+        "2000-01-01", "2000-01-31", freq="D", tz="Europe/Berlin"
+    )
     n = len(dr)
     with pytest.warns(UserWarning, match="No timezone given"):
         matched = tmatching.temporal_collocation(
@@ -603,29 +610,33 @@ def test_timezone_warning():
 
 def test_combined_timezones():
     dr = pd.date_range("2000-01-01", "2000-01-31", freq="D")
-    dr_utc = pd.date_range("2000-01-01", "2000-01-31", freq="D",
-                           tz="UTC")
-    dr_berlin = pd.date_range("2000-01-01", "2000-01-31", freq="D",
-                              tz="Europe/Berlin")
+    dr_utc = pd.date_range("2000-01-01", "2000-01-31", freq="D", tz="UTC")
+    dr_berlin = pd.date_range(
+        "2000-01-01", "2000-01-31", freq="D", tz="Europe/Berlin"
+    )
     n = len(dr)
 
     # test timezone naive
     merged = tmatching.combined_temporal_collocation(
         pd.DataFrame(np.random.randn(n), index=dr),
-        (pd.DataFrame(np.random.randn(n), index=dr),
-         pd.DataFrame(np.random.randn(n), index=dr)),
+        (
+            pd.DataFrame(np.random.randn(n), index=dr),
+            pd.DataFrame(np.random.randn(n), index=dr),
+        ),
         pd.Timedelta(6, "H"),
-        add_ref_data=True
+        add_ref_data=True,
     )
     assert merged.index.tz is None
 
     # test with same timezone
     merged = tmatching.combined_temporal_collocation(
         pd.DataFrame(np.random.randn(n), index=dr_berlin),
-        (pd.DataFrame(np.random.randn(n), index=dr_berlin),
-         pd.DataFrame(np.random.randn(n), index=dr_berlin)),
+        (
+            pd.DataFrame(np.random.randn(n), index=dr_berlin),
+            pd.DataFrame(np.random.randn(n), index=dr_berlin),
+        ),
         pd.Timedelta(6, "H"),
-        add_ref_data=True
+        add_ref_data=True,
     )
     assert str(merged.index.tz) == "Europe/Berlin"
 
@@ -633,10 +644,12 @@ def test_combined_timezones():
     with pytest.warns(UserWarning, match="No timezone given"):
         merged = tmatching.combined_temporal_collocation(
             pd.DataFrame(np.random.randn(n), index=dr),
-            (pd.DataFrame(np.random.randn(n), index=dr_berlin),
-             pd.DataFrame(np.random.randn(n), index=dr)),
+            (
+                pd.DataFrame(np.random.randn(n), index=dr_berlin),
+                pd.DataFrame(np.random.randn(n), index=dr),
+            ),
             pd.Timedelta(6, "H"),
-            add_ref_data=True
+            add_ref_data=True,
         )
         assert str(merged.index.tz) == "Europe/Berlin"
 
@@ -644,10 +657,12 @@ def test_combined_timezones():
     with pytest.warns(UserWarning) as warn_record:
         merged = tmatching.combined_temporal_collocation(
             pd.DataFrame(np.random.randn(n), index=dr),
-            (pd.DataFrame(np.random.randn(n), index=dr_berlin),
-             pd.DataFrame(np.random.randn(n), index=dr_utc)),
+            (
+                pd.DataFrame(np.random.randn(n), index=dr_berlin),
+                pd.DataFrame(np.random.randn(n), index=dr_utc),
+            ),
             pd.Timedelta(6, "H"),
-            add_ref_data=True
+            add_ref_data=True,
         )
         assert str(merged.index.tz) == "UTC"
     assert len(warn_record) == 3
@@ -660,9 +675,52 @@ def test_combined_timezones():
     # test with different timezones and ref timezone
     merged = tmatching.combined_temporal_collocation(
         pd.DataFrame(np.random.randn(n), index=dr_berlin),
-        (pd.DataFrame(np.random.randn(n), index=dr_berlin),
-         pd.DataFrame(np.random.randn(n), index=dr_utc)),
+        (
+            pd.DataFrame(np.random.randn(n), index=dr_berlin),
+            pd.DataFrame(np.random.randn(n), index=dr_utc),
+        ),
         pd.Timedelta(6, "H"),
-        add_ref_data=True
+        add_ref_data=True,
     )
     assert str(merged.index.tz) == "Europe/Berlin"
+
+
+def test_dfdict_combined_temporal_collocation():
+
+    ref_dr = pd.date_range("2000", "2020", freq="YS")
+    dr1 = pd.date_range("2000", "2015", freq="YS")
+    dr2 = pd.date_range("2005", "2020", freq="YS")
+
+    ref_df = pd.DataFrame({"ref": np.arange(len(ref_dr))}, index=ref_dr)
+    df1 = pd.DataFrame(
+        {"k1": np.arange(len(dr1)), "k2": np.arange(len(dr1))}, index=dr1
+    )
+    df2 = pd.DataFrame(
+        {"k1": np.arange(len(dr2)), "k2": np.arange(len(dr2))}, index=dr2
+    )
+
+    dfs = {"refkey": ref_df, "df1key": df1, "df2key": df2}
+    window = pd.Timedelta(days=300)
+
+    matched = tmatching.dfdict_combined_temporal_collocation(
+        dfs, "refkey", window
+    )
+
+    # keys are the same, only refkey is missing
+    assert sorted(list(matched.keys()) + ["refkey"]) == sorted(
+        list(dfs.keys())
+    )
+    assert sorted(list(matched["df1key"].columns)) == sorted(
+        ["ref", "k1", "k2"]
+    )
+    assert sorted(list(matched["df2key"].columns)) == sorted(
+        ["ref", "k1", "k2"]
+    )
+
+    # overlap is only 11 timestamps
+    assert matched["df1key"].shape == (11, 3)
+    assert matched["df2key"].shape == (11, 3)
+
+    overlap_dr = pd.date_range("2005", "2015", freq="YS")
+    assert np.all(matched["df1key"].index == overlap_dr)
+    assert np.all(matched["df2key"].index == overlap_dr)
