@@ -154,10 +154,11 @@ class Validation(object):
 
         self.luts = self.data_manager.get_luts()
 
-    def calc(self, gpis, lons, lats, *args):
+    def calc(self, gpis, lons, lats, *args, rename_cols=True):
         """
-        The argument iterables (lists or numpy.ndarrays) are processed one after the other in
-        tuples of the form (gpis[n], lons[n], lats[n], arg1[n], ..).
+        The argument iterables (lists or numpy.ndarrays) are processed one
+        after the other in tuples of the form (gpis[n], lons[n], lats[n],
+        arg1[n], ..).
 
         Parameters
         ----------
@@ -166,13 +167,19 @@ class Validation(object):
             spatial reference dataset can be read. This is either a list
             or a numpy.ndarray or any other iterable containing this indicator.
         lons: iterable
-            Longitudes of the points identified by the gpis. Has to be the same size as gpis.
+            Longitudes of the points identified by the gpis. Has to be the same
+            size as gpis.
         lats: iterable
-            latitudes of the points identified by the gpis. Has to be the same size as gpis.
+            latitudes of the points identified by the gpis. Has to be the same
+            size as gpis.
         args: iterables
-            any addiational arguments have to have the same size as the gpis iterable. They are
-            given to the metrics calculators as metadata. Common usage is e.g. the long name
-            or network name of an in situ station.
+            any addiational arguments have to have the same size as the gpis
+            iterable. They are given to the metrics calculators as
+            metadata. Common usage is e.g. the long name or network name of an
+            in situ station.
+        rename_cols : bool, optional
+            Whether to rename the columns to "ref", "k1", ... before passing
+            the dataframe to the metrics calculators. Default is True.
 
         Returns
         -------
@@ -202,7 +209,8 @@ class Validation(object):
             if len(df_dict) == 0:
                 continue
             matched_data, result, used_data = self.perform_validation(
-                df_dict, gpi_info)
+                df_dict, gpi_info, rename_cols=rename_cols
+            )
 
             # add result of one gpi to global results dictionary
             for r in result:
@@ -223,9 +231,7 @@ class Validation(object):
 
         return compact_results
 
-    def perform_validation(self,
-                           df_dict,
-                           gpi_info):
+    def perform_validation(self, df_dict, gpi_info, rename_cols=True):
         """
         Perform the validation for one grid point index and return the
         matched datasets as well as the calculated metrics.
@@ -236,13 +242,17 @@ class Validation(object):
             DataFrames read by the data readers for each dataset
         gpi_info: tuple
             tuple of at least, (gpi, lon, lat)
+        rename_cols : bool, optional
+            Whether to rename the columns to "ref", "k1", ... before passing
+            the dataframe to the metrics calculators. Default is True.
 
         Returns
         -------
         matched_n: dict of pandas.DataFrames
             temporally matched data stored by (n, k) tuples
         results: dict
-            Dictonary of calculated metrics stored by dataset combinations tuples.
+            Dictonary of calculated metrics stored by dataset combinations
+            tuples.
         used_data: dict
             The DataFrame used for calculation of each set of metrics.
         """
@@ -296,10 +306,11 @@ class Validation(object):
                         data = data.drop(columns=[self.scaling_ref])
 
                 # Rename the columns to 'ref', 'k1', 'k2', ...
-                rename_dict = {}
-                for i, r in enumerate(result_key):
-                    rename_dict[r[0]] = f"k{i}" if i > 0 else "ref"
-                data.rename(columns=rename_dict, inplace=True)
+                if rename_cols:
+                    rename_dict = {}
+                    for i, r in enumerate(result_key):
+                        rename_dict[r[0]] = f"k{i}" if i > 0 else "ref"
+                    data.rename(columns=rename_dict, inplace=True)
 
                 if result_key not in results.keys():
                     results[result_key] = []
