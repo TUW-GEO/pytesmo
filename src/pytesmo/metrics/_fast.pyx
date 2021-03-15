@@ -122,9 +122,16 @@ cpdef mse_corr(floating [:] x, floating [:] y):
     mse_corr : float
         Correlation component of MSE.
     """
-    cdef floating varx, vary, cov
-    _, _, varx, vary, cov = _moments_welford(x, y)
-    return 2 * sqrt(varx) * sqrt(vary) - 2 * cov
+    cdef floating mx, my, varx, vary, cov
+    mx, my, varx, vary, cov = _moments_welford(x, y)
+    return _mse_corr_from_moments(mx, my, varx, vary, cov)
+
+
+cpdef _mse_corr_from_moments(
+    floating mx, floating my, floating vx, floating vy, floating cov
+):
+    return 2 * sqrt(vx) * sqrt(vy) - 2 * cov
+
 
 
 cpdef mse_var(floating [:] x, floating [:] y):
@@ -157,9 +164,15 @@ cpdef mse_var(floating [:] x, floating [:] y):
     mse_var : float
         Variance component of MSE.
     """
-    cdef floating varx, vary
-    _, _, varx, vary, _ = _moments_welford(x, y)
-    return (sqrt(varx) - sqrt(vary)) ** 2
+    cdef floating mx, my, varx, vary, cov
+    mx, my, varx, vary, cov = _moments_welford(x, y)
+    return _mse_var_from_moments(mx, my, varx, vary, cov)
+
+
+cpdef _mse_var_from_moments(
+    floating mx, floating my, floating vx, floating vy, floating cov
+):
+    return (sqrt(vx) - sqrt(vy)) ** 2
 
 
 cpdef mse_bias(floating [:] x, floating [:] y):
@@ -192,6 +205,12 @@ cpdef mse_bias(floating [:] x, floating [:] y):
         Bias component of MSE.
     """
     return bias(x, y) ** 2
+
+
+cpdef _mse_bias_from_moments(
+    floating mx, floating my, floating vx, floating vy, floating cov
+):
+    return (mx - my) ** 2
 
 
 # Faster implementation of the old `mse`
@@ -245,9 +264,9 @@ cpdef mse_decomposition(floating [:] x, floating [:] y):
     mx, my, varx, vary, cov = _moments_welford(x, y)
 
     # decompositions
-    mse_corr =  2 * sqrt(varx) * sqrt(vary) - 2 * cov
-    mse_var = (sqrt(varx) - sqrt(vary)) ** 2
-    mse_bias = (mx - my) ** 2
+    mse_corr =  _mse_corr_from_moments(mx, my, varx, vary, cov)
+    mse_var =  _mse_var_from_moments(mx, my, varx, vary, cov)
+    mse_bias =  _mse_bias_from_moments(mx, my, varx, vary, cov)
     mse = mse_corr + mse_var + mse_bias
     return mse, mse_corr, mse_bias, mse_var
 
@@ -298,6 +317,22 @@ cpdef _ubrmsd(floating [:] x, floating [:] y):
     return sqrt(sum / n)
 
 
+cpdef _pearsonr_from_moments(floating varx, floating vary, floating cov, int n):
+    cdef floating R, p_R, t_squared, df, z
+
+    R = cov / sqrt(varx * vary)
+
+    # p-value for R
+    if fabs(R) == 1.0:
+        p_R = 0.0
+    else:
+        df = n - 2
+        t_squared = R * R * (df / ((1.0 - R) * (1.0 + R)))
+        z = min(float(df) / (df + t_squared), 1.0)
+        p_R = betainc(0.5*df, 0.5, z)
+    return R, p_R
+
+
 # This implementation is much faster than the old version with numba:
 # old: 76.7 ms ± 1.62 ms per loop (mean ± std. dev. of 7 runs, 10 loops each)
 # new: 117 µs ± 836 ns per loop (mean ± std. dev. of 7 runs, 10000 loops each)
@@ -332,8 +367,8 @@ cpdef rolling_pr_rmsd(floating [:] timestamps,
     """
     # This uses an adapted Welford's algorithm to calculate the rolling mean,
     # variance, covariance, and mean squared difference.
-    cdef int i, j, n_ts, num_obs, df, lower, upper, lold, uold
-    cdef floating mx, my, mxold, myold, M2x, M2y, C, r, t_squared, z, msd,
+    cdef int i, j, n_ts, num_obs, lower, upper, lold, uold
+    cdef floating mx, my, mxold, myold, M2x, M2y, C, msd,
     cdef floating rolling_nobs  # a float because we divide by it
     cdef cnp.ndarray[floating, ndim=2] pr_arr
     cdef cnp.ndarray[floating, ndim=1] rmsd_arr
@@ -438,18 +473,9 @@ cpdef rolling_pr_rmsd(floating [:] timestamps,
         else:
             # to get var and cov we would need to divide by n, but since
             # we're only interested in the ratio that's not necessary
-            r = C / (sqrt(M2x * M2y))
-            pr_view[i, 0] = r
-            rmsd_view[i] = sqrt(msd)
-
-            # p-value
-            if fabs(r) == 1.0:
-                pr_view[i, 1] = 0.0
-            else:
-                df = num_obs - 2
-                t_squared = r * r * (df / ((1.0 - r) * (1.0 + r)))
-                z = min(float(df) / (df + t_squared), 1.0)
-                pr_view[i, 1] = betainc(0.5*df, 0.5, z)
+            pr_view[i, 0], pr_view[i, 1] = _pearsonr_from_moments(
+                C, M2x, M2y, num_obs
+            )
 
     return pr_arr, rmsd_arr
 
@@ -489,37 +515,22 @@ cpdef pairwise_metrics(floating [:] x, floating [:] y):
     p_R : float
         p-value for Pearson correlation coefficent.
     """
-    cdef int i, n, df
-    cdef floating mx, my, varx, vary, cov, n_float, sum
+    cdef floating mx, my, varx, vary, cov, n_float
     cdef floating bias, rss, rmsd, ubRMSD, mse, mse_corr, mse_bias, mse_var
-    cdef floating R, p_R, t_squared, z
+    cdef floating R, p_R
 
     n = len(x)
-    n_float = n
+    n_float = len(x)
     mx, my, varx, vary, cov = _moments_welford(x, y)
 
     bias = mx - my
     rss = RSS(x, y)
     rmsd = sqrt(rss/n_float)
-    mse_corr = 2 * sqrt(varx) * sqrt(vary) - 2 * cov
-    mse_var = (sqrt(varx) - sqrt(vary)) ** 2
-    mse_bias = bias ** 2
+    ubRMSD = sqrt(rss / n_float - bias ** 2)
+    mse_corr = _mse_corr_from_moments(mx, my, varx, vary, cov)
+    mse_var = _mse_var_from_moments(mx, my, varx, vary, cov)
+    mse_bias = _mse_bias_from_moments(mx, my, varx, vary, cov)
     mse = mse_corr + mse_var + mse_bias
-    R = cov / sqrt(varx * vary)
-
-    # p-value for R
-    if fabs(R) == 1.0:
-        p_R = 0.0
-    else:
-        df = n - 2
-        t_squared = R * R * (df / ((1.0 - R) * (1.0 + R)))
-        z = min(float(df) / (df + t_squared), 1.0)
-        p_R = betainc(0.5*df, 0.5, z)
-
-    # ubRMSD
-    sum = 0
-    for i in range(n):
-        sum += ((x[i] - mx) - (y[i] - my))**2
-    ubRMSD = sqrt(sum / n_float)
+    R, p_R = _pearsonr_from_moments(varx, vary, cov, n)
 
     return bias, rss, rmsd, ubRMSD, mse, mse_corr, mse_bias, mse_var, R, p_R

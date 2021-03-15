@@ -522,11 +522,13 @@ def test_PairwiseIntercomparisonMetrics():
     # preparation of IntercomparisonMetrics run
     # note: this order of dataset names currently must be passed like this, see
     # GH issue #220
-    ds_names = ["c1name", "c2name", "c3name", "refname"]
+    # ds_names = ["c1name", "c2name", "c3name", "refname"]
+    ds_names = ["refname", "c1name", "c2name", "c3name"]
     metrics = IntercomparisonMetrics(
         dataset_names=ds_names,
     )
 
+    print(df)
     val = Validation(
         datasets,
         "refname",
@@ -536,7 +538,7 @@ def test_PairwiseIntercomparisonMetrics():
         metrics_calculators={(4, 4): metrics.calc_metrics}
     )
 
-    results = val.calc(1, 1, 1)
+    results = val.calc(1, 1, 1, rename_cols=False)
     # results is a dictionary with one entry and key
     # (('c1name', 'k1'), ('c2name', 'k2'), ('c3name', 'k3'), ('refname',
     # 'ref')), the value is a list of length 0, which contains a dictionary
@@ -563,7 +565,7 @@ def test_PairwiseIntercomparisonMetrics():
             (4, 2): PairwiseIntercomparisonMetrics().calc_metrics
         }
     )
-    results_pw = val.calc([1], [1], [1])
+    results_pw = val.calc([1], [1], [1], rename_cols=False)
 
     # in results_pw, there are four entries with keys (("c1name", "c1"),
     # ("refname", "ref"), and so on.
