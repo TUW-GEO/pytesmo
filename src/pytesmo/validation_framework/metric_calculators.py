@@ -40,12 +40,6 @@ import pytesmo.df_metrics as df_metrics
 from pytesmo.scaling import scale
 from pytesmo.validation_framework.data_manager import get_result_names
 from pytesmo.df_metrics import n_combinations
-from pytesmo.metrics._fast import (
-    _mse_corr_from_moments,
-    _mse_var_from_moments,
-    _mse_bias_from_moments,
-    _pearsonr_from_moments,
-)
 
 
 def _get_tc_metric_template(metr, ds_names):
@@ -662,9 +656,8 @@ class IntercomparisonMetrics(MetadataMetrics):
         Name of the column of the non-reference / other datasets in the
         DataFrame.
     calc_rho: boolean, optional
-        If True then also Spearman's rho is calculated. This is set to False by
-        default since the calculation is rather slow and can significantly
-        impact performance of e.g. global validation studies.
+        If True then also Spearman's rho is calculated. This is set to True by
+        default.
     calc_tau: boolean, optional
         if True then also tau is calculated. This is set to False by default
         since the calculation of Kendalls tau is rather slow and can
@@ -682,7 +675,7 @@ class IntercomparisonMetrics(MetadataMetrics):
 
     def __init__(self, refname="ref", other_names=('k1', 'k2', 'k3'),
                  calc_tau=False, metrics_between_nonref=False,
-                 calc_rho=False, dataset_names=None, metadata_template=None):
+                 calc_rho=True, dataset_names=None, metadata_template=None):
 
         other_names = list(other_names)
         super(IntercomparisonMetrics, self).__init__(
@@ -804,7 +797,7 @@ class IntercomparisonMetrics(MetadataMetrics):
             rho, p_rho = df_metrics.spearmanr(data)
             rho_dict, p_rho_dict = rho._asdict(), p_rho._asdict()
         else:
-            tau = p_tau = p_tau_dict = tau_dict = None
+            rho = p_rho = p_rho_dict = rho_dict = None
 
         # calulcate tau
         if self.calc_tau:
@@ -1292,7 +1285,7 @@ class PairwiseIntercomparisonMetrics(MetadataMetrics):
         True.
     """
 
-    def __init__(self, min_obs=10, calc_spearman=True, calc_kendall=True):
+    def __init__(self, min_obs=10, calc_spearman=False, calc_kendall=False):
 
         self.min_obs = min_obs
         # metrics that are calculated between dataset pairs
@@ -1336,8 +1329,9 @@ class PairwiseIntercomparisonMetrics(MetadataMetrics):
             )
             return result
 
-        x = data.iloc[:, 0]
-        y = data.iloc[:, 1]
+        data_matrix = data.values
+        x = data_matrix[:, 0]
+        y = data_matrix[:, 1]
 
         if self.calc_spearman:
             result["rho"][0], result["p_rho"][0] = stats.spearmanr(x, y)
@@ -1355,146 +1349,7 @@ class PairwiseIntercomparisonMetrics(MetadataMetrics):
             result["mse_var"][0],
             result["R"][0],
             result["p_R"][0],
-        ) = metrics.pairwise_metrics(x.values, y.values)
-
-        return result
-
-
-class StatisticsMetrics:
-    """
-    This metrics calculator works be precalculating all moments of metrics
-    first and uses them to calculate all metrics.
-    """
-
-    def __init__(self, dataset_names, min_obs=10,
-                 calc_spearman=True, calc_kendall=True):
-
-        self.min_obs = min_obs
-        self.dataset_names = dataset_names
-        # metrics that are calculated between dataset pairs
-        self._metrics = ['n_obs', 'R', 'p_R', 'BIAS', 'RMSD', 'mse', 'RSS',
-                         'mse_corr', 'mse_bias', 'urmsd', 'mse_var']
-        self.calc_spearman = calc_spearman
-        if calc_spearman:
-            self._metrics += ["rho", "p_rho"]
-        self.calc_kendall = calc_kendall
-        if calc_kendall:
-            self._metrics += ["tau", "p_tau"]
-
-        self.results_template = {}
-        for i, name1 in enumerate(self.dataset_names):
-            for name2 in self.dataset_names[i+1:]:
-                for m in self._metrics:
-                    self.results_template[self._key(m, name1, name2)] = (
-                        _get_metric_template(m)[m]
-                    )
-
-        self.results_template.update({"gpi": np.int32([-1]),
-                                      "lon": np.float64([np.nan]),
-                                      "lat": np.float64([np.nan]),
-                                     "n_obs": np.int32([0])})
-
-    def _key(self, metric, name1, name2):
-        return f"{metric}_between_{name1}_and_{name2}"
-
-    def calc_metrics(self, data, gpi_info):
-        """
-        Calculates pairwise metrics between all data columns.
-
-        Parameters
-        ----------
-        data : pd.DataFrame
-            DataFrame with at least columns between which metrics should be
-            calculated.
-        gpi_info : tuple
-            (gpi, lon, lat)
-        """
-        names = list(data.columns)
-        ncols = len(names)
-        n_obs = len(data)
-        result = copy.deepcopy(self.results_template)
-
-        # as a safeguard, this should probably be an if clause that throws a
-        # proper error in the future
-        assert sorted(names) == sorted(self.dataset_names)
-        data = data[self.dataset_names]  # get same order as expected
-
-        result["n_obs"][0] = n_obs
-        result["gpi"][0] = gpi_info[0]
-        result["lon"][0] = gpi_info[1]
-        result["lat"][0] = gpi_info[2]
-        if n_obs < self.min_obs:
-            warnings.warn(
-                "Not enough observations to calculate metrics.",
-                UserWarning
-            )
-            return result
-
-        # calculate moments
-        mean = data.mean()
-        cov = data.cov()
-
-        # calculate RSS
-        RSS_matrix = np.empty((ncols, ncols), dtype=np.float32)
-        for i, name1 in enumerate(self.dataset_names):
-            for j, name2 in enumerate(self.dataset_names[i+1:]):
-                RSS_matrix[i, j] = metrics.RSS(
-                    data[name1].values,
-                    data[name2].values
-                )
-
-        # loop over all combinations, but only once
-        for i, name1 in enumerate(self.dataset_names):
-            for j, name2 in enumerate(self.dataset_names[i+1:]):
-
-                bias = mean[name1] - mean[name2]
-                result[self._key("BIAS", name1, name2)][0] = bias
-                result[self._key("RSS", name1, name2)][0] = (
-                    RSS_matrix[i, j]
-                )
-                result[self._key("RMSD", name1, name2)][0] = (
-                    np.sqrt(RSS_matrix[i, j] / n_obs)
-                )
-                result[self._key("urmsd", name1, name2)][0] = (
-                    np.sqrt(RSS_matrix[i, j] / n_obs - bias ** 2)
-                )
-
-                # mse decomposition
-                mx = float(mean[name1])
-                my = float(mean[name2])
-                varx = float(cov.loc[name1, name1])
-                vary = float(cov.loc[name2, name2])
-                c = float(cov.loc[name1, name2])
-                mse_corr = _mse_corr_from_moments(
-                    mx, my, varx, vary, c
-                )
-                mse_var = _mse_var_from_moments(
-                    mx, my, varx, vary, c
-                )
-                mse_bias = _mse_bias_from_moments(
-                    mx, my, varx, vary, c
-                )
-                result[self._key("mse_corr", name1, name2)][0] = mse_corr
-                result[self._key("mse_var", name1, name2)][0] = mse_var
-                result[self._key("mse_bias", name1, name2)][0] = mse_bias
-                result[self._key("mse", name1, name2)][0] = (
-                    mse_corr + mse_var + mse_bias
-                )
-
-                R, p_R = _pearsonr_from_moments(
-                    varx, vary, c, n_obs
-                )
-                result[self._key("R", name1, name2)][0] = R
-                result[self._key("p_R", name1, name2)][0] = p_R
-
-                if self.calc_spearman:
-                    rho, p_rho = stats.spearmanr(data[name1], data[name2])
-                    result[self._key("rho", name1, name2)][0] = rho
-                    result[self._key("p_rho", name1, name2)][0] = p_rho
-                if self.calc_kendall:
-                    tau, p_tau = stats.kendalltau(data[name1], data[name2])
-                    result[self._key("tau", name1, name2)][0] = tau
-                    result[self._key("p_tau", name1, name2)][0] = p_tau
+        ) = metrics.pairwise_metrics(x, y)
 
         return result
 

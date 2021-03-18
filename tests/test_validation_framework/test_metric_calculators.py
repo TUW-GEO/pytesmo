@@ -12,21 +12,23 @@
 #     the names of its contributors may be used to endorse or promote products
 #     derived from this software without specific prior written permission.
 
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-# DISCLAIMED. IN NO EVENT SHALL VIENNA UNIVERSITY OF TECHNOLOGY,
-# DEPARTMENT OF GEODESY AND GEOINFORMATION BE LIABLE FOR ANY
-# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL VIENNA UNIVERSITY OF TECHNOLOGY, DEPARTMENT
+# OF GEODESY AND GEOINFORMATION BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+# OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+# OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+# ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from datetime import datetime
 import numpy as np
+from numpy.testing import assert_equal
 import pandas as pd
+import pytest
 
 from pytesmo.validation_framework.validation import Validation
 from pytesmo.validation_framework.metric_calculators import (
@@ -41,8 +43,10 @@ from pytesmo.validation_framework.metric_calculators import (
     MonthsMetricsAdapter,
     PairwiseIntercomparisonMetrics,
 )
+from pytesmo.validation_framework.temporal_matchers import (
+    CombinedTemporalMatcher
+)
 import pytesmo.metrics as metrics
-import pytesmo.temporal_matching as temporal_matching
 
 
 def make_some_data():
@@ -498,71 +502,186 @@ def test_RollingMetrics():
     np.testing.assert_almost_equal(dataset['RMSD'][0][29:-1], rmsd_arr)
 
 
-def test_PairwiseIntercomparisonMetrics():
-    # compare whether PairwiseIntercomparisonMetrics with (n, 2) does the same
-    # as IntercomparisonMetrics with (n, n)
-    class DummyReader:
-        def __init__(self, df, name):
-            self.data = pd.DataFrame(df[name])
+###########################################################################
+# Tests for new QA4SM metrics calculators
 
-        def read_ts(self, *args, **kwargs):
-            return self.data
 
-    def make_datasets(df):
-        datasets = {}
-        for key in df:
-            ds = {"columns": [key], "class": DummyReader(df, key)}
-            datasets[key+"name"] = ds
-        return datasets
+class DummyReader:
+    def __init__(self, df, name):
+        self.data = pd.DataFrame(df[name])
 
-    df = make_some_data()
-    df.rename({"k1": "c1", "k2": "c2", "k3": "c3"}, axis=1, inplace=True)
-    datasets = make_datasets(df)
+    def read_ts(self, *args, **kwargs):
+        return self.data
 
-    # preparation of IntercomparisonMetrics run
-    # note: this order of dataset names currently must be passed like this, see
-    # GH issue #220
-    # ds_names = ["c1name", "c2name", "c3name", "refname"]
-    ds_names = ["refname", "c1name", "c2name", "c3name"]
-    metrics = IntercomparisonMetrics(
-        dataset_names=ds_names,
+
+def make_datasets(df):
+    datasets = {}
+    for key in df:
+        ds = {"columns": [key], "class": DummyReader(df, key)}
+        datasets[key+"_name"] = ds
+    return datasets
+
+
+def testdata_known_results():
+    dr = pd.date_range("2000", "2020", freq="D")
+    n = len(dr)
+    x = np.ones(n) * 2
+    x[10] = np.nan
+    df = pd.DataFrame(
+        {
+            "reference": x,
+            # starting with a letter > r here, so we can check how
+            # reliable the sorting is
+            "plus2": x + 2,
+            "minus4": x - 4,
+            "plus1": x + 1,
+        },
+        index=dr
     )
 
-    print(df)
-    val = Validation(
-        datasets,
-        "refname",
-        temporal_ref="refname",
-        scaling=None,
-        temporal_matcher=None,  # use default here
-        metrics_calculators={(4, 4): metrics.calc_metrics}
+    expected = {
+        (("plus2_name", "plus2"), ("reference_name", "reference")):
+        {
+            "n_obs": n - 1,
+            "R": np.nan,
+            "p_R": np.nan,
+            "BIAS": 2,
+            "RMSD": 2,
+            "mse": 4,
+            "RSS": (n-1) * 4,
+            "mse_corr": 0,
+            "mse_bias": 4,
+            "mse_var": 0,
+            "urmsd": 0,
+            "gpi": 1,
+            "lon": 1,
+            "lat": 1,
+        },
+        (("minus4_name", "minus4"), ("reference_name", "reference")):
+        {
+            "n_obs": n - 1,
+            "R": np.nan,
+            "p_R": np.nan,
+            "BIAS": -4,
+            "RMSD": 4,
+            "mse": 16,
+            "RSS": (n-1) * 16,
+            "mse_corr": 0,
+            "mse_bias": 16,
+            "mse_var": 0,
+            "urmsd": 0,
+            "gpi": 1,
+            "lon": 1,
+            "lat": 1,
+        },
+        (("plus1_name", "plus1"), ("reference_name", "reference")):
+        {
+            "n_obs": n - 1,
+            "R": np.nan,
+            "p_R": np.nan,
+            "BIAS": 1,
+            "RMSD": 1,
+            "mse": 1,
+            "RSS": (n-1) * 1,
+            "mse_corr": 0,
+            "mse_bias": 1,
+            "mse_var": 0,
+            "urmsd": 0,
+            "gpi": 1,
+            "lon": 1,
+            "lat": 1,
+        },
+    }
+
+    # make all arrays of np.float32, except n_obs, gpi (int32) and lat, lon
+    # (float64)
+    for ck in expected:
+        for m in expected[ck]:
+            if m in ["n_obs", "gpi"]:
+                expected[ck][m] = np.array([expected[ck][m]], dtype=np.int32)
+            elif m in ["lat", "lon"]:
+                expected[ck][m] = np.array([expected[ck][m]], dtype=np.float64)
+            else:
+                expected[ck][m] = np.array([expected[ck][m]], dtype=np.float32)
+
+    return make_datasets(df), expected
+
+
+def testdata_random():
+    dr = pd.date_range("2000", "2020", freq="D")
+    n = len(dr)
+    X = np.random.randn(n, 4)
+    X[10, 0] = np.nan
+    X[50, 2] = np.nan
+    df = pd.DataFrame(
+        {
+            "reference": X[:, 0],
+            "col1": X[:, 1],
+            "col2": X[:, 2],
+            "col3": X[:, 3],
+        },
+        index=dr
     )
 
-    results = val.calc(1, 1, 1, rename_cols=False)
-    # results is a dictionary with one entry and key
-    # (('c1name', 'k1'), ('c2name', 'k2'), ('c3name', 'k3'), ('refname',
-    # 'ref')), the value is a list of length 0, which contains a dictionary
-    # with all the results, where the metrics are joined with "_between_" with
-    # the combination of datasets, which is joined with "_and_", e.g. for R
-    # between ``refname`` and ``c1name`` the key is
-    # "R_between_refname_and_c1name"
-    result_old = list(results.values())[0]
-    assert result_old["gpi"][0] == 1
-    assert result_old["lat"][0] == 1
-    assert result_old["lon"][0] == 1
-    assert result_old["n_obs"][0] == 366
+    expected = {
+        (("col1_name", "col1"), ("reference_name", "reference")):
+        {
+            "n_obs": n - 2,
+            "gpi": 1,
+            "lon": 1,
+            "lat": 1,
+        },
+        (("col2_name", "col2"), ("reference_name", "reference")):
+        {
+            "n_obs": n - 2,
+            "gpi": 1,
+            "lon": 1,
+            "lat": 1,
+        },
+        (("col3_name", "col3"), ("reference_name", "reference")):
+        {
+            "n_obs": n - 2,
+            "gpi": 1,
+            "lon": 1,
+            "lat": 1,
+        },
+    }
 
-    # now do the same with the new metrics calculator
+    # make all arrays of np.float32, except n_obs, gpi (int32) and lat, lon
+    # (float64)
+    for ck in expected:
+        for m in expected[ck]:
+            if m in ["n_obs", "gpi"]:
+                expected[ck][m] = np.array([expected[ck][m]], dtype=np.int32)
+            elif m in ["lat", "lon"]:
+                expected[ck][m] = np.array([expected[ck][m]], dtype=np.float64)
+            else:
+                expected[ck][m] = np.array([expected[ck][m]], dtype=np.float32)
+
+    return make_datasets(df), expected
+
+
+@pytest.mark.parametrize(
+    "testdata_generator", [testdata_known_results, testdata_random]
+)
+def test_PairwiseIntercomparisonMetrics(testdata_generator):
+    # This test first compares the PairwiseIntercomparisonMetrics to known
+    # results and then confirms that it agrees with IntercomparisonMetrics as
+    # expected
+
+    datasets, expected = testdata_generator()
+
+    # for the pairwise intercomparison metrics it's important that we use
+    # dfdict_combined_temporal_collocation as temporal matcher
     val = Validation(
         datasets,
-        "refname",
-        temporal_ref="refname",
-        scaling=None,
-        temporal_matcher=(
-            temporal_matching.dfdict_combined_temporal_collocation
-        ),
+        "reference_name",
+        scaling=None,  # doesn't work with the constant test data
+        temporal_matcher=CombinedTemporalMatcher(pd.Timedelta(6, "H")),
         metrics_calculators={
-            (4, 2): PairwiseIntercomparisonMetrics().calc_metrics
+            (4, 2): (
+                PairwiseIntercomparisonMetrics(calc_spearman=True).calc_metrics
+            )
         }
     )
     results_pw = val.calc([1], [1], [1], rename_cols=False)
@@ -571,25 +690,107 @@ def test_PairwiseIntercomparisonMetrics():
     # ("refname", "ref"), and so on.
     # Each value is a single dictionary with the values of the metrics
 
-    metrics = ['R', 'p_R', 'BIAS', 'RMSD', 'mse', 'RSS',
-               'mse_corr', 'mse_bias', 'urmsd', 'mse_var',
-               'tau', 'p_tau', 'rho', 'p_rho']
+    expected_metrics = [
+        "R", "p_R", "BIAS", "RMSD", "mse", "RSS", "mse_corr", "mse_bias",
+        "urmsd", "mse_var", "n_obs", "gpi", "lat", "lon", "rho", "p_rho"
+    ]
     for key in results_pw:
-        othername = key[0][0]
-        refname = key[1][0]
-        old_suffix = "_between_" + refname + "_and_" + othername
-        result = results_pw[key]
-        assert result["n_obs"][0] == result_old["n_obs"][0]
-        assert result["gpi"][0] == result_old["gpi"][0]
-        assert result["lat"][0] == result_old["lat"][0]
-        assert result["lon"][0] == result_old["lon"][0]
-        for m in metrics:
-            old_key = m + old_suffix
-            if old_key in result_old:
-                np.testing.assert_equal(result[m][0], result_old[old_key][0])
+        assert isinstance(key, tuple)
+        assert len(key) == 2
+        assert all(map(lambda x: isinstance(x, tuple), key))
+        assert isinstance(results_pw[key], dict)
+        assert sorted(expected_metrics) == sorted(results_pw[key].keys())
+        for m in expected_metrics:
+            if m in expected[key]:
+                assert_equal(results_pw[key][m], expected[key][m])
+
+    # preparation of IntercomparisonMetrics run for comparison
+    ds_names = list(datasets.keys())
+    metrics = IntercomparisonMetrics(
+        dataset_names=ds_names,
+        # passing the names here explicitly, see GH issue #220
+        refname="reference_name",
+        other_names=ds_names[1:],
+        calc_tau=False,
+    )
+    val = Validation(
+        datasets,
+        "reference_name",
+        scaling=None,
+        temporal_matcher=None,  # use default here
+        metrics_calculators={(4, 4): metrics.calc_metrics}
+    )
+
+    results = val.calc(1, 1, 1, rename_cols=False)
+
+    # results is a dictionary with one entry and key
+    # (('c1name', 'c1'), ('c2name', 'c2'), ('c3name', 'c3'), ('refname',
+    # 'ref')), the value is a list of length 0, which contains a dictionary
+    # with all the results, where the metrics are joined with "_between_" with
+    # the combination of datasets, which is joined with "_and_", e.g. for R
+    # between ``refname`` and ``c1name`` the key is
+    # "R_between_refname_and_c1name"
+    common_metrics = ["n_obs", "gpi", "lat", "lon"]
+    pw_metrics = list(set(expected_metrics) - set(common_metrics))
+    # there's some sorting done at some point in pytesmo
+    oldkey = tuple(sorted([(name, name.split("_")[0]) for name in ds_names]))
+    res_old = results[oldkey]
+    for key in results_pw:
+        res = results_pw[key]
+        # handle the full dataset metrics
+        for m in common_metrics:
+            assert_equal(res[m], res_old[m])
+        # now get the metrics and compare to the right combination
+        for m in pw_metrics:
+            othername = key[0][0]
+            refname = key[1][0]
+            old_m_key = f"{m}_between_{refname}_and_{othername}"
+            if m == "BIAS":
+                # PairwiseIntercomparisonMetrics has the result as (other,
+                # ref), and therefore "bias between other and ref", compared to
+                # "bias between ref and bias" in IntercomparisonMetrics
+                # this is related to issue #220
+                assert_equal(-res[m], res_old[old_m_key])
+            elif m == "urmsd" and np.isnan(res_old[old_m_key]):
+                # the old implementation failed when calculating urmsd with
+                # constant arrays due to the applied scaling
+                pass
             else:
-                print(
-                    "Warning: currently something doesn't work as"
-                    " expected here, see GH-issue #220. Once fixed,"
-                    " remove this code."
-                )
+                assert_equal(res[m], res_old[old_m_key])
+
+
+def test_sorting_issue():
+    # GH #220
+    # might be a good start for fixing the issue
+
+    # dr = pd.date_range("2000", "2020", freq="D")
+    # n = len(dr)
+    # x = np.ones(n) * 2
+    # df = pd.DataFrame(
+    #     {
+    #         "reference": x,
+    #         "zplus2": x + 2,
+    #         "plus1": x + 1,
+    #     },
+    #     index=dr
+    # )
+
+    # datasets = {
+    #     key + "_name": {"columns": [key], "class": DummyReader(df, key)}
+    #     for key in df
+    # }
+
+    # val = Validation(
+    #     datasets,
+    #     "reference_name",
+    #     scaling=None,  # doesn't work with the constant test data
+    #     # temporal_matcher=None,
+    #     temporal_matcher=CombinedTemporalMatcher(pd.Timedelta(6, "H")),
+    #     metrics_calculators={
+    #         (3, 2): PairwiseIntercomparisonMetrics().calc_metrics
+    #     }
+    # )
+    # results = val.calc(1, 1, 1)
+
+    # assert 0
+    pass

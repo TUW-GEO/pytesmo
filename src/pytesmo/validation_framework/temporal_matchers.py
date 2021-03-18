@@ -35,8 +35,7 @@ Created on Sep 24, 2013
 import itertools
 import pandas as pd
 
-import pytesmo.temporal_matching as temp_match
-from pytesmo.temporal_matching import df_name_multiindex
+import pytesmo.temporal_matching as temporal_matching
 
 
 class BasicTemporalMatching(object):
@@ -60,7 +59,7 @@ class BasicTemporalMatching(object):
         temporal reference dataset
         """
         ref_df = pd.DataFrame(reference)
-        return temp_match.combined_temporal_collocation(
+        return temporal_matching.combined_temporal_collocation(
             ref_df, args, self.window, dropna=True, dropduplicates=True,
             add_ref_data=True, combined_dropna="all"
         )
@@ -117,3 +116,90 @@ class BasicTemporalMatching(object):
                 matched[matched_key] = joined
 
         return matched
+
+
+def dfdict_combined_temporal_collocation(
+    dfs, refname, window=None, n=None, **kwargs
+):
+    """
+    Applies :py:func:`combined_temporal_collocation` on a dictionary of
+    dataframes.
+
+    Parameters
+    ----------
+    dfs : dict
+        Dictionary of pd.DataFrames containing the dataframes to be collocated.
+    refname : str
+        Name of the reference frame in `dfs`.
+    window : pd.Timedelta or float, optional
+        Window around reference timestamps in which to look for data. Floats
+        are interpreted as number of days. If it is not given, defaults to 1
+        hour to mimick the behaviour of
+        ``BasicTemporalMatching.combinatory_matcher``.
+    n : dummy argument
+        Will be ignored.
+    **kwargs :
+        Keyword arguments passed to :py:func:`combined_temporal_collocation`.
+
+    Returns:
+    --------
+    matched_dict : dict
+        Dictionary where the keys are tuples of ``(other_name, refname)`` for
+        each other key in `dfs`, and values are the matched dataframes.
+        The column names of the dataframes are again tuples of ``(name, col)``
+        where `name` is the key from `dfs` and `col` is the original column
+        name in the input dataframe.
+    """
+    if window is None:
+        window = pd.Timedelta(hours=1)
+
+    others = []
+    for name in dfs:
+        if name != refname:
+            others.append(df_name_multiindex(dfs[name], name))
+    ref = df_name_multiindex(dfs[refname], refname)
+    matched_df = temporal_matching.combined_temporal_collocation(
+        ref, others, window, add_ref_data=True, combined_dropna=True, **kwargs
+    )
+
+    # unpack again to dictionary
+    matched_dict = {}
+    for name in dfs:
+        if name != refname:
+            tuple_keys = list(itertools.product((name,), dfs[name].columns))
+            keep = list(ref.columns) + tuple_keys
+            # there's a strange bug in pytesmo, when I make the order here to
+            # be (refname, name) instead of (name, refname) I don't get all the
+            # results
+            matched_dict[(name, refname)] = matched_df[keep]
+            # rename_dict = {tk: tk[1] for tk in tuple_keys}
+            # matched_dict[(refname, name)].rename(rename_dict, axis=1,
+            # inplace=True)
+    return matched_dict
+
+
+def CombinedTemporalMatcher(window):
+    """
+    Matches multiple dataframes together to only have common timestamps.
+
+    See
+    :py:func:`pytesmo.temporal_matching.dfdict_combined_temporal_collocation`
+    for more details
+    """
+
+    def matcher(dfs, refname, n=None, **kwargs):
+        return dfdict_combined_temporal_collocation(dfs, refname, **kwargs)
+    return matcher
+
+
+def df_name_multiindex(df, name):
+    """
+    Rename columns of a DataFrame by using new column names that
+    are tuples of (name, column_name) to ensure unique column names
+    that can also be split again. This transforms the columns to a MultiIndex.
+    """
+    d = {}
+    for c in df.columns:
+        d[c] = (name, c)
+
+    return df.rename(columns=d)
