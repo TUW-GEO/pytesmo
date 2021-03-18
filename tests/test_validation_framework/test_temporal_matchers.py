@@ -125,5 +125,46 @@ def test_add_name_to_df_columns():
     index = pd.date_range(start="2000-01-01", periods=n, freq="D")
 
     df = pd.DataFrame({'x': x, 'y': y}, columns=['x', 'y'], index=index)
-    df = tmatching.df_name_multiindex(df, 'test')
+    df = temporal_matchers.df_name_multiindex(df, 'test')
     assert list(df.columns) == [('test', 'x'), ('test', 'y')]
+
+
+def test_dfdict_combined_temporal_collocation():
+
+    ref_dr = pd.date_range("2000", "2020", freq="YS")
+    dr1 = pd.date_range("2000", "2015", freq="YS")
+    dr2 = pd.date_range("2005", "2020", freq="YS")
+
+    ref_df = pd.DataFrame({"ref": np.arange(len(ref_dr))}, index=ref_dr)
+    df1 = pd.DataFrame(
+        {"k1": np.arange(len(dr1)), "k2": np.arange(len(dr1))}, index=dr1
+    )
+    df2 = pd.DataFrame(
+        {"k1": np.arange(len(dr2)), "k2": np.arange(len(dr2))}, index=dr2
+    )
+
+    dfs = {"refkey": ref_df, "df1key": df1, "df2key": df2}
+    window = pd.Timedelta(days=300)
+
+    matched = temporal_matchers.dfdict_combined_temporal_collocation(
+        dfs, "refkey", window
+    )
+
+    # keys are the same, only refkey is missing
+    assert sorted(list(matched.keys())) == sorted([
+        ("df1key", "refkey"), ("df2key", "refkey")
+    ])
+    assert sorted(list(matched[("df1key", "refkey")].columns)) == sorted(
+        [("refkey", "ref"), ("df1key", "k1"), ("df1key", "k2")]
+    )
+    assert sorted(list(matched[("df2key", "refkey")].columns)) == sorted(
+        [("refkey", "ref"), ("df2key", "k1"), ("df2key", "k2")]
+    )
+
+    # overlap is only 11 timestamps
+    assert matched[("df1key", "refkey")].shape == (11, 3)
+    assert matched[("df2key", "refkey")].shape == (11, 3)
+
+    overlap_dr = pd.date_range("2005", "2015", freq="YS")
+    assert np.all(matched[("df1key", "refkey")].index == overlap_dr)
+    assert np.all(matched[("df2key", "refkey")].index == overlap_dr)

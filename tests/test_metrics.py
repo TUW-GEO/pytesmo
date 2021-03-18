@@ -3,10 +3,14 @@ import numpy as np
 import numpy.testing as nptest
 import pandas as pd
 import pytest
+from scipy import stats
 
 import pytesmo.metrics
 from pytesmo.metrics import *
-from pytesmo.metrics._fast import _moments_welford
+from pytesmo.metrics._fast import (
+    _moments_welford,
+    _pearsonr_from_moments
+)
 import pytesmo.metrics.deprecated as deprecated
 
 
@@ -339,6 +343,23 @@ def test_rmsd_mse():
     mse_pred, _, _, _ = mse_decomposition(x, y)
 
     nptest.assert_almost_equal(rmsd_pred ** 2, mse_pred, 6)
+
+
+def test_pearsonr_from_moments():
+    x = np.random.randn(100)
+    y = np.random.randn(100) + x
+
+    R_sp, p_R_sp = stats.pearsonr(x, y)
+
+    covmatrix = np.cov(x, y)
+    n = len(x)
+    varx = covmatrix[0, 0]
+    vary = covmatrix[1, 1]
+    cov = covmatrix[1, 0]
+    R, p_R = _pearsonr_from_moments(varx, vary, cov, n)
+
+    nptest.assert_almost_equal(R_sp, R, 15)
+    nptest.assert_almost_equal(p_R_sp, p_R, 15)
 
 
 def test_rolling_pr_rmsd():
