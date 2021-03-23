@@ -83,6 +83,7 @@ from pytesmo.metrics.pairwise import (
     kendall_tau,
     nash_sutcliffe,
     index_of_agreement,
+    rolling_pr_rmsd,
 )
 from pytesmo.metrics.pairwise_utils import (
     has_analytical_ci,
