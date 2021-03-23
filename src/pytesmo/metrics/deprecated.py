@@ -7,7 +7,7 @@ from scipy import stats
 from scipy.special import betainc
 
 from pytesmo.utils import deprecated
-from pytesmo.metrics._fast import bias
+from pytesmo.metrics.pairwise import bias
 
 
 @deprecated

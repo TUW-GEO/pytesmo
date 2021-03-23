@@ -26,10 +26,15 @@
 
 from datetime import datetime
 import numpy as np
-from numpy.testing import assert_equal
+from numpy.testing import assert_equal, assert_almost_equal
 import pandas as pd
 import pytest
 
+from pytesmo.metrics import (
+    with_analytical_ci,
+    with_bootstrapped_ci,
+    pairwise
+)
 from pytesmo.validation_framework.validation import Validation
 from pytesmo.validation_framework.metric_calculators import (
     MetadataMetrics,
@@ -44,7 +49,7 @@ from pytesmo.validation_framework.metric_calculators import (
     PairwiseIntercomparisonMetrics,
 )
 from pytesmo.validation_framework.temporal_matchers import (
-    CombinedTemporalMatcher
+    make_combined_temporal_matcher
 )
 import pytesmo.metrics as metrics
 
@@ -672,12 +677,12 @@ def test_PairwiseIntercomparisonMetrics(testdata_generator):
     datasets, expected = testdata_generator()
 
     # for the pairwise intercomparison metrics it's important that we use
-    # dfdict_combined_temporal_collocation as temporal matcher
+    # make_combined_temporal_matcher
     val = Validation(
         datasets,
         "reference_name",
         scaling=None,  # doesn't work with the constant test data
-        temporal_matcher=CombinedTemporalMatcher(pd.Timedelta(6, "H")),
+        temporal_matcher=make_combined_temporal_matcher(pd.Timedelta(6, "H")),
         metrics_calculators={
             (4, 2): (
                 PairwiseIntercomparisonMetrics(calc_spearman=True).calc_metrics
@@ -751,12 +756,89 @@ def test_PairwiseIntercomparisonMetrics(testdata_generator):
                 # "bias between ref and bias" in IntercomparisonMetrics
                 # this is related to issue #220
                 assert_equal(-res[m], res_old[old_m_key])
-            elif m == "urmsd" and np.isnan(res_old[old_m_key]):
-                # the old implementation failed when calculating urmsd with
-                # constant arrays due to the applied scaling
+            elif m == "urmsd":
+                # the old implementation differs from the new implementation
                 pass
             else:
                 assert_equal(res[m], res_old[old_m_key])
+
+
+def test_PairwiseIntercomparisonMetrics_confidence_intervals():
+    # tests if the correct confidence intervals are returned
+
+    datasets, _ = testdata_random()
+    matcher = make_combined_temporal_matcher(pd.Timedelta(6, "H"))
+    val = Validation(
+        datasets,
+        "reference_name",
+        scaling=None,  # doesn't work with the constant test data
+        temporal_matcher=matcher,
+        metrics_calculators={
+            (4, 2): (
+                PairwiseIntercomparisonMetrics(
+                    calc_spearman=True,
+                    calc_kendall=True,
+                    analytical_cis=True,
+                    bootstrap_cis=True,
+                ).calc_metrics
+            )
+        }
+    )
+    results_pw = val.calc([1], [1], [1], rename_cols=False)
+
+    metrics_with_ci = {
+        "BIAS": "bias",
+        "R": "pearson_r",
+        "rho": "spearman_r",
+        "tau": "kendall_tau",
+        "RMSD": "rmsd",
+        "urmsd": "ubrmsd",
+        "mse": "msd",
+    }
+    metrics_with_bs_ci = {
+        "mse_bias": "mse_bias",
+        "mse_corr": "mse_corr",
+        "mse_var": "mse_var",
+    }
+
+    # reconstruct dataframe
+    frames = []
+    for key in datasets:
+        frames.append(datasets[key]["class"].data)
+    data = pd.concat(frames, axis=1)
+    data.dropna(how="any", inplace=True)
+
+    for key in results_pw:
+        othername = key[0][0]
+        other_col = othername.split("_")[0]
+        other = data[other_col].values
+        refname = key[1][0]
+        ref_col = refname.split("_")[0]
+        ref = data[ref_col].values
+        for metric_key in metrics_with_ci:
+            lower = results_pw[key][f"{metric_key}_ci_lower"]
+            upper = results_pw[key][f"{metric_key}_ci_upper"]
+
+            # calculate manually from data
+            metric_func = getattr(pairwise, metrics_with_ci[metric_key])
+            m, lb, ub = with_analytical_ci(
+                metric_func, other, ref
+            )
+            # difference due to float32 vs. float64
+            assert_almost_equal(upper, ub, 7)
+            assert_almost_equal(lower, lb, 7)
+
+        for metric_key in metrics_with_bs_ci:
+            lower = results_pw[key][f"{metric_key}_ci_lower"]
+            upper = results_pw[key][f"{metric_key}_ci_upper"]
+
+            # calculate manually from data
+            metric_func = getattr(pairwise, metrics_with_bs_ci[metric_key])
+            m, lb, ub = with_bootstrapped_ci(
+                metric_func, other, ref
+            )
+            assert_almost_equal(upper, ub, 3)
+            assert_almost_equal(lower, lb, 3)
 
 
 def test_sorting_issue():
@@ -785,7 +867,9 @@ def test_sorting_issue():
     #     "reference_name",
     #     scaling=None,  # doesn't work with the constant test data
     #     # temporal_matcher=None,
-    #     temporal_matcher=CombinedTemporalMatcher(pd.Timedelta(6, "H")),
+    #     temporal_matcher=make_combined_temporal_matcher(
+    #          pd.Timedelta(6, "H")
+    #     ),
     #     metrics_calculators={
     #         (3, 2): PairwiseIntercomparisonMetrics().calc_metrics
     #     }

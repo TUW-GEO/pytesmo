@@ -35,12 +35,13 @@ def with_analytical_ci(metric_func, x, y, alpha=0.05):
 
     Parameters
     ----------
-    metric_func : callable
+    metric_func : callable or str
         Function that calculates metric value. Must be from
         :py:mod:`pytesmo.metrics`, and have an analytical CI function
         implemented in :py:mod:`pytesmo.metric_cis`.
         The metric function must have the following signature:
         ``(x : np.ndarray, y : np.ndarray) -> float``
+        Alternatively can be the name of the function in `pytesmo.metrics`.
     x, y : np.ndarray
         Data to be compared.
     alpha : float, optional
@@ -59,6 +60,8 @@ def with_analytical_ci(metric_func, x, y, alpha=0.05):
     ------
     ValueError :
         If no analytical CI function is available.     """
+    if isinstance(metric_func, str):
+        metric_func = getattr(pairwise, metric_func)
     m = metric_func(x, y)
     name = metric_func.__name__
     if has_analytical_ci(metric_func):

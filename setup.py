@@ -1,14 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-    Setup file for pytesmo.
-    Use setup.cfg to configure your project.
-
-    This file was generated with PyScaffold 3.2.3.
-    PyScaffold helps you to put up the scaffold of your new Python project.
-    Learn more under: https://pyscaffold.org/
-
-    The code to cythonize extensions was added manually.
-"""
 
 from setuptools import setup
 from setuptools.command.build_ext import build_ext as _build_ext
@@ -32,6 +22,12 @@ def get_ext_modules(ext):
             include_dirs=[numpy.get_include()],
             define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
         ),
+        Extension(
+            "pytesmo.metrics._fast_pairwise",
+            ["src/pytesmo/metrics/_fast_pairwise" + ext],
+            include_dirs=[numpy.get_include()],
+            define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
+        ),
     ]
 
 
@@ -39,6 +35,7 @@ def get_ext_modules(ext):
 # that can be reused for the different options
 def cythonize_extensions():
     from Cython.Build import cythonize
+
     cythonize(
         get_ext_modules(".pyx"),
         compiler_directives={
@@ -68,10 +65,9 @@ class sdist(_sdist):
 
 class build_ext(_build_ext):
 
-    user_options = (
-        getattr(_build_ext, "user_options", [])
-        + [("cythonize", None, "recreate the C extensions with cython")]
-    )
+    user_options = getattr(_build_ext, "user_options", []) + [
+        ("cythonize", None, "recreate the C extensions with cython")
+    ]
 
     def initialize_options(self):
         super().initialize_options()
@@ -83,12 +79,12 @@ class build_ext(_build_ext):
         super().run()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     cmdclass = {}
     cmdclass["sdist"] = sdist
     cmdclass["build_ext"] = build_ext
     setup(
         cmdclass=cmdclass,
         # at this point the C modules have already been generated if necessary
-        ext_modules=get_ext_modules(".c")
+        ext_modules=get_ext_modules(".c"),
     )

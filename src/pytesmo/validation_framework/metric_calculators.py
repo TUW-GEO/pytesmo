@@ -40,6 +40,26 @@ import pytesmo.df_metrics as df_metrics
 from pytesmo.scaling import scale
 from pytesmo.validation_framework.data_manager import get_result_names
 from pytesmo.df_metrics import n_combinations
+from pytesmo.metrics import pairwise
+from pytesmo.metrics._fast_pairwise import (
+    _moments_welford,
+    _mse_corr_from_moments,
+    _mse_var_from_moments,
+    _mse_bias_from_moments,
+    _pearsonr_from_moments,
+)
+from pytesmo.metrics.pairwise import (
+    _bias_ci_from_moments,
+    msd_ci,
+    rmsd_ci,
+    ubrmsd_ci,
+    pearson_r_ci,
+    spearman_r_ci,
+    kendall_tau_ci,
+)
+from pytesmo.metrics.pairwise_utils import (
+    with_bootstrapped_ci
+)
 
 
 def _get_tc_metric_template(metr, ds_names):
@@ -74,20 +94,44 @@ def _get_metric_template(metr):
     # metrics that are equal for all data sets
     met_comm = {'n_obs': np.int32([0])}
     # metrics that are computed between dataset pairs
-    met_tds = {'R': np.float32([np.nan]),
-               'p_R': np.float32([np.nan]),
-               'rho': np.float32([np.nan]),
-               'p_rho': np.float32([np.nan]),
-               'BIAS': np.float32([np.nan]),
-               'tau': np.float32([np.nan]),
-               'p_tau': np.float32([np.nan]),
-               'RMSD': np.float32([np.nan]),
-               'mse': np.float32([np.nan]),
-               'RSS': np.float32([np.nan]),
-               'mse_corr': np.float32([np.nan]),
-               'mse_bias': np.float32([np.nan]),
-               'urmsd': np.float32([np.nan]),
-               'mse_var': np.float32([np.nan])}
+    met_tds = {
+        'R': np.float32([np.nan]),
+        'p_R': np.float32([np.nan]),
+        'rho': np.float32([np.nan]),
+        'p_rho': np.float32([np.nan]),
+        'BIAS': np.float32([np.nan]),
+        'tau': np.float32([np.nan]),
+        'p_tau': np.float32([np.nan]),
+        'RMSD': np.float32([np.nan]),
+        'mse': np.float32([np.nan]),
+        'RSS': np.float32([np.nan]),
+        'mse_corr': np.float32([np.nan]),
+        'mse_bias': np.float32([np.nan]),
+        'mse_var': np.float32([np.nan]),
+        'urmsd': np.float32([np.nan]),
+        'BIAS_ci_lower': np.float32([np.nan]),
+        'BIAS_ci_upper': np.float32([np.nan]),
+        'RMSD_ci_lower': np.float32([np.nan]),
+        'RMSD_ci_upper': np.float32([np.nan]),
+        'RSS_ci_lower': np.float32([np.nan]),
+        'RSS_ci_upper': np.float32([np.nan]),
+        'mse_ci_lower': np.float32([np.nan]),
+        'mse_ci_upper': np.float32([np.nan]),
+        'mse_corr_ci_lower': np.float32([np.nan]),
+        'mse_corr_ci_upper': np.float32([np.nan]),
+        'mse_bias_ci_lower': np.float32([np.nan]),
+        'mse_bias_ci_upper': np.float32([np.nan]),
+        'mse_var_ci_lower': np.float32([np.nan]),
+        'mse_var_ci_upper': np.float32([np.nan]),
+        'urmsd_ci_lower': np.float32([np.nan]),
+        'urmsd_ci_upper': np.float32([np.nan]),
+        'R_ci_lower': np.float32([np.nan]),
+        'R_ci_upper': np.float32([np.nan]),
+        'rho_ci_lower': np.float32([np.nan]),
+        'rho_ci_upper': np.float32([np.nan]),
+        'tau_ci_lower': np.float32([np.nan]),
+        'tau_ci_upper': np.float32([np.nan]),
+    }
 
     lut.update(met_comm)
     lut.update(met_tds)
@@ -1266,11 +1310,14 @@ class PairwiseIntercomparisonMetrics(MetadataMetrics):
     - RMSD
     - BIAS
     - ubRMSD
-    - mse and decomposition
+    - mse and decomposition (mse_var, mse_corr, mse_bias)
     - RSS
     - Pearson's R and p
     - Spearman's rho and p (optional)
     - Kendall's tau and p (optional)
+
+    Additionally, confidence intervals for these metrics can be calculated
+    (optional).
 
     Parameters
     ----------
@@ -1283,9 +1330,33 @@ class PairwiseIntercomparisonMetrics(MetadataMetrics):
     calc_kendall : bool, optional
         Whether to calculate Kendall's rank correlation coefficient. Default is
         True.
+    analytical_cis : bool, optional
+        Whether to calculate analytical confidence intervals for the following
+        metrics:
+
+        - BIAS
+        - RMSD
+        - urmsd
+        - mse
+        - R
+        - rho (only if ``calc_spearman=True``)
+        - tau (only if ``calc_kendall=True``)
+
+        The default is `False`.
+
+    bootstrap_cis
+        Whether to calculate bootstrap confidence intervals for the following
+        metrics:
+
+        - mse_corr
+        - mse_var
+        - mse_bias
+
+        The default is `False`. This might be a lot of computational effort.
     """
 
-    def __init__(self, min_obs=10, calc_spearman=False, calc_kendall=False):
+    def __init__(self, min_obs=10, calc_spearman=False, calc_kendall=False,
+                 analytical_cis=False, bootstrap_cis=False):
 
         self.min_obs = min_obs
         # metrics that are calculated between dataset pairs
@@ -1297,6 +1368,25 @@ class PairwiseIntercomparisonMetrics(MetadataMetrics):
         self.calc_kendall = calc_kendall
         if calc_kendall:
             metrics += ["tau", "p_tau"]
+        self.analytical_cis = analytical_cis
+        if analytical_cis:
+            metrics += [
+                "BIAS_ci_lower", "BIAS_ci_upper",
+                "RMSD_ci_lower", "RMSD_ci_upper",
+                "mse_ci_lower", "mse_ci_upper",
+                "RSS_ci_lower", "RSS_ci_upper",
+                "urmsd_ci_lower", "urmsd_ci_upper",
+                "R_ci_lower", "R_ci_upper"
+            ]
+            if calc_spearman:
+                metrics += ["rho_ci_lower", "rho_ci_upper"]
+            if calc_kendall:
+                metrics += ["tau_ci_lower", "tau_ci_upper"]
+        self.bootstrap_cis = bootstrap_cis
+        if bootstrap_cis:
+            metrics += ["mse_var_ci_lower", "mse_var_ci_upper",
+                        "mse_corr_ci_lower", "mse_corr_ci_upper",
+                        "mse_bias_ci_lower", "mse_bias_ci_upper"]
 
         self.result_template = _get_metric_template(metrics)
         self.result_template.update({'gpi': np.int32([-1]),
@@ -1333,23 +1423,79 @@ class PairwiseIntercomparisonMetrics(MetadataMetrics):
         x = data_matrix[:, 0]
         y = data_matrix[:, 1]
 
+        # we can calculate almost all metrics from moments
+        mx, my, varx, vary, cov = _moments_welford(x, y)
+
+        result["BIAS"][0] = mx - my
+
+        mse_corr = _mse_corr_from_moments(mx, my, varx, vary, cov)
+        mse_var = _mse_var_from_moments(mx, my, varx, vary, cov)
+        mse_bias = _mse_bias_from_moments(mx, my, varx, vary, cov)
+        mse = mse_corr + mse_var + mse_bias
+        result["mse_corr"][0] = mse_corr
+        result["mse_var"][0] = mse_var
+        result["mse_bias"][0] = mse_bias
+        result["mse"][0] = mse
+
+        result["RSS"][0] = mse * n_obs
+        result["RMSD"][0] = np.sqrt(mse)
+        result["urmsd"][0] = np.sqrt(mse - mse_bias)
+
+        R, p_R = _pearsonr_from_moments(varx, vary, cov, n_obs)
+        result["R"][0] = R
+        result["p_R"][0] = p_R
+
         if self.calc_spearman:
             result["rho"][0], result["p_rho"][0] = stats.spearmanr(x, y)
         if self.calc_kendall:
             result["tau"][0], result["p_tau"][0] = stats.kendalltau(x, y)
 
-        (
-            result["BIAS"][0],
-            result["RSS"][0],
-            result["RMSD"][0],
-            result["urmsd"][0],
-            result["mse"][0],
-            result["mse_corr"][0],
-            result["mse_bias"][0],
-            result["mse_var"][0],
-            result["R"][0],
-            result["p_R"][0],
-        ) = metrics.pairwise_metrics(x, y)
+        if self.analytical_cis:
+            (
+                result["BIAS_ci_lower"][0],
+                result["BIAS_ci_upper"][0]
+            ) = _bias_ci_from_moments(0.05, mx, my, varx, vary, cov, n_obs)
+            # MSE is the same as MSD
+            (
+                result["mse_ci_lower"][0],
+                result["mse_ci_upper"][0]
+            ) = msd_ci(x, y, result["mse"][0])
+
+            (
+                result["RMSD_ci_lower"][0],
+                result["RMSD_ci_upper"][0]
+            ) = rmsd_ci(x, y, result["RMSD"][0])
+
+            result["RSS_ci_lower"][0] = result["mse_ci_lower"][0] * n_obs
+            result["RSS_ci_upper"][0] = result["mse_ci_upper"][0] * n_obs
+
+            (
+                result["urmsd_ci_lower"][0],
+                result["urmsd_ci_upper"][0]
+            ) = ubrmsd_ci(x, y, result["urmsd"][0])
+
+            (
+                result["R_ci_lower"][0],
+                result["R_ci_upper"][0]
+            ) = pearson_r_ci(x, y, result["R"][0])
+
+            if self.calc_spearman:
+                (
+                    result["rho_ci_lower"][0],
+                    result["rho_ci_upper"][0]
+                ) = spearman_r_ci(x, y, result["rho"][0])
+            if self.calc_kendall:
+                (
+                    result["tau_ci_lower"][0],
+                    result["tau_ci_upper"][0]
+                ) = kendall_tau_ci(x, y, result["tau"][0])
+
+        if self.bootstrap_cis:
+            for m in ["mse_var", "mse_corr", "mse_bias"]:
+                metric_func = getattr(pairwise, m)
+                _, lb, ub = with_bootstrapped_ci(metric_func, x, y)
+                result[f"{m}_ci_lower"][0] = lb
+                result[f"{m}_ci_upper"][0] = ub
 
         return result
 
