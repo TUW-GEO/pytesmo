@@ -26,7 +26,11 @@
 
 from datetime import datetime
 import numpy as np
-from numpy.testing import assert_equal, assert_almost_equal
+from numpy.testing import (
+    assert_equal,
+    assert_almost_equal,
+    assert_allclose,
+)
 import pandas as pd
 import pytest
 
@@ -837,8 +841,8 @@ def test_PairwiseIntercomparisonMetrics_confidence_intervals():
             m, lb, ub = with_bootstrapped_ci(
                 metric_func, other, ref
             )
-            assert_almost_equal(upper, ub, 3)
-            assert_almost_equal(lower, lb, 3)
+            assert_allclose(upper, ub, rtol=1e-1)
+            assert_allclose(lower, lb, rtol=1e-1)
 
 
 def test_sorting_issue():
