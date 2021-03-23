@@ -39,7 +39,39 @@ import numpy as np
 from scipy import stats
 import warnings
 
-from pytesmo.metrics._fast import RSS, _ubrmsd
+from pytesmo.metrics._fast_pairwise import (  # noqa: F401
+    bias,
+    mse_bias,
+    mse_var,
+    mse_corr,
+    mse_decomposition,
+    RSS,
+    _ubrmsd,
+    rolling_pr_rmsd,
+    pairwise_metrics,
+)
+
+
+has_ci = [
+    "bias",
+    "msd",
+    "rmsd",
+    "nrmsd",
+    "ubrmsd",
+    "pearson_r",
+    "spearman_r",
+    "kendall_tau",
+]
+
+no_ci = [
+    "aad",
+    "mad",
+    "mse_corr",
+    "mse_var",
+    "mse_bias",
+    "nash_sutcliffe",
+    "index_of_agreement",
+]
 
 
 def bias_ci(x, y, b, alpha=0.05):
@@ -65,10 +97,19 @@ def bias_ci(x, y, b, alpha=0.05):
         Lower and upper confidence interval bounds.
     """
     n = len(x)
-    delta = (
-        np.std(x - y, ddof=1)
-        / np.sqrt(n) * stats.t.ppf(1 - alpha/2, n)
-    )
+    delta = np.std(x - y, ddof=1) / np.sqrt(n) * stats.t.ppf(1 - alpha / 2, n)
+    return b - delta, b + delta
+
+
+def _bias_ci_from_moments(alpha, mx, my, varx, vary, cov, n):
+    # This is based on the fact that:
+    # var(x - y) = var(x) + var(y) - 2*cov(x,y)
+    # and therefore
+    # std(x - y, ddof=1) = sqrt(var(x - y, ddof=1))
+    #                    = sqrt(n/(n-1) * var(x-y))
+    std = np.sqrt(n / (n - 1) * (varx + vary - 2 * cov))
+    delta = std / np.sqrt(n) * stats.t.ppf(1 - alpha / 2, n)
+    b = mx - my
     return b - delta, b + delta
 
 
@@ -173,8 +214,8 @@ def msd_ci(x, y, m, alpha=0.05):
         Lower and upper confidence interval bounds.
     """
     n = len(x)
-    lb_msd = n * m / stats.chi2.ppf(1 - alpha/2, n)
-    ub_msd = n * m / stats.chi2.ppf(alpha/2, n)
+    lb_msd = n * m / stats.chi2.ppf(1 - alpha / 2, n)
+    ub_msd = n * m / stats.chi2.ppf(alpha / 2, n)
     return lb_msd, ub_msd
 
 
@@ -208,7 +249,7 @@ def rmsd(x, y, ddof=0):
         warnings.warn(
             "ddof is deprecated and might be removed in future versions of"
             " pytesmo.",
-            category=DeprecationWarning
+            category=DeprecationWarning,
         )
         return np.sqrt(RSS(x, y) / (len(x) - ddof))
 
@@ -237,8 +278,8 @@ def rmsd_ci(x, y, rmsd, alpha=0.05):
     """
     n = len(x)
     msd = rmsd ** 2
-    lb_msd = n * msd / stats.chi2.ppf(1 - alpha/2, n)
-    ub_msd = n * msd / stats.chi2.ppf(alpha/2, n)
+    lb_msd = n * msd / stats.chi2.ppf(1 - alpha / 2, n)
+    ub_msd = n * msd / stats.chi2.ppf(alpha / 2, n)
     return np.sqrt(lb_msd), np.sqrt(ub_msd)
 
 
@@ -291,7 +332,7 @@ def nrmsd_ci(x, y, nrmsd, alpha=0.05):
     """
     c = np.max([x, y]) - np.min([x, y])
     lb, ub = rmsd_ci(x, y, nrmsd * c, alpha)
-    return lb/c, ub/c
+    return lb / c, ub / c
 
 
 def ubrmsd(x, y, ddof=0):
@@ -328,7 +369,7 @@ def ubrmsd(x, y, ddof=0):
         warnings.warn(
             "ddof is deprecated and might be removed in future versions of"
             " pytesmo.",
-            DeprecationWarning
+            DeprecationWarning,
         )
         return np.sqrt(RSS(x - np.mean(x), y - np.mean(y)) / (len(x) - ddof))
     else:
@@ -357,36 +398,9 @@ def ubrmsd_ci(x, y, ubrmsd, alpha=0.05):
     """
     n = len(x)
     ubMSD = ubrmsd ** 2
-    lb_ubMSD = n * ubMSD / stats.chi2.ppf(1 - alpha/2, n)
-    ub_ubMSD = n * ubMSD / stats.chi2.ppf(alpha/2, n)
+    lb_ubMSD = n * ubMSD / stats.chi2.ppf(1 - alpha / 2, n)
+    ub_ubMSD = n * ubMSD / stats.chi2.ppf(alpha / 2, n)
     return np.sqrt(lb_ubMSD), np.sqrt(ub_ubMSD)
-
-
-def mse_bias_ci(x, y, msd_bias, alpha=0.05):
-    """
-    Confidence interval for :math:`MSE_{bias}`
-
-    See also :func:`pytesmo.metrics.mse_bias`.
-
-    Parameters
-    ----------
-    x : numpy.ndarray
-        First input vector
-    y : numpy.ndarray
-        Second input vector
-    msd_bias : float
-        msd_bias for this data
-    alpha : float, optional
-        1 - confidence level, default is 0.05
-
-    Returns
-    -------
-    lower, upper : float
-        Lower and upper confidence interval bounds.
-    """
-    # we can get this by calculating the CI for
-    lb_bias, ub_bias = bias_ci(x, y, np.sqrt(msd_bias), alpha)
-    return lb_bias ** 2, ub_bias ** 2
 
 
 def pearson_r(x, y):
@@ -440,9 +454,9 @@ def pearson_r_ci(x, y, r, alpha=0.05):
     """
     n = len(x)
     v = np.arctanh(r)
-    z = stats.norm.ppf(1-alpha/2)
-    cl = v - z/np.sqrt(n - 3)
-    cu = v + z/np.sqrt(n - 3)
+    z = stats.norm.ppf(1 - alpha / 2)
+    cl = v - z / np.sqrt(n - 3)
+    cu = v + z / np.sqrt(n - 3)
     return np.tanh(cl), np.tanh(cu)
 
 
@@ -497,7 +511,7 @@ def spearman_r_ci(x, y, r, alpha=0.05):
     """
     n = len(x)
     v = np.arctanh(r)
-    z = stats.norm.ppf(1 - alpha/2)
+    z = stats.norm.ppf(1 - alpha / 2)
     # see reference for this formula
     cl = v - z * np.sqrt(1 + r ** 2 / 2) / np.sqrt(n - 3)
     cu = v + z * np.sqrt(1 + r ** 2 / 2) / np.sqrt(n - 3)
@@ -555,7 +569,7 @@ def kendall_tau_ci(x, y, tau, alpha=0.05):
     """
     n = len(x)
     v = np.arctanh(tau)
-    z = stats.norm.ppf(1 - alpha/2)
+    z = stats.norm.ppf(1 - alpha / 2)
     # see reference for this formula
     cl = v - z * 0.431 / np.sqrt(n - 3)
     cu = v + z * 0.431 / np.sqrt(n - 3)
@@ -585,7 +599,7 @@ def index_of_agreement(o, p):
     d : float
         Index of agreement.
     """
-    denom = np.sum((np.abs(p - np.mean(o)) + np.abs(o - np.mean(o)))**2)
+    denom = np.sum((np.abs(p - np.mean(o)) + np.abs(o - np.mean(o))) ** 2)
     d = 1 - RSS(o, p) / denom
     return d
 

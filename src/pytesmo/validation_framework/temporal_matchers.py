@@ -178,7 +178,7 @@ def dfdict_combined_temporal_collocation(
     return matched_dict
 
 
-def CombinedTemporalMatcher(window):
+def make_combined_temporal_matcher(window):
     """
     Matches multiple dataframes together to only have common timestamps.
 

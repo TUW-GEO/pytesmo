@@ -7,9 +7,12 @@ from scipy import stats
 
 import pytesmo.metrics
 from pytesmo.metrics import *
-from pytesmo.metrics._fast import (
+from pytesmo.metrics._fast_pairwise import (
     _moments_welford,
     _pearsonr_from_moments
+)
+from pytesmo.metrics.pairwise import (
+    has_ci, no_ci
 )
 import pytesmo.metrics.deprecated as deprecated
 
@@ -32,28 +35,6 @@ def arange_testdata():
     x = np.arange(10, dtype=float)
     y = np.arange(10, dtype=float) + 2
     return x, y
-
-
-has_ci = [
-    "bias",
-    "msd",
-    "rmsd",
-    "nrmsd",
-    "ubrmsd",
-    "mse_bias",
-    "pearson_r",
-    "spearman_r",
-    "kendall_tau",
-]
-
-no_ci = [
-    "aad",
-    "mad",
-    "mse_corr",
-    "mse_var",
-    "nash_sutcliffe",
-    "index_of_agreement",
-]
 
 
 def test_analytical_ci_availability(testdata):
