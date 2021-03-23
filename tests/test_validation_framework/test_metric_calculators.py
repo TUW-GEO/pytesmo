@@ -841,8 +841,8 @@ def test_PairwiseIntercomparisonMetrics_confidence_intervals():
             m, lb, ub = with_bootstrapped_ci(
                 metric_func, other, ref
             )
-            assert_allclose(upper, ub, rtol=1e-1)
-            assert_allclose(lower, lb, rtol=1e-1)
+            assert_allclose(upper, ub, rtol=1e-1, atol=1e-4)
+            assert_allclose(lower, lb, rtol=1e-1, atol=1e-4)
 
 
 def test_sorting_issue():
