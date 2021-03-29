@@ -491,17 +491,16 @@ class Validation(object):
             # we should have an exact match of datasets and
             # temporal matches
 
-            try:
-                # still need to make sure that dskey is in the right order and
-                # contains all the same datasets as the n_matched_data
-                if sorted(dskey) == sorted(list(n_matched_data.keys())[0]):
-                    dskey = list(n_matched_data.keys())[0]
-
-                data = n_matched_data[dskey]
-            except KeyError:
-                # if not then temporal matching between two datasets was
-                # unsuccessful
+            # still need to make sure that dskey is in the right order and
+            # contains all the same datasets as the n_matched_data
+            for key in n_matched_data:
+                if sorted(dskey) == sorted(key):
+                    dskey = key
+                    break
+            if dskey not in n_matched_data:
                 return []
+            else:
+                data = n_matched_data[dskey]
         else:
             # more datasets were temporally matched than are
             # requested now so we select a temporally matched

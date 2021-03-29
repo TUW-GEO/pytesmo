@@ -66,12 +66,8 @@ if __name__ != "__main__":
     )
 
 
-@pytest.mark.slow
-@pytest.mark.full_framework
-def test_ascat_ismn_validation():
-    """
-    Test processing framework with some ISMN and ASCAT sample data
-    """
+@pytest.fixture
+def ascat_reader():
     ascat_data_folder = os.path.join(
         os.path.dirname(__file__),
         "..",
@@ -108,6 +104,15 @@ def test_ascat_ismn_validation():
         static_layer_path=static_layers_folder,
     )
     ascat_reader.read_bulk = True
+    return ascat_reader
+
+
+@pytest.mark.slow
+@pytest.mark.full_framework
+def test_ascat_ismn_validation(ascat_reader):
+    """
+    Test processing framework with some ISMN and ASCAT sample data
+    """
 
     # Initialize ISMN reader
 
@@ -240,46 +245,10 @@ def test_ascat_ismn_validation():
 
 @pytest.mark.slow
 @pytest.mark.full_framework
-def test_ascat_ismn_validation_metadata():
+def test_ascat_ismn_validation_metadata(ascat_reader):
     """
     Test processing framework with some ISMN and ASCAT sample data
     """
-    ascat_data_folder = os.path.join(
-        os.path.dirname(__file__),
-        "..",
-        "test-data",
-        "sat",
-        "ascat",
-        "netcdf",
-        "55R22",
-    )
-
-    ascat_grid_folder = os.path.join(
-        os.path.dirname(__file__),
-        "..",
-        "test-data",
-        "sat",
-        "ascat",
-        "netcdf",
-        "grid",
-    )
-
-    static_layers_folder = os.path.join(
-        os.path.dirname(__file__),
-        "..",
-        "test-data",
-        "sat",
-        "h_saf",
-        "static_layer",
-    )
-
-    ascat_reader = AscatSsmCdr(
-        ascat_data_folder,
-        ascat_grid_folder,
-        grid_filename="TUW_WARP5_grid_info_2_1.nc",
-        static_layer_path=static_layers_folder,
-    )
-    ascat_reader.read_bulk = True
 
     # Initialize ISMN reader
 
@@ -987,46 +956,10 @@ def test_validation_n3_k2_masking():
 
 @pytest.mark.slow
 @pytest.mark.full_framework
-def test_ascat_ismn_validation_metadata_rolling():
+def test_ascat_ismn_validation_metadata_rolling(ascat_reader):
     """
     Test processing framework with some ISMN and ASCAT sample data
     """
-    ascat_data_folder = os.path.join(
-        os.path.dirname(__file__),
-        "..",
-        "test-data",
-        "sat",
-        "ascat",
-        "netcdf",
-        "55R22",
-    )
-
-    ascat_grid_folder = os.path.join(
-        os.path.dirname(__file__),
-        "..",
-        "test-data",
-        "sat",
-        "ascat",
-        "netcdf",
-        "grid",
-    )
-
-    static_layers_folder = os.path.join(
-        os.path.dirname(__file__),
-        "..",
-        "test-data",
-        "sat",
-        "h_saf",
-        "static_layer",
-    )
-
-    ascat_reader = AscatSsmCdr(
-        ascat_data_folder,
-        ascat_grid_folder,
-        grid_filename="TUW_WARP5_grid_info_2_1.nc",
-        static_layer_path=static_layers_folder,
-    )
-    ascat_reader.read_bulk = True
 
     # Initialize ISMN reader
 

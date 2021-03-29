@@ -146,7 +146,7 @@ def test_dfdict_combined_temporal_collocation():
     window = pd.Timedelta(days=300)
 
     matched = temporal_matchers.dfdict_combined_temporal_collocation(
-        dfs, "refkey", window
+        dfs, "refkey", 2, window
     )
 
     # keys are the same, only refkey is missing

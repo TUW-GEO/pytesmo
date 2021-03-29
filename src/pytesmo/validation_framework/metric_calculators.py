@@ -1312,7 +1312,7 @@ class PairwiseMetricsMixin:
         """
         Returns a list of metric names to be calculated between pairs.
         """
-        metrics = ['n_obs', 'R', 'p_R', 'BIAS', 'RMSD', 'mse', 'RSS',
+        metrics = ['R', 'p_R', 'BIAS', 'RMSD', 'mse', 'RSS',
                    'mse_corr', 'mse_bias', 'urmsd', 'mse_var']
         if self.calc_spearman:
             metrics += ["rho", "p_rho"]
@@ -1509,6 +1509,7 @@ class PairwiseIntercomparisonMetrics(MetadataMetrics, PairwiseMetricsMixin):
         self.bootstrap_cis = bootstrap_cis
 
         metrics = self._pairwise_metric_names()
+        metrics.append("n_obs")
         self.result_template.update(_get_metric_template(metrics))
 
     def calc_metrics(self, data, gpi_info):
@@ -1565,6 +1566,12 @@ class TripletMetrics(MetadataMetrics, PairwiseMetricsMixin):
     Additionally, confidence intervals for these metrics can be calculated
     (optional).
 
+    The triple collocation metrics calculated are:
+
+    - SNR
+    - error standard deviation
+    - linear scaling/multiplicative (first-order) bias
+
     Parameters
     ----------
     refname : str
@@ -1573,7 +1580,7 @@ class TripletMetrics(MetadataMetrics, PairwiseMetricsMixin):
         ``rename_cols=False`` in the call to ``Validation.calc``, otherwise the
         names will be wrong.**
     othernames : list
-        List of the names of the other datasets (>= 2).
+        List of the names of the other datasets (>=2).
     min_obs : int, optional
         Minimum number of observations required to calculate metrics. Default
         is 10.
@@ -1608,7 +1615,7 @@ class TripletMetrics(MetadataMetrics, PairwiseMetricsMixin):
         The default is `False`. This might be a lot of computational effort.
     """
 
-    def __init__(self, refname, othernames, min_obs=10, calc_spearman=False,
+    def __init__(self, refname, min_obs=10, calc_spearman=False,
                  calc_kendall=False, analytical_cis=False,
                  bootstrap_cis=False):
 
@@ -1620,26 +1627,27 @@ class TripletMetrics(MetadataMetrics, PairwiseMetricsMixin):
         self.bootstrap_cis = bootstrap_cis
 
         self.refname = refname
-        self.othernames = othernames
+        self.result_template.update(_get_metric_template(["n_obs"]))
 
+    def _get_metric_template(self, refname, othernames):
+        # othernames must have length 2 here!
         pairwise_metrics = self._pairwise_metric_names()
         template = _get_metric_template(pairwise_metrics)
-        for oname in self.othernames:
+        result_template = {}
+        for oname in othernames:
             for pm in pairwise_metrics:
-                self.result_template.update({
+                result_template.update({
                     f"{pm}_between_{self.refname}_and_{oname}": (
                         copy.copy(template[pm])
                     )
                 })
 
         tcol_metrics = ["snr", "err_std", "beta"]
-        tcol_others_combinations = itertools.combinations(self.othernames, 2)
-        self.tcol_ds_names = []
-        for oname1, oname2 in tcol_others_combinations:
-            ds_names = (self.refname, oname1, oname2)
-            tcol_template = _get_tc_metric_template(tcol_metrics, ds_names)
-            self.result_template.update(tcol_template)
-            self.tcol_ds_names.append(ds_names)
+        tcol_template = _get_tc_metric_template(
+            tcol_metrics, (refname, *othernames)
+        )
+        result_template.update(tcol_template)
+        return result_template
 
     def calc_metrics(self, data, gpi_info):
         """
@@ -1648,10 +1656,11 @@ class TripletMetrics(MetadataMetrics, PairwiseMetricsMixin):
         Parameters
         ----------
         data : pd.DataFrame
-            DataFrame with columns between which metrics should be
-            calculated. The names of the columns must be the same as given in
-            the constructor. Make sure to use ``rename_cols`` for
-            ``Validation.calc``.
+            DataFrame with one reference column and two other columns between
+            which the metrics are calculated. The name of the reference column
+            must be the same as used in the constructor.
+            Make sure to use ``rename_cols`` for ``Validation.calc``, so that
+            the names are correct.
         gpi_info : tuple
             (gpi, lon, lat)
         """
@@ -1665,18 +1674,23 @@ class TripletMetrics(MetadataMetrics, PairwiseMetricsMixin):
             )
             return result
 
+        # get the remaining metrics template for this specific combination
+        othernames = list(data.columns)
+        othernames.remove(self.refname)
+        result.update(self._get_metric_template(self.refname, othernames))
+
         # we can calculate almost all metrics from moments
         mean = data.mean()
         cov = data.cov()
 
         # calculate pairwise metrics
-        for oname in self.othernames:
-            suffix = f"_between_{self.refname} and_{oname}"
+        for oname in othernames:
+            suffix = f"_between_{self.refname}_and_{oname}"
             self._calc_pairwise_metrics(
                 data[self.refname].values,
                 data[oname].values,
-                mean[self.refname].values,
-                mean[oname].values,
+                mean[self.refname],
+                mean[oname],
                 cov.loc[self.refname, self.refname],
                 cov.loc[oname, oname],
                 cov.loc[self.refname, oname],
@@ -1685,13 +1699,14 @@ class TripletMetrics(MetadataMetrics, PairwiseMetricsMixin):
             )
 
         # calculate triple collocation metrics
-        for ds_names in self.tcol_ds_names:
-            snr, err_std, beta = _tcol_metrics_from_cov(
-                cov.loc[ds_names, ds_names]
-            )
-            result[("snr", ds_names)][0] = snr
-            result[("err_std", ds_names)][0] = err_std
-            result[("beta", ds_names)][0] = beta
+        ds_names = (self.refname, *othernames)
+        snr, err_std, beta = _tcol_metrics_from_cov(
+            cov.loc[ds_names, ds_names].values
+        )
+        for i, name in enumerate(ds_names):
+            result[("snr", name)][0] = snr[i]
+            result[("err_std", name)][0] = err_std[i]
+            result[("beta", name)][0] = beta[i]
 
         return result
 

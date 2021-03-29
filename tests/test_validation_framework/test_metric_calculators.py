@@ -860,7 +860,7 @@ def test_TripletMetrics(testdata_generator):
     othernames.remove(refname)
 
     triplet_metrics_calculator = TripletMetrics(
-        refname, othernames, calc_spearman=True
+        refname, calc_spearman=True
     )
     pairwise_metrics_calculator = PairwiseIntercomparisonMetrics(
         calc_spearman=True
@@ -874,7 +874,7 @@ def test_TripletMetrics(testdata_generator):
         scaling=None,  # doesn't work with the constant test data
         temporal_matcher=matcher,
         metrics_calculators={
-            (4, 4): triplet_metrics_calculator.calc_metrics
+            (4, 3): triplet_metrics_calculator.calc_metrics
         }
     )
     results_triplet = val_triplet.calc([1], [1], [1], rename_cols=False)
@@ -890,10 +890,14 @@ def test_TripletMetrics(testdata_generator):
     )
     results_pw = val_pw.calc([1], [1], [1], rename_cols=False)
 
-    assert 0
+    # compare pairwise results with triplet results
     for key in results_pw:
+        otherkey = key[0]
+        refkey = key[1]
         othername = key[0][0]
         refname = key[1][0]
+        triplet_keys = list(filter(lambda x: otherkey in x, results_triplet.keys()))
+        assert 0
         
 
 
