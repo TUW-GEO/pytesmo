@@ -51,6 +51,7 @@ from pytesmo.validation_framework.metric_calculators import (
     RollingMetrics,
     MonthsMetricsAdapter,
     PairwiseIntercomparisonMetrics,
+    TripletMetrics,
 )
 from pytesmo.validation_framework.temporal_matchers import (
     make_combined_temporal_matcher
@@ -617,6 +618,7 @@ def testdata_known_results():
 
 
 def testdata_random():
+    np.random.seed(42)
     dr = pd.date_range("2000", "2020", freq="D")
     n = len(dr)
     X = np.random.randn(n, 4)
@@ -829,8 +831,8 @@ def test_PairwiseIntercomparisonMetrics_confidence_intervals():
                 metric_func, other, ref
             )
             # difference due to float32 vs. float64
-            assert_almost_equal(upper, ub, 7)
-            assert_almost_equal(lower, lb, 7)
+            assert_almost_equal(upper, ub, 6)
+            assert_almost_equal(lower, lb, 6)
 
         for metric_key in metrics_with_bs_ci:
             lower = results_pw[key][f"{metric_key}_ci_lower"]
@@ -843,6 +845,58 @@ def test_PairwiseIntercomparisonMetrics_confidence_intervals():
             )
             assert_allclose(upper, ub, rtol=1e-1, atol=1e-4)
             assert_allclose(lower, lb, rtol=1e-1, atol=1e-4)
+
+
+@pytest.mark.parametrize(
+    "testdata_generator", [testdata_known_results, testdata_random]
+)
+def test_TripletMetrics(testdata_generator):
+    # tests by comparison of pairwise metrics to triplet metrics
+
+    datasets, expected = testdata_generator()
+
+    refname = "reference_name"
+    othernames = list(datasets.keys())
+    othernames.remove(refname)
+
+    triplet_metrics_calculator = TripletMetrics(
+        refname, othernames, calc_spearman=True
+    )
+    pairwise_metrics_calculator = PairwiseIntercomparisonMetrics(
+        calc_spearman=True
+    )
+
+    matcher = make_combined_temporal_matcher(pd.Timedelta(6, "H"))
+
+    val_triplet = Validation(
+        datasets,
+        "reference_name",
+        scaling=None,  # doesn't work with the constant test data
+        temporal_matcher=matcher,
+        metrics_calculators={
+            (4, 4): triplet_metrics_calculator.calc_metrics
+        }
+    )
+    results_triplet = val_triplet.calc([1], [1], [1], rename_cols=False)
+
+    val_pw = Validation(
+        datasets,
+        "reference_name",
+        scaling=None,  # doesn't work with the constant test data
+        temporal_matcher=matcher,
+        metrics_calculators={
+            (4, 2): pairwise_metrics_calculator.calc_metrics
+        }
+    )
+    results_pw = val_pw.calc([1], [1], [1], rename_cols=False)
+
+    assert 0
+    for key in results_pw:
+        othername = key[0][0]
+        refname = key[1][0]
+        
+
+
 
 
 def test_sorting_issue():

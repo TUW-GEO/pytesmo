@@ -101,7 +101,13 @@ def tcol_metrics(x, y, z, ref_ind=0):
     """
 
     cov = np.cov(np.vstack((x, y, z)))
+    return _tcol_metrics_from_cov(cov, ref_ind)
 
+
+def _tcol_metrics_from_cov(cov, ref_ind=0):
+    """
+    Calculate TCA metrics from pre-computed covariance matrix
+    """
     ind = (0, 1, 2, 0, 1, 2)
     no_ref_ind = np.where(np.arange(3) != ref_ind)[0]
 

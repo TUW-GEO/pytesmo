@@ -413,7 +413,7 @@ class Validation(object):
         for n, k in self.metrics_c:
             matched_data = self.temp_matching(df_dict,
                                               self.temporal_ref,
-                                              n=n)
+                                              n=n, k=k)
 
             matched_n[(n, k)] = matched_data
 
