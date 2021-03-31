@@ -57,8 +57,11 @@ from pytesmo.metrics.pairwise import (
     spearman_r_ci,
     kendall_tau_ci,
 )
-from pytesmo.metrics.pairwise_utils import (
-    with_bootstrapped_ci
+from pytesmo.metrics import (
+    with_bootstrapped_ci,
+)
+from pytesmo.metrics.tcol import (
+    _tcol_metrics_from_cov
 )
 
 
@@ -1303,7 +1306,144 @@ def get_dataset_names(ref_key, datasets, n=3):
     return dataset_names
 
 
-class PairwiseIntercomparisonMetrics(MetadataMetrics):
+class PairwiseMetricsMixin:
+
+    def _pairwise_metric_names(self):
+        """
+        Returns a list of metric names to be calculated between pairs.
+        """
+        metrics = ['R', 'p_R', 'BIAS', 'RMSD', 'mse', 'RSS',
+                   'mse_corr', 'mse_bias', 'urmsd', 'mse_var']
+        if self.calc_spearman:
+            metrics += ["rho", "p_rho"]
+        if self.calc_kendall:
+            metrics += ["tau", "p_tau"]
+        if self.analytical_cis:
+            metrics += [
+                "BIAS_ci_lower", "BIAS_ci_upper",
+                "RMSD_ci_lower", "RMSD_ci_upper",
+                "mse_ci_lower", "mse_ci_upper",
+                "RSS_ci_lower", "RSS_ci_upper",
+                "urmsd_ci_lower", "urmsd_ci_upper",
+                "R_ci_lower", "R_ci_upper"
+            ]
+            if self.calc_spearman:
+                metrics += ["rho_ci_lower", "rho_ci_upper"]
+            if self.calc_kendall:
+                metrics += ["tau_ci_lower", "tau_ci_upper"]
+        if self.bootstrap_cis:
+            metrics += ["mse_var_ci_lower", "mse_var_ci_upper",
+                        "mse_corr_ci_lower", "mse_corr_ci_upper",
+                        "mse_bias_ci_lower", "mse_bias_ci_upper"]
+        return metrics
+
+    def _calc_pairwise_metrics(self, x, y, mx, my, varx, vary, cov,
+                               result, suffix=""):
+        """
+        Calculates pairwise metrics, making use of pre-computed moments.
+
+        Parameters
+        ----------
+        x, y : np.ndarray
+            Data as numpy matrix
+        mx, my : float
+            Means
+        varx, vary : float
+            Variances
+        cov : float
+            Covariance
+        result : dict
+            Result template dictionary. This is where the results are written
+            to.
+        suffix : str, optional
+            Suffix to be used for storing the metric calculation result. E.g.,
+            with ``suffix=_between_k1_and_k2``, bias will be stored as
+            ``BIAS_between_k1_and_k2``.
+        """
+        n_obs = len(x)
+        result["BIAS" + suffix][0] = mx - my
+
+        mse_corr = _mse_corr_from_moments(mx, my, varx, vary, cov)
+        mse_var = _mse_var_from_moments(mx, my, varx, vary, cov)
+        mse_bias = _mse_bias_from_moments(mx, my, varx, vary, cov)
+        mse = mse_corr + mse_var + mse_bias
+        result["mse_corr" + suffix][0] = mse_corr
+        result["mse_var" + suffix][0] = mse_var
+        result["mse_bias" + suffix][0] = mse_bias
+        result["mse" + suffix][0] = mse
+
+        result["RSS" + suffix][0] = mse * n_obs
+        result["RMSD" + suffix][0] = np.sqrt(mse)
+        result["urmsd" + suffix][0] = np.sqrt(mse - mse_bias)
+
+        R, p_R = _pearsonr_from_moments(varx, vary, cov, n_obs)
+        result["R" + suffix][0] = R
+        result["p_R" + suffix][0] = p_R
+
+        if self.calc_spearman:
+            (
+                result["rho" + suffix][0],
+                result["p_rho" + suffix][0]
+            ) = stats.spearmanr(x, y)
+        if self.calc_kendall:
+            (
+                result["tau" + suffix][0],
+                result["p_tau" + suffix][0]
+            ) = stats.kendalltau(x, y)
+
+        if self.analytical_cis:
+            (
+                result["BIAS_ci_lower" + suffix][0],
+                result["BIAS_ci_upper" + suffix][0]
+            ) = _bias_ci_from_moments(0.05, mx, my, varx, vary, cov, n_obs)
+            # MSE is the same as MSD
+            (
+                result["mse_ci_lower" + suffix][0],
+                result["mse_ci_upper" + suffix][0]
+            ) = msd_ci(x, y, result["mse" + suffix][0])
+
+            (
+                result["RMSD_ci_lower" + suffix][0],
+                result["RMSD_ci_upper" + suffix][0]
+            ) = rmsd_ci(x, y, result["RMSD" + suffix][0])
+
+            result["RSS_ci_lower" + suffix][0] = (
+                result["mse_ci_lower" + suffix][0] * n_obs
+            )
+            result["RSS_ci_upper" + suffix][0] = (
+                result["mse_ci_upper" + suffix][0] * n_obs
+            )
+
+            (
+                result["urmsd_ci_lower" + suffix][0],
+                result["urmsd_ci_upper" + suffix][0]
+            ) = ubrmsd_ci(x, y, result["urmsd" + suffix][0])
+
+            (
+                result["R_ci_lower" + suffix][0],
+                result["R_ci_upper" + suffix][0]
+            ) = pearson_r_ci(x, y, result["R" + suffix][0])
+
+            if self.calc_spearman:
+                (
+                    result["rho_ci_lower" + suffix][0],
+                    result["rho_ci_upper" + suffix][0]
+                ) = spearman_r_ci(x, y, result["rho" + suffix][0])
+            if self.calc_kendall:
+                (
+                    result["tau_ci_lower" + suffix][0],
+                    result["tau_ci_upper" + suffix][0]
+                ) = kendall_tau_ci(x, y, result["tau" + suffix][0])
+
+        if self.bootstrap_cis:
+            for m in ["mse_var", "mse_corr", "mse_bias"]:
+                metric_func = getattr(pairwise, m)
+                _, lb, ub = with_bootstrapped_ci(metric_func, x, y)
+                result[f"{m}_ci_lower" + suffix][0] = lb
+                result[f"{m}_ci_upper" + suffix][0] = ub
+
+
+class PairwiseIntercomparisonMetrics(MetadataMetrics, PairwiseMetricsMixin):
     """
     Basic metrics for comparison of two datasets:
 
@@ -1357,41 +1497,16 @@ class PairwiseIntercomparisonMetrics(MetadataMetrics):
 
     def __init__(self, min_obs=10, calc_spearman=False, calc_kendall=False,
                  analytical_cis=False, bootstrap_cis=False):
+        super().__init__(min_obs=10)
 
-        self.min_obs = min_obs
-        # metrics that are calculated between dataset pairs
-        metrics = ['n_obs', 'R', 'p_R', 'BIAS', 'RMSD', 'mse', 'RSS',
-                   'mse_corr', 'mse_bias', 'urmsd', 'mse_var']
         self.calc_spearman = calc_spearman
-        if calc_spearman:
-            metrics += ["rho", "p_rho"]
         self.calc_kendall = calc_kendall
-        if calc_kendall:
-            metrics += ["tau", "p_tau"]
         self.analytical_cis = analytical_cis
-        if analytical_cis:
-            metrics += [
-                "BIAS_ci_lower", "BIAS_ci_upper",
-                "RMSD_ci_lower", "RMSD_ci_upper",
-                "mse_ci_lower", "mse_ci_upper",
-                "RSS_ci_lower", "RSS_ci_upper",
-                "urmsd_ci_lower", "urmsd_ci_upper",
-                "R_ci_lower", "R_ci_upper"
-            ]
-            if calc_spearman:
-                metrics += ["rho_ci_lower", "rho_ci_upper"]
-            if calc_kendall:
-                metrics += ["tau_ci_lower", "tau_ci_upper"]
         self.bootstrap_cis = bootstrap_cis
-        if bootstrap_cis:
-            metrics += ["mse_var_ci_lower", "mse_var_ci_upper",
-                        "mse_corr_ci_lower", "mse_corr_ci_upper",
-                        "mse_bias_ci_lower", "mse_bias_ci_upper"]
 
-        self.result_template = _get_metric_template(metrics)
-        self.result_template.update({'gpi': np.int32([-1]),
-                                     'lon': np.float64([np.nan]),
-                                     'lat': np.float64([np.nan])})
+        metrics = self._pairwise_metric_names()
+        metrics.append("n_obs")
+        self.result_template.update(_get_metric_template(metrics))
 
     def calc_metrics(self, data, gpi_info):
         """
@@ -1405,13 +1520,10 @@ class PairwiseIntercomparisonMetrics(MetadataMetrics):
         gpi_info : tuple
             (gpi, lon, lat)
         """
-        result = copy.deepcopy(self.result_template)
+        result = super().calc_metrics(data, gpi_info)
 
         n_obs = len(data)
         result["n_obs"][0] = n_obs
-        result["gpi"][0] = gpi_info[0]
-        result["lon"][0] = gpi_info[1]
-        result["lat"][0] = gpi_info[2]
         if n_obs < self.min_obs:
             warnings.warn(
                 "Not enough observations to calculate metrics.",
@@ -1425,77 +1537,172 @@ class PairwiseIntercomparisonMetrics(MetadataMetrics):
 
         # we can calculate almost all metrics from moments
         mx, my, varx, vary, cov = _moments_welford(x, y)
+        self._calc_pairwise_metrics(x, y, mx, my, varx, vary, cov, result)
+        return result
 
-        result["BIAS"][0] = mx - my
 
-        mse_corr = _mse_corr_from_moments(mx, my, varx, vary, cov)
-        mse_var = _mse_var_from_moments(mx, my, varx, vary, cov)
-        mse_bias = _mse_bias_from_moments(mx, my, varx, vary, cov)
-        mse = mse_corr + mse_var + mse_bias
-        result["mse_corr"][0] = mse_corr
-        result["mse_var"][0] = mse_var
-        result["mse_bias"][0] = mse_bias
-        result["mse"][0] = mse
+class TripletMetrics(MetadataMetrics, PairwiseMetricsMixin):
+    """
+    Computes pairwise and triplet metrics, making use of TCA.
 
-        result["RSS"][0] = mse * n_obs
-        result["RMSD"][0] = np.sqrt(mse)
-        result["urmsd"][0] = np.sqrt(mse - mse_bias)
+    This calculates pairwise metrics between combinations of datasets as in
+    PairwiseIntercomparisonMetrics, and additionally triplet metrics from TCA.
 
-        R, p_R = _pearsonr_from_moments(varx, vary, cov, n_obs)
-        result["R"][0] = R
-        result["p_R"][0] = p_R
+    These metrics between pairs are calculated:
 
-        if self.calc_spearman:
-            result["rho"][0], result["p_rho"][0] = stats.spearmanr(x, y)
-        if self.calc_kendall:
-            result["tau"][0], result["p_tau"][0] = stats.kendalltau(x, y)
+    - RMSD
+    - BIAS
+    - ubRMSD
+    - mse and decomposition (mse_var, mse_corr, mse_bias)
+    - RSS
+    - Pearson's R and p
+    - Spearman's rho and p (optional)
+    - Kendall's tau and p (optional)
 
-        if self.analytical_cis:
-            (
-                result["BIAS_ci_lower"][0],
-                result["BIAS_ci_upper"][0]
-            ) = _bias_ci_from_moments(0.05, mx, my, varx, vary, cov, n_obs)
-            # MSE is the same as MSD
-            (
-                result["mse_ci_lower"][0],
-                result["mse_ci_upper"][0]
-            ) = msd_ci(x, y, result["mse"][0])
+    Additionally, confidence intervals for these metrics can be calculated
+    (optional).
 
-            (
-                result["RMSD_ci_lower"][0],
-                result["RMSD_ci_upper"][0]
-            ) = rmsd_ci(x, y, result["RMSD"][0])
+    The triple collocation metrics calculated are:
 
-            result["RSS_ci_lower"][0] = result["mse_ci_lower"][0] * n_obs
-            result["RSS_ci_upper"][0] = result["mse_ci_upper"][0] * n_obs
+    - SNR
+    - error standard deviation
+    - linear scaling/multiplicative (first-order) bias
 
-            (
-                result["urmsd_ci_lower"][0],
-                result["urmsd_ci_upper"][0]
-            ) = ubrmsd_ci(x, y, result["urmsd"][0])
+    Parameters
+    ----------
+    refname : str
+        Name of the reference column that is passed to ``calc_metrics``. This
+        will also be used to name the results. **Make sure that you set
+        ``rename_cols=False`` in the call to ``Validation.calc``, otherwise the
+        names will be wrong.**
+    othernames : list
+        List of the names of the other datasets (>=2).
+    min_obs : int, optional
+        Minimum number of observations required to calculate metrics. Default
+        is 10.
+    calc_spearman : bool, optional
+        Whether to calculate Spearman's rank correlation coefficient. Default
+        is True.
+    calc_kendall : bool, optional
+        Whether to calculate Kendall's rank correlation coefficient. Default is
+        True.
+    analytical_cis : bool, optional
+        Whether to calculate analytical confidence intervals for the following
+        metrics:
 
-            (
-                result["R_ci_lower"][0],
-                result["R_ci_upper"][0]
-            ) = pearson_r_ci(x, y, result["R"][0])
+        - BIAS
+        - RMSD
+        - urmsd
+        - mse
+        - R
+        - rho (only if ``calc_spearman=True``)
+        - tau (only if ``calc_kendall=True``)
 
-            if self.calc_spearman:
-                (
-                    result["rho_ci_lower"][0],
-                    result["rho_ci_upper"][0]
-                ) = spearman_r_ci(x, y, result["rho"][0])
-            if self.calc_kendall:
-                (
-                    result["tau_ci_lower"][0],
-                    result["tau_ci_upper"][0]
-                ) = kendall_tau_ci(x, y, result["tau"][0])
+        The default is `False`.
 
-        if self.bootstrap_cis:
-            for m in ["mse_var", "mse_corr", "mse_bias"]:
-                metric_func = getattr(pairwise, m)
-                _, lb, ub = with_bootstrapped_ci(metric_func, x, y)
-                result[f"{m}_ci_lower"][0] = lb
-                result[f"{m}_ci_upper"][0] = ub
+    bootstrap_cis
+        Whether to calculate bootstrap confidence intervals for the following
+        metrics:
+
+        - mse_corr
+        - mse_var
+        - mse_bias
+
+        The default is `False`. This might be a lot of computational effort.
+    """
+
+    def __init__(self, refname, min_obs=10, calc_spearman=False,
+                 calc_kendall=False, analytical_cis=False,
+                 bootstrap_cis=False):
+
+        super().__init__(min_obs=10)
+
+        self.calc_spearman = calc_spearman
+        self.calc_kendall = calc_kendall
+        self.analytical_cis = analytical_cis
+        self.bootstrap_cis = bootstrap_cis
+
+        self.refname = refname
+        self.result_template.update(_get_metric_template(["n_obs"]))
+
+    def _get_metric_template(self, refname, othernames):
+        # othernames must have length 2 here!
+        pairwise_metrics = self._pairwise_metric_names()
+        template = _get_metric_template(pairwise_metrics)
+        result_template = {}
+        for oname in othernames:
+            for pm in pairwise_metrics:
+                result_template.update({
+                    f"{pm}_between_{self.refname}_and_{oname}": (
+                        copy.copy(template[pm])
+                    )
+                })
+
+        tcol_metrics = ["snr", "err_std", "beta"]
+        tcol_template = _get_tc_metric_template(
+            tcol_metrics, (refname, *othernames)
+        )
+        result_template.update(tcol_template)
+        return result_template
+
+    def calc_metrics(self, data, gpi_info):
+        """
+        Calculates pairwise metrics.
+
+        Parameters
+        ----------
+        data : pd.DataFrame
+            DataFrame with one reference column and two other columns between
+            which the metrics are calculated. The name of the reference column
+            must be the same as used in the constructor.
+            Make sure to use ``rename_cols`` for ``Validation.calc``, so that
+            the names are correct.
+        gpi_info : tuple
+            (gpi, lon, lat)
+        """
+        result = super().calc_metrics(data, gpi_info)
+        n_obs = len(data)
+        result["n_obs"][0] = n_obs
+        if n_obs < self.min_obs:
+            warnings.warn(
+                "Not enough observations to calculate metrics.",
+                UserWarning
+            )
+            return result
+
+        # get the remaining metrics template for this specific combination
+        othernames = list(data.columns)
+        othernames.remove(self.refname)
+        result.update(self._get_metric_template(self.refname, othernames))
+
+        # we can calculate almost all metrics from moments
+        mean = data.mean()
+        cov = data.cov()
+
+        # calculate pairwise metrics
+        for oname in othernames:
+            suffix = f"_between_{self.refname}_and_{oname}"
+            self._calc_pairwise_metrics(
+                data[self.refname].values,
+                data[oname].values,
+                mean[self.refname],
+                mean[oname],
+                cov.loc[self.refname, self.refname],
+                cov.loc[oname, oname],
+                cov.loc[self.refname, oname],
+                result,
+                suffix=suffix
+            )
+
+        # calculate triple collocation metrics
+        ds_names = (self.refname, *othernames)
+        snr, err_std, beta = _tcol_metrics_from_cov(
+            cov.loc[ds_names, ds_names].values
+        )
+        for i, name in enumerate(ds_names):
+            result[("snr", name)][0] = snr[i]
+            result[("err_std", name)][0] = err_std[i]
+            result[("beta", name)][0] = beta[i]
 
         return result
 

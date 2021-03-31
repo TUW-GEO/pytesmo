@@ -64,7 +64,7 @@ class BasicTemporalMatching(object):
             add_ref_data=True, combined_dropna="all"
         )
 
-    def combinatory_matcher(self, df_dict, refkey, n=2):
+    def combinatory_matcher(self, df_dict, refkey, n=2, **kwargs):
         """
         Basic temporal matcher that matches always one Dataframe to
         the reference Dataframe resulting in matched DataFrame pairs.
@@ -85,6 +85,7 @@ class BasicTemporalMatching(object):
             as a reference.
         n: int
             number of datasets to match at once
+        k : dummy argument
 
         Returns
         -------
@@ -119,7 +120,7 @@ class BasicTemporalMatching(object):
 
 
 def dfdict_combined_temporal_collocation(
-    dfs, refname, window=None, n=None, **kwargs
+    dfs, refname, k, window=None, **kwargs
 ):
     """
     Applies :py:func:`combined_temporal_collocation` on a dictionary of
@@ -131,24 +132,24 @@ def dfdict_combined_temporal_collocation(
         Dictionary of pd.DataFrames containing the dataframes to be collocated.
     refname : str
         Name of the reference frame in `dfs`.
+    k : int
+        Number of columns that will be put together in the output dictionary.
     window : pd.Timedelta or float, optional
         Window around reference timestamps in which to look for data. Floats
         are interpreted as number of days. If it is not given, defaults to 1
         hour to mimick the behaviour of
         ``BasicTemporalMatching.combinatory_matcher``.
-    n : dummy argument
-        Will be ignored.
     **kwargs :
         Keyword arguments passed to :py:func:`combined_temporal_collocation`.
 
     Returns:
     --------
     matched_dict : dict
-        Dictionary where the keys are tuples of ``(other_name, refname)`` for
-        each other key in `dfs`, and values are the matched dataframes.
-        The column names of the dataframes are again tuples of ``(name, col)``
-        where `name` is the key from `dfs` and `col` is the original column
-        name in the input dataframe.
+        Dictionary where the keys are tuples of ``(other_names..., refname)``
+        for each combination of other keys in `dfs` of size `n`, and values are
+        the matched dataframes.  The column names of the dataframes are again
+        tuples of ``(name, col)`` where `name` is the key from `dfs` and `col`
+        is the original column name in the input dataframe.
     """
     if window is None:
         window = pd.Timedelta(hours=1)
@@ -164,17 +165,22 @@ def dfdict_combined_temporal_collocation(
 
     # unpack again to dictionary
     matched_dict = {}
-    for name in dfs:
-        if name != refname:
+    othernames = list(dfs.keys())
+    othernames.remove(refname)
+    for onames in itertools.combinations(othernames, k - 1):
+        # we want to keep the reference columns and the columns of the current
+        # other names in the combination
+        keep = list(ref.columns)
+        for name in onames:
             tuple_keys = list(itertools.product((name,), dfs[name].columns))
-            keep = list(ref.columns) + tuple_keys
-            # there's a strange bug in pytesmo, when I make the order here to
-            # be (refname, name) instead of (name, refname) I don't get all the
-            # results
-            matched_dict[(name, refname)] = matched_df[keep]
-            # rename_dict = {tk: tk[1] for tk in tuple_keys}
-            # matched_dict[(refname, name)].rename(rename_dict, axis=1,
-            # inplace=True)
+            keep += tuple_keys
+        # there's a strange bug in pytesmo, when I make the order here to
+        # be (refname, name) instead of (name, refname) I don't get all the
+        # results
+        matched_dict[(*onames, refname)] = matched_df[keep]
+        # rename_dict = {tk: tk[1] for tk in tuple_keys}
+        # matched_dict[(refname, name)].rename(rename_dict, axis=1,
+        # inplace=True)
     return matched_dict
 
 
@@ -185,10 +191,23 @@ def make_combined_temporal_matcher(window):
     See
     :py:func:`pytesmo.temporal_matching.dfdict_combined_temporal_collocation`
     for more details
+
+    Parameters
+    ----------
+    window : pd.Timedelta or float, optional
+        Window around reference timestamps in which to look for data. Floats
+        are interpreted as number of days. If it is not given, defaults to 1
+        hour to mimick the behaviour of
+        ``BasicTemporalMatching.combinatory_matcher``.
     """
 
-    def matcher(dfs, refname, n=None, **kwargs):
-        return dfdict_combined_temporal_collocation(dfs, refname, **kwargs)
+    def matcher(dfs, refname, k=None, **kwargs):
+        # this comes from Validation.temporal_match_datasets but is not
+        # required
+        del kwargs["n"]
+        return dfdict_combined_temporal_collocation(
+            dfs, refname, k, window=window, **kwargs
+        )
     return matcher
 
 

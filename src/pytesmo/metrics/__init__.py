@@ -85,15 +85,15 @@ from pytesmo.metrics.pairwise import (
     index_of_agreement,
     rolling_pr_rmsd,
 )
-from pytesmo.metrics.pairwise_utils import (
+from pytesmo.metrics.confidence_intervals import (
     has_analytical_ci,
     with_analytical_ci,
     with_bootstrapped_ci,
+    tcol_metrics_with_bootstrapped_ci,
 )
 
 from pytesmo.metrics.tcol import (
     tcol_metrics,
-    tcol_metrics_with_bootstrapped_ci,
     ecol
 )
 
