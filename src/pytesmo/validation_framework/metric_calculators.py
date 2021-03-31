@@ -57,8 +57,8 @@ from pytesmo.metrics.pairwise import (
     spearman_r_ci,
     kendall_tau_ci,
 )
-from pytesmo.metrics.pairwise_utils import (
-    with_bootstrapped_ci
+from pytesmo.metrics import (
+    with_bootstrapped_ci,
 )
 from pytesmo.metrics.tcol import (
     _tcol_metrics_from_cov

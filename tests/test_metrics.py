@@ -189,6 +189,64 @@ def test_tcol_metrics():
     )
 
 
+@pytest.mark.slow
+def test_tcol_metrics_bootstrapped_cis():
+    n = 10000
+
+    mean_signal = 0.3
+    sig_signal = 0.2
+    signal = np.random.normal(mean_signal, sig_signal, n)
+
+    sig_err_x = 0.02
+    sig_err_y = 0.07
+    sig_err_z = 0.04
+    err_x = np.random.normal(0, sig_err_x, n)
+    err_y = np.random.normal(0, sig_err_y, n)
+    err_z = np.random.normal(0, sig_err_z, n)
+
+    alpha_y = 0.2
+    alpha_z = 0.5
+
+    beta_y = 0.9
+    beta_z = 1.6
+
+    x = signal + err_x
+    y = alpha_y + beta_y * (signal + err_y)
+    z = alpha_z + beta_z * (signal + err_z)
+
+    beta_pred = 1.0 / np.array((1, beta_y, beta_z))
+    err_pred = np.array((sig_err_x, sig_err_y, sig_err_z))
+    snr_pred = np.array(
+        (
+            (sig_signal / sig_err_x),
+            (sig_signal / sig_err_y),
+            (sig_signal / sig_err_z),
+        )
+    )
+
+    (
+        snr_result, err_result, beta_result
+    ) = tcol_metrics_with_bootstrapped_ci(x, y, z)
+    snr = snr_result[0]
+    err = err_result[0]
+    beta = beta_result[0]
+
+    nptest.assert_allclose(beta, beta_pred, rtol=1e-2, atol=1e-2)
+    nptest.assert_allclose(err, err_pred, rtol=1e-2, atol=1e-2)
+    nptest.assert_allclose(
+        np.sqrt(10 ** (snr / 10.0)), snr_pred, rtol=5e-2, atol=1e-2
+    )
+
+    # 0: value, 1: lower, 2: upper
+    assert np.all(snr_result[1] < snr_result[0])
+    assert np.all(snr_result[0] < snr_result[2])
+    assert np.all(err_result[1] < err_result[0])
+    assert np.all(err_result[0] < err_result[2])
+    # equality is okay because the reference dataset has beta == 1 always
+    assert np.all(beta_result[1] <= beta_result[0])
+    assert np.all(beta_result[0] <= beta_result[2])
+
+
 def test_bias(arange_testdata):
     """
     Test for bias
