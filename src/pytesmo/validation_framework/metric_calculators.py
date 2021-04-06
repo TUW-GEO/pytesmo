@@ -83,7 +83,7 @@ def _get_tc_metric_template(metr, ds_names):
     met_thds = {}
     for m in metr:
         for d in ds_names:
-            met_thds[(m, d)] = met_thds_template[m]
+            met_thds[(m, d)] = copy.copy(met_thds_template[m])
 
     return met_thds
 
@@ -1633,7 +1633,7 @@ class TripletMetrics(MetadataMetrics, PairwiseMetricsMixin):
         for oname in othernames:
             for pm in pairwise_metrics:
                 result_template.update({
-                    f"{pm}_between_{self.refname}_and_{oname}": (
+                    f"{pm}_between_{oname}_and_{self.refname}": (
                         copy.copy(template[pm])
                     )
                 })
@@ -1642,7 +1642,7 @@ class TripletMetrics(MetadataMetrics, PairwiseMetricsMixin):
         tcol_template = _get_tc_metric_template(
             tcol_metrics, (refname, *othernames)
         )
-        result_template.update(tcol_template)
+        result_template.update(copy.copy(tcol_template))
         return result_template
 
     def calc_metrics(self, data, gpi_info):
@@ -1681,15 +1681,15 @@ class TripletMetrics(MetadataMetrics, PairwiseMetricsMixin):
 
         # calculate pairwise metrics
         for oname in othernames:
-            suffix = f"_between_{self.refname}_and_{oname}"
+            suffix = f"_between_{oname}_and_{self.refname}"
             self._calc_pairwise_metrics(
-                data[self.refname].values,
                 data[oname].values,
-                mean[self.refname],
+                data[self.refname].values,
                 mean[oname],
-                cov.loc[self.refname, self.refname],
+                mean[self.refname],
                 cov.loc[oname, oname],
-                cov.loc[self.refname, oname],
+                cov.loc[self.refname, self.refname],
+                cov.loc[oname, self.refname],
                 result,
                 suffix=suffix
             )

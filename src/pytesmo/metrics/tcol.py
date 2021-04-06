@@ -111,11 +111,13 @@ def _tcol_metrics_from_cov(cov, ref_ind=0):
     ind = (0, 1, 2, 0, 1, 2)
     no_ref_ind = np.where(np.arange(3) != ref_ind)[0]
 
+    # we have to take the absolute value of the ratio of covariances and of the
+    # full difference according to Gruber et al. 2020, Eq. 11
     snr = 10 * np.log10(
         [
-            (
-                (cov[i, i] * cov[ind[i + 1], ind[i + 2]])
-                / (cov[i, ind[i + 1]] * cov[i, ind[i + 2]])
+            np.abs(
+                np.abs((cov[i, i] * cov[ind[i + 1], ind[i + 2]])
+                       / (cov[i, ind[i + 1]] * cov[i, ind[i + 2]]))
                 - 1
             )
             ** (-1)

@@ -621,15 +621,19 @@ def testdata_random():
     np.random.seed(42)
     dr = pd.date_range("2000", "2020", freq="D")
     n = len(dr)
-    X = np.random.randn(n, 4)
-    X[10, 0] = np.nan
-    X[50, 2] = np.nan
+    y = np.random.randn(n)
+    ref = y + 0.1 * np.random.randn(n)
+    x1 = 2 * y + 0.1 * np.random.randn(n)
+    x2 = -2 * y + 0.1 * np.random.randn(n)
+    x3 = 5 * y + 0.1 * np.random.randn(n)
+    ref[10] = np.nan
+    x2[50] = np.nan
     df = pd.DataFrame(
         {
-            "reference": X[:, 0],
-            "col1": X[:, 1],
-            "col2": X[:, 2],
-            "col3": X[:, 3],
+            "reference": ref,
+            "col1": x1,
+            "col2": x2,
+            "col3": x3,
         },
         index=dr
     )
@@ -891,16 +895,38 @@ def test_TripletMetrics(testdata_generator):
     results_pw = val_pw.calc([1], [1], [1], rename_cols=False)
 
     # compare pairwise results with triplet results
-    # for key in results_pw:
-    #     otherkey = key[0]
-    #     refkey = key[1]
-    #     othername = key[0][0]
-    #     refname = key[1][0]
-    #     triplet_keys = list(
-    #         filter(lambda x: otherkey in x, results_triplet.keys())
-    #     )
-    #     assert 0
-    assert results_pw == results_triplet
+    for key in results_pw:
+        otherkey = key[0]
+        othername = key[0][0]
+        refname = key[1][0]
+        triplet_keys = list(
+            filter(lambda x: otherkey in x, results_triplet.keys())
+        )
+        for tkey in triplet_keys:
+            res = results_triplet[tkey]
+            for metric in results_pw[key]:
+                if metric in ["n_obs", "gpi", "lat", "lon"]:
+                    assert res[metric] == results_pw[key][metric]
+                else:
+                    metric_key = f"{metric}_between_{othername}_and_{refname}"
+                    assert_allclose(
+                        results_triplet[tkey][metric_key],
+                        results_pw[key][metric],
+                        rtol=2e-4,
+                    )
+    if "col1_name" in datasets.keys():
+        # we only test the TCA results with the random data, since for the
+        # constant data all covariances are zero and TCA therefore doesn't
+        # work.
+        for metric in ["snr", "err_std", "beta"]:
+            for dset in datasets:
+                values = []
+                dkey = (dset, datasets[dset]["columns"][0])
+                for tkey in results_triplet:
+                    if dkey in tkey:
+                        values.append(results_triplet[tkey][(metric, dset)][0])
+                diff = np.abs(np.diff(values))
+                assert diff.max() / values[0] < 0.1
 
 
 def test_sorting_issue():
