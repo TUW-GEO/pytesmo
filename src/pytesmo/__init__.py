@@ -32,4 +32,5 @@ __all__ = [
     "time_series",
     "grid",
     "colormaps",
+    "validation_framework"
 ]

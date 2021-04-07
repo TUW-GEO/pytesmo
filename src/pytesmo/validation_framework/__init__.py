@@ -1,6 +1,7 @@
 from pytesmo.validation_framework.validation import Validation
 from pytesmo.validation_framework.metric_calculators import (
-    PairwiseIntercomparisonMetrics
+    PairwiseIntercomparisonMetrics,
+    TripletMetrics,
 )
 from pytesmo.validation_framework.temporal_matchers import (
     BasicTemporalMatching,
