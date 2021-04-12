@@ -80,36 +80,53 @@ class PointDataResults(Dataset):
         super(PointDataResults, self).__init__(filename, mode=mode, zlib=zlib)
 
         if mode == 'w':
-            self.dataset.createDimension('loc', None)  # in space (static results)
-            self.dataset.createDimension('obs', None)  # in time (rolling metrics)
+            # in space (static results)
+            self.dataset.createDimension('loc', None)
+            # in time (rolling metrics)
+            self.dataset.createDimension('obs', None)
 
             # default variables, along loc dim
-            self.write_var('lon', dim=('loc'), dtype='float',
-                attr=dict(long_name="location longitude", standard_name="longitude",
-                          units="degrees_east", valid_range=np.array([-180, 180]),
-                          axis="X"))
+            self.write_var(
+                'lon', dim=('loc'), dtype='float',
+                attr=dict(long_name="location longitude",
+                          standard_name="longitude",
+                          units="degrees_east",
+                          valid_range=np.array([-180, 180]),
+                          axis="X")
+            )
 
-            self.write_var('lat', dim=('loc'), dtype="float",
-                attr=dict(long_name="location latitude", standard_name="latitude",
-                          units="degrees_north", valid_range=np.array([-90, 90]),
-                          axis="Y"))
+            self.write_var(
+                'lat', dim=('loc'), dtype="float",
+                attr=dict(long_name="location latitude",
+                          standard_name="latitude",
+                          units="degrees_north",
+                          valid_range=np.array([-90, 90]),
+                          axis="Y")
+            )
 
-            self.write_var('idx', dim=('loc'), dtype="int",
-                attr=dict(long_name="observation point index", standard_name="idx",
-                          units="timeseries_id"))
+            self.write_var(
+                'idx', dim=('loc'), dtype="int",
+                attr=dict(long_name="observation point index",
+                          standard_name="idx",
+                          units="timeseries_id")
+            )
 
             # indexing var for time series
-            self.write_var('_row_size', dim=('loc'), dtype="int",
+            self.write_var(
+                '_row_size', dim=('loc'), dtype="int",
                 attr=dict(long_name="number of timestamps for this loc",
-                          sample_dimension="obs"))
+                          sample_dimension="obs")
+            )
 
-            self.write_var("time", dtype="float", dim=('obs'),
+            self.write_var(
+                "time", dtype="float", dim=('obs'),
                 attr=dict(long_name="metric time stamp", standard_name="time",
-                          units=self.time_unit))
+                          units=self.time_unit)
+            )
 
-    def __getitem__(self, key:str) -> Variable:
+    def __getitem__(self, key: str) -> Variable:
         return self.dataset[key]
-    
+
     @property
     def variables(self) -> np.array:
         """Names of all variables in the data set"""
@@ -223,6 +240,8 @@ class PointDataResults(Dataset):
         self['lon'][sel], self['lat'][sel] = lons, lats
 
         for name, data in results.items():
+            if isinstance(name, tuple):
+                name = "__".join(name)
             if name not in self.variables:
                 var_attr = self._sel_attr(attr, name, False)
                 self.write_var(name, data=data, dim=('loc'), attr=var_attr)

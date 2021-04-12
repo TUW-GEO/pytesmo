@@ -32,7 +32,10 @@ from numpy.testing import (
     assert_allclose,
 )
 import pandas as pd
+from pathlib import Path
 import pytest
+import shutil
+import xarray as xr
 
 from pytesmo.metrics import (
     with_analytical_ci,
@@ -51,11 +54,12 @@ from pytesmo.validation_framework.metric_calculators import (
     RollingMetrics,
     MonthsMetricsAdapter,
     PairwiseIntercomparisonMetrics,
-    TripletMetrics,
+    TripleIntercomparisonMetrics,
 )
 from pytesmo.validation_framework.temporal_matchers import (
     make_combined_temporal_matcher
 )
+from pytesmo.validation_framework.results_manager import netcdf_results_manager
 import pytesmo.metrics as metrics
 
 
@@ -854,7 +858,7 @@ def test_PairwiseIntercomparisonMetrics_confidence_intervals():
 @pytest.mark.parametrize(
     "testdata_generator", [testdata_known_results, testdata_random]
 )
-def test_TripletMetrics(testdata_generator):
+def test_TripleIntercomparisonMetrics(testdata_generator):
     # tests by comparison of pairwise metrics to triplet metrics
 
     datasets, expected = testdata_generator()
@@ -863,11 +867,8 @@ def test_TripletMetrics(testdata_generator):
     othernames = list(datasets.keys())
     othernames.remove(refname)
 
-    triplet_metrics_calculator = TripletMetrics(
-        refname, calc_spearman=True
-    )
-    pairwise_metrics_calculator = PairwiseIntercomparisonMetrics(
-        calc_spearman=True
+    triplet_metrics_calculator = TripleIntercomparisonMetrics(
+        refname, bootstrap_cis=False
     )
 
     matcher = make_combined_temporal_matcher(pd.Timedelta(6, "H"))
@@ -883,37 +884,6 @@ def test_TripletMetrics(testdata_generator):
     )
     results_triplet = val_triplet.calc([1], [1], [1], rename_cols=False)
 
-    val_pw = Validation(
-        datasets,
-        "reference_name",
-        scaling=None,  # doesn't work with the constant test data
-        temporal_matcher=matcher,
-        metrics_calculators={
-            (4, 2): pairwise_metrics_calculator.calc_metrics
-        }
-    )
-    results_pw = val_pw.calc([1], [1], [1], rename_cols=False)
-
-    # compare pairwise results with triplet results
-    for key in results_pw:
-        otherkey = key[0]
-        othername = key[0][0]
-        refname = key[1][0]
-        triplet_keys = list(
-            filter(lambda x: otherkey in x, results_triplet.keys())
-        )
-        for tkey in triplet_keys:
-            res = results_triplet[tkey]
-            for metric in results_pw[key]:
-                if metric in ["n_obs", "gpi", "lat", "lon"]:
-                    assert res[metric] == results_pw[key][metric]
-                else:
-                    metric_key = f"{metric}_between_{othername}_and_{refname}"
-                    assert_allclose(
-                        results_triplet[tkey][metric_key],
-                        results_pw[key][metric],
-                        rtol=2e-4,
-                    )
     if "col1_name" in datasets.keys():
         # we only test the TCA results with the random data, since for the
         # constant data all covariances are zero and TCA therefore doesn't
@@ -928,8 +898,58 @@ def test_TripletMetrics(testdata_generator):
                 diff = np.abs(np.diff(values))
                 assert diff.max() / values[0] < 0.1
 
+    # check if writing to file works
+    results_path = Path("__test_results")
+    # if this throws, there's either some data left over from previous tests,
+    # or some data is named __test_results. Remove the __test_results directory
+    # from your current directory to make the test work again.
+    assert not results_path.exists()
+    results_path.mkdir(exist_ok=True, parents=True)
+    netcdf_results_manager(results_triplet, results_path.name)
+    assert results_path.exists()
+    for key in results_triplet:
+        fname = "_with_".join(map(lambda t: ".".join(t), key)) + ".nc"
+        assert (results_path / fname).exists()
+        res = xr.open_dataset(results_path / fname)
+        for metric in ["snr", "err_std", "beta"]:
+            for dset, _ in key:
+                mkey = metric + "__" + dset
+                assert mkey in res.data_vars
+    shutil.rmtree(results_path)
 
-def test_sorting_issue():
+    # now with CIs, again only for random data
+    if "col1_name" in datasets.keys():
+        triplet_metrics_calculator = TripleIntercomparisonMetrics(
+            refname, bootstrap_cis=True
+        )
+        val_triplet = Validation(
+            datasets,
+            "reference_name",
+            scaling=None,  # doesn't work with the constant test data
+            temporal_matcher=matcher,
+            metrics_calculators={
+                (4, 3): triplet_metrics_calculator.calc_metrics
+            }
+        )
+        results_triplet = val_triplet.calc([1], [1], [1], rename_cols=False)
+        for key in results_triplet:
+            for dset, _ in key:
+                for metric in ["snr", "err_std", "beta"]:
+                    lkey = f"{metric}_ci_lower"
+                    ukey = f"{metric}_ci_upper"
+                    assert (lkey, dset) in results_triplet[key]
+                    assert (ukey, dset) in results_triplet[key]
+                    assert (
+                        results_triplet[key][(lkey, dset)]
+                        <= results_triplet[key][(metric, dset)]
+                    )
+                    assert (
+                        results_triplet[key][(metric, dset)]
+                        <= results_triplet[key][(ukey, dset)]
+                    )
+
+
+# def test_sorting_issue():
     # GH #220
     # might be a good start for fixing the issue
 
@@ -965,4 +985,3 @@ def test_sorting_issue():
     # results = val.calc(1, 1, 1)
 
     # assert 0
-    pass

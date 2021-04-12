@@ -40,7 +40,14 @@ import pytesmo.df_metrics as df_metrics
 from pytesmo.scaling import scale
 from pytesmo.validation_framework.data_manager import get_result_names
 from pytesmo.df_metrics import n_combinations
-from pytesmo.metrics import pairwise
+from pytesmo.metrics import (
+    pairwise,
+    tcol_metrics,
+)
+from pytesmo.metrics.confidence_intervals import (
+    tcol_metrics_with_bootstrapped_ci,
+    with_bootstrapped_ci,
+)
 from pytesmo.metrics._fast_pairwise import (
     _moments_welford,
     _mse_corr_from_moments,
@@ -56,12 +63,6 @@ from pytesmo.metrics.pairwise import (
     pearson_r_ci,
     spearman_r_ci,
     kendall_tau_ci,
-)
-from pytesmo.metrics import (
-    with_bootstrapped_ci,
-)
-from pytesmo.metrics.tcol import (
-    _tcol_metrics_from_cov
 )
 
 
@@ -1482,7 +1483,7 @@ class PairwiseIntercomparisonMetrics(MetadataMetrics, PairwiseMetricsMixin):
         - rho (only if ``calc_spearman=True``)
         - tau (only if ``calc_kendall=True``)
 
-        The default is `False`.
+        The default is `True`.
 
     bootstrap_cis
         Whether to calculate bootstrap confidence intervals for the following
@@ -1495,9 +1496,10 @@ class PairwiseIntercomparisonMetrics(MetadataMetrics, PairwiseMetricsMixin):
         The default is `False`. This might be a lot of computational effort.
     """
 
-    def __init__(self, min_obs=10, calc_spearman=False, calc_kendall=False,
-                 analytical_cis=False, bootstrap_cis=False):
-        super().__init__(min_obs=10)
+    def __init__(self, min_obs=10, calc_spearman=True, calc_kendall=True,
+                 analytical_cis=True, bootstrap_cis=False,
+                 metadata_template=None):
+        super().__init__(min_obs=10, metadata_template=metadata_template)
 
         self.calc_spearman = calc_spearman
         self.calc_kendall = calc_kendall
@@ -1541,26 +1543,9 @@ class PairwiseIntercomparisonMetrics(MetadataMetrics, PairwiseMetricsMixin):
         return result
 
 
-class TripletMetrics(MetadataMetrics, PairwiseMetricsMixin):
+class TripleIntercomparisonMetrics(MetadataMetrics, PairwiseMetricsMixin):
     """
-    Computes pairwise and triplet metrics, making use of TCA.
-
-    This calculates pairwise metrics between combinations of datasets as in
-    PairwiseIntercomparisonMetrics, and additionally triplet metrics from TCA.
-
-    These metrics between pairs are calculated:
-
-    - RMSD
-    - BIAS
-    - ubRMSD
-    - mse and decomposition (mse_var, mse_corr, mse_bias)
-    - RSS
-    - Pearson's R and p
-    - Spearman's rho and p (optional)
-    - Kendall's tau and p (optional)
-
-    Additionally, confidence intervals for these metrics can be calculated
-    (optional).
+    Computes triple collocation metrics
 
     The triple collocation metrics calculated are:
 
@@ -1580,26 +1565,6 @@ class TripletMetrics(MetadataMetrics, PairwiseMetricsMixin):
     min_obs : int, optional
         Minimum number of observations required to calculate metrics. Default
         is 10.
-    calc_spearman : bool, optional
-        Whether to calculate Spearman's rank correlation coefficient. Default
-        is True.
-    calc_kendall : bool, optional
-        Whether to calculate Kendall's rank correlation coefficient. Default is
-        True.
-    analytical_cis : bool, optional
-        Whether to calculate analytical confidence intervals for the following
-        metrics:
-
-        - BIAS
-        - RMSD
-        - urmsd
-        - mse
-        - R
-        - rho (only if ``calc_spearman=True``)
-        - tau (only if ``calc_kendall=True``)
-
-        The default is `False`.
-
     bootstrap_cis
         Whether to calculate bootstrap confidence intervals for the following
         metrics:
@@ -1611,43 +1576,37 @@ class TripletMetrics(MetadataMetrics, PairwiseMetricsMixin):
         The default is `False`. This might be a lot of computational effort.
     """
 
-    def __init__(self, refname, min_obs=10, calc_spearman=False,
-                 calc_kendall=False, analytical_cis=False,
-                 bootstrap_cis=False):
+    def __init__(self, refname, min_obs=10, bootstrap_cis=False,
+                 metadata_template=None):
 
-        super().__init__(min_obs=10)
+        super().__init__(min_obs=10, metadata_template=metadata_template)
 
-        self.calc_spearman = calc_spearman
-        self.calc_kendall = calc_kendall
-        self.analytical_cis = analytical_cis
         self.bootstrap_cis = bootstrap_cis
-
         self.refname = refname
         self.result_template.update(_get_metric_template(["n_obs"]))
 
     def _get_metric_template(self, refname, othernames):
         # othernames must have length 2 here!
-        pairwise_metrics = self._pairwise_metric_names()
-        template = _get_metric_template(pairwise_metrics)
         result_template = {}
-        for oname in othernames:
-            for pm in pairwise_metrics:
-                result_template.update({
-                    f"{pm}_between_{oname}_and_{self.refname}": (
-                        copy.copy(template[pm])
-                    )
-                })
-
         tcol_metrics = ["snr", "err_std", "beta"]
         tcol_template = _get_tc_metric_template(
             tcol_metrics, (refname, *othernames)
         )
         result_template.update(copy.copy(tcol_template))
+        if self.bootstrap_cis:
+            for metric in tcol_metrics:
+                for ds in [refname] + othernames:
+                    result_template[(metric + "_ci_lower", ds)] = np.array(
+                        [np.nan], dtype=np.float32
+                    )
+                    result_template[(metric + "_ci_upper", ds)] = np.array(
+                        [np.nan], dtype=np.float32
+                    )
         return result_template
 
     def calc_metrics(self, data, gpi_info):
         """
-        Calculates pairwise metrics.
+        Calculates triple collocation metrics.
 
         Parameters
         ----------
@@ -1675,34 +1634,21 @@ class TripletMetrics(MetadataMetrics, PairwiseMetricsMixin):
         othernames.remove(self.refname)
         result.update(self._get_metric_template(self.refname, othernames))
 
-        # we can calculate almost all metrics from moments
-        mean = data.mean()
-        cov = data.cov()
-
-        # calculate pairwise metrics
-        for oname in othernames:
-            suffix = f"_between_{oname}_and_{self.refname}"
-            self._calc_pairwise_metrics(
-                data[oname].values,
-                data[self.refname].values,
-                mean[oname],
-                mean[self.refname],
-                cov.loc[oname, oname],
-                cov.loc[self.refname, self.refname],
-                cov.loc[oname, self.refname],
-                result,
-                suffix=suffix
-            )
-
         # calculate triple collocation metrics
         ds_names = (self.refname, *othernames)
-        snr, err_std, beta = _tcol_metrics_from_cov(
-            cov.loc[ds_names, ds_names].values
-        )
-        for i, name in enumerate(ds_names):
-            result[("snr", name)][0] = snr[i]
-            result[("err_std", name)][0] = err_std[i]
-            result[("beta", name)][0] = beta[i]
+        arrays = (data[name].values for name in ds_names)
+        if not self.bootstrap_cis:
+            res = tcol_metrics(*arrays)
+            for i, name in enumerate(ds_names):
+                for j, metric in enumerate(["snr", "err_std", "beta"]):
+                    result[(metric, name)][0] = res[j][i]
+        else:
+            res = tcol_metrics_with_bootstrapped_ci(*arrays)
+            for i, name in enumerate(ds_names):
+                for j, metric in enumerate(["snr", "err_std", "beta"]):
+                    result[(metric, name)][0] = res[j][0][i]
+                    result[(metric + "_ci_lower", name)][0] = res[j][1][i]
+                    result[(metric + "_ci_upper", name)][0] = res[j][2][i]
 
         return result
 
