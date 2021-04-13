@@ -698,7 +698,9 @@ def test_PairwiseIntercomparisonMetrics(testdata_generator):
         temporal_matcher=make_combined_temporal_matcher(pd.Timedelta(6, "H")),
         metrics_calculators={
             (4, 2): (
-                PairwiseIntercomparisonMetrics(calc_spearman=True).calc_metrics
+                PairwiseIntercomparisonMetrics(
+                    calc_spearman=True, analytical_cis=False
+                ).calc_metrics
             )
         }
     )
