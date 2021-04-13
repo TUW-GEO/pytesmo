@@ -712,7 +712,8 @@ def test_PairwiseIntercomparisonMetrics(testdata_generator):
 
     expected_metrics = [
         "R", "p_R", "BIAS", "RMSD", "mse", "RSS", "mse_corr", "mse_bias",
-        "urmsd", "mse_var", "n_obs", "gpi", "lat", "lon", "rho", "p_rho"
+        "urmsd", "mse_var", "n_obs", "gpi", "lat", "lon", "rho", "p_rho",
+        "tau", "p_tau"
     ]
     for key in results_pw:
         assert isinstance(key, tuple)
@@ -731,7 +732,7 @@ def test_PairwiseIntercomparisonMetrics(testdata_generator):
         # passing the names here explicitly, see GH issue #220
         refname="reference_name",
         other_names=ds_names[1:],
-        calc_tau=False,
+        calc_tau=True,
     )
     val = Validation(
         datasets,
