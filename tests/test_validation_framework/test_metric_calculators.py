@@ -53,7 +53,7 @@ from pytesmo.validation_framework.metric_calculators import (
     RollingMetrics,
     MonthsMetricsAdapter,
     PairwiseIntercomparisonMetrics,
-    TripleIntercomparisonMetrics,
+    TripleCollocationMetrics,
 )
 from pytesmo.validation_framework.temporal_matchers import (
     make_combined_temporal_matcher
@@ -860,7 +860,7 @@ def test_PairwiseIntercomparisonMetrics_confidence_intervals():
 @pytest.mark.parametrize(
     "testdata_generator", [testdata_known_results, testdata_random]
 )
-def test_TripleIntercomparisonMetrics(testdata_generator):
+def test_TripleCollocationMetrics(testdata_generator):
     # tests by comparison of pairwise metrics to triplet metrics
 
     datasets, expected = testdata_generator()
@@ -869,7 +869,7 @@ def test_TripleIntercomparisonMetrics(testdata_generator):
     othernames = list(datasets.keys())
     othernames.remove(refname)
 
-    triplet_metrics_calculator = TripleIntercomparisonMetrics(
+    triplet_metrics_calculator = TripleCollocationMetrics(
         refname, bootstrap_cis=False
     )
 
@@ -921,7 +921,7 @@ def test_TripleIntercomparisonMetrics(testdata_generator):
 
     # now with CIs, again only for random data
     if "col1_name" in datasets.keys():
-        triplet_metrics_calculator = TripleIntercomparisonMetrics(
+        triplet_metrics_calculator = TripleCollocationMetrics(
             refname, bootstrap_cis=True
         )
         val_triplet = Validation(

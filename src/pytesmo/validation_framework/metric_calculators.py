@@ -1543,7 +1543,7 @@ class PairwiseIntercomparisonMetrics(MetadataMetrics, PairwiseMetricsMixin):
         return result
 
 
-class TripleIntercomparisonMetrics(MetadataMetrics, PairwiseMetricsMixin):
+class TripleCollocationMetrics(MetadataMetrics, PairwiseMetricsMixin):
     """
     Computes triple collocation metrics
 
