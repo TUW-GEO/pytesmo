@@ -57,6 +57,7 @@ from pytesmo.metrics._fast_pairwise import (
 )
 from pytesmo.metrics.pairwise import (
     _bias_ci_from_moments,
+    _mse_bias_ci_from_moments,
     msd_ci,
     rmsd_ci,
     ubrmsd_ci,
@@ -1322,11 +1323,12 @@ class PairwiseMetricsMixin:
         if self.analytical_cis:
             metrics += [
                 "BIAS_ci_lower", "BIAS_ci_upper",
+                "mse_bias_ci_lower", "mse_bias_ci_upper",
                 "RMSD_ci_lower", "RMSD_ci_upper",
                 "mse_ci_lower", "mse_ci_upper",
                 "RSS_ci_lower", "RSS_ci_upper",
                 "urmsd_ci_lower", "urmsd_ci_upper",
-                "R_ci_lower", "R_ci_upper"
+                "R_ci_lower", "R_ci_upper",
             ]
             if self.calc_spearman:
                 metrics += ["rho_ci_lower", "rho_ci_upper"]
@@ -1334,8 +1336,7 @@ class PairwiseMetricsMixin:
                 metrics += ["tau_ci_lower", "tau_ci_upper"]
         if self.bootstrap_cis:
             metrics += ["mse_var_ci_lower", "mse_var_ci_upper",
-                        "mse_corr_ci_lower", "mse_corr_ci_upper",
-                        "mse_bias_ci_lower", "mse_bias_ci_upper"]
+                        "mse_corr_ci_lower", "mse_corr_ci_upper"]
         return metrics
 
     def _calc_pairwise_metrics(self, x, y, mx, my, varx, vary, cov,
@@ -1397,6 +1398,10 @@ class PairwiseMetricsMixin:
                 result["BIAS_ci_lower" + suffix][0],
                 result["BIAS_ci_upper" + suffix][0]
             ) = _bias_ci_from_moments(0.05, mx, my, varx, vary, cov, n_obs)
+            (
+                result["mse_bias_ci_lower" + suffix][0],
+                result["mse_bias_ci_upper" + suffix][0]
+            ) = _mse_bias_ci_from_moments(0.05, mx, my, varx, vary, cov, n_obs)
             # MSE is the same as MSD
             (
                 result["mse_ci_lower" + suffix][0],
@@ -1437,7 +1442,7 @@ class PairwiseMetricsMixin:
                 ) = kendall_tau_ci(x, y, result["tau" + suffix][0])
 
         if self.bootstrap_cis:
-            for m in ["mse_var", "mse_corr", "mse_bias"]:
+            for m in ["mse_var", "mse_corr"]:
                 metric_func = getattr(pairwise, m)
                 _, lb, ub = with_bootstrapped_ci(metric_func, x, y)
                 result[f"{m}_ci_lower" + suffix][0] = lb
@@ -1476,6 +1481,7 @@ class PairwiseIntercomparisonMetrics(MetadataMetrics, PairwiseMetricsMixin):
         metrics:
 
         - BIAS
+        - mse_bias
         - RMSD
         - urmsd
         - mse
@@ -1491,7 +1497,6 @@ class PairwiseIntercomparisonMetrics(MetadataMetrics, PairwiseMetricsMixin):
 
         - mse_corr
         - mse_var
-        - mse_bias
 
         The default is `False`. This might be a lot of computational effort.
     """
@@ -1566,13 +1571,8 @@ class TripleCollocationMetrics(MetadataMetrics, PairwiseMetricsMixin):
         Minimum number of observations required to calculate metrics. Default
         is 10.
     bootstrap_cis
-        Whether to calculate bootstrap confidence intervals for the following
-        metrics:
-
-        - mse_corr
-        - mse_var
-        - mse_bias
-
+        Whether to calculate bootstrap confidence intervals for triple
+        collocation metrics.
         The default is `False`. This might be a lot of computational effort.
     """
 

@@ -54,6 +54,7 @@ from pytesmo.metrics._fast_pairwise import (  # noqa: F401
 
 has_ci = [
     "bias",
+    "mse_bias",
     "msd",
     "rmsd",
     "nrmsd",
@@ -68,7 +69,6 @@ no_ci = [
     "mad",
     "mse_corr",
     "mse_var",
-    "mse_bias",
     "nash_sutcliffe",
     "index_of_agreement",
 ]
@@ -111,6 +111,60 @@ def _bias_ci_from_moments(alpha, mx, my, varx, vary, cov, n):
     delta = std / np.sqrt(n) * stats.t.ppf(1 - alpha / 2, n)
     b = mx - my
     return b - delta, b + delta
+
+
+def mse_bias_ci(x, y, bsq, alpha=0.05):
+    """
+    Confidence interval for MSE bias component = bias ** 2.
+
+    Assuming that x and y are normally distributed with means mx, my and
+    variances varx, vary, the bias is normally distributed with mean ``m = mx -
+    my`` and variance ``var = (varx + vary) / n``.
+
+    ``mse_bias / var`` then follows a non-central chi-square distribution with
+    one degree of freedom and non-centrality parameter ``l = m**2 / var``.
+    Since the variances are estimated from the data, we will calculate them
+    with ``ddof=1``.
+
+    Parameters
+    ----------
+    x : numpy.ndarray
+        First input vector.
+    y : numpy.ndarray
+        Second input vector.
+    bsq : float
+        bias ** 2
+    alpha : float, optional
+        1 - confidence level, default is 0.05
+
+    Returns
+    -------
+    lower, upper : float
+        Lower and upper confidence interval bounds.
+    """
+    n = len(x)
+    std = np.std(x - y, ddof=1) / np.sqrt(n)
+    nc = bsq / std ** 2
+    lower = stats.ncx2.ppf(alpha / 2, 1, nc) * std ** 2
+    upper = stats.ncx2.ppf(1 - alpha / 2, 1, nc) * std ** 2
+    return lower, upper
+
+
+def _mse_bias_ci_from_moments(alpha, mx, my, varx, vary, cov, n):
+    # This is based on the fact that:
+    # var(x - y) = var(x) + var(y) - 2*cov(x,y)
+    # and therefore
+    # std(x - y, ddof=1) = sqrt(var(x - y, ddof=1))
+    #                    = sqrt(n/(n-1) * var(x-y))
+    # the standard deviation of the bias is then
+    # std(bias) = std(x - y, ddof) / sqrt(n)
+    #           = sqrt(var(x - y) / (n-1))
+    b = mx - my
+    std = np.sqrt((varx + vary - 2 * cov) / (n - 1))
+    nc = b ** 2 / std ** 2
+    lower = stats.ncx2.ppf(alpha / 2, 1, nc) * std ** 2
+    upper = stats.ncx2.ppf(1 - alpha / 2, 1, nc) * std ** 2
+    return lower, upper
 
 
 def aad(x, y):

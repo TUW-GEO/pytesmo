@@ -77,7 +77,7 @@ def with_bootstrapped_ci(
     x,
     y,
     alpha=0.05,
-    method="BCa",
+    method="percentile",
     nsamples=1000,
     minimum_data_length=100,
 ):
@@ -103,11 +103,11 @@ def with_bootstrapped_ci(
         The method to use to calculate confidence intervals. Available methods
         are:
 
-        - "BCa" (default): Bias-corrected and accelerated bootstrap.
-        - "percentile": Uses the percentiles of the bootstrapped metric
-          distribution.
+        - "percentile" (default): Uses the percentiles of the bootstrapped
+          metric distribution.
         - "basic": Uses the percentiles of the differences to the original
           metric value.
+        - "BCa": Bias-corrected and accelerated bootstrap.
 
         For more info and a comparison of the methods, see [1]_, especially
         Table 6 on page 38.
@@ -170,7 +170,7 @@ def tcol_metrics_with_bootstrapped_ci(
     z,
     ref_ind=0,
     alpha=0.05,
-    method="BCa",
+    method="percentile",
     nsamples=1000,
     minimum_data_length=100,
 ):
@@ -194,11 +194,11 @@ def tcol_metrics_with_bootstrapped_ci(
         The method to use to calculate confidence intervals. Available methods
         are:
 
-        - "BCa" (default): Bias-corrected and accelerated bootstrap.
-        - "percentile": Uses the percentiles of the bootstrapped metric
-          distribution.
+        - "percentile" (default): Uses the percentiles of the bootstrapped
+          metric distribution.
         - "basic": Uses the percentiles of the differences to the original
           metric value.
+        - "BCa": Bias-corrected and accelerated bootstrap.
 
         For more info and a comparison of the methods, see [1]_, especially
         Table 6 on page 38.
@@ -279,7 +279,7 @@ def tcol_metrics_with_bootstrapped_ci(
                     bootstrapped_beta[:, i], orig_beta[i], alpha
                 )
             else:
-                lower_beta[i], upper_beta[i] = np.nan, np.nan
+                lower_beta[i], upper_beta[i] = 1, 1
         elif method == "basic":
             lower_snr[i], upper_snr[i] = _basic_bs_ci(
                 bootstrapped_snr[:, i], orig_snr[i], alpha
