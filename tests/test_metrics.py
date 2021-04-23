@@ -249,6 +249,30 @@ def test_tcol_metrics_bootstrapped_cis():
     assert np.all(beta_result[0] <= beta_result[2])
 
 
+def test_tcol_metrics_bootstrap_bad_data():
+    n_datasets = 3
+    n = 1000
+    r = 0.8
+    C = np.ones((n_datasets, n_datasets)) * r
+    for i in range(n_datasets):
+        C[i, i] = 1
+    A = np.linalg.cholesky(C)
+    X = (A @ np.random.randn(n_datasets, n)).T
+
+    x, y, z = X[:, 0], X[:, 1], X[:, 2]
+    (snr_result, err_result, beta_result) = tcol_metrics_with_bootstrapped_ci(
+        x, y, z
+    )
+    # 0: value, 1: lower, 2: upper
+    assert np.all(snr_result[1] < snr_result[0])
+    assert np.all(snr_result[0] < snr_result[2])
+    assert np.all(err_result[1] < err_result[0])
+    assert np.all(err_result[0] < err_result[2])
+    # equality is okay because the reference dataset has beta == 1 always
+    assert np.all(beta_result[1] <= beta_result[0])
+    assert np.all(beta_result[0] <= beta_result[2])
+
+
 def test_bias(arange_testdata):
     """
     Test for bias

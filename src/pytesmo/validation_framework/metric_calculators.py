@@ -1649,7 +1649,6 @@ class TripleCollocationMetrics(MetadataMetrics, PairwiseMetricsMixin):
                     result[(metric, name)][0] = res[j][0][i]
                     result[(metric + "_ci_lower", name)][0] = res[j][1][i]
                     result[(metric + "_ci_upper", name)][0] = res[j][2][i]
-
         return result
 
 
