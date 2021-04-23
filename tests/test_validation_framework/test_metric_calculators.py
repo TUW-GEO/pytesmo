@@ -636,7 +636,7 @@ def testdata_random():
             "reference": ref,
             "col1": x1,
             "col2": x2,
-            "col3": x3,
+            "zcol3": x3,
         },
         index=dr
     )
@@ -656,7 +656,7 @@ def testdata_random():
             "lon": 1,
             "lat": 1,
         },
-        (("col3_name", "col3"), ("reference_name", "reference")):
+        (("reference_name", "reference"), ("zcol3_name", "zcol3")):
         {
             "n_obs": n - 2,
             "gpi": 1,
@@ -765,13 +765,17 @@ def test_PairwiseIntercomparisonMetrics(testdata_generator):
         for m in pw_metrics:
             othername = key[0][0]
             refname = key[1][0]
+            if othername == "reference_name":
+                # sorting might be different, see GH #220
+                othername = key[1][0]
+                refname = key[0][0]
             old_m_key = f"{m}_between_{refname}_and_{othername}"
             if m == "BIAS":
                 # PairwiseIntercomparisonMetrics has the result as (other,
                 # ref), and therefore "bias between other and ref", compared to
                 # "bias between ref and bias" in IntercomparisonMetrics
                 # this is related to issue #220
-                assert_equal(-res[m], res_old[old_m_key])
+                assert_equal(np.abs(res[m]), np.abs(res_old[old_m_key]))
             elif m == "urmsd":
                 # the old implementation differs from the new implementation
                 pass
