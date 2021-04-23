@@ -28,8 +28,7 @@ Analytical CIs are available for
 * rmsd
 * nrmsd
 * ubrmsd
-* mean_squared_error
-* mse_bias
+* mse
 * pearson_r
 * spearman_r
 * kendall_tau
@@ -68,35 +67,33 @@ collocation metrics in :py:mod:`pytesmo.metrics.tcol`.
 
 from pytesmo.metrics.pairwise import (
     aad,
+    bias,
     mad,
     msd,
     rmsd,
     nrmsd,
     ubrmsd,
-    pearson_r,
-    spearman_r,
-    kendall_tau,
-    nash_sutcliffe,
-    index_of_agreement,
-)
-from pytesmo.metrics._fast import (
-    bias,
     mse_bias,
     mse_var,
     mse_corr,
     mse_decomposition,
     RSS,
+    pearson_r,
+    spearman_r,
+    kendall_tau,
+    nash_sutcliffe,
+    index_of_agreement,
     rolling_pr_rmsd,
 )
-from pytesmo.metrics.pairwise_utils import (
+from pytesmo.metrics.confidence_intervals import (
     has_analytical_ci,
     with_analytical_ci,
     with_bootstrapped_ci,
+    tcol_metrics_with_bootstrapped_ci,
 )
 
 from pytesmo.metrics.tcol import (
     tcol_metrics,
-    tcol_metrics_with_bootstrapped_ci,
     ecol
 )
 

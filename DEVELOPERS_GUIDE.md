@@ -31,5 +31,7 @@ after you applied your changes. There will be some warnings like this:
 
     warning: src/pytesmo/metrics/_fast.pyx:11:6: Unused entry 'dtype_signed'
 
-Ignore the warnings about 'dtype_signed'. If there are other warnings, you
-should probably investigate them.
+Ignore the warnings about unused entries, e.g. 'dtype_signed', 'itemsize',
+'kind', 'memslice', 'ndarray', and maybe some more. If there are other warnings
+than unused entry, or if one of the unused entries looks like a variable name
+you used, you should probably investigate them.

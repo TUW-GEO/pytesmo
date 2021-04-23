@@ -12,22 +12,36 @@
 #     the names of its contributors may be used to endorse or promote products
 #     derived from this software without specific prior written permission.
 
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-# DISCLAIMED. IN NO EVENT SHALL VIENNA UNIVERSITY OF TECHNOLOGY,
-# DEPARTMENT OF GEODESY AND GEOINFORMATION BE LIABLE FOR ANY
-# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL VIENNA UNIVERSITY OF TECHNOLOGY, DEPARTMENT
+# OF GEODESY AND GEOINFORMATION BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+# OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+# OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+# ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from datetime import datetime
 import numpy as np
+from numpy.testing import (
+    assert_equal,
+    assert_almost_equal,
+    assert_allclose,
+)
 import pandas as pd
+from pathlib import Path
+import pytest
+import shutil
 
+from pytesmo.metrics import (
+    with_analytical_ci,
+    with_bootstrapped_ci,
+    pairwise
+)
+from pytesmo.validation_framework.validation import Validation
 from pytesmo.validation_framework.metric_calculators import (
     MetadataMetrics,
     BasicMetrics,
@@ -38,7 +52,13 @@ from pytesmo.validation_framework.metric_calculators import (
     HSAF_Metrics,
     RollingMetrics,
     MonthsMetricsAdapter,
+    PairwiseIntercomparisonMetrics,
+    TripleCollocationMetrics,
 )
+from pytesmo.validation_framework.temporal_matchers import (
+    make_combined_temporal_matcher
+)
+from pytesmo.validation_framework.results_manager import netcdf_results_manager
 import pytesmo.metrics as metrics
 
 
@@ -194,6 +214,7 @@ def test_BasicMetricsPlusMSE_calculator_metadata():
     assert np.isnan(res['R'])
     # depends on scipy version changed after v1.2.1
     assert res['p_R'] == np.array([1.]) or np.isnan(res['R'])
+
 
 def test_IntercompMetrics_calculator():
     """
@@ -492,3 +513,481 @@ def test_RollingMetrics():
 
     rmsd_arr = np.array(rmsd_arr)
     np.testing.assert_almost_equal(dataset['RMSD'][0][29:-1], rmsd_arr)
+
+
+###########################################################################
+# Tests for new QA4SM metrics calculators
+
+
+class DummyReader:
+    def __init__(self, df, name):
+        self.data = pd.DataFrame(df[name])
+
+    def read_ts(self, *args, **kwargs):
+        return self.data
+
+
+def make_datasets(df):
+    datasets = {}
+    for key in df:
+        ds = {"columns": [key], "class": DummyReader(df, key)}
+        datasets[key+"_name"] = ds
+    return datasets
+
+
+def testdata_known_results():
+    dr = pd.date_range("2000", "2020", freq="D")
+    n = len(dr)
+    x = np.ones(n) * 2
+    x[10] = np.nan
+    df = pd.DataFrame(
+        {
+            "reference": x,
+            # starting with a letter > r here, so we can check how
+            # reliable the sorting is
+            "plus2": x + 2,
+            "minus4": x - 4,
+            "plus1": x + 1,
+        },
+        index=dr
+    )
+
+    expected = {
+        (("plus2_name", "plus2"), ("reference_name", "reference")):
+        {
+            "n_obs": n - 1,
+            "R": np.nan,
+            "p_R": np.nan,
+            "BIAS": 2,
+            "RMSD": 2,
+            "mse": 4,
+            "RSS": (n-1) * 4,
+            "mse_corr": 0,
+            "mse_bias": 4,
+            "mse_var": 0,
+            "urmsd": 0,
+            "gpi": 1,
+            "lon": 1,
+            "lat": 1,
+        },
+        (("minus4_name", "minus4"), ("reference_name", "reference")):
+        {
+            "n_obs": n - 1,
+            "R": np.nan,
+            "p_R": np.nan,
+            "BIAS": -4,
+            "RMSD": 4,
+            "mse": 16,
+            "RSS": (n-1) * 16,
+            "mse_corr": 0,
+            "mse_bias": 16,
+            "mse_var": 0,
+            "urmsd": 0,
+            "gpi": 1,
+            "lon": 1,
+            "lat": 1,
+        },
+        (("plus1_name", "plus1"), ("reference_name", "reference")):
+        {
+            "n_obs": n - 1,
+            "R": np.nan,
+            "p_R": np.nan,
+            "BIAS": 1,
+            "RMSD": 1,
+            "mse": 1,
+            "RSS": (n-1) * 1,
+            "mse_corr": 0,
+            "mse_bias": 1,
+            "mse_var": 0,
+            "urmsd": 0,
+            "gpi": 1,
+            "lon": 1,
+            "lat": 1,
+        },
+    }
+
+    # make all arrays of np.float32, except n_obs, gpi (int32) and lat, lon
+    # (float64)
+    for ck in expected:
+        for m in expected[ck]:
+            if m in ["n_obs", "gpi"]:
+                expected[ck][m] = np.array([expected[ck][m]], dtype=np.int32)
+            elif m in ["lat", "lon"]:
+                expected[ck][m] = np.array([expected[ck][m]], dtype=np.float64)
+            else:
+                expected[ck][m] = np.array([expected[ck][m]], dtype=np.float32)
+
+    return make_datasets(df), expected
+
+
+def testdata_random():
+    np.random.seed(42)
+    dr = pd.date_range("2000", "2020", freq="D")
+    n = len(dr)
+    y = np.random.randn(n)
+    ref = y + 0.1 * np.random.randn(n)
+    x1 = 2 * y + 0.1 * np.random.randn(n)
+    x2 = -2 * y + 0.1 * np.random.randn(n)
+    x3 = 5 * y + 0.1 * np.random.randn(n)
+    ref[10] = np.nan
+    x2[50] = np.nan
+    df = pd.DataFrame(
+        {
+            "reference": ref,
+            "col1": x1,
+            "col2": x2,
+            "zcol3": x3,
+        },
+        index=dr
+    )
+
+    expected = {
+        (("col1_name", "col1"), ("reference_name", "reference")):
+        {
+            "n_obs": n - 2,
+            "gpi": 1,
+            "lon": 1,
+            "lat": 1,
+        },
+        (("col2_name", "col2"), ("reference_name", "reference")):
+        {
+            "n_obs": n - 2,
+            "gpi": 1,
+            "lon": 1,
+            "lat": 1,
+        },
+        (("reference_name", "reference"), ("zcol3_name", "zcol3")):
+        {
+            "n_obs": n - 2,
+            "gpi": 1,
+            "lon": 1,
+            "lat": 1,
+        },
+    }
+
+    # make all arrays of np.float32, except n_obs, gpi (int32) and lat, lon
+    # (float64)
+    for ck in expected:
+        for m in expected[ck]:
+            if m in ["n_obs", "gpi"]:
+                expected[ck][m] = np.array([expected[ck][m]], dtype=np.int32)
+            elif m in ["lat", "lon"]:
+                expected[ck][m] = np.array([expected[ck][m]], dtype=np.float64)
+            else:
+                expected[ck][m] = np.array([expected[ck][m]], dtype=np.float32)
+
+    return make_datasets(df), expected
+
+
+@pytest.mark.parametrize(
+    "testdata_generator", [testdata_known_results, testdata_random]
+)
+def test_PairwiseIntercomparisonMetrics(testdata_generator):
+    # This test first compares the PairwiseIntercomparisonMetrics to known
+    # results and then confirms that it agrees with IntercomparisonMetrics as
+    # expected
+
+    datasets, expected = testdata_generator()
+
+    # for the pairwise intercomparison metrics it's important that we use
+    # make_combined_temporal_matcher
+    val = Validation(
+        datasets,
+        "reference_name",
+        scaling=None,  # doesn't work with the constant test data
+        temporal_matcher=make_combined_temporal_matcher(pd.Timedelta(6, "H")),
+        metrics_calculators={
+            (4, 2): (
+                PairwiseIntercomparisonMetrics(
+                    calc_spearman=True, analytical_cis=False
+                ).calc_metrics
+            )
+        }
+    )
+    results_pw = val.calc([1], [1], [1], rename_cols=False)
+
+    # in results_pw, there are four entries with keys (("c1name", "c1"),
+    # ("refname", "ref"), and so on.
+    # Each value is a single dictionary with the values of the metrics
+
+    expected_metrics = [
+        "R", "p_R", "BIAS", "RMSD", "mse", "RSS", "mse_corr", "mse_bias",
+        "urmsd", "mse_var", "n_obs", "gpi", "lat", "lon", "rho", "p_rho",
+        "tau", "p_tau"
+    ]
+    for key in results_pw:
+        assert isinstance(key, tuple)
+        assert len(key) == 2
+        assert all(map(lambda x: isinstance(x, tuple), key))
+        assert isinstance(results_pw[key], dict)
+        assert sorted(expected_metrics) == sorted(results_pw[key].keys())
+        for m in expected_metrics:
+            if m in expected[key]:
+                assert_equal(results_pw[key][m], expected[key][m])
+
+    # preparation of IntercomparisonMetrics run for comparison
+    ds_names = list(datasets.keys())
+    metrics = IntercomparisonMetrics(
+        dataset_names=ds_names,
+        # passing the names here explicitly, see GH issue #220
+        refname="reference_name",
+        other_names=ds_names[1:],
+        calc_tau=True,
+    )
+    val = Validation(
+        datasets,
+        "reference_name",
+        scaling=None,
+        temporal_matcher=None,  # use default here
+        metrics_calculators={(4, 4): metrics.calc_metrics}
+    )
+
+    results = val.calc(1, 1, 1, rename_cols=False)
+
+    # results is a dictionary with one entry and key
+    # (('c1name', 'c1'), ('c2name', 'c2'), ('c3name', 'c3'), ('refname',
+    # 'ref')), the value is a list of length 0, which contains a dictionary
+    # with all the results, where the metrics are joined with "_between_" with
+    # the combination of datasets, which is joined with "_and_", e.g. for R
+    # between ``refname`` and ``c1name`` the key is
+    # "R_between_refname_and_c1name"
+    common_metrics = ["n_obs", "gpi", "lat", "lon"]
+    pw_metrics = list(set(expected_metrics) - set(common_metrics))
+    # there's some sorting done at some point in pytesmo
+    oldkey = tuple(sorted([(name, name.split("_")[0]) for name in ds_names]))
+    res_old = results[oldkey]
+    for key in results_pw:
+        res = results_pw[key]
+        # handle the full dataset metrics
+        for m in common_metrics:
+            assert_equal(res[m], res_old[m])
+        # now get the metrics and compare to the right combination
+        for m in pw_metrics:
+            othername = key[0][0]
+            refname = key[1][0]
+            if othername == "reference_name":
+                # sorting might be different, see GH #220
+                othername = key[1][0]
+                refname = key[0][0]
+            old_m_key = f"{m}_between_{refname}_and_{othername}"
+            if m == "BIAS":
+                # PairwiseIntercomparisonMetrics has the result as (other,
+                # ref), and therefore "bias between other and ref", compared to
+                # "bias between ref and bias" in IntercomparisonMetrics
+                # this is related to issue #220
+                assert_equal(np.abs(res[m]), np.abs(res_old[old_m_key]))
+            elif m == "urmsd":
+                # the old implementation differs from the new implementation
+                pass
+            else:
+                assert_equal(res[m], res_old[old_m_key])
+
+
+def test_PairwiseIntercomparisonMetrics_confidence_intervals():
+    # tests if the correct confidence intervals are returned
+
+    datasets, _ = testdata_random()
+    matcher = make_combined_temporal_matcher(pd.Timedelta(6, "H"))
+    val = Validation(
+        datasets,
+        "reference_name",
+        scaling=None,  # doesn't work with the constant test data
+        temporal_matcher=matcher,
+        metrics_calculators={
+            (4, 2): (
+                PairwiseIntercomparisonMetrics(
+                    calc_spearman=True,
+                    calc_kendall=True,
+                    analytical_cis=True,
+                    bootstrap_cis=True,
+                ).calc_metrics
+            )
+        }
+    )
+    results_pw = val.calc([1], [1], [1], rename_cols=False)
+
+    metrics_with_ci = {
+        "BIAS": "bias",
+        "R": "pearson_r",
+        "rho": "spearman_r",
+        "tau": "kendall_tau",
+        "RMSD": "rmsd",
+        "urmsd": "ubrmsd",
+        "mse": "msd",
+        "mse_bias": "mse_bias",
+    }
+    metrics_with_bs_ci = {
+        "mse_corr": "mse_corr",
+        "mse_var": "mse_var",
+    }
+
+    # reconstruct dataframe
+    frames = []
+    for key in datasets:
+        frames.append(datasets[key]["class"].data)
+    data = pd.concat(frames, axis=1)
+    data.dropna(how="any", inplace=True)
+
+    for key in results_pw:
+        othername = key[0][0]
+        other_col = othername.split("_")[0]
+        other = data[other_col].values
+        refname = key[1][0]
+        ref_col = refname.split("_")[0]
+        ref = data[ref_col].values
+        for metric_key in metrics_with_ci:
+            lower = results_pw[key][f"{metric_key}_ci_lower"]
+            upper = results_pw[key][f"{metric_key}_ci_upper"]
+
+            # calculate manually from data
+            metric_func = getattr(pairwise, metrics_with_ci[metric_key])
+            m, lb, ub = with_analytical_ci(
+                metric_func, other, ref
+            )
+            # difference due to float32 vs. float64
+            assert_almost_equal(upper, ub, 6)
+            assert_almost_equal(lower, lb, 6)
+
+        for metric_key in metrics_with_bs_ci:
+            lower = results_pw[key][f"{metric_key}_ci_lower"]
+            upper = results_pw[key][f"{metric_key}_ci_upper"]
+
+            # calculate manually from data
+            metric_func = getattr(pairwise, metrics_with_bs_ci[metric_key])
+            m, lb, ub = with_bootstrapped_ci(
+                metric_func, other, ref
+            )
+            assert_allclose(upper, ub, rtol=1e-1, atol=1e-4)
+            assert_allclose(lower, lb, rtol=1e-1, atol=1e-4)
+
+
+@pytest.mark.parametrize(
+    "testdata_generator", [testdata_known_results, testdata_random]
+)
+def test_TripleCollocationMetrics(testdata_generator):
+    # tests by comparison of pairwise metrics to triplet metrics
+
+    datasets, expected = testdata_generator()
+
+    refname = "reference_name"
+    othernames = list(datasets.keys())
+    othernames.remove(refname)
+
+    triplet_metrics_calculator = TripleCollocationMetrics(
+        refname, bootstrap_cis=False
+    )
+
+    matcher = make_combined_temporal_matcher(pd.Timedelta(6, "H"))
+
+    val_triplet = Validation(
+        datasets,
+        "reference_name",
+        scaling=None,  # doesn't work with the constant test data
+        temporal_matcher=matcher,
+        metrics_calculators={
+            (4, 3): triplet_metrics_calculator.calc_metrics
+        }
+    )
+    results_triplet = val_triplet.calc([1], [1], [1], rename_cols=False)
+
+    if "col1_name" in datasets.keys():
+        # we only test the TCA results with the random data, since for the
+        # constant data all covariances are zero and TCA therefore doesn't
+        # work.
+        for metric in ["snr", "err_std", "beta"]:
+            for dset in datasets:
+                values = []
+                dkey = (dset, datasets[dset]["columns"][0])
+                for tkey in results_triplet:
+                    if dkey in tkey:
+                        values.append(results_triplet[tkey][(metric, dset)][0])
+                diff = np.abs(np.diff(values))
+                assert diff.max() / values[0] < 0.1
+
+    # check if writing to file works
+    results_path = Path("__test_results")
+    # if this throws, there's either some data left over from previous tests,
+    # or some data is named __test_results. Remove the __test_results directory
+    # from your current directory to make the test work again.
+    assert not results_path.exists()
+    results_path.mkdir(exist_ok=True, parents=True)
+    netcdf_results_manager(results_triplet, results_path.name)
+    assert results_path.exists()
+    for key in results_triplet:
+        fname = "_with_".join(map(lambda t: ".".join(t), key)) + ".nc"
+        assert (results_path / fname).exists()
+        # res = xr.open_dataset(results_path / fname)
+        # for metric in ["snr", "err_std", "beta"]:
+        #     for dset, _ in key:
+        #         mkey = metric + "__" + dset
+        #         assert mkey in res.data_vars
+    shutil.rmtree(results_path)
+
+    # now with CIs, again only for random data
+    if "col1_name" in datasets.keys():
+        triplet_metrics_calculator = TripleCollocationMetrics(
+            refname, bootstrap_cis=True
+        )
+        val_triplet = Validation(
+            datasets,
+            "reference_name",
+            scaling=None,  # doesn't work with the constant test data
+            temporal_matcher=matcher,
+            metrics_calculators={
+                (4, 3): triplet_metrics_calculator.calc_metrics
+            }
+        )
+        results_triplet = val_triplet.calc([1], [1], [1], rename_cols=False)
+        for key in results_triplet:
+            for dset, _ in key:
+                for metric in ["snr", "err_std", "beta"]:
+                    lkey = f"{metric}_ci_lower"
+                    ukey = f"{metric}_ci_upper"
+                    assert (lkey, dset) in results_triplet[key]
+                    assert (ukey, dset) in results_triplet[key]
+                    assert (
+                        results_triplet[key][(lkey, dset)]
+                        <= results_triplet[key][(metric, dset)]
+                    )
+                    assert (
+                        results_triplet[key][(metric, dset)]
+                        <= results_triplet[key][(ukey, dset)]
+                    )
+
+
+# def test_sorting_issue():
+    # GH #220
+    # might be a good start for fixing the issue
+
+    # dr = pd.date_range("2000", "2020", freq="D")
+    # n = len(dr)
+    # x = np.ones(n) * 2
+    # df = pd.DataFrame(
+    #     {
+    #         "reference": x,
+    #         "zplus2": x + 2,
+    #         "plus1": x + 1,
+    #     },
+    #     index=dr
+    # )
+
+    # datasets = {
+    #     key + "_name": {"columns": [key], "class": DummyReader(df, key)}
+    #     for key in df
+    # }
+
+    # val = Validation(
+    #     datasets,
+    #     "reference_name",
+    #     scaling=None,  # doesn't work with the constant test data
+    #     # temporal_matcher=None,
+    #     temporal_matcher=make_combined_temporal_matcher(
+    #          pd.Timedelta(6, "H")
+    #     ),
+    #     metrics_calculators={
+    #         (3, 2): PairwiseIntercomparisonMetrics().calc_metrics
+    #     }
+    # )
+    # results = val.calc(1, 1, 1)
+
+    # assert 0

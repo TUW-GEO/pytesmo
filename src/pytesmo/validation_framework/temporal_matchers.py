@@ -1,4 +1,5 @@
-# Copyright (c) 2013,Vienna University of Technology, Department of Geodesy and Geoinformation
+# Copyright (c) 2013,Vienna University of Technology, Department of Geodesy and
+# Geoinformation
 # All rights reserved.
 
 # Redistribution and use in source and binary forms, with or without
@@ -8,21 +9,22 @@
 #    * Redistributions in binary form must reproduce the above copyright
 #      notice, this list of conditions and the following disclaimer in the
 #      documentation and/or other materials provided with the distribution.
-#    * Neither the name of the Vienna University of Technology, Department of Geodesy and Geoinformation nor the
-#      names of its contributors may be used to endorse or promote products
-#      derived from this software without specific prior written permission.
+#    * Neither the name of the Vienna University of Technology, Department of
+#      Geodesy and Geoinformation nor the names of its contributors may be used
+#      to endorse or promote products derived from this software without
+#      specific prior written permission.
 
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-# DISCLAIMED. IN NO EVENT SHALL VIENNA UNIVERSITY OF TECHNOLOGY,
-# DEPARTMENT OF GEODESY AND GEOINFORMATION BE LIABLE FOR ANY
-# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL VIENNA UNIVERSITY OF TECHNOLOGY, DEPARTMENT
+# OF GEODESY AND GEOINFORMATION BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+# OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+# OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+# ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 '''
 Created on Sep 24, 2013
@@ -31,11 +33,10 @@ Created on Sep 24, 2013
 '''
 
 import itertools
-
-import pytesmo.temporal_matching as temp_match
-
 import pandas as pd
-from distutils.version import LooseVersion
+
+import pytesmo.temporal_matching as temporal_matching
+
 
 class BasicTemporalMatching(object):
     """
@@ -57,27 +58,13 @@ class BasicTemporalMatching(object):
         in this case the reference dataset for the grid is also the
         temporal reference dataset
         """
-        matched_datasets = temp_match.df_match(reference, *args, dropna=True,
-                                               dropduplicates=True,
-                                               window=self.window)
+        ref_df = pd.DataFrame(reference)
+        return temporal_matching.combined_temporal_collocation(
+            ref_df, args, self.window, dropna=True, dropduplicates=True,
+            add_ref_data=True, combined_dropna="all"
+        )
 
-        if type(matched_datasets) != tuple:
-            matched_datasets = [matched_datasets]
-
-        matched_data = pd.DataFrame(reference)
-
-        for match in matched_datasets:
-            if LooseVersion(pd.__version__) < LooseVersion('0.23'):
-                match = match.drop(('index', ''), axis=1)
-            else:
-                match = match.drop('index', axis=1)
-
-            match = match.drop('distance', axis=1)
-            matched_data = matched_data.join(match)
-
-        return matched_data.dropna(how='all')
-
-    def combinatory_matcher(self, df_dict, refkey, n=2):
+    def combinatory_matcher(self, df_dict, refkey, n=2, **kwargs):
         """
         Basic temporal matcher that matches always one Dataframe to
         the reference Dataframe resulting in matched DataFrame pairs.
@@ -98,6 +85,7 @@ class BasicTemporalMatching(object):
             as a reference.
         n: int
             number of datasets to match at once
+        k : dummy argument
 
         Returns
         -------
@@ -129,6 +117,98 @@ class BasicTemporalMatching(object):
                 matched[matched_key] = joined
 
         return matched
+
+
+def dfdict_combined_temporal_collocation(
+    dfs, refname, k, window=None, **kwargs
+):
+    """
+    Applies :py:func:`combined_temporal_collocation` on a dictionary of
+    dataframes.
+
+    Parameters
+    ----------
+    dfs : dict
+        Dictionary of pd.DataFrames containing the dataframes to be collocated.
+    refname : str
+        Name of the reference frame in `dfs`.
+    k : int
+        Number of columns that will be put together in the output dictionary.
+    window : pd.Timedelta or float, optional
+        Window around reference timestamps in which to look for data. Floats
+        are interpreted as number of days. If it is not given, defaults to 1
+        hour to mimick the behaviour of
+        ``BasicTemporalMatching.combinatory_matcher``.
+    **kwargs :
+        Keyword arguments passed to :py:func:`combined_temporal_collocation`.
+
+    Returns:
+    --------
+    matched_dict : dict
+        Dictionary where the keys are tuples of ``(other_names..., refname)``
+        for each combination of other keys in `dfs` of size `n`, and values are
+        the matched dataframes.  The column names of the dataframes are again
+        tuples of ``(name, col)`` where `name` is the key from `dfs` and `col`
+        is the original column name in the input dataframe.
+    """
+    if window is None:
+        window = pd.Timedelta(hours=1)
+
+    others = []
+    for name in dfs:
+        if name != refname:
+            others.append(df_name_multiindex(dfs[name], name))
+    ref = df_name_multiindex(dfs[refname], refname)
+    matched_df = temporal_matching.combined_temporal_collocation(
+        ref, others, window, add_ref_data=True, combined_dropna=True, **kwargs
+    )
+
+    # unpack again to dictionary
+    matched_dict = {}
+    othernames = list(dfs.keys())
+    othernames.remove(refname)
+    for onames in itertools.combinations(othernames, k - 1):
+        # we want to keep the reference columns and the columns of the current
+        # other names in the combination
+        keep = list(ref.columns)
+        for name in onames:
+            tuple_keys = list(itertools.product((name,), dfs[name].columns))
+            keep += tuple_keys
+        # there's a strange bug in pytesmo, when I make the order here to
+        # be (refname, name) instead of (name, refname) I don't get all the
+        # results
+        matched_dict[(*onames, refname)] = matched_df[keep]
+        # rename_dict = {tk: tk[1] for tk in tuple_keys}
+        # matched_dict[(refname, name)].rename(rename_dict, axis=1,
+        # inplace=True)
+    return matched_dict
+
+
+def make_combined_temporal_matcher(window):
+    """
+    Matches multiple dataframes together to only have common timestamps.
+
+    See
+    :py:func:`pytesmo.temporal_matching.dfdict_combined_temporal_collocation`
+    for more details
+
+    Parameters
+    ----------
+    window : pd.Timedelta or float, optional
+        Window around reference timestamps in which to look for data. Floats
+        are interpreted as number of days. If it is not given, defaults to 1
+        hour to mimick the behaviour of
+        ``BasicTemporalMatching.combinatory_matcher``.
+    """
+
+    def matcher(dfs, refname, k=None, **kwargs):
+        # this comes from Validation.temporal_match_datasets but is not
+        # required
+        del kwargs["n"]
+        return dfdict_combined_temporal_collocation(
+            dfs, refname, k, window=window, **kwargs
+        )
+    return matcher
 
 
 def df_name_multiindex(df, name):

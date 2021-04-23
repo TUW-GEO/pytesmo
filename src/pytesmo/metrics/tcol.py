@@ -101,15 +101,23 @@ def tcol_metrics(x, y, z, ref_ind=0):
     """
 
     cov = np.cov(np.vstack((x, y, z)))
+    return _tcol_metrics_from_cov(cov, ref_ind)
 
+
+def _tcol_metrics_from_cov(cov, ref_ind=0):
+    """
+    Calculate TCA metrics from pre-computed covariance matrix
+    """
     ind = (0, 1, 2, 0, 1, 2)
     no_ref_ind = np.where(np.arange(3) != ref_ind)[0]
 
+    # we have to take the absolute value of the ratio of covariances and of the
+    # full difference according to Gruber et al. 2020, Eq. 11
     snr = 10 * np.log10(
         [
-            (
-                (cov[i, i] * cov[ind[i + 1], ind[i + 2]])
-                / (cov[i, ind[i + 1]] * cov[i, ind[i + 2]])
+            np.abs(
+                np.abs((cov[i, i] * cov[ind[i + 1], ind[i + 2]])
+                       / (cov[i, ind[i + 1]] * cov[i, ind[i + 2]]))
                 - 1
             )
             ** (-1)
@@ -136,66 +144,6 @@ def tcol_metrics(x, y, z, ref_ind=0):
     )
 
     return snr, np.sqrt(err_var) * beta, beta
-
-
-def tcol_metrics_with_bootstrapped_ci(x, y, z, ref_ind=0, alpha=0.05,
-                                      nsamples=1000, minimum_data_length=100):
-    """
-    Confidence intervals for TCA metrics via bootstrapping.
-
-    Parameters
-    ----------
-    x, y, z : np.ndarray
-        1D arrays of data
-    ref_ind : int, optional
-        Index of reference data set for estimating scaling
-        coefficients. Default is 0 (x)
-    alpha : float, optional
-        Confidence level, default is 0.05
-    n_samples : int, optional
-        Number of bootstrap samples, default is 1000
-    minimum_data_length : int, optional
-        Minimum amount of data required to do bootstrapping. Default is 100.
-
-    Returns
-    -------
-    snr_and_ci, err_std_and_ci, beta_and_ci : tuple
-        Tuples of ``(metric, lower, upper)``. Each entry is an array of length
-        3.  ``metric`` consists of the metric values for the three datasets,
-        ``lower`` of the lower CI bounds for this metric for the three
-        datasets, and upper the upper CI bounds.
-        Example::
-
-            snr_and_ci = (
-                      [snr_x, snr_y, snr_z]
-                      [lower_snr_ci_x, lower_snr_ci_y, lower_snr_ci_z],
-                      [upper_snr_ci_x, upper_snr_ci_y, upper_snr_ci_z]
-            )
-
-    """
-    # inefficient prototype, maybe we should use Cython for this
-    n = len(x)
-    if n < minimum_data_length:
-        raise ValueError(
-            "Not enough data for bootstrapping. Your data should contain at"
-            f" least {minimum_data_length} samples.\n"
-            f"You can pass 'minimum_data_length={n}' if you want to do"
-            "bootstrapping nevertheless."
-        )
-    nmetrics = 3
-    mvals = np.empty((n, nmetrics, 3), dtype=float)
-    for i in range(nsamples):
-        idx = np.random.choice(n, size=n)
-        _x, _y, _z = x[idx], y[idx], z[idx]
-        metrics = tcol_metrics(_x, _y, _z, ref_ind)
-        for j in range(len(metrics)):
-            mvals[i, j, :] = metrics[i]
-    # m has shape (nsamples, nmetrics, 3) (actually, n_metrics == 3)
-    lower = np.quantile(mvals, alpha / 2, axis=0)
-    upper = np.quantile(mvals, 1 - alpha / 2, axis=0)
-    # return metrics + cis
-    metrics = tcol_metrics(x, y, z, ref_ind)
-    return tuple((metrics[i], lower[i, :], upper[i, :]) for i in range(3))
 
 
 def check_if_biased(combs, correlated):

@@ -7,7 +7,16 @@ from scipy import stats
 
 import pytesmo.metrics
 from pytesmo.metrics import *
-from pytesmo.metrics._fast import _moments_welford
+from pytesmo.metrics._fast_pairwise import (
+    _moments_welford,
+    _pearsonr_from_moments,
+)
+from pytesmo.metrics.pairwise import (
+    has_ci,
+    no_ci,
+    mse_bias_ci,
+    _mse_bias_ci_from_moments,
+)
 import pytesmo.metrics.deprecated as deprecated
 
 
@@ -29,28 +38,6 @@ def arange_testdata():
     x = np.arange(10, dtype=float)
     y = np.arange(10, dtype=float) + 2
     return x, y
-
-
-has_ci = [
-    "bias",
-    "msd",
-    "rmsd",
-    "nrmsd",
-    "ubrmsd",
-    "mse_bias",
-    "pearson_r",
-    "spearman_r",
-    "kendall_tau",
-]
-
-no_ci = [
-    "aad",
-    "mad",
-    "mse_corr",
-    "mse_var",
-    "nash_sutcliffe",
-    "index_of_agreement",
-]
 
 
 def test_analytical_ci_availability(testdata):
@@ -86,7 +73,7 @@ def test_bootstrap_cis_simple(method):
     b, lb, ub = with_analytical_ci(pytesmo.metrics.bias, x, y, alpha=0.1)
     # x and y have variance 1, so x - y has variance 2.
     # Therefore, b ~ N(5, 2/n)
-    rv = stats.norm(loc=5, scale=np.sqrt(2/len(x)))
+    rv = stats.norm(loc=5, scale=np.sqrt(2 / len(x)))
     # Approximate 95% intervals are therefore
     # 5 +- 2 * sqrt(2/n) = 5 +- 2 * sqrt(2/20000) ~ 5 +- 0.02
     assert abs(b - 5) < 0.02
@@ -98,8 +85,7 @@ def test_bootstrap_cis_simple(method):
 
     # test bootstrapped CIs
     bs_b, bs_lb, bs_ub = with_bootstrapped_ci(
-        pytesmo.metrics.bias, x, y, alpha=0.1,
-        method=method
+        pytesmo.metrics.bias, x, y, alpha=0.1, method=method
     )
     assert bs_b == b  # this is the same function call
     # The difference in CIs is based on experience values, and not quite as
@@ -205,6 +191,64 @@ def test_tcol_metrics():
     )
 
 
+@pytest.mark.slow
+def test_tcol_metrics_bootstrapped_cis():
+    n = 10000
+
+    mean_signal = 0.3
+    sig_signal = 0.2
+    signal = np.random.normal(mean_signal, sig_signal, n)
+
+    sig_err_x = 0.02
+    sig_err_y = 0.07
+    sig_err_z = 0.04
+    err_x = np.random.normal(0, sig_err_x, n)
+    err_y = np.random.normal(0, sig_err_y, n)
+    err_z = np.random.normal(0, sig_err_z, n)
+
+    alpha_y = 0.2
+    alpha_z = 0.5
+
+    beta_y = 0.9
+    beta_z = 1.6
+
+    x = signal + err_x
+    y = alpha_y + beta_y * (signal + err_y)
+    z = alpha_z + beta_z * (signal + err_z)
+
+    beta_pred = 1.0 / np.array((1, beta_y, beta_z))
+    err_pred = np.array((sig_err_x, sig_err_y, sig_err_z))
+    snr_pred = np.array(
+        (
+            (sig_signal / sig_err_x),
+            (sig_signal / sig_err_y),
+            (sig_signal / sig_err_z),
+        )
+    )
+
+    (snr_result, err_result, beta_result) = tcol_metrics_with_bootstrapped_ci(
+        x, y, z
+    )
+    snr = snr_result[0]
+    err = err_result[0]
+    beta = beta_result[0]
+
+    nptest.assert_allclose(beta, beta_pred, rtol=1e-2, atol=1e-2)
+    nptest.assert_allclose(err, err_pred, rtol=1e-2, atol=1e-2)
+    nptest.assert_allclose(
+        np.sqrt(10 ** (snr / 10.0)), snr_pred, rtol=5e-2, atol=1e-2
+    )
+
+    # 0: value, 1: lower, 2: upper
+    assert np.all(snr_result[1] < snr_result[0])
+    assert np.all(snr_result[0] < snr_result[2])
+    assert np.all(err_result[1] < err_result[0])
+    assert np.all(err_result[0] < err_result[2])
+    # equality is okay because the reference dataset has beta == 1 always
+    assert np.all(beta_result[1] <= beta_result[0])
+    assert np.all(beta_result[0] <= beta_result[2])
+
+
 def test_bias(arange_testdata):
     """
     Test for bias
@@ -221,7 +265,7 @@ def test_bias(arange_testdata):
     x = np.arange(10) * 1.0
     y = np.arange(20, 30) * 1.0
 
-    b_pred = 20.
+    b_pred = 20.0
     b_obs = bias(y, x)
 
     nptest.assert_equal(b_obs, b_pred)
@@ -233,14 +277,14 @@ def test_aad(arange_testdata):
     """
     # example 1
     x, y = arange_testdata
-    dev_pred = 2.
+    dev_pred = 2.0
     dev_obs = aad(x, y)
 
     nptest.assert_equal(dev_obs, dev_pred)
 
     # example 2, with outlier
-    y[-1] = 201.
-    dev_pred = 21.
+    y[-1] = 201.0
+    dev_pred = 21.0
     dev_obs = aad(x, y)
 
     nptest.assert_equal(dev_obs, dev_pred)
@@ -252,14 +296,14 @@ def test_mad(arange_testdata):
     """
     # example 1
     x, y = arange_testdata
-    dev_pred = 2.
+    dev_pred = 2.0
     dev_obs = mad(x, y)
 
     nptest.assert_equal(dev_obs, dev_pred)
 
     # example 2, with outlier
-    y[-1] = 201.
-    dev_pred = 2.
+    y[-1] = 201.0
+    dev_pred = 2.0
     dev_obs = mad(x, y)
 
     nptest.assert_equal(dev_obs, dev_pred)
@@ -272,13 +316,13 @@ def test_rmsd(arange_testdata):
     # example 1
     x, y = arange_testdata
 
-    rmsd_pred = 2.
+    rmsd_pred = 2.0
     rmsd_obs = rmsd(x, y)
 
     nptest.assert_equal(rmsd_obs, rmsd_pred)
 
     # example 2, with outlier
-    y[-1] = 100.
+    y[-1] = 100.0
 
     rmsd_pred = np.sqrt(831.7)
     rmsd_obs = rmsd(x, y)
@@ -298,18 +342,18 @@ def test_ubrmsd(arange_testdata):
 
     nptest.assert_equal(ubrmsd_obs, ubrmsd_pred)
     # aslo check consistency with direct formula
-    ubrmsd_direct = np.sqrt(rmsd(x, y) ** 2 - bias(x, y)**2)
+    ubrmsd_direct = np.sqrt(rmsd(x, y) ** 2 - bias(x, y) ** 2)
     nptest.assert_equal(ubrmsd_obs, ubrmsd_direct)
 
     # example 2, with outlier
-    y[-1] = 100.
+    y[-1] = 100.0
 
     ubrmsd_pred = 26.7
     ubrmsd_obs = ubrmsd(x, y)
 
     nptest.assert_almost_equal(ubrmsd_obs, ubrmsd_pred, 6)
     # aslo check consistency with direct formula
-    ubrmsd_direct = np.sqrt(rmsd(x, y) ** 2 - bias(x, y)**2)
+    ubrmsd_direct = np.sqrt(rmsd(x, y) ** 2 - bias(x, y) ** 2)
     nptest.assert_almost_equal(ubrmsd_obs, ubrmsd_direct)
 
 
@@ -320,8 +364,8 @@ def test_msd(arange_testdata):
     # example 1
     x, y = arange_testdata
 
-    mse_pred = 4.
-    mse_bias_pred = 2. ** 2
+    mse_pred = 4.0
+    mse_bias_pred = 2.0 ** 2
     mse_obs = msd(x, y)
     mse_bias_obs = mse_bias(x, y)
 
@@ -329,10 +373,10 @@ def test_msd(arange_testdata):
     nptest.assert_equal(mse_bias_obs, mse_bias_pred)
 
     # example 2, with outlier
-    y[-1] = 51.
+    y[-1] = 51.0
 
-    mse_pred = 180.
-    mse_bias_pred = 36.
+    mse_pred = 180.0
+    mse_bias_pred = 36.0
     mse_obs = msd(x, y)
     mse_bias_obs = mse_bias(x, y)
 
@@ -344,18 +388,18 @@ def test_mse_decomposition(arange_testdata):
     # example 1
     x, y = arange_testdata
 
-    mse_pred = 4.
-    mse_bias_pred = 2. ** 2
+    mse_pred = 4.0
+    mse_bias_pred = 2.0 ** 2
     mse_obs, _, mse_bias, _ = mse_decomposition(x, y)
 
     nptest.assert_equal(mse_obs, mse_pred)
     nptest.assert_equal(mse_bias, mse_bias_pred)
 
     # example 2, with outlier
-    y[-1] = 51.
+    y[-1] = 51.0
 
-    mse_pred = 180.
-    mse_bias_pred = 36.
+    mse_pred = 180.0
+    mse_bias_pred = 36.0
     mse_obs, _, mse_bias, _ = mse_decomposition(x, y)
 
     nptest.assert_almost_equal(mse_obs, mse_pred, 6)
@@ -376,33 +420,52 @@ def test_rmsd_mse():
     nptest.assert_almost_equal(rmsd_pred ** 2, mse_pred, 6)
 
 
+def test_pearsonr_from_moments():
+    x = np.random.randn(100)
+    y = np.random.randn(100) + x
+
+    R_sp, p_R_sp = stats.pearsonr(x, y)
+
+    covmatrix = np.cov(x, y)
+    n = len(x)
+    varx = covmatrix[0, 0]
+    vary = covmatrix[1, 1]
+    cov = covmatrix[1, 0]
+    R, p_R = _pearsonr_from_moments(varx, vary, cov, n)
+
+    nptest.assert_almost_equal(R_sp, R, 15)
+    nptest.assert_almost_equal(p_R_sp, p_R, 15)
+
+
 def test_rolling_pr_rmsd():
     # setup test data
-    window_size = '30d'
+    window_size = "30d"
     min_periods = 2
     center = True
 
     startdate = datetime(2000, 1, 1)
     enddate = datetime(2000, 12, 31)
-    dt_index = pd.date_range(start=startdate, end=enddate, freq='D')
+    dt_index = pd.date_range(start=startdate, end=enddate, freq="D")
 
-    names = ['ref', 'k1', 'k2', 'k3']
+    names = ["ref", "k1", "k2", "k3"]
     # always 0.5
     np.random.seed(10)
     df = pd.DataFrame(
         index=dt_index,
-        data={name: 0.5+0.01*np.random.randn(dt_index.size) for name in names}
+        data={
+            name: 0.5 + 0.01 * np.random.randn(dt_index.size) for name in names
+        },
     )
 
-    df['k1'] += 0.2  # some positive bias
-    df['k2'] -= 0.2  # some negative bias
-    df['k3'] -= 0.3  # some more negative bias
+    df["k1"] += 0.2  # some positive bias
+    df["k2"] -= 0.2  # some negative bias
+    df["k3"] -= 0.3  # some more negative bias
 
     data = df
     xy = data.to_numpy()
     timestamps = data.index.to_julian_date().values
-    window_size_jd = (
-        pd.Timedelta(window_size).to_numpy()/np.timedelta64(1, 'D')
+    window_size_jd = pd.Timedelta(window_size).to_numpy() / np.timedelta64(
+        1, "D"
     )
 
     pr, rmsd = deprecated.rolling_pr_rmsd(
@@ -431,3 +494,23 @@ def test_moments_welford():
     nptest.assert_almost_equal(np.var(x), varx, 14)
     nptest.assert_almost_equal(np.var(y), vary, 14)
     nptest.assert_almost_equal(np.cov(x, y, ddof=0)[0, 1], cov, 14)
+
+
+def test_mse_bias_ci_from_moments():
+    x = np.random.randn(1000)
+    y = np.random.randn(1000) + 2
+
+    mx = np.mean(x)
+    my = np.mean(y)
+    varx = np.var(x)
+    vary = np.var(y)
+    cov = np.cov(x, y)[0, 1]
+
+    b = bias(x, y)
+    lb, ub = mse_bias_ci(x, y, b ** 2)
+    lower, upper = _mse_bias_ci_from_moments(
+        0.05, mx, my, varx, vary, cov, len(x)
+    )
+
+    nptest.assert_almost_equal(lb, lower, 5)
+    nptest.assert_almost_equal(ub, upper, 5)
