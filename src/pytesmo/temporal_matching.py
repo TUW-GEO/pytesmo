@@ -2,6 +2,7 @@
 Provides a temporal matching function
 """
 
+from numba import guvectorize, float32, float64, int64
 import numpy as np
 import pandas as pd
 from pykdtree.kdtree import KDTree
@@ -223,6 +224,8 @@ def temporal_collocation(
         - "nearest" (default): Uses the nearest valid neighbour. When this
           method is used, entries with duplicate index values in `other` will
           be dropped, and only the first of the duplicates is kept.
+        - "mean": Takes the mean over the given window around the reference
+          times.
 
     return_index : boolean, optional
         Include index of `other` in matched dataframe (default: False). Only
@@ -344,6 +347,33 @@ def temporal_collocation(
             collocated["distance_other"] = (
                 collocated["index_other"] - collocated.index
             )
+
+    elif method == "mean":
+        window_days = window / pd.Timedelta(1, "D")
+        other_times = other.index.to_julian_date()
+        if not has_invalid or use_invalid:
+            mask = np.ones_like(other_times, dtype=bool)
+        else:
+            mask = ~flagged
+        if isinstance(other, pd.DataFrame):
+            data = [
+                resample_mean(
+                    other_times,
+                    other[col].values[mask],
+                    ref_dr.to_julian_date().values,
+                    window_days
+                )
+                for col in other
+            ]
+            collocated = pd.DataFrame(np.vstack(data).T, index=ref_dr, columns=other.columns)
+        elif isinstance(other, pd.Series):
+            data = resample_mean(
+                other_times,
+                other.values[mask],
+                ref_dr.to_julian_date().values,
+                window_days
+            )
+            collocated = pd.Series(data, index=ref_dr, columns=other.columns)
 
     else:
         raise NotImplementedError(
@@ -487,3 +517,58 @@ def combined_temporal_collocation(
             combined_dropna = "any"
         merged = merged.dropna(how=combined_dropna)
     return merged
+
+
+@guvectorize(
+    [
+        (float32[:], float32[:], float32[:], float32, float32[:]),
+        (float64[:], float64[:], float64[:], float64, float64[:]),
+    ],
+    "(n), (n), (m), () -> (m)",
+    nopython=True,
+)
+def resample_mean(times, values, target_times, window, resampled):
+    """
+    Resamples to new times by taking a mean over a given window.
+
+    Parameters
+    ----------
+    times : np.ndarray
+        Times at which values are taken as float.
+    values : np.ndarray
+        Array with values.
+    target_times : np.ndarray
+        New times to which to resample.
+    window : float
+        Size of the window as float, in the same units as the times (e.g., if
+        the times are in units of days, this should be in days).
+
+    Returns
+    -------
+    resampled : np.ndarray
+    """
+    n_orig = len(times)
+    n_target = len(target_times)
+    lower = 0
+    upper = 0
+    half_window = window / 2.0
+
+    for i in range(n_target):
+        for j in range(lower, n_orig + 1):
+            lower = j
+            if times[j] >= target_times[i] - half_window:
+                break
+        # check if the current window is still below the last time that we have
+        if times[n_orig - 1] > target_times[i] + half_window:
+            for j in range(upper, n_orig):
+                upper = j - 1
+                if times[j] > target_times[i] + half_window:
+                    break
+        else:
+            upper = n_orig - 1
+
+        nobs = upper - lower + 1
+        if nobs == 0:
+            resampled[i] = np.nan
+        else:
+            resampled[i] = np.nanmean(values[lower : (upper + 1)])
