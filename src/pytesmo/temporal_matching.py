@@ -373,7 +373,8 @@ def temporal_collocation(
                 ref_dr.to_julian_date().values,
                 window_days
             )
-            collocated = pd.Series(data, index=ref_dr, columns=other.columns)
+            collocated = pd.Series(data, index=ref_dr)
+            collocated.name = other.name
 
     else:
         raise NotImplementedError(
@@ -527,7 +528,9 @@ def combined_temporal_collocation(
     "(n), (n), (m), () -> (m)",
     nopython=True,
 )
-def resample_mean(times, values, target_times, window, resampled):
+def resample_mean(
+    times, values, target_times, window, resampled
+):  # pragma: no cover
     """
     Resamples to new times by taking a mean over a given window.
 

@@ -725,3 +725,7 @@ def test_mean_collocation():
     assert (resampled[0] == resampled[1]).all()
     assert (resampled[0] == expected).all()
     
+    # try with Series
+    s = tmatching.temporal_collocation(ref_dr, other[0], window, method="mean")
+    assert (s == resampled[0]).all()
+    assert isinstance(s, pd.Series)
