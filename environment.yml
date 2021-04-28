@@ -15,6 +15,7 @@ dependencies:
   - pykdtree
   - pyresample
   - cartopy
+  - numba
   - pip
   - pip:
     - pynetcf

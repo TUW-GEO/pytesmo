@@ -683,3 +683,49 @@ def test_combined_timezones():
         add_ref_data=True,
     )
     assert str(merged.index.tz) == "Europe/Berlin"
+
+
+def test_resample_mean():
+
+    times = np.arange(10, dtype=float)
+    vals = np.arange(10, dtype=float)
+
+    target_times = np.asarray([3, 7, 10, 12], dtype=float)
+    window = 3.0
+
+    expected = np.asarray([3, 7, 9, np.nan])
+
+    resampled = tmatching.resample_mean(times, vals, target_times, window)
+
+    def repeat(x, n):
+        return np.repeat(x[np.newaxis, :], n, axis=0)
+
+    newvals = repeat(vals, 12)
+    new_expected = repeat(expected, 12)
+    resampled = tmatching.resample_mean(times, newvals, target_times, window)
+    np.testing.assert_equal(new_expected, resampled)
+
+
+def test_mean_collocation():
+    dr = pd.date_range("1970", "2020", freq="D", tz="UTC")
+    other = pd.DataFrame(
+        np.vstack(
+            (np.arange(len(dr), dtype=float), np.arange(len(dr), dtype=float))
+        ).T,
+        index=dr
+    )
+    window = pd.Timedelta("3D")
+
+    dateidx = list(range(0, len(dr) - 3, 3))
+    expected = list(range(0, len(dr) - 3, 3))
+    expected[0] = 0.5
+    ref_dr = pd.DatetimeIndex([dr[i] for i in dateidx])
+
+    resampled = tmatching.temporal_collocation(ref_dr, other, window, method="mean")
+    assert (resampled[0] == resampled[1]).all()
+    assert (resampled[0] == expected).all()
+    
+    # try with Series
+    s = tmatching.temporal_collocation(ref_dr, other[0], window, method="mean")
+    assert (s == resampled[0]).all()
+    assert isinstance(s, pd.Series)
