@@ -55,7 +55,7 @@ from ismn.interface import ISMN_Interface
 
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore")
-    from ascat.read_native.cdr import AscatSsmCdr
+    from ascat.read_native.cdr import AscatGriddedNcTs
 
 if __name__ != "__main__":
     from tests.test_validation_framework.test_datasets import (
@@ -87,6 +87,7 @@ def ascat_reader():
         "netcdf",
         "grid",
     )
+    grid_fname = os.path.join(ascat_grid_folder, "TUW_WARP5_grid_info_2_1.nc")
 
     static_layers_folder = os.path.join(
         os.path.dirname(__file__),
@@ -97,10 +98,10 @@ def ascat_reader():
         "static_layer",
     )
 
-    ascat_reader = AscatSsmCdr(
+    ascat_reader = AscatGriddedNcTs(
         ascat_data_folder,
-        ascat_grid_folder,
-        grid_filename="TUW_WARP5_grid_info_2_1.nc",
+        "TUW_METOP_ASCAT_WARP55R22_{:04d}",
+        grid_filename=grid_fname,
         static_layer_path=static_layers_folder,
     )
     ascat_reader.read_bulk = True
