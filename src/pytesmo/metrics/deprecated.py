@@ -10,6 +10,9 @@ from pytesmo.utils import deprecated
 from pytesmo.metrics.pairwise import bias
 
 
+__all__ = []
+
+
 @deprecated
 def tcol_error(x, y, z):
     """

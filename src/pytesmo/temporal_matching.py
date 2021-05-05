@@ -1,12 +1,15 @@
 """
-Provides a temporal matching function
+Provides functions for temporally collocating data from multiple dataframes.
 """
 
-from numba import guvectorize, float32, float64, int64
+from numba import guvectorize, float32, float64
 import numpy as np
 import pandas as pd
 from pykdtree.kdtree import KDTree
 import warnings
+
+
+__all__ = ["temporal_collocation", "combined_temporal_collocation"]
 
 
 def df_match(reference, *args, **kwds):

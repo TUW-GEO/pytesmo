@@ -4,7 +4,7 @@ Pairwise metrics and analytical confidence intervals.
 Metrics
 -------
 
-The metrics function implemented here must have the signature::
+The metrics function implemented here all have the signature::
 
     def metric(x : np.ndarray, y : np.ndarray) -> float
 
@@ -12,19 +12,23 @@ Confidence intervals
 --------------------
 
 Formulas for confidence intervals have in general been taken from from
-Gilleland 2010, 10.5065/D6WD3XJM,
- https://opensky.ucar.edu/islandora/object/technotes:491
+Gilleland (2010), 10.5065/D6WD3XJM,
+https://opensky.ucar.edu/islandora/object/technotes:491
 
 Other references are cited in the docstring of the respective function.
 
-Analytical confidence interval functions implemented here must be named
-``<metric>_ci``, e.g. for ``bias``, the CI function must be ``bias_ci``.
-The signature must be::
+Analytical confidence interval functions implemented here are named
+``<metric>_ci``, e.g. for ``bias``, the CI function is ``bias_ci``.
+The signature is be::
 
     def metric_ci(x : np.ndarray, y : np.ndarray, m : float,
                   alpha=0.05 : float) -> float, float
 
 where m is the metric value that has been calculated for x and y.
+
+Typically, you should use
+:py:func:`pytesmo.metrics.confidence_intervals.with_analytical_ci` for
+calculating a metric CI.
 """
 
 # IMPORTANT: DEVELOPERS NOTES

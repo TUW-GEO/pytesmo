@@ -49,7 +49,7 @@ from tests.test_validation_framework.test_datasets import TestDataset
 
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore")
-    from ascat.read_native.cdr import AscatSsmCdr
+    from ascat.read_native.cdr import AscatGriddedNcTs
 
 
 def test_masking_adapter():
@@ -191,11 +191,12 @@ def test_adapters_with_ascat():
         "netcdf",
         "grid",
     )
+    grid_fname = os.path.join(ascat_grid_folder, "TUW_WARP5_grid_info_2_1.nc")
 
-    ascat_reader = AscatSsmCdr(
+    ascat_reader = AscatGriddedNcTs(
         ascat_data_folder,
-        ascat_grid_folder,
-        grid_filename="TUW_WARP5_grid_info_2_1.nc",
+        "TUW_METOP_ASCAT_WARP55R22_{:04d}",
+        grid_filename=grid_fname,
     )
 
     ascat_anom = AnomalyAdapter(ascat_reader, window_size=35, columns=["sm"])

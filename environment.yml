@@ -22,7 +22,7 @@ dependencies:
     - pygeogrids
     - pynetcf
     - pygeobase
-    - ascat
+    - ascat>=2.0
     - ismn
     - repurpose
     - pytest

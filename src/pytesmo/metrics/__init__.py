@@ -1,5 +1,6 @@
 """
-Metrics for pairs and triplets.
+Metrics for pairs and triplets
+==============================
 
 This module provides functions to calculate metrics and their associated
 confidence intervals.
@@ -107,3 +108,30 @@ from pytesmo.metrics.deprecated import (
     pearson_conf,
     pearsonr_recursive,
 )
+
+__all__ = [
+    "bias",
+    "mse_bias",
+    "mse_var",
+    "mse_corr",
+    "mse_decomposition",
+    "RSS",
+    "rolling_pr_rmsd",
+    "aad",
+    "mad",
+    "msd",
+    "rmsd",
+    "nrmsd",
+    "ubrmsd",
+    "pearson_r",
+    "spearman_r",
+    "kendall_tau",
+    "index_of_agreement",
+    "nash_sutcliffe",
+    "has_analytical_ci",
+    "with_analytical_ci",
+    "with_bootstrapped_ci",
+    "tcol_metrics_with_bootstrapped_ci",
+    "tcol_metrics",
+    "ecol",
+]

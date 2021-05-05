@@ -109,8 +109,8 @@ def with_bootstrapped_ci(
           metric value.
         - "BCa": Bias-corrected and accelerated bootstrap.
 
-        For more info and a comparison of the methods, see [1]_, especially
-        Table 6 on page 38.
+        For more info and a comparison of the methods, see [Gilleland2010]_,
+        especially Table 6 on page 38.
     nsamples : int, optional
         Number of bootstrap samples, default is 1000.
     minimum_data_length : int, optional
@@ -127,8 +127,8 @@ def with_bootstrapped_ci(
 
     References
     ----------
-    .. [1] Gilleland, E. (2010). *Confidence Intervals for Forecast
-    Verification* (No. NCAR/TN-479+STR). University Corporation for Atmospheric
+    .. [Gilleland2010] Gilleland, E. (2010). *Confidence Intervals for Forecast\
+    Verification* (No. NCAR/TN-479+STR). University Corporation for Atmospheric\
     Research. doi:10.5065/D6WD3XJM
     """
     # Prototype, might be better to implement this in Cython if it's too slow.
@@ -200,8 +200,8 @@ def tcol_metrics_with_bootstrapped_ci(
           metric value.
         - "BCa": Bias-corrected and accelerated bootstrap.
 
-        For more info and a comparison of the methods, see [1]_, especially
-        Table 6 on page 38.
+        For more info and a comparison of the methods, see [Gilleland2010]_,
+        especially Table 6 on page 38.
     nsamples : int, optional
         Number of bootstrap samples, default is 1000.
     minimum_data_length : int, optional
@@ -220,8 +220,8 @@ def tcol_metrics_with_bootstrapped_ci(
 
     References
     ----------
-    .. [1] Gilleland, E. (2010). *Confidence Intervals for Forecast
-    Verification* (No. NCAR/TN-479+STR). University Corporation for Atmospheric
+    .. [Gilleland2010] Gilleland, E. (2010). *Confidence Intervals for Forecast\
+    Verification* (No. NCAR/TN-479+STR). University Corporation for Atmospheric\
     Research. doi:10.5065/D6WD3XJM
     """
     # Prototype, might be better to implement this in Cython if it's too slow.
