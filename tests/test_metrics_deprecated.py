@@ -33,6 +33,14 @@ import pytesmo.metrics as met
 from pytesmo.metrics import *
 import pytest
 
+from pytesmo.metrics.deprecated import (
+    tcol_error,
+    tcol_snr,
+    pearsonr,
+    spearmanr,
+    kendalltau,
+)
+
 from .test_metrics import arange_testdata
 
 
