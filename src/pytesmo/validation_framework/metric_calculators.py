@@ -347,10 +347,12 @@ class BasicMetrics(MetadataMetrics):
         significantly impact performance of e.g. global validation studies
     metadata_template: dictionary, optional
         A dictionary containing additional fields (and types) of the form
-        dict = {'field': np.float32([np.nan]}. Allows users to specify
-        information in the job tuple,
-        i.e. jobs.append(
-            (idx, metadata['longitude'], metadata['latitude'], metadata_dict))
+        ``dict = {'field': np.float32([np.nan]}``. Allows users to specify
+        information in the job tuple, i.e.::
+
+            jobs.append((idx, metadata['longitude'], metadata['latitude'],
+                         metadata_dict))``
+
         which is then propagated to the end netCDF results file.
     """
 
@@ -1210,12 +1212,13 @@ class RollingMetrics(MetadataMetrics):
         pandas DataFrame
     metadata_template: dictionary, optional
         A dictionary containing additional fields (and types) of the form
-        dict = {'field': np.float32([np.nan]}. Allows users to specify
-        information in the job tuple,
-        i.e. jobs.append(
-            (idx, metadata['longitude'], metadata['latitude'], metadata_dict))
-        which is then propagated to the end netCDF results file.
+        ``dict = {'field': np.float32([np.nan]}``. Allows users to specify
+        information in the job tuple, i.e.::
 
+            jobs.append((idx, metadata['longitude'], metadata['latitude'],
+                         metadata_dict))``
+
+        which is then propagated to the end netCDF results file.
     """
 
     def __init__(self, other_name='k1', metadata_template=None):

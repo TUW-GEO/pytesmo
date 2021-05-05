@@ -94,10 +94,10 @@ def tcol_metrics(x, y, z, ref_ind=0):
 
     References
     ----------
-    .. [Gruber2015] Gruber, A., Su, C., Zwieback, S., Crow, W., Dorigo, W.,
-       Wagner, W.  (2015). Recent advances in (soil moisture) triple
-       collocation analysis.  International Journal of Applied Earth
-       Observation and Geoinformation, in review
+    .. [Gruber2015] Gruber, A., Su, C., Zwieback, S., Crow, W., Dorigo, W.,\
+    Wagner, W.  (2015). Recent advances in (soil moisture) triple\
+    collocation analysis.  International Journal of Applied Earth\
+    Observation and Geoinformation, in review
     """
 
     cov = np.cov(np.vstack((x, y, z)))
@@ -164,6 +164,7 @@ def check_if_biased(combs, correlated):
 def ecol(data, correlated=None, err_cov=None, abs_est=True):
     """
     Extended collocation analysis to obtain estimates of:
+
         - signal variances
         - error variances
         - signal-to-noise ratios [dB]
@@ -171,8 +172,8 @@ def ecol(data, correlated=None, err_cov=None, abs_est=True):
 
     based on an arbitrary number of N>3 data sets.
 
-    !!! EACH DATA SET MUST BE MEMBER OF >= 1 TRIPLET THAT FULFILLS THE
-        CLASSICAL TRIPLE COLLOCATION ASSUMPTIONS !!!
+    **EACH DATA SET MUST BE MEMBER OF >= 1 TRIPLET THAT FULFILLS THE CLASSICAL
+    TRIPLE COLLOCATION ASSUMPTIONS**
 
     Parameters
     ----------
@@ -210,31 +211,33 @@ def ecol(data, correlated=None, err_cov=None, abs_est=True):
 
     Examples
     --------
-    # Just random numbers for demonstrations
-    ds1 = np.random.normal(0,1,500)
-    ds2 = np.random.normal(0,1,500)
-    ds3 = np.random.normal(0,1,500)
-    ds4 = np.random.normal(0,1,500)
-    ds5 = np.random.normal(0,1,500)
+    .. code-block::
 
-    # Three data sets without cross-correlated errors: This is equivalent
-    # to standard triple collocation.
-    df = pd.DataFrame({'ds1':ds1,'ds2':ds2,'ds3':ds3},
-                      index=np.arange(500))
-    res = ecol(df)
+        # Just random numbers for demonstrations
+        ds1 = np.random.normal(0,1,500)
+        ds2 = np.random.normal(0,1,500)
+        ds3 = np.random.normal(0,1,500)
+        ds4 = np.random.normal(0,1,500)
+        ds5 = np.random.normal(0,1,500)
 
-    # Five data sets, where data sets (1 and 2), and (3 and 4), are assumed
-    # to have cross-correlated errors.
-    df = pd.DataFrame({'ds1':ds1,'ds2':ds2,'ds3':ds3,'ds4':ds4,'ds5':ds5},
-                      index=np.arange(500),)
-    correlated = [['ds1','ds2'],['ds3','ds4']]
-    res = ecol(df,correlated=correlated)
+        # Three data sets without cross-correlated errors: This is equivalent
+        # to standard triple collocation.
+        df = pd.DataFrame({'ds1':ds1,'ds2':ds2,'ds3':ds3},
+                          index=np.arange(500))
+        res = ecol(df)
+
+        # Five data sets, where data sets (1 and 2), and (3 and 4), are assumed
+        # to have cross-correlated errors.
+        df = pd.DataFrame({'ds1':ds1,'ds2':ds2,'ds3':ds3,'ds4':ds4,'ds5':ds5},
+                          index=np.arange(500),)
+        correlated = [['ds1','ds2'],['ds3','ds4']]
+        res = ecol(df,correlated=correlated)
 
     References
     ----------
-    .. [Gruber2016] Gruber, A., Su, C. H., Crow, W. T., Zwieback, S., Dorigo,
-    W. A., & Wagner, W. (2016). Estimating error cross-correlations in soil
-    moisture data sets using extended collocation analysis. Journal of
+    .. [Gruber2016] Gruber, A., Su, C. H., Crow, W. T., Zwieback, S., Dorigo,\
+    W. A., & Wagner, W. (2016). Estimating error cross-correlations in soil\
+    moisture data sets using extended collocation analysis. Journal of\
     Geophysical Research: Atmospheres, 121(3), 1208-1219.
     """
     data.dropna(inplace=True)

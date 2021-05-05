@@ -7,7 +7,7 @@ Overview
 ========
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 4
 
    Introduction <introduction>
    Examples <examples>
