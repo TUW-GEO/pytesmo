@@ -65,17 +65,8 @@ class sdist(_sdist):
 
 class build_ext(_build_ext):
 
-    user_options = getattr(_build_ext, "user_options", []) + [
-        ("cythonize", None, "recreate the C extensions with cython")
-    ]
-
-    def initialize_options(self):
-        super().initialize_options()
-        self.cythonize = False
-
     def run(self):
-        if self.cythonize:
-            cythonize_extensions()
+        cythonize_extensions()
         super().run()
 
 
