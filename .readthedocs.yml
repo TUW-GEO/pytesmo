@@ -9,6 +9,9 @@ formats:
 submodules:
   include: all
 
+conda:
+  environment: environment.yml
+
 python:
   version: 3.7
   install:
