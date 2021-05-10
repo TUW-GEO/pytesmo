@@ -5,7 +5,5 @@ nbsphinx
 ipykernel
 ascat
 ismn
-pytesmo
 pandas
 matplotlib
-cartopy
