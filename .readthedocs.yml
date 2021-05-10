@@ -6,6 +6,9 @@ sphinx:
 formats:
   - pdf
 
+submodules:
+  include: all
+
 python:
   version: 3.7
   install:
