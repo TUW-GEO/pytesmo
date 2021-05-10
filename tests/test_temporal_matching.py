@@ -712,19 +712,22 @@ def test_mean_collocation():
         np.vstack(
             (np.arange(len(dr), dtype=float), np.arange(len(dr), dtype=float))
         ).T,
-        index=dr
+        index=dr,
     )
-    window = pd.Timedelta("3D")
+    # window is actually half window in temporal_collocation
+    window = pd.Timedelta(1.5, "D")
 
     dateidx = list(range(0, len(dr) - 3, 3))
     expected = list(range(0, len(dr) - 3, 3))
     expected[0] = 0.5
     ref_dr = pd.DatetimeIndex([dr[i] for i in dateidx])
 
-    resampled = tmatching.temporal_collocation(ref_dr, other, window, method="mean")
+    resampled = tmatching.temporal_collocation(
+        ref_dr, other, window, method="mean"
+    )
     assert (resampled[0] == resampled[1]).all()
     assert (resampled[0] == expected).all()
-    
+
     # try with Series
     s = tmatching.temporal_collocation(ref_dr, other[0], window, method="mean")
     assert (s == resampled[0]).all()

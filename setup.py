@@ -78,4 +78,5 @@ if __name__ == "__main__":
         cmdclass=cmdclass,
         # at this point the C modules have already been generated if necessary
         ext_modules=get_ext_modules(".c"),
+        use_scm_version={"version_scheme": "no-guess-dev"}
     )

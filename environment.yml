@@ -32,3 +32,4 @@ dependencies:
     - cadati
     - pre-commit
     - flake8
+    - build
