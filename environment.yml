@@ -16,6 +16,7 @@ dependencies:
   - pyresample
   - cartopy
   - numba
+  - nb_conda
   - pip
   - pip:
     - pynetcf
