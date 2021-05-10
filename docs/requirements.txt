@@ -7,3 +7,5 @@ ascat
 ismn
 pandas
 matplotlib
+numba
+cartopy
