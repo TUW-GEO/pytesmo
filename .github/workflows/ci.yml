@@ -67,8 +67,8 @@ jobs:
         shell: bash -l {0}
         run: |
           pip install wheel
-          python setup.py sdist --dist-dir .artifacts/dist
-          python setup.py bdist_wheel --dist-dir .artifacts/dist
+          python -m build --sdist --outdir .artifacts/dist
+          python -m build --wheel --outdir .artifacts/dist
           ls .artifacts/dist
       - name: Upload Artifacts
         uses: actions/upload-artifact@v2

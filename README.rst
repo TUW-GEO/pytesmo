@@ -14,8 +14,8 @@ pytesmo - a Python Toolbox for the Evaluation of Soil Moisture Observations
     :target: https://pytesmo.readthedocs.io/en/latest/?badge=latest
 
 pytesmo, the Python Toolbox for the Evaluation of Soil Moisture Observations, is
-a package/python toolbox which aims it is to provide a library that can be used
-for the comparison and validation of geospatial time series datasets with a
+a package/python toolbox which aims to provide a library that can be used for
+the comparison and validation of geospatial time series datasets with a
 (initial) focus on soil moisture.
 
 Documentation & Software Citation
@@ -27,14 +27,17 @@ Documentation & Software Citation
 To see the latest `full documentation <https://pytesmo.readthedocs.io/en/latest/?badge=latest>`_
 click on the docs badge at the top.
 
-If you use the software in a publication then please cite it using the Zenodo DOI.
-Be aware that this badge links to the latest package version.
+If you use the software in a publication then please cite it using the Zenodo
+DOI.  Be aware that this badge links to the latest package version.
 
-Please select your specific version at https://doi.org/10.5281/zenodo.596422 to get the DOI of that version.
-You should normally always use the DOI for the specific version of your record in citations.
-This is to ensure that other researchers can access the exact research artefact you used for reproducibility.
+Please select your specific version at https://doi.org/10.5281/zenodo.596422 to
+get the DOI of that version.  You should normally always use the DOI for the
+specific version of your record in citations.  This is to ensure that other
+researchers can access the exact research artefact you used for
+reproducibility.
 
-You can find additional information regarding DOI versioning at http://help.zenodo.org/#versioning
+You can find additional information regarding DOI versioning at
+http://help.zenodo.org/#versioning
 
 Installation
 ============
@@ -49,28 +52,26 @@ We recommend using either `Anaconda <https://www.anaconda.com/>`__ or
 
 .. code-block:: bash
 
-    $ conda install -c conda-forge numpy scipy pandas netCDF4 cython pyresample
+    conda install -c conda-forge numpy scipy pandas netCDF4 cython pyresample
 
 Afterwards ``pytesmo`` can be installed via pip.
 
 .. code-block:: bash
 
-    $ pip install pytesmo
+    pip install pytesmo
 
 
-You can also install all needed (conda and pip) dependencies at once using the following
-commands after cloning this repository.
-This is recommended for developers of the package. Note that the git ``--recursive`` flag
-will clone test-data, which is needed by some tests.
+As an alternative (e.g. if you want to contribute to the package), you can
+clone the Github repository and install from source:
 
 .. code::
 
-    $ git clone https://github.com/TUW-GEO/pytesmo.git --recursive
-    $ cd pytesmo
-    $ conda create -n pytesmo python=3.6 # or any supported python version
-    $ source activate pytesmo
-    $ conda env update -f environment.yml -n pytesmo
-    $ python setup.py develop
+    git clone https://github.com/TUW-GEO/pytesmo.git --recursive
+    cd pytesmo
+    conda create -n pytesmo python=3.6 # or any supported python version
+    source activate pytesmo
+    conda env update -f environment.yml -n pytesmo
+    pip install -e .
 
 .. note::
 
@@ -106,28 +107,7 @@ We are happy if you want to contribute. Please raise an issue explaining what
 is missing or if you find a bug. We will also gladly accept pull requests
 against our master branch for new features or bug fixes.
 
-**Guidelines**
-
-If you want to contribute please follow these steps:
-
-- Fork the pytesmo repository to your account
-- Clone the repository, make sure you use ``git clone --recursive`` to also get
-  the test data repository.
-- make a new feature branch from the pytesmo master branch
-- Follow the developers guide (DEVELOPERS_GUIDE.md)
-- Add your feature
-- please include tests for your contributions in one of the test directories
-  We use py.test so a simple function called test_my_feature is enough
-- submit a pull request to our master branch
-
-
-**Release Windows**
-
-In order to make a working release for windows the ``whl`` files for windows
-from appveyor CI have to be uploaded to PyPI. They can be found on the appveyor
-CI run for the created tag under the ``jobs/Artifacts`` tab. All the ``.whl``
-files should be downloaded into a folder. They can then be added to the release
-on PyPI using e.g. ``twine upload pytesmo-0.7.1*whl``
+Please follow the [developers guide](./DEVELOPERS_GUIDE.md) if you want to contribute.
 
 
 Note
