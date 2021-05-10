@@ -3,3 +3,6 @@ numpy
 cython
 nbsphinx
 ipykernel
+ascat
+ismn
+pytesmo
