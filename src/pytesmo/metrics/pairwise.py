@@ -52,7 +52,6 @@ from pytesmo.metrics._fast_pairwise import (  # noqa: F401
     RSS,
     _ubrmsd,
     rolling_pr_rmsd,
-    pairwise_metrics,
 )
 
 
