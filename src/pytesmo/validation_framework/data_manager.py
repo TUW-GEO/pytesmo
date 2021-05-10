@@ -33,6 +33,7 @@ import pandas as pd
 
 from pygeobase.object_base import TS
 
+from pytesmo.validation_framework.data_averaging import DataAverager
 
 class DataManager(object):
 
@@ -114,7 +115,21 @@ class DataManager(object):
             self.reference_grid = None
 
         self.period = period
-        self.luts = self.get_luts()
+
+        upscale_method = None  # todo: move to inputs of validation
+        if upscale_method:
+            # initialize class that performs upscaling operations
+            others_class = {}
+            for other in self.other_name:
+                others_class[other] = datasets[other]["class"]
+            self.luts = DataAverager(
+                ref_class=datasets[self.reference_name]["class"],
+                others_class=others_class,
+            )
+        else:
+            # combine ref to NNs only
+            self.luts = self.get_luts()
+
         if type(read_ts_names) is dict:
             self.read_ts_names = read_ts_names
         else:
@@ -360,6 +375,8 @@ class DataManager(object):
             if grids_compatible:
                 other_dataframe = self.read_other(
                     other_name, gpi)
+            if isinstance(self.luts, DataAverager):
+                pass  # todo: return wrapper of DataAverager with other_dataframe result
             elif self.luts[other_name] is not None:
                 other_gpi = self.luts[other_name][gpi]
                 if other_gpi == -1:
