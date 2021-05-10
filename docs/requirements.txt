@@ -6,3 +6,5 @@ ipykernel
 ascat
 ismn
 pytesmo
+pandas
+matplotlib
