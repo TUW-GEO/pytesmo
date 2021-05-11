@@ -11,6 +11,36 @@ import os
 import sys
 import inspect
 import shutil
+import subprocess
+
+
+# Create kernel for notebooks
+on_rtd = "READTHEDOCS" in os.environ and os.environ["READTHEDOCS"]
+if on_rtd:
+    interpreter = (
+        "/home/docs/checkouts/readthedocs.org/user_builds/pytesmo/"
+        "conda/latest/bin/python"
+    )
+else:
+    interpreter = "python"
+
+print("Installing kernel")
+subprocess.run(
+    [
+        interpreter,
+        "-m",
+        "ipykernel",
+        "install",
+        "--user",
+        "--name",
+        "conda-env-pytesmo-py",
+        "--display-name",
+        "Python [conda env:pytesmo]"
+    ],
+    check=True,
+    capture_output=True,
+)
+print("Done")
 
 # -- Path setup --------------------------------------------------------------
 
