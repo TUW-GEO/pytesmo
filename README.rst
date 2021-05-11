@@ -107,7 +107,9 @@ We are happy if you want to contribute. Please raise an issue explaining what
 is missing or if you find a bug. We will also gladly accept pull requests
 against our master branch for new features or bug fixes.
 
-Please follow the [developers guide](./DEVELOPERS_GUIDE.md) if you want to contribute.
+Please follow the `developers guide
+<https://github.com/TUW-GEO/pytesmo/blob/master/DEVELOPERS_GUIDE.md>`_ if you
+want to contribute.
 
 
 Note
