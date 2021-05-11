@@ -54,7 +54,9 @@ jobs:
         shell: bash -l {0}
         run: |
           pip install .
-          pytest --cache-clear
+          # This separation avoids segfaults:
+          pytest --cache-clear -m 'not full_framework'
+          pytest --cache-clear -m 'full_framework'
       - name: Upload Coverage
         shell: bash -l {0}
         run: |
