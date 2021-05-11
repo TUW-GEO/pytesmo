@@ -112,11 +112,11 @@ Creating a release
 
 To release a new version of this package, make sure all tests are passing
 on the master branch and the `CHANGELOG.rst` is up-to-date, with changes for 
-the new version at the top. 
+the new version at the top.  
 Then draft a new release on [GitHub](https://github.com/TUW-GEO/pytesmo/releases).
-Create a version tag following the `v{MAJOR}.{MINOR}.{PATCH}` pattern.
-This will trigger a new build. After the build has finished successfully, you can
+Create a version tag following the `v{MAJOR}.{MINOR}.{PATCH}` pattern. This will trigger a new build.  
+After the build has finished successfully, you can
 download the `.dist` and `.whl` files for the release from the build Artifacts
 and upload them to [PyPI](https://pypi.org/project/pytesmo/) (only maintainers of pytesmo),
-e.g. by using `twine check ./dist/*` and  `twine upload ./dist/pytesmo-0.7.1*whl`.
+e.g. by using `twine check ./dist/*` and  `twine upload ./dist/pytesmo-0.7.1*whl`.  
 Note that PyPI might reject the non-windows `.whl` files.
