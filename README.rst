@@ -39,6 +39,9 @@ reproducibility.
 You can find additional information regarding DOI versioning at
 http://help.zenodo.org/#versioning
 
+If you want to contribute, take a look at the `developers guide
+<https://github.com/TUW-GEO/pytesmo/blob/master/DEVELOPERS_GUIDE.md>`_ .
+
 Installation
 ============
 
@@ -100,6 +103,17 @@ through independent and optional (reader) packages:
     found in the "Examples" chapter.
     * Variables stored in separate files (CEOP formatted)
 
+Related Packages
+================
+
+Some former pytesmo modules are now provided as separate packages.
+
+- `pygeogrids <https://github.com/TUW-GEO/pygeogrids/>`_ : Creation and handling of Discrete Global Grids or Point collections
+- `cadati <https://github.com/TUW-GEO/cadati/>`_ : Calender, Date and Time functions
+- `repurpose <https://github.com/TUW-GEO/repurpose/>`_ : Time series - image conversion and resampling routines
+- `colorella <https://github.com/TUW-GEO/colorella/>`_ : Color maps and color map handling
+
+
 Contribute
 ==========
 
@@ -108,12 +122,5 @@ is missing or if you find a bug. We will also gladly accept pull requests
 against our master branch for new features or bug fixes.
 
 Please follow the `developers guide
-<https://github.com/TUW-GEO/pytesmo/blob/master/DEVELOPERS_GUIDE.md>`_ if you
-want to contribute.
+<https://github.com/TUW-GEO/pytesmo/blob/master/DEVELOPERS_GUIDE.md>`_.
 
-
-Note
-====
-
-This project has been set up using PyScaffold 3.2.3. For details and usage
-information on PyScaffold see https://pyscaffold.org/.

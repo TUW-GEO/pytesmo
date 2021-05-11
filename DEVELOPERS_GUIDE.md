@@ -99,9 +99,24 @@ future-proof commands:
 - `pip install .` instead of `python setup.py install`
 - `pip install -e .` instead of `python setup.py develop`
 - `pytest` instead of `python setup.py test`
-- `python -m build --sdist` instead of `python setup.py sdist`
-- `python -m build --wheel` instead of `python setup.py bdist_wheel`
+- `python -m build --sdist` instead of `python setup.py sdist` (needs `build` installed)
+- `python -m build --wheel` instead of `python setup.py bdist_wheel` (needs `build` installed)
 
 Due to our more complex build setup (using Cython) we still need a `setup.py`,
 and the old commands will still work (except `python setup.py test`), but we
 recommend to use the new commands.
+
+
+Creating a release
+------------------
+
+To release a new version of this package, make sure all tests are passing
+on the master branch and the `CHANGELOG.rst` is up-to-date, with changes for 
+the new version at the top. 
+Then draft a new release on [GitHub](https://github.com/TUW-GEO/pytesmo/releases).
+Create a version tag following the `v{MAJOR}.{MINOR}.{PATCH}` pattern.
+This will trigger a new build. After the build has finished successfully, you can
+download the `.dist` and `.whl` files for the release from the build Artifacts
+and upload them to [PyPI](https://pypi.org/project/pytesmo/) (only maintainers of pytesmo),
+e.g. by using `twine check ./dist/*` and  `twine upload ./dist/pytesmo-0.7.1*whl`.
+Note that PyPI might reject the non-windows `.whl` files.
