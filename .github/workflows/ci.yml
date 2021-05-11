@@ -69,7 +69,6 @@ jobs:
       - name: Create wheel package
         shell: bash -l {0}
         run: |
-          pip install setuptools_scm
           pip install build
           python -m build --sdist --outdir .artifacts/dist
           python -m build --wheel --outdir .artifacts/dist
