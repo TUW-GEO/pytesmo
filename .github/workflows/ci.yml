@@ -72,11 +72,11 @@ jobs:
           pip install setuptools_scm
           if [ ${{ matrix.os }} == "windows-latest" ]
           then
-            # whls are only build on windows
+            # build whls on windows
             pip install wheel
             python setup.py bdist_wheel --dist-dir .artifacts/dist
           else
-            # dist is only build on linux
+            # build dist on linux
             python setup.py sdist --dist-dir .artifacts/dist
           fi
           ls .artifacts/dist
