@@ -25,6 +25,7 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: true # does not work with self-hosted testdata
+          fetch-depth: 0
       - uses: conda-incubator/setup-miniconda@v2.0.1
         with:
           miniconda-version: "latest"
@@ -54,7 +55,9 @@ jobs:
         shell: bash -l {0}
         run: |
           pip install .
-          pytest --cache-clear
+          # This separation avoids segfaults:
+          pytest --cache-clear -m 'not full_framework'
+          pytest --cache-clear -m 'full_framework'
       - name: Upload Coverage
         shell: bash -l {0}
         run: |
@@ -63,11 +66,19 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COVERALLS_FLAG_NAME: ${{ matrix.python-version }}
           COVERALLS_PARALLEL: true
-      - name: Create wheel package
+      - name: Create wheel and dist package
         shell: bash -l {0}
         run: |
-          python -m build --sdist --outdir .artifacts/dist
-          python -m build --wheel --outdir .artifacts/dist
+          pip install setuptools_scm
+          if [ ${{ matrix.os }} == "windows-latest" ]
+          then
+            # build whls on windows
+            pip install wheel
+            python setup.py bdist_wheel --dist-dir .artifacts/dist
+          else
+            # build dist on linux
+            python setup.py sdist --dist-dir .artifacts/dist
+          fi
           ls .artifacts/dist
       - name: Upload Artifacts
         uses: actions/upload-artifact@v2
