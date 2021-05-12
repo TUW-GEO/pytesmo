@@ -6,7 +6,7 @@ Unreleased
 ==========
 -
 
-Version 0.11.0, 2021-05-07
+Version 0.11.0, 2021-05-12
 ==========================
 - Analytical and bootstrapping confidence intervals for metrics (PR #206). This
   includes some changes to the existing implementations (all old
