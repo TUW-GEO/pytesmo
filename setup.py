@@ -59,6 +59,7 @@ def cythonize_extensions():
 # Cython
 class sdist(_sdist):
     def run(self):
+        cythonize_extensions()
         super().run()
 
 

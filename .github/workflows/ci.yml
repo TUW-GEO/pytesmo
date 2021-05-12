@@ -66,13 +66,19 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COVERALLS_FLAG_NAME: ${{ matrix.python-version }}
           COVERALLS_PARALLEL: true
-      - name: Create wheel package
+      - name: Create wheel and dist package
         shell: bash -l {0}
         run: |
           pip install setuptools_scm
-          pip install wheel
-          python setup.py bdist_wheel --dist-dir .artifacts/dist
-          python setup.py sdist --dist-dir .artifacts/dist
+          if [ ${{ matrix.os }} == "windows-latest" ]
+          then
+            # whls are only build on windows
+            pip install wheel
+            python setup.py bdist_wheel --dist-dir .artifacts/dist
+          else
+            # dist is only build on linux
+            python setup.py sdist --dist-dir .artifacts/dist
+          fi
           ls .artifacts/dist
       - name: Upload Artifacts
         uses: actions/upload-artifact@v2
