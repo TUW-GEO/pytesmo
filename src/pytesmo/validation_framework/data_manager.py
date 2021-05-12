@@ -31,11 +31,10 @@ import warnings
 
 import pandas as pd
 
-from pygeobase.object_base import TS
+from pytesmo.validation_framework.data_averaging import DataAverager, MixinReadTs
 
-from pytesmo.validation_framework.data_averaging import DataAverager
 
-class DataManager(object):
+class DataManager(MixinReadTs):
 
     """
     Class to handle the data management.
@@ -73,6 +72,11 @@ class DataManager(object):
     period : list, optional
         Of type [datetime start, datetime end]. If given then the two input
         datasets will be truncated to start <= dates <= end.
+    upscale_parms: dict, optional. Default is None.
+        dictionary with parameters for the upscaling methods. Keys:
+            * 'tmatching': method to use for temporal matching
+            * 'up_method': method for upscaling
+            * 'tstability': bool for using temporal stability
     read_ts_names: string or dict of strings, optional
         if another method name than 'read_ts' should be used for reading the data
         then it can be specified here. If it is a dict then specify a
@@ -93,6 +97,7 @@ class DataManager(object):
 
     def __init__(self, datasets, ref_name,
                  period=None,
+                 upscale_parms=None,
                  read_ts_names='read_ts'):
         """
         Initialize parameters.
@@ -100,6 +105,7 @@ class DataManager(object):
         self.datasets = datasets
         self._add_default_values()
         self.reference_name = ref_name
+        self.upscale_parms=upscale_parms
 
         self.other_name = []
         for dataset in datasets.keys():
@@ -116,15 +122,15 @@ class DataManager(object):
 
         self.period = period
 
-        upscale_method = None  # todo: move to inputs of validation
-        if upscale_method:
+        if upscale_parms:
             # initialize class that performs upscaling operations
             others_class = {}
             for other in self.other_name:
-                others_class[other] = datasets[other]["class"]
+                others_class[other] = self.datasets[other]["class"]
             self.luts = DataAverager(
                 ref_class=datasets[self.reference_name]["class"],
                 others_class=others_class,
+                datasets=self.datasets
             )
         else:
             # combine ref to NNs only
@@ -235,76 +241,6 @@ class DataManager(object):
         """
         return self.read_ds(name, *args)
 
-    def read_ds(self, name, *args):
-        """
-        Function to read and prepare a datasets.
-
-        Calls read_ts of the dataset.
-
-        Takes either 1 (gpi) or 2 (lon, lat) arguments.
-
-        Parameters
-        ----------
-        name : string
-            Name of the other dataset.
-        gpi : int
-            Grid point index
-        lon : float
-            Longitude of point
-        lat : float
-            Latitude of point
-
-        Returns
-        -------
-        data_df : pandas.DataFrame or None
-            Data DataFrame.
-
-        """
-        ds = self.datasets[name]
-        args = list(args)
-        args.extend(ds['args'])
-
-        try:
-            func = getattr(ds['class'], self.read_ts_names[name])
-            data_df = func(*args, **ds['kwargs'])
-            if type(data_df) is TS or issubclass(type(data_df), TS):
-                data_df = data_df.data
-        except IOError:
-            warnings.warn(
-                "IOError while reading dataset {} with args {:}".format(name,
-                                                                        args))
-            return None
-        except RuntimeError as e:
-            if e.args[0] == "No such file or directory":
-                warnings.warn(
-                    "IOError while reading dataset {} with args {:}".format(name,
-                                                                            args))
-                return None
-            else:
-                raise e
-
-        if len(data_df) == 0:
-            warnings.warn("No data for dataset {}".format(name))
-            return None
-
-        if isinstance(data_df, pd.DataFrame) == False:
-            warnings.warn("Data is not a DataFrame {:}".format(args))
-            return None
-
-        if self.period is not None:
-            # here we use the isoformat since pandas slice behavior is
-            # different when using datetime objects.
-            data_df = data_df[
-                self.period[0].isoformat():self.period[1].isoformat()]
-
-        if len(data_df) == 0:
-            warnings.warn("No data for dataset {} with arguments {:}".format(name,
-                                                                             args))
-            return None
-
-        else:
-            return data_df
-
     def get_data(self, gpi, lon, lat):
         """
         Get all the data from this manager for a certain
@@ -375,8 +311,12 @@ class DataManager(object):
             if grids_compatible:
                 other_dataframe = self.read_other(
                     other_name, gpi)
-            if isinstance(self.luts, DataAverager):
-                pass  # todo: return wrapper of DataAverager with other_dataframe result
+            elif isinstance(self.luts, DataAverager):
+                other_dataframe = self.luts.wrapper(
+                    gpi,
+                    other_name,
+                    **self.upscale_parms
+                )
             elif self.luts[other_name] is not None:
                 other_gpi = self.luts[other_name][gpi]
                 if other_gpi == -1:

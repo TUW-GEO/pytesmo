@@ -28,7 +28,86 @@
 
 import warnings
 
-import pandas as pd
+import pandas as pd#
+from scipy.stats import linregress
+
+from pygeobase.object_base import TS
+from pytesmo.temporal_matching import temporal_collocation as tcoll
+
+
+class MixinReadTs():
+    """Mixin class to provide the reading function in DataAverager and DataManager"""
+
+    def read_ds(self, name, *args):
+        """
+        Function to read and prepare a datasets.
+
+        Calls read_ts of the dataset.
+
+        Takes either 1 (gpi) or 2 (lon, lat) arguments.
+
+        Parameters
+        ----------
+        name : string
+            Name of the other dataset.
+        gpi : int
+            Grid point index
+        lon : float
+            Longitude of point
+        lat : float
+            Latitude of point
+
+        Returns
+        -------
+        data_df : pandas.DataFrame or None
+            Data DataFrame.
+
+        """
+        ds = self.datasets[name]
+        args = list(args)
+        args.extend(ds['args'])
+
+        try:
+            func = getattr(ds['class'], self.read_ts_names[name])
+            data_df = func(*args, **ds['kwargs'])
+            if type(data_df) is TS or issubclass(type(data_df), TS):
+                data_df = data_df.data
+        except IOError:
+            warnings.warn(
+                "IOError while reading dataset {} with args {:}".format(name,
+                                                                        args))
+            return None
+        except RuntimeError as e:
+            if e.args[0] == "No such file or directory":
+                warnings.warn(
+                    "IOError while reading dataset {} with args {:}".format(name,
+                                                                            args))
+                return None
+            else:
+                raise e
+
+        if len(data_df) == 0:
+            warnings.warn("No data for dataset {}".format(name))
+            return None
+
+        if isinstance(data_df, pd.DataFrame) == False:
+            warnings.warn("Data is not a DataFrame {:}".format(args))
+            return None
+
+        if self.period is not None:
+            # here we use the isoformat since pandas slice behavior is
+            # different when using datetime objects.
+            data_df = data_df[
+                self.period[0].isoformat():self.period[1].isoformat()]
+
+        if len(data_df) == 0:
+            warnings.warn("No data for dataset {} with arguments {:}".format(name,
+                                                                             args))
+            return None
+
+        else:
+            return data_df
+
 
 class DataAverager():
     """
@@ -42,40 +121,269 @@ class DataAverager():
 
     Parameters
     ----------
-    ref: pygeogrids Grid obj.
+    ref_class: pygeogrids Grid obj.
         Class containing the method read_ts for reading the data of the reference
-    others: dict
+    others_class: dict
         Dict of shape 'other_name': pygeogrids Grid obj. for the other dataset
+    datasets: dict
+        dict of dicts, see class DataManager
     """
     def __init__(
             self,
-            ref,
-            others,
+            ref_class,
+            others_class,
+            datasets
     ):
-        self.ref = ref_class
-        self.others = others_class
+        self.ref_class = ref_class
+        self.others_class = others_class
+        self.datasets = datasets
+
 
     @property
     def lut(self) -> dict:
         """Get a lookup table that combines the points falling under the same reference pixel"""
         lut = {}
-        for other_name, other_class in self.others.items():
-            other_points = other_class.grid.get_grid_points()
-            other_lut = {}
-            # iterate from the side of the non-reference
-            for point in other_points:
-                gpi, lon, lat = point
-                # list all non-ref points under the same ref gpi
-                ref_gpi = self.ref_class.find_nearest_gpi(lon, lat)[0]
-                if ref_gpi in other_lut.keys():
-                    other_lut[ref_gpi].append(point)
-                else:
-                    other_lut[ref_gpi] = [point]
+        for other_name, other_class in self.others_class.items():
+            try:
+                other_points = other_class.grid.get_grid_points()
+                other_lut = {}
+                # iterate from the side of the non-reference
+                for point in other_points:
+                    gpi, lon, lat = point
+                    # list all non-ref points under the same ref gpi
+                    ref_gpi = self.ref_class.find_nearest_gpi(lon, lat)[0]
+                    if ref_gpi in other_lut.keys():
+                        other_lut[ref_gpi].append(point)
+                    else:
+                        other_lut[ref_gpi] = [point]
+            except AttributeError:
+                other_lut = None  # todo: handle AdvancedMaskingAdapter
             # add to dictionary even when empty
             lut[other_name] = other_lut
 
         return lut
 
 
+    def get_timeseries(
+            self,
+            points,
+            other_name,
+    ) -> list:
+        """
+        Get the timeseries for given points info and return them in a list.
+
+        Parameters
+        ----------
+        points: list of tuples
+            list of tuples of (gpi, lon, lat)
+        other_name: str
+            Name of the dataset which the points belong to
+
+        Returns
+        -------
+        dss: list
+            list of dataframes of the reference timeseries
+        """
+        dss = []
+        for gpi, lon, lat in points:
+            ds = self.read_ds(other_name, lon, lat)
+            dss.append(ds)
+
+        return dss
 
 
+    @staticmethod
+    def temp_match(
+            to_match,
+            method='common',
+            hours=6,
+            **kwargs
+    ) -> pd.DataFrame:
+        """
+        Temporal match by:
+            * temporal matching to the longest timeseries
+            * taking the common values only
+
+        Parameters
+        ----------
+        to_match: list
+            list of dataframes to match
+        method: str
+            matching method. Either 'common' or 'rescale'
+        hours: int
+            window to perform the temporal matching
+
+        Returns
+        -------
+        matched: pd.DataFrame
+            dataframe with temporally matched timeseries
+        """
+        if method == 'common':
+            matched = pd.concat(to_match, axis=1, join="inner").dropna()
+
+        elif method == 'rescale':
+            # get time series with most points
+            for n, df in enumerate(to_match):
+                points = len(df.dropna())
+                if n == 0:
+                    ref = df
+                if len(ref.dropna()) >= points:
+                    continue
+                else:
+                    ref = df
+
+            to_match = pd.concat(to_match, axis=1)
+            matched = tcoll(
+                ref,
+                to_match,
+                pd.Timedelta(hours, "H"),
+                dropna=True
+            )
+
+        return matched
+
+
+    @staticmethod
+    def tstability_filter(
+            df,
+            r_min=0.6,
+            see_max=0.05,
+            min_n=4,
+            **kwargs,
+    ) -> pd.DataFrame:
+        """
+        Uses time stability concepts to filter point-measurements (pms). Determines wether the upscaled measurement
+        based on a simple average of all the pms is in sufficient agreement with each pm, and if not eliminates pm
+        from the pool.
+
+        Parameters
+        ----------
+        df: pd.DataFrame
+            temporally matched DataFrame
+        r_min: float
+            lower threshold for correlation (Pearson) between upscaled and pm
+        see_max: float
+            upper threshold for standard error of estimate
+        min_n: int
+            minimum number of pms to perform the filtering
+
+        Returns
+        -------
+        filtered: pd.DataFrame
+            filtered input
+        """
+        if len(df.columns) < min_n:
+            return df
+
+        # get a trivial (average) upscale estimate
+        estimate = df.mean(axis=1)
+
+        filter_out = []
+        for n, pm in enumerate(df):
+            pm_values = df[pm]
+            regr = linregress(
+                estimate,
+                pm_values
+            )
+            if regr.rvalue < r_min or regr.intercept_stderr > see_max:
+                filter_out.append(pm)
+
+        filtered = df.drop(filter_out)
+        # todo: This could be done iteratively to calibrate the thresholds
+        if len(filtered.columns) < 2:
+            warnings.warn(
+                "The filtering options are too strict. Returning entire dataframe ..."
+            )
+            return  df
+
+        return filtered
+
+
+    def upscale(self, df, method='average', **kwargs) -> pd.DataFrame:
+        """
+        Return the upscaled Dataframe with the specified method
+
+        **New upscaling methods can be specified here in the lut**
+
+        Parameters
+        ----------
+        df: pd.DataFrame
+            Dataframe of values to average using method
+        method: str
+            averaging method
+        kwargs: keyword arguments
+            Arguments for some upscaling functions
+
+        Returns
+        -------
+        upscaled: pandas.DataFrame
+            dataframe with "upscaled" column
+        """
+        up_function = {
+            "average": self.faverage,
+        }
+        f = up_function[method]
+        df["upscaled"] = f(df, **kwargs)
+
+        return df
+
+
+    @staticmethod
+    def faverage(df) -> pd.Series:
+        """Simple average of each column in the dataframe"""
+        # workaround to avoid changes in place
+        out = df.mean(axis=1)
+
+        return out
+
+
+    def wrapper(
+            self,
+            gpi,
+            other_name,
+            tmatching="rescale",
+            up_method="average",
+            tstability=False,
+            **kwargs
+    ) -> pd.DataFrame:
+        """
+        Find the upscale estimate with given method, for a certain reference gpi
+
+        Parameters
+        ----------
+        gpi: int
+            gpi value of the reference point
+        other_name: str
+            name of the non-reference dataset to be upscaled
+        tmatching: str, default is "rescale"
+            method to use for temporal matching. 'rescale' uses the pytesmo.temporal_matching methods, 'common' takes
+            only measurements at common times between all the pms
+        up_method: str
+            method to use for upscaling:
+                * 'average' takes the simple mean of all timeseries
+        tstability: bool, default is False
+            if True, the values are filtered using the time stability concept
+        kwargs: keyword arguments
+            argumjents for the temporal window or time stability thresholds
+
+        Returns
+        -------
+        upscaled: pd.DataFrame
+            upscaled time series
+        """
+        warnings.warn('lut: {}'.format(self.lut))
+        other_lut = self.lut[other_name]
+        other_points = other_lut[gpi]
+        # check that there are points for specidic reference gpi
+        if not other_points:
+            return None
+
+        tss = self.get_timeseries(points=other_points, other_name=other_name)
+        tss = self.temp_match(tss, method=tmatching, **kwargs)
+
+        if tstability:
+            tss = self.tstability_filter(tss, **kwargs)
+
+        upscaled = self.upscale(tss, method=up_method)["upscaled"].to_frame()
+
+        return upscaled
