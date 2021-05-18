@@ -316,7 +316,6 @@ class DataManager(MixinReadTs):
                 other_dataframe = self.read_other(
                     other_name, gpi)
             elif isinstance(self.luts, DataAverager):
-                assert gpi<24, "gpi debug {}".format(gpi)
                 other_dataframe = self.luts.wrapper(
                     gpi=gpi,
                     other_name=other_name,
