@@ -154,7 +154,10 @@ class Validation(object):
 
         self.luts = self.data_manager.get_luts()
 
-    def calc(self, gpis, lons, lats, *args, rename_cols=True):
+    def calc(
+        self, gpis, lons, lats, *args, rename_cols=True,
+        only_with_temporal_ref=False
+    ):
         """
         The argument iterables (lists or numpy.ndarrays) are processed one
         after the other in tuples of the form (gpis[n], lons[n], lats[n],
@@ -180,6 +183,9 @@ class Validation(object):
         rename_cols : bool, optional
             Whether to rename the columns to "ref", "k1", ... before passing
             the dataframe to the metrics calculators. Default is True.
+        only_with_temporal_ref : bool, optional
+            If this is enabled, only combinations that include the temmporal
+            reference are calculated.
 
         Returns
         -------
@@ -209,7 +215,8 @@ class Validation(object):
             if len(df_dict) == 0:
                 continue
             matched_data, result, used_data = self.perform_validation(
-                df_dict, gpi_info, rename_cols=rename_cols
+                df_dict, gpi_info, rename_cols=rename_cols,
+                only_with_temporal_ref=only_with_temporal_ref
             )
 
             # add result of one gpi to global results dictionary
@@ -231,7 +238,9 @@ class Validation(object):
 
         return compact_results
 
-    def perform_validation(self, df_dict, gpi_info, rename_cols=True):
+    def perform_validation(
+        self, df_dict, gpi_info, rename_cols=True, only_with_temporal_ref=False
+    ):
         """
         Perform the validation for one grid point index and return the
         matched datasets as well as the calculated metrics.
@@ -282,6 +291,13 @@ class Validation(object):
                                                    n=k)
             for data, result_key in self.k_datasets_from(n_matched_data,
                                                          result_names):
+
+                # it might also be a good idea to move this to
+                # `get_result_combinations`
+                result_ds_names = [key[0] for key in result_key]
+                if only_with_temporal_ref:
+                    if self.temporal_ref not in result_ds_names:
+                        continue
 
                 if len(data) == 0:
                     continue

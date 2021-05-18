@@ -120,7 +120,7 @@ class BasicTemporalMatching(object):
 
 
 def dfdict_combined_temporal_collocation(
-    dfs, refname, k, n=None, window=None, **kwargs
+    dfs, refname, k, window=None, n=None, **kwargs
 ):
     """
     Applies :py:func:`combined_temporal_collocation` on a dictionary of
@@ -146,11 +146,7 @@ def dfdict_combined_temporal_collocation(
     Returns:
     --------
     matched_dict : dict
-        Dictionary where the keys are tuples of ``(other_names..., refname)``
-        for each combination of other keys in `dfs` of size `n`, and values are
-        the matched dataframes.  The column names of the dataframes are again
-        tuples of ``(name, col)`` where `name` is the key from `dfs` and `col`
-        is the original column name in the input dataframe.
+        Dictionary where the key is tuples of ``(refname, othernames...)``.
     """
     if n is not None:
         if len(dfs) != n:
@@ -172,20 +168,8 @@ def dfdict_combined_temporal_collocation(
     matched_dict = {}
     othernames = list(dfs.keys())
     othernames.remove(refname)
-    for onames in itertools.combinations(othernames, k - 1):
-        # we want to keep the reference columns and the columns of the current
-        # other names in the combination
-        keep = list(ref.columns)
-        for name in onames:
-            tuple_keys = list(itertools.product((name,), dfs[name].columns))
-            keep += tuple_keys
-        # there's a strange bug in pytesmo, when I make the order here to
-        # be (refname, name) instead of (name, refname) I don't get all the
-        # results
-        matched_dict[(*onames, refname)] = matched_df[keep]
-        # rename_dict = {tk: tk[1] for tk in tuple_keys}
-        # matched_dict[(refname, name)].rename(rename_dict, axis=1,
-        # inplace=True)
+    key = tuple([refname] + othernames)
+    matched_dict[key] = matched_df
     return matched_dict
 
 

@@ -713,7 +713,9 @@ def test_PairwiseIntercomparisonMetrics(testdata_generator):
             )
         }
     )
-    results_pw = val.calc([1], [1], [1], rename_cols=False)
+    results_pw = val.calc(
+        [1], [1], [1], rename_cols=False, only_with_temporal_ref=True
+    )
 
     # in results_pw, there are four entries with keys (("c1name", "c1"),
     # ("refname", "ref"), and so on.
@@ -751,7 +753,7 @@ def test_PairwiseIntercomparisonMetrics(testdata_generator):
         metrics_calculators={(4, 4): metrics.calc_metrics}
     )
 
-    results = val.calc(1, 1, 1, rename_cols=False)
+    results = val.calc(1, 1, 1, rename_cols=False, only_with_temporal_ref=True)
 
     # results is a dictionary with one entry and key
     # (('c1name', 'c1'), ('c2name', 'c2'), ('c3name', 'c3'), ('refname',
@@ -813,7 +815,9 @@ def test_PairwiseIntercomparisonMetrics_confidence_intervals():
             )
         }
     )
-    results_pw = val.calc([1], [1], [1], rename_cols=False)
+    results_pw = val.calc(
+        [1], [1], [1], rename_cols=False, only_with_temporal_ref=True
+    )
 
     metrics_with_ci = {
         "BIAS": "bias",
@@ -897,7 +901,9 @@ def test_TripleCollocationMetrics(testdata_generator):
             (4, 3): triplet_metrics_calculator.calc_metrics
         }
     )
-    results_triplet = val_triplet.calc([1], [1], [1], rename_cols=False)
+    results_triplet = val_triplet.calc(
+        [1], [1], [1], rename_cols=False, only_with_temporal_ref=True
+    )
 
     if "col1_name" in datasets.keys():
         # we only test the TCA results with the random data, since for the
@@ -946,7 +952,9 @@ def test_TripleCollocationMetrics(testdata_generator):
                 (4, 3): triplet_metrics_calculator.calc_metrics
             }
         )
-        results_triplet = val_triplet.calc([1], [1], [1], rename_cols=False)
+        results_triplet = val_triplet.calc(
+            [1], [1], [1], rename_cols=False, only_with_temporal_ref=True
+        )
         for key in results_triplet:
             for dset, _ in key:
                 for metric in ["snr", "err_std", "beta"]:

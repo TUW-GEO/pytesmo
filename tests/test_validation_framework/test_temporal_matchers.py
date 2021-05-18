@@ -146,24 +146,15 @@ def test_dfdict_combined_temporal_collocation():
     window = pd.Timedelta(days=300)
 
     matched = temporal_matchers.dfdict_combined_temporal_collocation(
-        dfs, "refkey", 2, window
+        dfs, "refkey", 2, window=window, n=3
     )
 
     # keys are the same, only refkey is missing
-    assert sorted(list(matched.keys())) == sorted([
-        ("df1key", "refkey"), ("df2key", "refkey")
-    ])
-    assert sorted(list(matched[("df1key", "refkey")].columns)) == sorted(
-        [("refkey", "ref"), ("df1key", "k1"), ("df1key", "k2")]
-    )
-    assert sorted(list(matched[("df2key", "refkey")].columns)) == sorted(
-        [("refkey", "ref"), ("df2key", "k1"), ("df2key", "k2")]
-    )
+    key = ("refkey", "df1key", "df2key")
+    assert list(matched.keys()) == [key]
 
     # overlap is only 11 timestamps
-    assert matched[("df1key", "refkey")].shape == (11, 3)
-    assert matched[("df2key", "refkey")].shape == (11, 3)
+    assert matched[key].shape == (11, 5)
 
     overlap_dr = pd.date_range("2005", "2015", freq="YS")
-    assert np.all(matched[("df1key", "refkey")].index == overlap_dr)
-    assert np.all(matched[("df2key", "refkey")].index == overlap_dr)
+    assert np.all(matched[key].index == overlap_dr)

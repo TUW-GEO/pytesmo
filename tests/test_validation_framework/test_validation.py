@@ -1192,7 +1192,7 @@ class DummyNoneReader:
         return pd.DataFrame(np.zeros((0, len(names))), columns=names)
 
 
-def create_datasets(n_datasets, npoints, nsamples):
+def create_datasets(n_datasets, npoints, nsamples, missing=False):
     """
     Creates three datasets with given number of points to compare, each
     having number of samples given
@@ -1218,14 +1218,39 @@ def create_datasets(n_datasets, npoints, nsamples):
             "columns": [f"other{i}col"],
             "class": DummyReader(dfs, f"other{i}col")
         }
-    datasets[f"{n_datasets-1}-missing"] = {
-        "columns": [f"other{n_datasets-1}col"],
-        "class": DummyNoneReader(dfs, f"other{n_datasets-1}col")
-    }
+    if missing:
+        datasets[f"{n_datasets-1}-missing"] = {
+            "columns": [f"other{n_datasets-1}col"],
+            "class": DummyNoneReader(dfs, f"other{n_datasets-1}col")
+        }
+    else:
+        datasets[f"{n_datasets-1}-ESA_CCI_SM_combined"] = {
+            "columns": [f"other{n_datasets-1}col"],
+            "class": DummyReader(dfs, f"other{n_datasets-1}col")
+        }
     return datasets
 
 
 def test_missing_data():
+    n_datasets = 5
+    npoints = 5
+    nsamples = 100
+
+    datasets = create_datasets(n_datasets, npoints, nsamples, missing=True)
+
+    metric_calculator = PairwiseIntercomparisonMetrics()
+
+    val = Validation(
+        datasets,
+        spatial_ref="0-ERA5",
+        metrics_calculators={(n_datasets, 2): metric_calculator.calc_metrics},
+        temporal_matcher=make_combined_temporal_matcher(pd.Timedelta(12, "H")),
+    )
+    gpis = list(range(npoints))
+    val.calc(gpis, gpis, gpis, rename_cols=False, only_with_temporal_ref=True)
+
+
+def test_combined_matching_scaling():
     n_datasets = 5
     npoints = 5
     nsamples = 100
@@ -1239,9 +1264,11 @@ def test_missing_data():
         spatial_ref="0-ERA5",
         metrics_calculators={(n_datasets, 2): metric_calculator.calc_metrics},
         temporal_matcher=make_combined_temporal_matcher(pd.Timedelta(12, "H")),
+        scaling="mean_std",
+        scaling_ref="0-ERA5",
     )
     gpis = list(range(npoints))
-    val.calc(gpis, gpis, gpis, rename_cols=False)
+    val.calc(gpis, gpis, gpis, rename_cols=False, only_with_temporal_ref=True)
 
 
 if __name__ == "__main__":
