@@ -27,8 +27,9 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import warnings
+from itertools import groupby
 
-import pandas as pd#
+import pandas as pd
 from scipy.stats import linregress
 
 from pygeobase.object_base import TS
@@ -98,7 +99,7 @@ class MixinReadTs():
             # here we use the isoformat since pandas slice behavior is
             # different when using datetime objects.
             data_df = data_df[
-                self.period[0].isoformat():self.period[1].isoformat()]
+                      self.period[0].isoformat():self.period[1].isoformat()]
 
         if len(data_df) == 0:
             warnings.warn("No data for dataset {} with arguments {:}".format(name,
@@ -109,7 +110,7 @@ class MixinReadTs():
             return data_df
 
 
-class DataAverager():
+class DataAverager(MixinReadTs):
     """
     Class to handle multiple measurements falling under the same reference gridpoint. The goal is to include
     here all identified upscaling methods to provide an estimate at the reference footprint scale.
@@ -125,19 +126,26 @@ class DataAverager():
         Class containing the method read_ts for reading the data of the reference
     others_class: dict
         Dict of shape 'other_name': pygeogrids Grid obj. for the other dataset
-    datasets: dict
-        dict of dicts, see class DataManager
+    geo_subset: tuple, optional. Default is None.
+        Information on the grographic subset for data averaging -> (latmin, latmax, lonmin, lonmax)
+    manager_parms: dict
+        Dict of DataManager attributes
     """
+
     def __init__(
             self,
             ref_class,
             others_class,
-            datasets
+            geo_subset,
+            manager_parms,
     ):
         self.ref_class = ref_class
         self.others_class = others_class
-        self.datasets = datasets
-
+        self.geo_subset = geo_subset
+        # attributes used by the Mixin class:
+        self.datasets = manager_parms["datasets"]
+        self.period = manager_parms["period"]
+        self.read_ts_names = manager_parms["read_ts_names"]
 
     @property
     def lut(self) -> dict:
@@ -145,24 +153,30 @@ class DataAverager():
         lut = {}
         for other_name, other_class in self.others_class.items():
             try:
-                other_points = other_class.grid.get_grid_points()
-                other_lut = {}
-                # iterate from the side of the non-reference
-                for point in other_points:
-                    gpi, lon, lat = point
-                    # list all non-ref points under the same ref gpi
-                    ref_gpi = self.ref_class.find_nearest_gpi(lon, lat)[0]
-                    if ref_gpi in other_lut.keys():
-                        other_lut[ref_gpi].append(point)
-                    else:
-                        other_lut[ref_gpi] = [point]
+                grid = other_class.grid
             except AttributeError:
-                other_lut = None  # todo: handle AdvancedMaskingAdapter
+                # when filters are applied, this will be an AdvancedMaskingAdapter
+                grid = other_class.cls.cls.grid
+            other_points = grid.get_bbox_grid_points(
+                *self.geo_subset,
+                both=True,
+            )
+            other_lut = {}
+            # iterate from the side of the non-reference
+            for gpi, lon, lat in zip(other_points[0], other_points[1], other_points[2]):
+                # list all non-ref points under the same ref gpi
+                try:
+                    ref_gpi = self.ref_class.grid.find_nearest_gpi(lon, lat)[0]
+                except AttributeError:
+                    ref_gpi = self.ref_class.cls.cls.grid.find_nearest_gpi(lon, lat)[0]
+                if ref_gpi in other_lut.keys():
+                    other_lut[ref_gpi].append((gpi, lon, lat))
+                else:
+                    other_lut[ref_gpi] = [(gpi, lon, lat)]
             # add to dictionary even when empty
             lut[other_name] = other_lut
 
         return lut
-
 
     def get_timeseries(
             self,
@@ -186,11 +200,14 @@ class DataAverager():
         """
         dss = []
         for gpi, lon, lat in points:
-            ds = self.read_ds(other_name, lon, lat)
+            # todo: resolve ambiguity on gpi/lon, lat and AssertionError on validator/hacks
+            try:
+                ds = self.read_ds(other_name, gpi)
+            except AttributeError:
+                continue
             dss.append(ds)
 
         return dss
-
 
     @staticmethod
     def temp_match(
@@ -224,6 +241,8 @@ class DataAverager():
         elif method == 'rescale':
             # get time series with most points
             for n, df in enumerate(to_match):
+                if df is None:
+                    continue
                 points = len(df.dropna())
                 if n == 0:
                     ref = df
@@ -241,7 +260,6 @@ class DataAverager():
             )
 
         return matched
-
 
     @staticmethod
     def tstability_filter(
@@ -294,10 +312,9 @@ class DataAverager():
             warnings.warn(
                 "The filtering options are too strict. Returning entire dataframe ..."
             )
-            return  df
+            return df
 
         return filtered
-
 
     def upscale(self, df, method='average', **kwargs) -> pd.DataFrame:
         """
@@ -323,10 +340,17 @@ class DataAverager():
             "average": self.faverage,
         }
         f = up_function[method]
-        df["upscaled"] = f(df, **kwargs)
+        # check that column names are all the same and return first
+        g = groupby(df.columns)
+        assert (next(g, True) and not next(g, False))
+        var_name = df.columns[0]
 
-        return df
+        upscaled = pd.DataFrame(
+            data=f(df, **kwargs),
+            columns=[var_name]
+        )
 
+        return upscaled
 
     @staticmethod
     def faverage(df) -> pd.Series:
@@ -335,7 +359,6 @@ class DataAverager():
         out = df.mean(axis=1)
 
         return out
-
 
     def wrapper(
             self,
@@ -371,19 +394,30 @@ class DataAverager():
         upscaled: pd.DataFrame
             upscaled time series
         """
-        warnings.warn('lut: {}'.format(self.lut))
         other_lut = self.lut[other_name]
-        other_points = other_lut[gpi]
-        # check that there are points for specidic reference gpi
+        if gpi in other_lut.keys():
+            other_points = other_lut[gpi]
+        else:
+            return None
+        # check that there are points for specific reference gpi
         if not other_points:
             return None
 
         tss = self.get_timeseries(points=other_points, other_name=other_name)
+        # check that timeseries were extracted from the points
+        if not tss:
+            return None
+        tss = [df for df in tss if not df is None]
+
+        # handle situation with single timeseries or all None
+        if len(tss) < 1:
+            if not tss:
+                return None
+            return tss[0]
         tss = self.temp_match(tss, method=tmatching, **kwargs)
 
         if tstability:
             tss = self.tstability_filter(tss, **kwargs)
-
-        upscaled = self.upscale(tss, method=up_method)["upscaled"].to_frame()
+        upscaled = self.upscale(tss, method=up_method)
 
         return upscaled

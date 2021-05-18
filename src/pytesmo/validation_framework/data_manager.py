@@ -27,9 +27,6 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import itertools
-import warnings
-
-import pandas as pd
 
 from pytesmo.validation_framework.data_averaging import DataAverager, MixinReadTs
 
@@ -72,15 +69,17 @@ class DataManager(MixinReadTs):
     period : list, optional
         Of type [datetime start, datetime end]. If given then the two input
         datasets will be truncated to start <= dates <= end.
+    read_ts_names: string or dict of strings, optional
+        if another method name than 'read_ts' should be used for reading the data
+        then it can be specified here. If it is a dict then specify a
+        function name for each dataset.
     upscale_parms: dict, optional. Default is None.
         dictionary with parameters for the upscaling methods. Keys:
             * 'tmatching': method to use for temporal matching
             * 'up_method': method for upscaling
             * 'tstability': bool for using temporal stability
-    read_ts_names: string or dict of strings, optional
-        if another method name than 'read_ts' should be used for reading the data
-        then it can be specified here. If it is a dict then specify a
-        function name for each dataset.
+    geo_subset: tuple, optional. Default is None
+        parameter for DataAverager methods -> (latmin, latmax, lonmin, lonmax)
 
     Methods
     -------
@@ -95,17 +94,19 @@ class DataManager(MixinReadTs):
         Function to read and prepare the other datasets.
     """
 
-    def __init__(self, datasets, ref_name,
-                 period=None,
-                 upscale_parms=None,
-                 read_ts_names='read_ts'):
-        """
-        Initialize parameters.
-        """
+    def __init__(
+            self, datasets,
+            ref_name,
+            period=None,
+            read_ts_names='read_ts',
+            upscale_parms=None,
+            geo_subset=None,
+    ):
+        """Initialize parameters."""
         self.datasets = datasets
         self._add_default_values()
         self.reference_name = ref_name
-        self.upscale_parms=upscale_parms
+        self.upscale_parms = upscale_parms
 
         self.other_name = []
         for dataset in datasets.keys():
@@ -122,20 +123,7 @@ class DataManager(MixinReadTs):
 
         self.period = period
 
-        if upscale_parms:
-            # initialize class that performs upscaling operations
-            others_class = {}
-            for other in self.other_name:
-                others_class[other] = self.datasets[other]["class"]
-            self.luts = DataAverager(
-                ref_class=datasets[self.reference_name]["class"],
-                others_class=others_class,
-                datasets=self.datasets
-            )
-        else:
-            # combine ref to NNs only
-            self.luts = self.get_luts()
-
+        # get reading functions
         if type(read_ts_names) is dict:
             self.read_ts_names = read_ts_names
         else:
@@ -143,6 +131,22 @@ class DataManager(MixinReadTs):
             for dataset in datasets:
                 d[dataset] = read_ts_names
             self.read_ts_names = d
+
+        # match points in space
+        if upscale_parms and geo_subset:
+            # initialize class that performs upscaling operations
+            others_class = {}
+            for other in self.other_name:
+                others_class[other] = self.datasets[other]["class"]
+            self.luts = DataAverager(
+                ref_class=datasets[self.reference_name]["class"],
+                others_class=others_class,
+                geo_subset=geo_subset,
+                manager_parms=self.__dict__,
+            )
+        else:
+            # combine ref to NNs only
+            self.luts = self.get_luts()
 
     def _add_default_values(self):
         """
@@ -312,9 +316,10 @@ class DataManager(MixinReadTs):
                 other_dataframe = self.read_other(
                     other_name, gpi)
             elif isinstance(self.luts, DataAverager):
+                assert gpi<24, "gpi debug {}".format(gpi)
                 other_dataframe = self.luts.wrapper(
-                    gpi,
-                    other_name,
+                    gpi=gpi,
+                    other_name=other_name,
                     **self.upscale_parms
                 )
             elif self.luts[other_name] is not None:
