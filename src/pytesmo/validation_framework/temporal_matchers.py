@@ -120,7 +120,7 @@ class BasicTemporalMatching(object):
 
 
 def dfdict_combined_temporal_collocation(
-    dfs, refname, k, window=None, **kwargs
+    dfs, refname, k, n=None, window=None, **kwargs
 ):
     """
     Applies :py:func:`combined_temporal_collocation` on a dictionary of
@@ -134,6 +134,7 @@ def dfdict_combined_temporal_collocation(
         Name of the reference frame in `dfs`.
     k : int
         Number of columns that will be put together in the output dictionary.
+        The output will consist of all combinations of size k.
     window : pd.Timedelta or float, optional
         Window around reference timestamps in which to look for data. Floats
         are interpreted as number of days. If it is not given, defaults to 1
@@ -151,6 +152,10 @@ def dfdict_combined_temporal_collocation(
         tuples of ``(name, col)`` where `name` is the key from `dfs` and `col`
         is the original column name in the input dataframe.
     """
+    if n is not None:
+        if len(dfs) != n:
+            return {}
+
     if window is None:
         window = pd.Timedelta(hours=1)
 
@@ -204,7 +209,6 @@ def make_combined_temporal_matcher(window):
     def matcher(dfs, refname, k=None, **kwargs):
         # this comes from Validation.temporal_match_datasets but is not
         # required
-        del kwargs["n"]
         return dfdict_combined_temporal_collocation(
             dfs, refname, k, window=window, **kwargs
         )
