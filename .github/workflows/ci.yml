@@ -86,7 +86,7 @@ jobs:
           name: Artifacts
           path: .artifacts/*
       - name: Publish
-        if: ${{ github.event_name == 'release' }}
+        if: ${{ github.event_name == 'release' && (matrix.os == "windows-latest" || matrix.python-version == '3.8')}}
         uses: pypa/gh-action-pypi-publish@v1.4.1
         with:
           skip_existing: true
@@ -94,7 +94,8 @@ jobs:
           verify_metadata: true
           packages_dir: .artifacts/dist/
           user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }} # this needs to be uploaded to github actions secrets
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }} # this needs to be uploaded to github actions secrets
+          repository_url: https://test.pypi.org/legacy/ # todo: delete for real pypi
   coveralls:
     name: Submit Coveralls 👚
     needs: build
