@@ -86,7 +86,7 @@ jobs:
           name: Artifacts
           path: .artifacts/*
       - name: Publish
-        if: ${{ github.event_name == 'release' && (matrix.os == "windows-latest" || matrix.python-version == '3.8')}}
+        if: ${{ github.event_name == 'release' && (matrix.os == 'windows-latest' || matrix.python-version == '3.8') }}
         uses: pypa/gh-action-pypi-publish@v1.4.1
         with:
           skip_existing: true
