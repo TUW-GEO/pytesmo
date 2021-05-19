@@ -85,17 +85,6 @@ jobs:
         with:
           name: Artifacts
           path: .artifacts/*
-      - name: Publish to PyPI Test
-        if: ${{ github.event_name == 'release' && (matrix.os == 'windows-latest' || matrix.python-version == '3.8') }}
-        uses: pypa/gh-action-pypi-publish@v1.4.1
-        with:
-          skip_existing: true
-          verbose: true
-          verify_metadata: true
-          packages_dir: .artifacts/dist/
-          user: __token__
-          password: ${{ secrets.TEST_PYPI_API_TOKEN }} # this needs to be uploaded to github actions secrets
-          repository_url: https://test.pypi.org/legacy/ # todo: delete for real pypi
   coveralls:
     name: Submit Coveralls 👚
     needs: build
@@ -107,3 +96,18 @@ jobs:
           pip3 install --upgrade coveralls && coveralls --service=github --finish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  publish:
+    name: Upload to PyPI
+    if: ${{ github.event_name == 'release' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish to PyPI Test
+        uses: pypa/gh-action-pypi-publish@v1.4.1
+        with:
+          skip_existing: true
+          verbose: true
+          verify_metadata: true
+          packages_dir: .artifacts/dist/
+          user: __token__
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }} # this needs to be uploaded to github actions secrets
+          repository_url: https://test.pypi.org/legacy/ # todo: delete for real pypi

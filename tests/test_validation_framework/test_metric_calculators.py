@@ -56,7 +56,7 @@ from pytesmo.validation_framework.metric_calculators import (
     TripleCollocationMetrics,
 )
 from pytesmo.validation_framework.temporal_matchers import (
-    make_combined_temporal_matcher
+    make_combined_temporal_matcher, BasicTemporalMatching
 )
 from pytesmo.validation_framework.results_manager import netcdf_results_manager
 import pytesmo.metrics as metrics
@@ -753,7 +753,8 @@ def test_PairwiseIntercomparisonMetrics(testdata_generator):
         metrics_calculators={(4, 4): metrics.calc_metrics}
     )
 
-    results = val.calc(1, 1, 1, rename_cols=False, only_with_temporal_ref=True)
+    print("running old setup")
+    results = val.calc(1, 1, 1, rename_cols=False)
 
     # results is a dictionary with one entry and key
     # (('c1name', 'c1'), ('c2name', 'c2'), ('c3name', 'c3'), ('refname',
@@ -970,6 +971,73 @@ def test_TripleCollocationMetrics(testdata_generator):
                         results_triplet[key][(metric, dset)]
                         <= results_triplet[key][(ukey, dset)]
                     )
+
+
+def test_temporal_matching_ascat_ismn():
+    """
+    This test uses a CSV file of ASCAT and ISMN data to test if the temporal
+    matching within the validation works as epxected in a "real" setup.
+    This only tests whether the number of observations matches, because this is
+    the main thing the temporal matching influences.
+    """
+
+    # test with ASCAT and ISMN data
+    here = Path(__file__).resolve().parent
+    ascat = pd.read_csv(here / "ASCAT.csv", index_col=0, parse_dates=True)
+    ismn = pd.read_csv(here / "ISMN.csv", index_col=0, parse_dates=True)
+    dfs = {"ASCAT": ascat, "ISMN": ismn}
+    columns = {"ASCAT": "sm", "ISMN": "soil_moisture"}
+    refname = "ISMN"
+    window = pd.Timedelta(12, "H")
+
+    old_matcher = BasicTemporalMatching().combinatory_matcher
+    new_matcher = make_combined_temporal_matcher(window)
+
+    datasets = {}
+    for key in ["ISMN", "ASCAT"]:
+        all_columns = list(dfs[key].columns)
+        ds = {"columns": [columns[key]], "class": DummyReader(dfs[key], all_columns)}
+        datasets[key] = ds
+
+    new_val = Validation(
+        datasets,
+        refname,
+        scaling=None,  # doesn't work with the constant test data
+        temporal_matcher=new_matcher,
+        metrics_calculators={
+            (2, 2): PairwiseIntercomparisonMetrics().calc_metrics
+        }
+    )
+    new_results = new_val.calc(
+        1, 1, 1, rename_cols=False, only_with_temporal_ref=True
+    )
+
+    # old setup
+    ds_names = list(datasets.keys())
+    metrics = IntercomparisonMetrics(
+        dataset_names=ds_names,
+        # passing the names here explicitly, see GH issue #220
+        refname=refname,
+        other_names=ds_names[1:],
+        calc_tau=True,
+    )
+    old_val = Validation(
+        datasets,
+        refname,
+        scaling=None,  # doesn't work with the constant test data
+        temporal_matcher=old_matcher,
+        metrics_calculators={
+            (2, 2): metrics.calc_metrics
+        }
+    )
+    old_results = old_val.calc(
+        1, 1, 1, rename_cols=False
+    )
+
+    old_key = (('ASCAT', 'sm'), ('ISMN', 'soil_moisture'))
+    new_key = (('ASCAT', 'sm'), ('ISMN', 'soil_moisture'))
+
+    assert old_results[old_key]["n_obs"] == new_results[new_key]["n_obs"]
 
 
 # def test_sorting_issue():

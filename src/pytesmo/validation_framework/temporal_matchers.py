@@ -120,7 +120,7 @@ class BasicTemporalMatching(object):
 
 
 def dfdict_combined_temporal_collocation(
-    dfs, refname, k, window=None, n=None, combined_dropna=False, **kwargs
+    dfs, refname, k, window=None, n=None, **kwargs
 ):
     """
     Applies :py:func:`combined_temporal_collocation` on a dictionary of
@@ -161,7 +161,7 @@ def dfdict_combined_temporal_collocation(
             others.append(df_name_multiindex(dfs[name], name))
     ref = df_name_multiindex(dfs[refname], refname)
     matched_df = temporal_matching.combined_temporal_collocation(
-        ref, others, window, add_ref_data=True, combined_dropna=combined_dropna, **kwargs
+        ref, others, window, add_ref_data=True, **kwargs
     )
 
     # unpack again to dictionary
@@ -194,7 +194,9 @@ def make_combined_temporal_matcher(window):
         # this comes from Validation.temporal_match_datasets but is not
         # required
         return dfdict_combined_temporal_collocation(
-            dfs, refname, k, window=window, **kwargs
+            dfs, refname, k, window=window, dropna=True,
+            combined_dropna="any", dropduplicates=True,
+            **kwargs
         )
     return matcher
 

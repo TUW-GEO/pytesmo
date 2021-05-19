@@ -285,10 +285,13 @@ class Validation(object):
 
             df_dict[self.temporal_ref] = masked_ref_df
 
-        # matched_n is a dictionary with the same keys as self.metrics_c, i.e.
-        # (n1, k1), (n2, k2), ...
-        # each entry is a dictionary whose
-        matched_n = self.temporal_match_datasets(df_dict)
+        # we only need the data columns
+        data_df_dict = {}
+        for ds in df_dict:
+            columns = self.data_manager.datasets[ds]["columns"]
+            data_df_dict[ds] = df_dict[ds][columns]
+
+        matched_n = self.temporal_match_datasets(data_df_dict)
 
         for n, k in self.metrics_c:
             n_matched_data = matched_n[(n, k)]

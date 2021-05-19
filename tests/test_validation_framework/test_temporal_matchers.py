@@ -165,7 +165,7 @@ def test_dfdict_combined_temporal_collocation():
     ascat = pd.read_csv(here / "ASCAT.csv", index_col=0, parse_dates=True)
     ismn = pd.read_csv(here / "ISMN.csv", index_col=0, parse_dates=True)
 
-    dfs = {"ASCAT": ascat, "ISMN": ismn}
+    dfs = {"ASCAT": ascat[["sm"]], "ISMN": ismn[["soil_moisture"]]}
     refname = "ISMN"
     window = pd.Timedelta(12, "H")
 
@@ -178,6 +178,14 @@ def test_dfdict_combined_temporal_collocation():
     key = ("ISMN", "ASCAT")
     assert list(expected.keys()) == [key]
     assert list(new.keys()) == [key]
-    assert expected[key].shape == new[key].shape
+    # We have to do an extra dropna for the old matcher, because the old
+    # matcher doesn't do this by itself.
+    # This is normally done within validation.py, `get_data_for_result_tuple`,
+    # but since the combined matcher should exclude all data where even a
+    # single entry misses (so that all only have common data) this is done
+    # before in the new matcher (the combined matcher, whereas the old one is
+    # the combinatory matcher)
+    exp = expected[key].dropna()
+    assert exp.shape == new[key].shape
     for col in new[key]:
-        np.testing.assert_equal(expected[key][col].values, new[key][col].values)
+        np.testing.assert_equal(exp[col].values, new[key][col].values)
