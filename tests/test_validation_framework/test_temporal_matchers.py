@@ -32,6 +32,7 @@ Test for temporal matchers
 
 import numpy as np
 import pandas as pd
+from pathlib import Path
 
 import pytesmo.validation_framework.temporal_matchers as temporal_matchers
 
@@ -146,7 +147,7 @@ def test_dfdict_combined_temporal_collocation():
     window = pd.Timedelta(days=300)
 
     matched = temporal_matchers.dfdict_combined_temporal_collocation(
-        dfs, "refkey", 2, window=window, n=3
+        dfs, "refkey", 2, window=window, n=3, combined_dropna=True
     )
 
     # keys are the same, only refkey is missing
@@ -158,3 +159,25 @@ def test_dfdict_combined_temporal_collocation():
 
     overlap_dr = pd.date_range("2005", "2015", freq="YS")
     assert np.all(matched[key].index == overlap_dr)
+
+    # test with ASCAT and ISMN data
+    here = Path(__file__).resolve().parent
+    ascat = pd.read_csv(here / "ASCAT.csv", index_col=0, parse_dates=True)
+    ismn = pd.read_csv(here / "ISMN.csv", index_col=0, parse_dates=True)
+
+    dfs = {"ASCAT": ascat, "ISMN": ismn}
+    refname = "ISMN"
+    window = pd.Timedelta(12, "H")
+
+    old_matcher = temporal_matchers.BasicTemporalMatching().combinatory_matcher
+    new_matcher = temporal_matchers.make_combined_temporal_matcher(window)
+
+    expected = old_matcher(dfs, refname, k=2, n=2)
+    new = new_matcher(dfs, refname, k=2, n=2)
+
+    key = ("ISMN", "ASCAT")
+    assert list(expected.keys()) == [key]
+    assert list(new.keys()) == [key]
+    assert expected[key].shape == new[key].shape
+    for col in new[key]:
+        np.testing.assert_equal(expected[key][col].values, new[key][col].values)
