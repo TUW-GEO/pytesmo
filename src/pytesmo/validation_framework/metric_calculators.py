@@ -1468,6 +1468,12 @@ class PairwiseIntercomparisonMetrics(MetadataMetrics, PairwiseMetricsMixin):
     Additionally, confidence intervals for these metrics can be calculated
     (optional).
 
+    **NOTE**: When using this within a
+      ``pytesmo.validation_framework.validation.Validation``, use
+      ``temporal_matcher=make_combined_temporal_matcher(<window>)`` as keyword
+      argument. ``make_combined_temporal_matcher`` can be imported from
+      ``pytesmo.validation_framework.temporal_matchers``.
+
     Parameters
     ----------
     min_obs : int, optional
@@ -1560,6 +1566,12 @@ class TripleCollocationMetrics(MetadataMetrics, PairwiseMetricsMixin):
     - SNR
     - error standard deviation
     - linear scaling/multiplicative (first-order) bias
+
+    **NOTE**: When using this within a
+      ``pytesmo.validation_framework.validation.Validation``, use
+      ``temporal_matcher=make_combined_temporal_matcher(<window>)`` as keyword
+      argument. ``make_combined_temporal_matcher`` can be imported from
+      ``pytesmo.validation_framework.temporal_matchers``.
 
     Parameters
     ----------

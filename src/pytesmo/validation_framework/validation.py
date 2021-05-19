@@ -7,6 +7,7 @@ except ImportError:
 import numpy as np
 import pandas as pd
 from pygeogrids.grids import CellGrid
+import warnings
 
 from pytesmo.validation_framework.data_manager import DataManager
 from pytesmo.validation_framework.data_manager import get_result_names
@@ -121,6 +122,12 @@ class Validation(object):
 
         self.temp_matching = temporal_matcher
         if self.temp_matching is None:
+            warnings.warn(
+                "You are using the default temporal matcher. If you are using one of the"
+                " newer metric calculators (PairwiseIntercomparisonMetrics,"
+                " TripleCollocationMetrics) you should probably use `make_combined_temporal_matcher`"
+                " instead. Have a look at the documentation of the metric calculators for more info."
+            )
             self.temp_matching = temporal_matchers.BasicTemporalMatching(
                 window=temporal_window).combinatory_matcher
 
