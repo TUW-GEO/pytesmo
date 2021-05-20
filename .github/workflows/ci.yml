@@ -102,11 +102,8 @@ jobs:
     if: startsWith(${{ github.ref }}, 'refs/tags/v') && startsWith(${{ github.repository }}, "TUW-GEO/")
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
       - name: Download Artifacts
         uses: actions/download-artifact@v2
-        with:
-          path: artifacts
       - name: Display downloaded files
         run: ls -aR
       - name: Publish to PyPI Test
@@ -115,7 +112,7 @@ jobs:
           skip_existing: true
           verbose: true
           verify_metadata: true
-          packages_dir: artifacts/dist/
+          packages_dir: Artifacts/dist/
           user: __token__
           password: ${{ secrets.TEST_PYPI_API_TOKEN }} # this needs to be uploaded to github actions secrets
           repository_url: https://test.pypi.org/legacy/ # todo: delete for real pypi
