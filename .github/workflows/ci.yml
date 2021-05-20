@@ -9,6 +9,8 @@ name: Automated Tests
 on:
   push:
   pull_request:
+  release:
+    types: [released]
   schedule: # only upstream, won't trigger on forks!
     - cron: '0 0 * * *' # daily
 jobs:
@@ -99,7 +101,7 @@ jobs:
   publish:
     name: Upload to PyPI
     needs: build
-    if: ${{ github.event_name == 'release' }}
+    if: startsWith(${{ github.ref }}, 'refs/tags/v') && startsWith(${{ github.repository }}, "TUW-GEO/")
     runs-on: ubuntu-latest
     steps:
       - name: Publish to PyPI Test
