@@ -157,13 +157,14 @@ class DataAverager(MixinReadTs):
             except AttributeError:
                 # when filters are applied, this will be an AdvancedMaskingAdapter
                 grid = other_class.cls.cls.grid
+            # subsetting shouldn't be necessary with ismn reader, but for satellites
             other_points = grid.get_bbox_grid_points(
                 *self.geo_subset,
                 both=True,
             )
             other_lut = {}
             # iterate from the side of the non-reference
-            for gpi, lon, lat in zip(other_points[0], other_points[1], other_points[2]):
+            for gpi, lat, lon in zip(other_points[0], other_points[1], other_points[2]):
                 # list all non-ref points under the same ref gpi
                 try:
                     ref_gpi = self.ref_class.grid.find_nearest_gpi(lon, lat)[0]
@@ -182,7 +183,7 @@ class DataAverager(MixinReadTs):
             self,
             points,
             other_name,
-    ) -> list:
+    ) -> pd.DataFrame:
         """
         Get the timeseries for given points info and return them in a list.
 
@@ -200,11 +201,7 @@ class DataAverager(MixinReadTs):
         """
         dss = []
         for gpi, lon, lat in points:
-            # todo: resolve ambiguity on gpi/lon, lat and AssertionError on validator/hacks
-            try:
-                ds = self.read_ds(other_name, gpi)
-            except AttributeError:
-                continue
+            ds = self.read_ds(other_name, gpi)
             dss.append(ds)
 
         return dss
@@ -212,7 +209,7 @@ class DataAverager(MixinReadTs):
     @staticmethod
     def temp_match(
             to_match,
-            method='common',
+            method='rescale',
             hours=6,
             **kwargs
     ) -> pd.DataFrame:
@@ -236,7 +233,7 @@ class DataAverager(MixinReadTs):
             dataframe with temporally matched timeseries
         """
         if method == 'common':
-            matched = pd.concat(to_match, axis=1, join="inner").dropna()
+            matched = pd.concat(to_match, axis=1, join="inner").dropna(how="any")
 
         elif method == 'rescale':
             # get time series with most points
@@ -257,7 +254,9 @@ class DataAverager(MixinReadTs):
                 to_match,
                 pd.Timedelta(hours, "H"),
                 dropna=True
-            )
+            ).dropna(how="any")
+
+            # todo: handle cases with no match with warning
 
         return matched
 
@@ -307,7 +306,7 @@ class DataAverager(MixinReadTs):
                 filter_out.append(pm)
 
         filtered = df.drop(filter_out)
-        # todo: This could be done iteratively to calibrate the thresholds
+        # todo: This could be done iteratively during the run to calibrate the thresholds
         if len(filtered.columns) < 2:
             warnings.warn(
                 "The filtering options are too strict. Returning entire dataframe ..."
@@ -316,16 +315,16 @@ class DataAverager(MixinReadTs):
 
         return filtered
 
-    def upscale(self, df, method='average', **kwargs) -> pd.DataFrame:
+    def upscale(self, df, method='average', **kwargs) -> pd.Series:
         """
-        Return the upscaled Dataframe with the specified method
+        Handle the column names and return the upscaled Dataframe with the specified method
 
         **New upscaling methods can be specified here in the lut**
 
         Parameters
         ----------
         df: pd.DataFrame
-            Dataframe of values to average using method
+            Dataframe of values to upscale using method
         method: str
             averaging method
         kwargs: keyword arguments
@@ -340,17 +339,8 @@ class DataAverager(MixinReadTs):
             "average": self.faverage,
         }
         f = up_function[method]
-        # check that column names are all the same and return first
-        g = groupby(df.columns)
-        assert (next(g, True) and not next(g, False))
-        var_name = df.columns[0]
 
-        upscaled = pd.DataFrame(
-            data=f(df, **kwargs),
-            columns=[var_name]
-        )
-
-        return upscaled
+        return f(df, **kwargs)
 
     @staticmethod
     def faverage(df) -> pd.Series:
@@ -395,29 +385,46 @@ class DataAverager(MixinReadTs):
             upscaled time series
         """
         other_lut = self.lut[other_name]
-        if gpi in other_lut.keys():
-            other_points = other_lut[gpi]
-        else:
-            return None
         # check that there are points for specific reference gpi
-        if not other_points:
+        if not gpi in other_lut.keys():
+            warnings.warn(
+                "The reference gpi {} has no points to average from {}".format(gpi, other_name)
+            )
             return None
+        else:
+            other_points = other_lut[gpi]
 
-        tss = self.get_timeseries(points=other_points, other_name=other_name)
-        # check that timeseries were extracted from the points
-        if not tss:
-            return None
+        # read non-reference points and filter out None
+        tss = self.get_timeseries(
+            points=other_points,
+            other_name=other_name
+        )
         tss = [df for df in tss if not df is None]
 
         # handle situation with single timeseries or all None
-        if len(tss) < 1:
+        if len(tss) <= 1:
             if not tss:
                 return None
             return tss[0]
-        tss = self.temp_match(tss, method=tmatching, **kwargs)
 
+        # here we collect only the variable columns; flags are irrelevant at this point and can be dropped
+        target_column = self.datasets[other_name]["columns"][0]
+        to_match = []
+        for n, point_df in enumerate(tss):
+            point_ts = point_df[target_column]
+            to_match.append(
+                point_ts.to_frame(name=target_column + "_{}".format(n))  # avoid name clashing
+            )
+
+        # temporal match and time stability filtering
+        tss = self.temp_match(to_match, method=tmatching, **kwargs)
         if tstability:
             tss = self.tstability_filter(tss, **kwargs)
-        upscaled = self.upscale(tss, method=up_method)
+
+        # perform upscaling and return correct name
+        upscaled = self.upscale(
+            tss,
+            method=up_method
+        ).to_frame(target_column)
 
         return upscaled
