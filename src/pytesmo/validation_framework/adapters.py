@@ -69,6 +69,15 @@ class BasicAdapter(object):
         data = self.__drop_tz_info(self.__get_dataframe(data))
         return data
 
+    @property
+    def grid(self):
+        """
+        Returns grid of wrapped class if it exists, otherwise None.
+        """
+        if hasattr(self.cls, "grid"):
+            return self.cls.grid
+
+
 class MaskingAdapter(BasicAdapter):
     """
     Transform the given class to return a boolean dataset given the operator
