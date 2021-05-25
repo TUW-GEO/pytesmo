@@ -32,6 +32,7 @@ Test for temporal matchers
 
 import numpy as np
 import pandas as pd
+from pathlib import Path
 
 import pytesmo.validation_framework.temporal_matchers as temporal_matchers
 
@@ -146,24 +147,45 @@ def test_dfdict_combined_temporal_collocation():
     window = pd.Timedelta(days=300)
 
     matched = temporal_matchers.dfdict_combined_temporal_collocation(
-        dfs, "refkey", 2, window
+        dfs, "refkey", 2, window=window, n=3, combined_dropna=True
     )
 
     # keys are the same, only refkey is missing
-    assert sorted(list(matched.keys())) == sorted([
-        ("df1key", "refkey"), ("df2key", "refkey")
-    ])
-    assert sorted(list(matched[("df1key", "refkey")].columns)) == sorted(
-        [("refkey", "ref"), ("df1key", "k1"), ("df1key", "k2")]
-    )
-    assert sorted(list(matched[("df2key", "refkey")].columns)) == sorted(
-        [("refkey", "ref"), ("df2key", "k1"), ("df2key", "k2")]
-    )
+    key = ("refkey", "df1key", "df2key")
+    assert list(matched.keys()) == [key]
 
     # overlap is only 11 timestamps
-    assert matched[("df1key", "refkey")].shape == (11, 3)
-    assert matched[("df2key", "refkey")].shape == (11, 3)
+    assert matched[key].shape == (11, 5)
 
     overlap_dr = pd.date_range("2005", "2015", freq="YS")
-    assert np.all(matched[("df1key", "refkey")].index == overlap_dr)
-    assert np.all(matched[("df2key", "refkey")].index == overlap_dr)
+    assert np.all(matched[key].index == overlap_dr)
+
+    # test with ASCAT and ISMN data
+    here = Path(__file__).resolve().parent
+    ascat = pd.read_csv(here / "ASCAT.csv", index_col=0, parse_dates=True)
+    ismn = pd.read_csv(here / "ISMN.csv", index_col=0, parse_dates=True)
+
+    dfs = {"ASCAT": ascat[["sm"]], "ISMN": ismn[["soil_moisture"]]}
+    refname = "ISMN"
+    window = pd.Timedelta(12, "H")
+
+    old_matcher = temporal_matchers.BasicTemporalMatching().combinatory_matcher
+    new_matcher = temporal_matchers.make_combined_temporal_matcher(window)
+
+    expected = old_matcher(dfs, refname, k=2, n=2)
+    new = new_matcher(dfs, refname, k=2, n=2)
+
+    key = ("ISMN", "ASCAT")
+    assert list(expected.keys()) == [key]
+    assert list(new.keys()) == [key]
+    # We have to do an extra dropna for the old matcher, because the old
+    # matcher doesn't do this by itself.
+    # This is normally done within validation.py, `get_data_for_result_tuple`,
+    # but since the combined matcher should exclude all data where even a
+    # single entry misses (so that all only have common data) this is done
+    # before in the new matcher (the combined matcher, whereas the old one is
+    # the combinatory matcher)
+    exp = expected[key].dropna()
+    assert exp.shape == new[key].shape
+    for col in new[key]:
+        np.testing.assert_equal(exp[col].values, new[key][col].values)

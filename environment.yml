@@ -16,6 +16,8 @@ dependencies:
   - pyresample
   - cartopy
   - numba
+  - nb_conda
+  - ipykernel
   - pip
   - pip:
     - pynetcf
@@ -32,3 +34,6 @@ dependencies:
     - cadati
     - pre-commit
     - flake8
+    - build
+    - sphinx_rtd_theme
+    - nbsphinx

@@ -4,7 +4,7 @@
 # For more information see:
 # https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
 
-name: tests
+name: Automated Tests
 
 on:
   push:
@@ -15,16 +15,17 @@ jobs:
   build:
     strategy:
       matrix:
-        os: ["ubuntu-latest", "windows-latest"] # currently windows is not tested
+        os: ["ubuntu-latest", "windows-latest"]
         python-version: ['3.6', '3.7', '3.8']
         ymlfile: ['environment.yml']
-    name: Py${{ matrix.python-version }}@${{ matrix.os }}|${{ matrix.ymlfile }}🐍
+    name: Py${{ matrix.python-version }}@${{ matrix.os }}🐍
     runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v2
         with:
           submodules: true # does not work with self-hosted testdata
+          fetch-depth: 0
       - uses: conda-incubator/setup-miniconda@v2.0.1
         with:
           miniconda-version: "latest"
@@ -54,7 +55,9 @@ jobs:
         shell: bash -l {0}
         run: |
           pip install .
-          pytest --cache-clear
+          # This separation avoids segfaults:
+          pytest --cache-clear -m 'not full_framework'
+          pytest --cache-clear -m 'full_framework'
       - name: Upload Coverage
         shell: bash -l {0}
         run: |
@@ -63,12 +66,19 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COVERALLS_FLAG_NAME: ${{ matrix.python-version }}
           COVERALLS_PARALLEL: true
-      - name: Create wheel package
+      - name: Create wheel and dist package
         shell: bash -l {0}
         run: |
-          pip install wheel
-          python setup.py sdist --dist-dir .artifacts/dist
-          python setup.py bdist_wheel --dist-dir .artifacts/dist
+          pip install setuptools_scm
+          if [ ${{ matrix.os }} == "windows-latest" ]
+          then
+            # build whls on windows
+            pip install wheel
+            python setup.py bdist_wheel --dist-dir .artifacts/dist
+          else
+            # build dist on linux
+            python setup.py sdist --dist-dir .artifacts/dist
+          fi
           ls .artifacts/dist
       - name: Upload Artifacts
         uses: actions/upload-artifact@v2
@@ -86,3 +96,26 @@ jobs:
           pip3 install --upgrade coveralls && coveralls --service=github --finish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  publish:
+    name: Upload to PyPI
+    if: startsWith(github.ref, 'refs/tags/v') && startsWith(github.repository, 'TUW-GEO')
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print environment variables
+        run: |
+          echo "GITHUB_REF = $GITHUB_REF"
+          echo "GITHUB_REPOSITORY = $GITHUB_REPOSITORY"
+      - name: Download Artifacts
+        uses: actions/download-artifact@v2
+      - name: Display downloaded files
+        run: ls -aR
+      - name: Upload to PyPI
+        uses: pypa/gh-action-pypi-publish@v1.4.1
+        with:
+          skip_existing: true
+          verbose: true
+          verify_metadata: true
+          packages_dir: Artifacts/dist/
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }} # this needs to be uploaded to github actions secrets

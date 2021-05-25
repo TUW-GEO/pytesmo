@@ -14,6 +14,8 @@ __all__ = ["temporal_collocation", "combined_temporal_collocation"]
 
 def df_match(reference, *args, **kwds):
     """
+    **Deprecated!**
+
     Finds temporal match between the reference pandas.DataFrame (index has to
     be datetime) and n other pandas.DataFrame (index has to be datetime).
 
@@ -352,8 +354,8 @@ def temporal_collocation(
             )
 
     elif method == "mean":
-        window_days = window / pd.Timedelta(1, "D")
-        other_times = other.index.to_julian_date()
+        window_days = 2 * window / pd.Timedelta(1, "D")
+        other_times = other.index.to_julian_date().values
         if not has_invalid or use_invalid:
             mask = np.ones_like(other_times, dtype=bool)
         else:
@@ -430,6 +432,8 @@ def combined_temporal_collocation(
         - "nearest" (default): Uses the nearest valid neighbour. When this
           method is used, entries with duplicate index values in `other` will
           be dropped, and only the first of the duplicates is kept.
+        - "mean": Takes the mean over the given window around the reference
+          times.
 
     dropduplicates : bool, optional
         Whether to drop duplicated timestamps in `others`. Default is

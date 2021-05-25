@@ -4,6 +4,10 @@ Changelog
 
 Unreleased
 ==========
+-
+
+Version 0.11.0, 2021-05-12
+==========================
 - Analytical and bootstrapping confidence intervals for metrics (PR #206). This
   includes some changes to the existing implementations (all old
   implementations are still available, but deprecated)
@@ -33,7 +37,7 @@ Unreleased
 
 
 Version 0.10.0, 2021-02-15
-=========================
+==========================
 
 - Drop Travis CI and Appveyor CI, replaced by Github Actions ci.yml workflow
 - New implementation of temporal collocation based on pd.reindex (PR #204):
