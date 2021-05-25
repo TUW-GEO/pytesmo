@@ -58,7 +58,7 @@ def ismn_reader():
         "header_values",
     )
 
-    return ISMN_Interface(ismn_data_folder)
+    return ISMN_Interface(ismn_data_folder, network="REMEDHUS")
 
 
 @pytest.fixture
@@ -181,9 +181,13 @@ def test_cci(cci_test):
             assert isinstance(upscaled, pd.DataFrame), "get_upscaled_ts should always return a Dataframe or None"
 
 
+def test_ascat():
+    """Create test where two satellite products of different resolutions are validated, and one is averaged"""
+
+
 @pytest.fixture
 def synthetic_test():
-    """Create test with synthetic readers"""
+    """Create test with synthetic readers to replace cci test below"""
     # todo
 
 

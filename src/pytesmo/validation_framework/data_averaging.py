@@ -381,9 +381,6 @@ class DataAverager(MixinReadTs):
         other_lut = self.lut[other_name]
         # check that there are points for specific reference gpi
         if gpi not in other_lut.keys():
-            warnings.warn(
-                "The reference gpi {} has no points to average from {}".format(gpi, other_name)
-            )
             return None
         else:
             other_points = other_lut[gpi]

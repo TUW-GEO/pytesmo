@@ -125,7 +125,7 @@ def test_ascat_ismn_validation(ascat_reader):
         "multinetwork",
         "header_values",
     )
-    ismn_reader = ISMN_Interface(ismn_data_folder)
+    ismn_reader = ISMN_Interface(ismn_data_folder, network=["MAQU", "SCAN", "SOILSCAPE"])
 
     jobs = []
 
@@ -260,7 +260,7 @@ def test_ascat_ismn_validation_metadata(ascat_reader):
         "multinetwork",
         "header_values",
     )
-    ismn_reader = ISMN_Interface(ismn_data_folder)
+    ismn_reader = ISMN_Interface(ismn_data_folder, network=["MAQU", "SCAN", "SOILSCAPE"])
 
     jobs = []
 
@@ -969,7 +969,7 @@ def test_ascat_ismn_validation_metadata_rolling(ascat_reader):
         "multinetwork",
         "header_values",
     )
-    ismn_reader = ISMN_Interface(ismn_data_folder)
+    ismn_reader = ISMN_Interface(ismn_data_folder, network=["MAQU", "SCAN", "SOILSCAPE"])
 
     jobs = []
 
