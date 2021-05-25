@@ -26,27 +26,39 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-'''
-Test for the data averaging class:
+"""Test for the data averaging class"""
 
-* First test uses ISMN as a non-reference dataset
-* Second test averages a higher-resolution satellite dataset, used as non-reference with a lower
-    res satellite as reference
-'''
 import warnings
+
+import pandas as pd
+import numpy as np
+
 import pytest
 import os
 from datetime import datetime
-import numpy as np
 
 from pytesmo.validation_framework.data_averaging import DataAverager
 
 from ismn.interface import ISMN_Interface
-from smecv_grid.grid import SMECV_Grid_v052
 from esa_cci_sm.interface import CCITs
+
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore")
     from ascat.read_native.cdr import AscatGriddedNcTs
+
+
+@pytest.fixture
+def ismn_reader():
+    ismn_data_folder = os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        "test-data",
+        "ismn",
+        "multinetwork",
+        "header_values",
+    )
+
+    return ISMN_Interface(ismn_data_folder)
 
 
 @pytest.fixture
@@ -109,17 +121,8 @@ def cci_reader():
 
 
 @pytest.fixture
-def first_test_manager_parms(cci_reader):
-    """Imputs of data averaging class"""
-    ismn_data_folder = os.path.join(
-        os.path.dirname(__file__),
-        "..",
-        "test-data",
-        "ismn",
-        "multinetwork",
-        "header_values",
-    )
-    ismn_reader = ISMN_Interface(ismn_data_folder)
+def cci_test(ismn_reader, cci_reader):
+    """Setup of test for ISMN averaged in cci (regular) grid"""
     manager_parms = {
         "datasets": {
             "ISMN": {
@@ -134,45 +137,115 @@ def first_test_manager_parms(cci_reader):
                 "kwargs": {},
             },
         }, "read_ts_names": {
-                "ESA_CCI_SM_combined": "read", "ISMN": "read_ts"
-            },
+            "ESA_CCI_SM_combined": "read", "ISMN": "read_ts"
+        },
         "period": [datetime(2007, 1, 1), datetime(2014, 12, 31)],
         "ref_class": cci_reader,
         "others_class": {"ISMN": ismn_reader}
     }
 
-    return manager_parms
-
-
-def test_ismn_averaging(first_test_manager_parms, cci_reader):
-    ref_class = first_test_manager_parms["ref_class"]
-    others_class = first_test_manager_parms["others_class"]
-
-    averager = DataAverager(
-        ref_class=ref_class,
-        others_class=others_class,
-        geo_subset=(
+    cci_subset = (
             41.08659705984312,
             41.545589036668105,
             -5.722503662109376,
             -5.060577392578126,
-        ),
-        manager_parms=first_test_manager_parms
+        )
+
+    cci_points = cci_reader.grid.get_bbox_grid_points(*cci_subset)
+
+    cci_test_averager = DataAverager(
+        ref_class=cci_reader,
+        others_class={"ISMN": ismn_reader},
+        geo_subset=cci_subset,
+        manager_parms=manager_parms
     )
-    print(averager.lut)
-    remedhus_bbox = [
-        41.08659705984312,
-        41.545589036668105,
-        -5.722503662109376,
-        -5.060577392578126,
-    ]
-    cci_points = cci_reader.grid.get_bbox_grid_points(*remedhus_bbox)
+
+    return cci_test_averager, cci_points
+
+
+def test_cci(cci_test):
+    """Test that averaging doesn't produce errors with a cci (regular) grid"""
+    cci_test_averager, cci_points = cci_test
 
     ismn_upscaled = []
     for gpi in cci_points:
-        upscaled = averager.wrapper(
+        upscaled = cci_test_averager.get_upscaled_ts(
             gpi=gpi,
             other_name="ISMN",
+            temporal_stability=True
         )
         ismn_upscaled.append(upscaled)
-    print(ismn_upscaled)
+
+    for upscaled in ismn_upscaled:
+        if upscaled is not None:
+            assert isinstance(upscaled, pd.DataFrame), "get_upscaled_ts should always return a Dataframe or None"
+
+
+@pytest.fixture
+def synthetic_test():
+    """Create test with synthetic readers"""
+    # todo
+
+
+def test_upscale(cci_test):
+    """Test all upscaling functions"""
+    cci_test_averager, cci_points = cci_test
+
+    to_upscale = pd.concat(
+        [pd.Series(2, index=np.linspace(1,10), name='sm'),
+         pd.Series(4, index=np.linspace(1,10), name='sm')],
+        axis=1
+    )
+    # simple check of series averaging
+    upscaled = cci_test_averager.upscale(to_upscale, method="average")
+    should = pd.Series(float(3), index=np.linspace(1,10))
+    assert upscaled.equals(should)
+
+
+def test_tstability(cci_test):
+    """Test temporal stability filtering with noisy or uncorrelated series"""
+    cci_test_averager, cci_points = cci_test
+    n_obs = 1000
+    points = np.linspace(0, 2*np.pi, n_obs)
+    ts = np.sin(points)
+    low_corr = np.sin(points+np.pi)
+    high_sterr = np.sin(points) + np.random.normal(0, 2, n_obs)
+    to_filter = pd.concat(
+        [pd.Series(ts, name='sm_1'),
+         pd.Series(ts, name='sm_2'),
+         pd.Series(ts, name='sm_3'),
+         pd.Series(low_corr, name='low_corr'),
+         pd.Series(high_sterr, name='high_sterr')],
+        axis=1
+    )
+
+    filtered = cci_test_averager.tstability_filter(to_filter)
+    should = to_filter.drop(["low_corr", "high_sterr"], axis="columns")
+    assert filtered.equals(should)
+
+
+def test_temporal_matching(cci_test):
+    """Test temporal matching"""
+    cci_test_averager, cci_points = cci_test
+    data_ref = np.arange(30.)
+    data2match = data_ref[:-1]
+    data2match[2] = np.nan
+
+    ref_ser = pd.Series(
+        data_ref,
+        index=pd.date_range(datetime(2007, 1, 1, 0), datetime(2007, 1, 30, 0), freq="D"),
+    ).to_frame()
+    match_ser = pd.Series(
+        data2match,
+        index=pd.date_range(datetime(2007, 1, 1, 5), datetime(2007, 1, 29, 5), freq="D"),
+    ).to_frame()
+    to_match = [ref_ser, match_ser]
+
+    matched = cci_test_averager.temporal_match(to_match, drop_missing=False)
+    assert len(matched.index) == 29, "Should be matched to the longest timeseries"
+
+    matched = cci_test_averager.temporal_match(to_match, drop_missing=True)
+    assert len(matched.index) == 28, matched
+
+    matched = cci_test_averager.temporal_match(to_match, hours=4)
+    assert matched[matched.columns[1]].dropna().empty, "Should not be matched"

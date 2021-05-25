@@ -27,16 +27,16 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import warnings
-from itertools import groupby
+from typing import Union
 
 import pandas as pd
 from scipy.stats import linregress
 
 from pygeobase.object_base import TS
-from pytesmo.temporal_matching import temporal_collocation as tcoll
+from pytesmo.temporal_matching import temporal_collocation
 
 
-class MixinReadTs():
+class MixinReadTs:
     """Mixin class to provide the reading function in DataAverager and DataManager"""
 
     def read_ds(self, name, *args):
@@ -51,12 +51,10 @@ class MixinReadTs():
         ----------
         name : string
             Name of the other dataset.
-        gpi : int
-            Grid point index
-        lon : float
-            Longitude of point
-        lat : float
-            Latitude of point
+        args: either gpi or (lon, lat)
+            * gpi (int): Grid point index
+            * lon (float): Longitude of point
+            * lat(float): Latitude of point
 
         Returns
         -------
@@ -91,7 +89,7 @@ class MixinReadTs():
             warnings.warn("No data for dataset {}".format(name))
             return None
 
-        if isinstance(data_df, pd.DataFrame) == False:
+        if not isinstance(data_df, pd.DataFrame):
             warnings.warn("Data is not a DataFrame {:}".format(args))
             return None
 
@@ -112,8 +110,10 @@ class MixinReadTs():
 
 class DataAverager(MixinReadTs):
     """
-    Class to handle multiple measurements falling under the same reference gridpoint. The goal is to include
-    here all identified upscaling methods to provide an estimate at the reference footprint scale.
+    This class provides methods to combine the measurements of validation datasets (others) that fall under the same
+    gridpoint of the dataset being validated (reference).
+
+    The goal is to include here all identified upscaling methods to provide an estimate at the reference footprint scale.
 
     Implemented methods:
 
@@ -125,9 +125,9 @@ class DataAverager(MixinReadTs):
     ref_class: pygeogrids Grid obj.
         Class containing the method read_ts for reading the data of the reference
     others_class: dict
-        Dict of shape 'other_name': pygeogrids Grid obj. for the other dataset
+        Dict of shape {'other_name': <pygeogrids Grid object>} for the other dataset
     geo_subset: tuple, optional. Default is None.
-        Information on the grographic subset for data averaging -> (latmin, latmax, lonmin, lonmax)
+        Information on the geographic subset for data averaging -> (latmin, latmax, lonmin, lonmax)
     manager_parms: dict
         Dict of DataManager attributes
     """
@@ -152,10 +152,9 @@ class DataAverager(MixinReadTs):
         """Get a lookup table that combines the points falling under the same reference pixel"""
         lut = {}
         for other_name, other_class in self.others_class.items():
-            try:
+            if hasattr(other_class, "grid"):  # todo: check potential object attributes
                 grid = other_class.grid
-            except AttributeError:
-                # when filters are applied, this will be an AdvancedMaskingAdapter
+            else:
                 grid = other_class.cls.cls.grid
             # subsetting shouldn't be necessary with ismn reader, but for satellites
             other_points = grid.get_bbox_grid_points(
@@ -166,9 +165,9 @@ class DataAverager(MixinReadTs):
             # iterate from the side of the non-reference
             for gpi, lat, lon in zip(other_points[0], other_points[1], other_points[2]):
                 # list all non-ref points under the same ref gpi
-                try:
+                if hasattr(self.ref_class, "grid"):
                     ref_gpi = self.ref_class.grid.find_nearest_gpi(lon, lat)[0]
-                except AttributeError:
+                else:
                     ref_gpi = self.ref_class.cls.cls.grid.find_nearest_gpi(lon, lat)[0]
                 if ref_gpi in other_lut.keys():
                     other_lut[ref_gpi].append((gpi, lon, lat))
@@ -183,7 +182,7 @@ class DataAverager(MixinReadTs):
             self,
             points,
             other_name,
-    ) -> pd.DataFrame:
+    ) -> list:
         """
         Get the timeseries for given points info and return them in a list.
 
@@ -201,62 +200,61 @@ class DataAverager(MixinReadTs):
         """
         dss = []
         for gpi, lon, lat in points:
+            # todo: check attributes in loop
             ds = self.read_ds(other_name, gpi)
             dss.append(ds)
 
         return dss
 
     @staticmethod
-    def temp_match(
+    def temporal_match(
             to_match,
-            method='rescale',
             hours=6,
+            drop_missing=False,
             **kwargs
     ) -> pd.DataFrame:
         """
-        Temporal match by:
-            * temporal matching to the longest timeseries
-            * taking the common values only
+        Temporal match to the longest timeseries
 
         Parameters
         ----------
         to_match: list
             list of dataframes to match
-        method: str
-            matching method. Either 'common' or 'rescale'
         hours: int
             window to perform the temporal matching
+        drop_missing: bool, optional. Default is False.
+            If true, only time steps when all points have measurements are kept
 
         Returns
         -------
         matched: pd.DataFrame
             dataframe with temporally matched timeseries
         """
-        if method == 'common':
-            matched = pd.concat(to_match, axis=1, join="inner").dropna(how="any")
+        # get time series with most points
+        ref = to_match[0]
+        for n, df in enumerate(to_match):
+            if df is None:
+                continue
+            points = int(df.count())
+            if int(ref.count()) >= points:
+                continue
+            else:
+                ref = df
 
-        elif method == 'rescale':
-            # get time series with most points
-            for n, df in enumerate(to_match):
-                if df is None:
-                    continue
-                points = len(df.dropna())
-                if n == 0:
-                    ref = df
-                if len(ref.dropna()) >= points:
-                    continue
-                else:
-                    ref = df
-
-            to_match = pd.concat(to_match, axis=1)
-            matched = tcoll(
+        matched = []
+        for series in to_match:
+            matched_ser = temporal_collocation(
                 ref,
-                to_match,
+                series,
                 pd.Timedelta(hours, "H"),
-                dropna=True
-            ).dropna(how="any")
+                dropna=True,
+                checkna=True,
+            )
+            matched.append(matched_ser)
+        matched = pd.concat(matched, axis=1)
 
-            # todo: handle cases with no match with warning
+        if drop_missing:
+            matched.dropna(axis=0, how="any", inplace=True)
 
         return matched
 
@@ -272,6 +270,10 @@ class DataAverager(MixinReadTs):
         Uses time stability concepts to filter point-measurements (pms). Determines wether the upscaled measurement
         based on a simple average of all the pms is in sufficient agreement with each pm, and if not eliminates pm
         from the pool.
+
+        Thresholds are based on Wagner W, Pathe C, Doubkova M, Sabel D, Bartsch A, Hasenauer S, Blöschl G, Scipal K,
+        Martínez-Fernández J, Löw A. Temporal Stability of Soil Moisture and Radar Backscatter Observed by the Advanced
+        Synthetic Aperture Radar (ASAR). Sensors. 2008; 8(2):1174-1197. https://doi.org/10.3390/s80201174
 
         Parameters
         ----------
@@ -302,24 +304,16 @@ class DataAverager(MixinReadTs):
                 estimate,
                 pm_values
             )
-            if regr.rvalue < r_min or regr.intercept_stderr > see_max:
+            if regr.rvalue < r_min or regr.stderr > see_max:
                 filter_out.append(pm)
 
-        filtered = df.drop(filter_out)
-        # todo: This could be done iteratively during the run to calibrate the thresholds
-        if len(filtered.columns) < 2:
-            warnings.warn(
-                "The filtering options are too strict. Returning entire dataframe ..."
-            )
-            return df
+        filtered = df.drop(filter_out, axis="columns")
 
         return filtered
 
     def upscale(self, df, method='average', **kwargs) -> pd.Series:
         """
-        Handle the column names and return the upscaled Dataframe with the specified method
-
-        **New upscaling methods can be specified here in the lut**
+        Handle the column names and return the upscaled Dataframe with the specified method.
 
         Parameters
         ----------
@@ -335,32 +329,35 @@ class DataAverager(MixinReadTs):
         upscaled: pandas.DataFrame
             dataframe with "upscaled" column
         """
+        # New upscaling methods can be specified here in the lookup table
         up_function = {
-            "average": self.faverage,
+            "average": self._average,
         }
+        if method not in up_function.keys():
+            raise KeyError(
+                "The selected method {} is not implemented in the upscaling options".format(method)
+            )
         f = up_function[method]
 
         return f(df, **kwargs)
 
     @staticmethod
-    def faverage(df) -> pd.Series:
+    def _average(df, **kwargs) -> pd.Series:
         """Simple average of each column in the dataframe"""
-        # workaround to avoid changes in place
         out = df.mean(axis=1)
 
         return out
 
-    def wrapper(
+    def get_upscaled_ts(
             self,
             gpi,
             other_name,
-            tmatching="rescale",
-            up_method="average",
-            tstability=False,
+            upscaling_method="average",
+            temporal_stability=False,
             **kwargs
-    ) -> pd.DataFrame:
+    ) -> Union[None, pd.DataFrame]:
         """
-        Find the upscale estimate with given method, for a certain reference gpi
+        Find the upscale estimate timeseries with given method, for a certain reference gpi
 
         Parameters
         ----------
@@ -368,25 +365,22 @@ class DataAverager(MixinReadTs):
             gpi value of the reference point
         other_name: str
             name of the non-reference dataset to be upscaled
-        tmatching: str, default is "rescale"
-            method to use for temporal matching. 'rescale' uses the pytesmo.temporal_matching methods, 'common' takes
-            only measurements at common times between all the pms
-        up_method: str
+        upscaling_method: str
             method to use for upscaling:
                 * 'average' takes the simple mean of all timeseries
-        tstability: bool, default is False
+        temporal_stability: bool, default is False
             if True, the values are filtered using the time stability concept
         kwargs: keyword arguments
             argumjents for the temporal window or time stability thresholds
 
         Returns
         -------
-        upscaled: pd.DataFrame
-            upscaled time series
+        upscaled: pd.DataFrame or None
+            upscaled time series; if there are no points under the specific gpi, None is returned
         """
         other_lut = self.lut[other_name]
         # check that there are points for specific reference gpi
-        if not gpi in other_lut.keys():
+        if gpi not in other_lut.keys():
             warnings.warn(
                 "The reference gpi {} has no points to average from {}".format(gpi, other_name)
             )
@@ -394,12 +388,12 @@ class DataAverager(MixinReadTs):
         else:
             other_points = other_lut[gpi]
 
-        # read non-reference points and filter out None
+        # read non-reference points and filter out Nones
         tss = self.get_timeseries(
             points=other_points,
             other_name=other_name
         )
-        tss = [df for df in tss if not df is None]
+        tss = [df for df in tss if df is not None]
 
         # handle situation with single timeseries or all None
         if len(tss) <= 1:
@@ -416,15 +410,19 @@ class DataAverager(MixinReadTs):
                 point_ts.to_frame(name=target_column + "_{}".format(n))  # avoid name clashing
             )
 
-        # temporal match and time stability filtering
-        tss = self.temp_match(to_match, method=tmatching, **kwargs)
-        if tstability:
+        try:
+            tss = self.temporal_match(to_match, **kwargs)
+        # in case no match is found (result is all nans)
+        except UserWarning:
+            return None
+
+        if temporal_stability:
             tss = self.tstability_filter(tss, **kwargs)
 
         # perform upscaling and return correct name
         upscaled = self.upscale(
             tss,
-            method=up_method
+            method=upscaling_method
         ).to_frame(target_column)
 
         return upscaled

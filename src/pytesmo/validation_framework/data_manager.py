@@ -75,9 +75,9 @@ class DataManager(MixinReadTs):
         function name for each dataset.
     upscale_parms: dict, optional. Default is None.
         dictionary with parameters for the upscaling methods. Keys:
-            * 'tmatching': method to use for temporal matching
-            * 'up_method': method for upscaling
-            * 'tstability': bool for using temporal stability
+            * 'temporal_mathcing_method': method to use for temporal matching
+            * 'upscaling_method': method for upscaling
+            * 'temporal_stability': bool for using temporal stability
     geo_subset: tuple, optional. Default is None
         parameter for DataAverager methods -> (latmin, latmax, lonmin, lonmax)
 
@@ -102,7 +102,6 @@ class DataManager(MixinReadTs):
             upscale_parms=None,
             geo_subset=None,
     ):
-        """Initialize parameters."""
         self.datasets = datasets
         self._add_default_values()
         self.reference_name = ref_name
@@ -316,7 +315,7 @@ class DataManager(MixinReadTs):
                 other_dataframe = self.read_other(
                     other_name, gpi)
             elif isinstance(self.luts, DataAverager):
-                other_dataframe = self.luts.wrapper(
+                other_dataframe = self.luts.get_upscaled_ts(
                     gpi=gpi,
                     other_name=other_name,
                     **self.upscale_parms
