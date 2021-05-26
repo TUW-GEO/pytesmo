@@ -490,7 +490,7 @@ def test_cci_validation_with_averager(cci_reader):
     datasets = {
         "ESA_CCI_SM_combined": {
             "class": cci_reader,
-            "columns": ["ESA_CCI_SM_C_sm"],
+            "columns": ["sm"],
         },
         "ISMN": {
             "class": ismn_reader,
@@ -502,7 +502,12 @@ def test_cci_validation_with_averager(cci_reader):
     period = [datetime(2007, 1, 1), datetime(2014, 12, 31)]
 
     datasets = DataManager(
-        datasets, "ESA_CCI_SM_combined", period, read_ts_names=read_ts_names
+        datasets,
+        "ESA_CCI_SM_combined",
+        period,
+        read_ts_names=read_ts_names,
+        geo_subset=cci_subset,
+        upscale_parms={"upscaling_method":"average","temporal_stability":True},
     )
     process = Validation(
         datasets,
@@ -523,16 +528,34 @@ def test_cci_validation_with_averager(cci_reader):
         netcdf_results_manager(results, save_path)
 
     results_fname = os.path.join(
-        save_path, "ISMN.sm_with_ESA_CCI_SM_combined.soil moisture.nc"
+        save_path, "ESA_CCI_SM_combined.sm_with_ISMN.soil moisture.nc"
     )
 
     with nc.Dataset(results_fname, mode="r") as results:
-        vars = results.variables.keys()
+        calc_vars = results.variables.keys()
         n_obs = results.variables["n_obs"][:].tolist()
         rho = results.variables["rho"][:]
         rmsd = results.variables["RMSD"][:]
-        network = results.variables["network"][:]
 
+        vars_should = [
+            u"n_obs",
+            u"tau",
+            u"gpi",
+            u"RMSD",
+            u"lon",
+            u"p_tau",
+            u"BIAS",
+            u"p_rho",
+            u"rho",
+            u"lat",
+            u"R",
+            u"p_R",
+            u"time",
+            u"idx",
+            u"_row_size",
+        ]
+
+    assert sorted(vars_should) == sorted(calc_vars)
 
 
 def test_validation_error_n2_k2():
