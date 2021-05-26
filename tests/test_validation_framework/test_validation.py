@@ -42,6 +42,7 @@ import warnings
 import pandas as pd
 
 import pygeogrids.grids as grids
+from esa_cci_sm.interface import CCITs
 from pygeobase.io_base import GriddedTsBase
 
 import pytesmo.validation_framework.temporal_matchers as temporal_matchers
@@ -114,6 +115,22 @@ def ascat_reader():
     )
     ascat_reader.read_bulk = True
     return ascat_reader
+
+
+@pytest.fixture
+def cci_reader():
+    cci_data_folder = os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        "test-data",
+        "sat",
+        "ESA_CCI_SM_combined",
+        "ESA_CCI_SM_C_V04_7",
+    )
+    cci_reader = CCITs(cci_data_folder)
+    cci_reader.read_bulk = True
+
+    return cci_reader
 
 
 @pytest.mark.slow
@@ -424,6 +441,98 @@ def test_ascat_ismn_validation_metadata(ascat_reader):
     nptest.assert_allclose(sorted(rho), sorted(rho_should), rtol=1e-4)
     nptest.assert_allclose(sorted(rmsd), sorted(rmsd_should), rtol=1e-4)
     nptest.assert_equal(sorted(network), sorted(network_should))
+
+
+def test_cci_validation_with_averager(cci_reader):
+    """
+    Test processing framework with averaging module with some ISMN and cci sample data.
+    The ISMN data are used here as non-reference
+    """
+    while hasattr(cci_reader, 'cls'):
+        ref_reader = cci_reader.cls
+
+    cci_subset = (
+            41.08659705984312,
+            41.545589036668105,
+            -5.722503662109376,
+            -5.060577392578126,
+        )
+
+    gpis = cci_reader.grid.get_bbox_grid_points(*cci_subset)
+    lons, lats = [], []
+    for n, gpi in enumerate(gpis):
+        lon, lat = cci_reader.grid.gpi2lonlat(gpi)
+        lons.append(lon)
+        lats.append(lat)
+
+    jobs = [(gpis, lons, lats)]
+
+    # Initialize ISMN reader
+    ismn_data_folder = os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        "test-data",
+        "ismn",
+        "multinetwork",
+        "header_values",
+    )
+    ismn_reader = ISMN_Interface(ismn_data_folder, network=["REMEDHUS"])
+
+    # Create the variable ***save_path*** which is a string representing the
+    # path where the results will be saved. **DO NOT CHANGE** the name
+    # ***save_path*** because it will be searched during the parallel
+    # processing!
+
+    save_path = tempfile.mkdtemp()
+
+    # Create the validation object.
+
+    datasets = {
+        "ESA_CCI_SM_combined": {
+            "class": cci_reader,
+            "columns": ["ESA_CCI_SM_C_sm"],
+        },
+        "ISMN": {
+            "class": ismn_reader,
+            "columns": ["soil moisture"],
+        },
+    }
+
+    read_ts_names = {"ESA_CCI_SM_combined": "read", "ISMN": "read_ts"}
+    period = [datetime(2007, 1, 1), datetime(2014, 12, 31)]
+
+    datasets = DataManager(
+        datasets, "ESA_CCI_SM_combined", period, read_ts_names=read_ts_names
+    )
+    process = Validation(
+        datasets,
+        "ESA_CCI_SM_combined",
+        temporal_ref="ISMN",
+        scaling="lin_cdf_match",
+        scaling_ref="ISMN",
+        metrics_calculators={
+            (2, 2): metrics_calculators.BasicMetrics(
+                other_name="k1"
+            ).calc_metrics
+        },
+        period=period,
+    )
+
+    for job in jobs:
+        results = process.calc(*job)
+        netcdf_results_manager(results, save_path)
+
+    results_fname = os.path.join(
+        save_path, "ISMN.sm_with_ESA_CCI_SM_combined.soil moisture.nc"
+    )
+
+    with nc.Dataset(results_fname, mode="r") as results:
+        vars = results.variables.keys()
+        n_obs = results.variables["n_obs"][:].tolist()
+        rho = results.variables["rho"][:]
+        rmsd = results.variables["RMSD"][:]
+        network = results.variables["network"][:]
+
 
 
 def test_validation_error_n2_k2():
