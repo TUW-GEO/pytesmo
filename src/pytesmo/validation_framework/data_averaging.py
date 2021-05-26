@@ -150,12 +150,17 @@ class DataAverager(MixinReadTs):
     @property
     def lut(self) -> dict:
         """Get a lookup table that combines the points falling under the same reference pixel"""
+        # get grid of reference
+        while hasattr(self.ref_class, 'cls'):
+            self.ref_class = self.ref_class.cls
+        ref_grid = self.ref_class.grid
+
         lut = {}
         for other_name, other_class in self.others_class.items():
-            if hasattr(other_class, "grid"):  # todo: check potential object attributes
-                grid = other_class.grid
-            else:
-                grid = other_class.cls.cls.grid
+            # get grid of other
+            while hasattr(other_class, 'cls'):
+                other_class = other_class.cls
+            grid = other_class.grid
             # subsetting shouldn't be necessary with ismn reader, but for satellites
             other_points = grid.get_bbox_grid_points(
                 *self.geo_subset,
@@ -165,15 +170,11 @@ class DataAverager(MixinReadTs):
             # iterate from the side of the non-reference
             for gpi, lat, lon in zip(other_points[0], other_points[1], other_points[2]):
                 # list all non-ref points under the same ref gpi
-                if hasattr(self.ref_class, "grid"):
-                    ref_gpi = self.ref_class.grid.find_nearest_gpi(lon, lat)[0]
-                else:
-                    ref_gpi = self.ref_class.cls.cls.grid.find_nearest_gpi(lon, lat)[0]
+                ref_gpi = ref_grid.find_nearest_gpi(lon, lat)[0]
                 if ref_gpi in other_lut.keys():
                     other_lut[ref_gpi].append((gpi, lon, lat))
                 else:
                     other_lut[ref_gpi] = [(gpi, lon, lat)]
-            # add to dictionary even when empty
             lut[other_name] = other_lut
 
         return lut

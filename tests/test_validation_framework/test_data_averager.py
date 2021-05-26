@@ -163,6 +163,7 @@ def cci_test(ismn_reader, cci_reader):
     return cci_test_averager, cci_points
 
 
+@pytest.mark.filterwarnings("ignore: IOError in reading ISMN data")
 def test_cci(cci_test):
     """Test that averaging doesn't produce errors with a cci (regular) grid"""
     cci_test_averager, cci_points = cci_test
