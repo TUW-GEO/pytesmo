@@ -75,7 +75,6 @@ class DataManager(MixinReadTs):
         function name for each dataset.
     upscale_parms: dict, optional. Default is None.
         dictionary with parameters for the upscaling methods. Keys:
-            * 'temporal_mathcing_method': method to use for temporal matching
             * 'upscaling_method': method for upscaling
             * 'temporal_stability': bool for using temporal stability
     geo_subset: tuple, optional. Default is None
