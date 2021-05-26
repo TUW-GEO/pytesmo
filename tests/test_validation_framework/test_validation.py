@@ -449,23 +449,28 @@ def test_cci_validation_with_averager(cci_reader):
     The ISMN data are used here as non-reference
     """
     while hasattr(cci_reader, 'cls'):
-        ref_reader = cci_reader.cls
+        cci_reader = cci_reader.cls
 
-    cci_subset = (
-            41.08659705984312,
-            41.545589036668105,
-            -5.722503662109376,
-            -5.060577392578126,
+    cci_points = [755258, 756699, 756698, 756697, 755257]
+    others_points = {
+        "ISMN":(
+            [0, 6, 20, 24, 30, 34, 2, 10, 38, 4, 8, 12, 14, 16, 18, 22, 26, 32, 40, 42, 44, 28, 36, 46],
+            [-5.35997, -5.47197, -5.29738, -5.39757, -5.47708, -5.41558, -5.1614, -5.24704, -5.22474, -5.38049,
+             -5.32146, -5.42922, -5.49027, -5.37566, -5.44884, -5.46713, -5.30003, -5.3587, -5.37403, -5.33113,
+             -5.41099, -5.5485, -5.5919, -5.54427],
+            [41.19603, 41.23432, 41.20048, 41.14894, 41.18264, 41.20548, 41.31243, 41.3001, 41.34709, 41.26504,
+             41.39392, 41.38134, 41.34888, 41.30582, 41.46426, 41.2892, 41.28546, 41.44649, 41.42413, 41.35757,
+             41.45586, 41.37338, 41.27473, 41.23923]
         )
+    }
 
-    gpis = cci_reader.grid.get_bbox_grid_points(*cci_subset)
     lons, lats = [], []
-    for n, gpi in enumerate(gpis):
+    for n, gpi in enumerate(cci_points):
         lon, lat = cci_reader.grid.gpi2lonlat(gpi)
         lons.append(lon)
         lats.append(lat)
 
-    jobs = [(gpis, lons, lats)]
+    jobs = [(cci_points, lons, lats)]
 
     # Initialize ISMN reader
     ismn_data_folder = os.path.join(
@@ -506,8 +511,11 @@ def test_cci_validation_with_averager(cci_reader):
         "ESA_CCI_SM_combined",
         period,
         read_ts_names=read_ts_names,
-        geo_subset=cci_subset,
-        upscale_parms={"upscaling_method":"average","temporal_stability":True},
+        upscale_parms={
+            "upscaling_method": "average",
+            "temporal_stability": True,
+            "others_points": others_points,
+        },
     )
     process = Validation(
         datasets,

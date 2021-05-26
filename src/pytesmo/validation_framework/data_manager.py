@@ -77,8 +77,7 @@ class DataManager(MixinReadTs):
         dictionary with parameters for the upscaling methods. Keys:
             * 'upscaling_method': method for upscaling
             * 'temporal_stability': bool for using temporal stability
-    geo_subset: tuple, optional. Default is None
-        parameter for DataAverager methods -> (latmin, latmax, lonmin, lonmax)
+            * 'others_points': dict of shape {'other': tuple}. See definition in DataAverager.
 
     Methods
     -------
@@ -99,7 +98,6 @@ class DataManager(MixinReadTs):
             period=None,
             read_ts_names='read_ts',
             upscale_parms=None,
-            geo_subset=None,
     ):
         self.datasets = datasets
         self._add_default_values()
@@ -131,7 +129,7 @@ class DataManager(MixinReadTs):
             self.read_ts_names = d
 
         # match points in space
-        if upscale_parms and geo_subset:
+        if upscale_parms:
             # initialize class that performs upscaling operations
             others_class = {}
             for other in self.other_name:
@@ -139,7 +137,7 @@ class DataManager(MixinReadTs):
             self.luts = DataAverager(
                 ref_class=datasets[self.reference_name]["class"],
                 others_class=others_class,
-                geo_subset=geo_subset,
+                others_points=upscale_parms["others_points"],
                 manager_parms=self.__dict__,
             )
         else:

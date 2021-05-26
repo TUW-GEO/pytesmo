@@ -126,8 +126,10 @@ class DataAverager(MixinReadTs):
         Class containing the method read_ts for reading the data of the reference
     others_class: dict
         Dict of shape {'other_name': <pygeogrids Grid object>} for the other dataset
-    geo_subset: tuple, optional. Default is None.
-        Information on the geographic subset for data averaging -> (latmin, latmax, lonmin, lonmax)
+    others_points: dict
+        Dict of shape {'other': tuple}. Provides the points info of 'other'. This is necessary because while we can just
+        get gpi, lon lat from gridded datasets by defining a bounding box, for ISMN data more information
+        (depth, network, variable type) are required; therefore, this should be dealt with in batches.py of qa4sm.
     manager_parms: dict
         Dict of DataManager attributes
     """
@@ -136,12 +138,12 @@ class DataAverager(MixinReadTs):
             self,
             ref_class,
             others_class,
-            geo_subset,
+            others_points,
             manager_parms,
     ):
         self.ref_class = ref_class
         self.others_class = others_class
-        self.geo_subset = geo_subset
+        self.others_points = others_points
         # attributes used by the Mixin class:
         self.datasets = manager_parms["datasets"]
         self.period = manager_parms["period"]
@@ -156,19 +158,11 @@ class DataAverager(MixinReadTs):
         ref_grid = self.ref_class.grid
 
         lut = {}
-        for other_name, other_class in self.others_class.items():
-            # get grid of other
-            while hasattr(other_class, 'cls'):
-                other_class = other_class.cls
-            grid = other_class.grid
-            # subsetting shouldn't be necessary with ismn reader, but for satellites
-            other_points = grid.get_bbox_grid_points(
-                *self.geo_subset,
-                both=True,
-            )
+        for other_name in self.others_class.keys():
+            other_points = self.others_points[other_name]
             other_lut = {}
             # iterate from the side of the non-reference
-            for gpi, lat, lon in zip(other_points[0], other_points[1], other_points[2]):
+            for gpi, lon, lat in zip(other_points[0], other_points[1], other_points[2]):
                 # list all non-ref points under the same ref gpi
                 ref_gpi = ref_grid.find_nearest_gpi(lon, lat)[0]
                 if ref_gpi in other_lut.keys():
