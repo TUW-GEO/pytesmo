@@ -117,22 +117,6 @@ def ascat_reader():
     return ascat_reader
 
 
-@pytest.fixture
-def cci_reader():
-    cci_data_folder = os.path.join(
-        os.path.dirname(__file__),
-        "..",
-        "test-data",
-        "sat",
-        "ESA_CCI_SM_combined",
-        "ESA_CCI_SM_C_V04_7",
-    )
-    cci_reader = CCITs(cci_data_folder)
-    cci_reader.read_bulk = True
-
-    return cci_reader
-
-
 @pytest.mark.slow
 @pytest.mark.full_framework
 def test_ascat_ismn_validation(ascat_reader):
@@ -150,7 +134,7 @@ def test_ascat_ismn_validation(ascat_reader):
         "multinetwork",
         "header_values",
     )
-    ismn_reader = ISMN_Interface(ismn_data_folder, network=["MAQU", "SCAN", "SOILSCAPE"])
+    ismn_reader = ISMN_Interface(ismn_data_folder)
 
     jobs = []
 
@@ -285,7 +269,7 @@ def test_ascat_ismn_validation_metadata(ascat_reader):
         "multinetwork",
         "header_values",
     )
-    ismn_reader = ISMN_Interface(ismn_data_folder, network=["MAQU", "SCAN", "SOILSCAPE"])
+    ismn_reader = ISMN_Interface(ismn_data_folder)
 
     jobs = []
 
@@ -443,34 +427,28 @@ def test_ascat_ismn_validation_metadata(ascat_reader):
     nptest.assert_equal(sorted(network), sorted(network_should))
 
 
-def test_cci_validation_with_averager(cci_reader):
+def test_validation_with_averager(ascat_reader):
     """
-    Test processing framework with averaging module with some ISMN and cci sample data.
-    The ISMN data are used here as non-reference
+    Test processing framework with averaging module. ASCAT and ISMN data are used here with no geographical
+    considerations (the lut is provided more upstream and contains this information already)
     """
-    while hasattr(cci_reader, 'cls'):
-        cci_reader = cci_reader.cls
-
-    cci_points = [755258, 756699, 756698, 756697, 755257]
-    others_points = {
-        "ISMN":(
-            [0, 6, 20, 24, 30, 34, 2, 10, 38, 4, 8, 12, 14, 16, 18, 22, 26, 32, 40, 42, 44, 28, 36, 46],
-            [-5.35997, -5.47197, -5.29738, -5.39757, -5.47708, -5.41558, -5.1614, -5.24704, -5.22474, -5.38049,
-             -5.32146, -5.42922, -5.49027, -5.37566, -5.44884, -5.46713, -5.30003, -5.3587, -5.37403, -5.33113,
-             -5.41099, -5.5485, -5.5919, -5.54427],
-            [41.19603, 41.23432, 41.20048, 41.14894, 41.18264, 41.20548, 41.31243, 41.3001, 41.34709, 41.26504,
-             41.39392, 41.38134, 41.34888, 41.30582, 41.46426, 41.2892, 41.28546, 41.44649, 41.42413, 41.35757,
-             41.45586, 41.37338, 41.27473, 41.23923]
-        )
-    }
-
+    while hasattr(ascat_reader, 'cls'):
+        ascat_reader = ascat_reader.cls
+    # lookup table between the ascat and ismn points - not geographically correct
+    upscaling_lut = {
+        "ISMN": {
+            1814367: [(0, 102.1333, 33.8833),(1, 102.1333, 33.6666)],
+            1803695: [(2, -86.55, 34.783),(3, -97.083, 37.133),(4, -105.417, 34.25)],
+            1856312: [(5, -120.9675, 38.43003),(6, -120.78559, 38.14956),(7, -120.80639, 38.17353)]
+        }}
+    gpis = (1814367, 1803695, 1856312)
     lons, lats = [], []
-    for n, gpi in enumerate(cci_points):
-        lon, lat = cci_reader.grid.gpi2lonlat(gpi)
+    for gpi in gpis:
+        lon, lat = ascat_reader.grid.gpi2lonlat(gpi)
         lons.append(lon)
         lats.append(lat)
 
-    jobs = [(cci_points, lons, lats)]
+    jobs = [(gpis, lons, lats)]
 
     # Initialize ISMN reader
     ismn_data_folder = os.path.join(
@@ -481,7 +459,7 @@ def test_cci_validation_with_averager(cci_reader):
         "multinetwork",
         "header_values",
     )
-    ismn_reader = ISMN_Interface(ismn_data_folder, network=["REMEDHUS"])
+    ismn_reader = ISMN_Interface(ismn_data_folder)
 
     # Create the variable ***save_path*** which is a string representing the
     # path where the results will be saved. **DO NOT CHANGE** the name
@@ -493,9 +471,14 @@ def test_cci_validation_with_averager(cci_reader):
     # Create the validation object.
 
     datasets = {
-        "ESA_CCI_SM_combined": {
-            "class": cci_reader,
+        "ASCAT": {
+            "class": ascat_reader,
             "columns": ["sm"],
+            "kwargs": {
+                "mask_frozen_prob": 80,
+                "mask_snow_prob": 80,
+                "mask_ssf": True,
+            }
         },
         "ISMN": {
             "class": ismn_reader,
@@ -503,23 +486,23 @@ def test_cci_validation_with_averager(cci_reader):
         },
     }
 
-    read_ts_names = {"ESA_CCI_SM_combined": "read", "ISMN": "read_ts"}
+    read_ts_names = {"ASCAT": "read", "ISMN": "read_ts"}
     period = [datetime(2007, 1, 1), datetime(2014, 12, 31)]
 
     datasets = DataManager(
         datasets,
-        "ESA_CCI_SM_combined",
+        "ASCAT",
         period,
         read_ts_names=read_ts_names,
         upscale_parms={
             "upscaling_method": "average",
             "temporal_stability": True,
-            "others_points": others_points,
+            "upscaling_lut": upscaling_lut,
         },
     )
     process = Validation(
         datasets,
-        "ESA_CCI_SM_combined",
+        "ASCAT",
         temporal_ref="ISMN",
         scaling="lin_cdf_match",
         scaling_ref="ISMN",
@@ -536,7 +519,7 @@ def test_cci_validation_with_averager(cci_reader):
         netcdf_results_manager(results, save_path)
 
     results_fname = os.path.join(
-        save_path, "ESA_CCI_SM_combined.sm_with_ISMN.soil moisture.nc"
+        save_path, "ASCAT.sm_with_ISMN.soil moisture.nc"
     )
 
     with nc.Dataset(results_fname, mode="r") as results:
@@ -544,27 +527,45 @@ def test_cci_validation_with_averager(cci_reader):
         n_obs = results.variables["n_obs"][:].tolist()
         rho = results.variables["rho"][:]
         rmsd = results.variables["RMSD"][:]
+        r = results.variables["R"][:]
 
-        vars_should = [
-            u"n_obs",
-            u"tau",
-            u"gpi",
-            u"RMSD",
-            u"lon",
-            u"p_tau",
-            u"BIAS",
-            u"p_rho",
-            u"rho",
-            u"lat",
-            u"R",
-            u"p_R",
-            u"time",
-            u"idx",
-            u"_row_size",
-        ]
+    vars_should = [
+        u"n_obs",
+        u"tau",
+        u"gpi",
+        u"RMSD",
+        u"lon",
+        u"p_tau",
+        u"BIAS",
+        u"p_rho",
+        u"rho",
+        u"lat",
+        u"R",
+        u"p_R",
+        u"time",
+        u"idx",
+        u"_row_size",
+    ]
+    n_obs_should = [764, 2392, 904]
+
+    rho_should = np.array(
+        [-0.012487,  0.255156,  0.635517],
+        dtype=np.float32,
+    )
+    rmsd_should = np.array(
+        [0.056428, 0.056508, 0.116294],
+        dtype=np.float32,
+    )
+    r_should = np.array(
+        [-0.012335,  0.257671,  0.657239],
+        dtype=np.float32,
+    )
 
     assert sorted(vars_should) == sorted(calc_vars)
-
+    assert n_obs == n_obs_should
+    nptest.assert_allclose(sorted(rho), sorted(rho_should), rtol=1e-4)
+    nptest.assert_allclose(sorted(rmsd), sorted(rmsd_should), rtol=1e-4)
+    nptest.assert_allclose(sorted(r), sorted(r_should), rtol=1e-4)
 
 def test_validation_error_n2_k2():
 
@@ -1117,7 +1118,7 @@ def test_ascat_ismn_validation_metadata_rolling(ascat_reader):
         "multinetwork",
         "header_values",
     )
-    ismn_reader = ISMN_Interface(ismn_data_folder, network=["MAQU", "SCAN", "SOILSCAPE"])
+    ismn_reader = ISMN_Interface(ismn_data_folder)
 
     jobs = []
 

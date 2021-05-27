@@ -33,7 +33,7 @@ import pandas as pd
 from scipy.stats import linregress
 
 from pygeobase.object_base import TS
-from pytesmo.temporal_matching import temporal_collocation
+from pytesmo.temporal_matching import combined_temporal_collocation
 
 
 class MixinReadTs:
@@ -210,20 +210,17 @@ class DataAverager(MixinReadTs):
             else:
                 ref = df
 
-        matched = []
-        for series in to_match:
-            matched_ser = temporal_collocation(
-                ref,
-                series,
-                pd.Timedelta(hours, "H"),
-                dropna=True,
-                checkna=True,
-            )
-            matched.append(matched_ser)
-        matched = pd.concat(matched, axis=1)
-
+        combined_dropna = False
         if drop_missing:
-            matched.dropna(axis=0, how="any", inplace=True)
+            combined_dropna = "any"
+
+        matched = combined_temporal_collocation(
+            ref,
+            to_match,
+            pd.Timedelta(hours, "H"),
+            combined_dropna=combined_dropna,
+            checkna=True,
+        )
 
         return matched
 
