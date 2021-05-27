@@ -126,10 +126,8 @@ class DataAverager(MixinReadTs):
         Class containing the method read_ts for reading the data of the reference
     others_class: dict
         Dict of shape {'other_name': <pygeogrids Grid object>} for the other dataset
-    others_points: dict
-        Dict of shape {'other': tuple}. Provides the points info of 'other'. This is necessary because while we can just
-        get gpi, lon lat from gridded datasets by defining a bounding box, for ISMN data more information
-        (depth, network, variable type) are required; therefore, this should be dealt with in batches.py of qa4sm.
+    upscaling_lut: dict
+        Dict of shape {'other_name':{ref gpi: [other gpis]}}
     manager_parms: dict
         Dict of DataManager attributes
     """
@@ -138,40 +136,16 @@ class DataAverager(MixinReadTs):
             self,
             ref_class,
             others_class,
-            others_points,
+            upscaling_lut,
             manager_parms,
     ):
         self.ref_class = ref_class
         self.others_class = others_class
-        self.others_points = others_points
+        self.lut = upscaling_lut
         # attributes used by the Mixin class:
         self.datasets = manager_parms["datasets"]
         self.period = manager_parms["period"]
         self.read_ts_names = manager_parms["read_ts_names"]
-
-    @property
-    def lut(self) -> dict:
-        """Get a lookup table that combines the points falling under the same reference pixel"""
-        # get grid of reference
-        while hasattr(self.ref_class, 'cls'):
-            self.ref_class = self.ref_class.cls
-        ref_grid = self.ref_class.grid
-
-        lut = {}
-        for other_name in self.others_class.keys():
-            other_points = self.others_points[other_name]
-            other_lut = {}
-            # iterate from the side of the non-reference
-            for gpi, lon, lat in zip(other_points[0], other_points[1], other_points[2]):
-                # list all non-ref points under the same ref gpi
-                ref_gpi = ref_grid.find_nearest_gpi(lon, lat)[0]
-                if ref_gpi in other_lut.keys():
-                    other_lut[ref_gpi].append((gpi, lon, lat))
-                else:
-                    other_lut[ref_gpi] = [(gpi, lon, lat)]
-            lut[other_name] = other_lut
-
-        return lut
 
     def get_timeseries(
             self,

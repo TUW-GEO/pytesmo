@@ -77,7 +77,7 @@ class DataManager(MixinReadTs):
         dictionary with parameters for the upscaling methods. Keys:
             * 'upscaling_method': method for upscaling
             * 'temporal_stability': bool for using temporal stability
-            * 'others_points': dict of shape {'other': tuple}. See definition in DataAverager.
+            * 'upscaling_lut': dict of shape {'other_name':{ref gpi: [other gpis]}}
 
     Methods
     -------
@@ -137,7 +137,7 @@ class DataManager(MixinReadTs):
             self.luts = DataAverager(
                 ref_class=datasets[self.reference_name]["class"],
                 others_class=others_class,
-                others_points=upscale_parms["others_points"],
+                upscaling_lut=upscale_parms["upscaling_lut"],
                 manager_parms=self.__dict__,
             )
         else:
