@@ -42,7 +42,6 @@ import warnings
 import pandas as pd
 
 import pygeogrids.grids as grids
-from esa_cci_sm.interface import CCITs
 from pygeobase.io_base import GriddedTsBase
 
 import pytesmo.validation_framework.temporal_matchers as temporal_matchers
