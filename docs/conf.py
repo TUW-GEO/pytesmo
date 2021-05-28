@@ -17,8 +17,9 @@ import subprocess
 # Create kernel for notebooks
 on_rtd = "READTHEDOCS" in os.environ and os.environ["READTHEDOCS"]
 if on_rtd:
+    rtd_project = os.environ["READTHEDOCS_PROJECT"]
     interpreter = (
-        "/home/docs/checkouts/readthedocs.org/user_builds/pytesmo/"
+        f"/home/docs/checkouts/readthedocs.org/user_builds/{rtd_project}/"
         "conda/latest/bin/python"
     )
 else:
