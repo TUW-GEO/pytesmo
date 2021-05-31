@@ -34,7 +34,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 
-from pytesmo.validation_framework.data_averaging import DataAverager
+from pytesmo.validation_framework.upscaling import Upscaling
 
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore")
@@ -46,7 +46,7 @@ def return_averager():
         "period": None,
         "read_ts_names": None,
     }
-    averager = DataAverager(
+    averager = Upscaling(
         ref_class=None,
         others_class={},
         upscaling_lut={},

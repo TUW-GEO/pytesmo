@@ -28,7 +28,7 @@
 
 import itertools
 
-from pytesmo.validation_framework.data_averaging import DataAverager, MixinReadTs
+from pytesmo.validation_framework.upscaling import Upscaling, MixinReadTs
 
 
 class DataManager(MixinReadTs):
@@ -134,7 +134,7 @@ class DataManager(MixinReadTs):
             others_class = {}
             for other in self.other_name:
                 others_class[other] = self.datasets[other]["class"]
-            self.luts = DataAverager(
+            self.luts = Upscaling(
                 ref_class=datasets[self.reference_name]["class"],
                 others_class=others_class,
                 upscaling_lut=upscale_parms["upscaling_lut"],
@@ -311,7 +311,7 @@ class DataManager(MixinReadTs):
             if grids_compatible:
                 other_dataframe = self.read_other(
                     other_name, gpi)
-            elif isinstance(self.luts, DataAverager):
+            elif isinstance(self.luts, Upscaling):
                 other_dataframe = self.luts.get_upscaled_ts(
                     gpi=gpi,
                     other_name=other_name,

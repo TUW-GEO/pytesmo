@@ -108,7 +108,7 @@ class MixinReadTs:
             return data_df
 
 
-class DataAverager(MixinReadTs):
+class Upscaling(MixinReadTs):
     """
     This class provides methods to combine the measurements of validation datasets (others) that fall under the same
     gridpoint of the dataset being validated (reference).
