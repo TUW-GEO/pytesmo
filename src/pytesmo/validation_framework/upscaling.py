@@ -51,7 +51,7 @@ class MixinReadTs:
         ----------
         name : string
             Name of the other dataset.
-        args: either gpi or (lon, lat)
+        args : either gpi or (lon, lat)
             * gpi (int): Grid point index
             * lon (float): Longitude of point
             * lat(float): Latitude of point
@@ -122,13 +122,13 @@ class Upscaling(MixinReadTs):
 
     Parameters
     ----------
-    ref_class: pygeogrids Grid obj.
+    ref_class : <reader object> of the reference
         Class containing the method read_ts for reading the data of the reference
-    others_class: dict
-        Dict of shape {'other_name': <pygeogrids Grid object>} for the other dataset
-    upscaling_lut: dict
+    others_class : dict
+        Dict of shape {'other_name': <reader object>} for the other dataset
+    upscaling_lut : dict
         Dict of shape {'other_name':{ref gpi: [other gpis]}}
-    manager_parms: dict
+    manager_parms : dict
         Dict of DataManager attributes
     """
 
@@ -147,7 +147,7 @@ class Upscaling(MixinReadTs):
         self.period = manager_parms["period"]
         self.read_ts_names = manager_parms["read_ts_names"]
 
-    def get_timeseries(
+    def _read(
             self,
             points,
             other_name,
@@ -157,14 +157,14 @@ class Upscaling(MixinReadTs):
 
         Parameters
         ----------
-        points: list of tuples
+        points : list of tuples
             list of tuples of (gpi, lon, lat)
-        other_name: str
+        other_name : str
             Name of the dataset which the points belong to
 
         Returns
         -------
-        dss: list
+        dss : list
             list of dataframes of the reference timeseries
         """
         dss = []
@@ -187,11 +187,11 @@ class Upscaling(MixinReadTs):
 
         Parameters
         ----------
-        to_match: list
+        to_match : list
             list of dataframes to match
-        hours: int
+        hours : int
             window to perform the temporal matching
-        drop_missing: bool, optional. Default is False.
+        drop_missing : bool, optional. Default is False.
             If true, only time steps when all points have measurements are kept
 
         Returns
@@ -221,6 +221,7 @@ class Upscaling(MixinReadTs):
             combined_dropna=combined_dropna,
             checkna=True,
         )
+        matched.dropna(axis="columns", how="all", inplace=True)
 
         return matched
 
@@ -243,18 +244,18 @@ class Upscaling(MixinReadTs):
 
         Parameters
         ----------
-        df: pd.DataFrame
+        df : pd.DataFrame
             temporally matched DataFrame
-        r_min: float
+        r_min : float
             lower threshold for correlation (Pearson) between upscaled and pm
-        see_max: float
+        see_max : float
             upper threshold for standard error of estimate
-        min_n: int
+        min_n : int
             minimum number of pms to perform the filtering
 
         Returns
         -------
-        filtered: pd.DataFrame
+        filtered : pd.DataFrame
             filtered input
         """
         if len(df.columns) < min_n:
@@ -283,16 +284,16 @@ class Upscaling(MixinReadTs):
 
         Parameters
         ----------
-        df: pd.DataFrame
+        df : pd.DataFrame
             Dataframe of values to upscale using method
-        method: str
+        method : str
             averaging method
-        kwargs: keyword arguments
+        kwargs : keyword arguments
             Arguments for some upscaling functions
 
         Returns
         -------
-        upscaled: pandas.DataFrame
+        upscaled : pandas.DataFrame
             dataframe with "upscaled" column
         """
         # New upscaling methods can be specified here in the lookup table
@@ -327,21 +328,21 @@ class Upscaling(MixinReadTs):
 
         Parameters
         ----------
-        gpi: int
+        gpi : int
             gpi value of the reference point
-        other_name: str
+        other_name : str
             name of the non-reference dataset to be upscaled
-        upscaling_method: str
+        upscaling_method : str
             method to use for upscaling:
                 * 'average' takes the simple mean of all timeseries
-        temporal_stability: bool, default is False
+        temporal_stability : bool, default is False
             if True, the values are filtered using the time stability concept
-        kwargs: keyword arguments
-            argumjents for the temporal window or time stability thresholds
+        kwargs : keyword arguments
+            arguments for the temporal window or time stability thresholds
 
         Returns
         -------
-        upscaled: pd.DataFrame or None
+        upscaled : pd.DataFrame or None
             upscaled time series; if there are no points under the specific gpi, None is returned
         """
         other_lut = self.lut[other_name]
@@ -352,7 +353,7 @@ class Upscaling(MixinReadTs):
             other_points = other_lut[gpi]
 
         # read non-reference points and filter out Nones
-        tss = self.get_timeseries(
+        tss = self._read(
             points=other_points,
             other_name=other_name
         )
@@ -373,12 +374,7 @@ class Upscaling(MixinReadTs):
                 point_ts.to_frame(name=target_column + "_{}".format(n))  # avoid name clashing
             )
 
-        try:
-            tss = self.temporal_match(to_match, **kwargs)
-        # in case no match is found (result is all nans)
-        except UserWarning:
-            return None
-
+        tss = self.temporal_match(to_match, **kwargs)
         if temporal_stability:
             tss = self.tstability_filter(tss, **kwargs)
 

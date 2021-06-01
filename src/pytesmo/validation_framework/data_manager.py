@@ -39,41 +39,41 @@ class DataManager(MixinReadTs):
     Parameters
     ----------
     datasets : dict of dicts
-        :Keys: string, datasets names
-        :Values: dict, containing the following fields
+        :Keys : string, datasets names
+        :Values : dict, containing the following fields
 
-            'class': object
+            'class' : object
                 Class containing the method read_ts for reading the data.
-            'columns': list
+            'columns' : list
                 List of columns which will be used in the validation process.
-            'args': list, optional
+            'args' : list, optional
                 Args that are passed to the reading function.
-            'kwargs': dict, optional
+            'kwargs' : dict, optional
                 Kwargs that are passed to the reading function.
-            'grids_compatible': boolean, optional
+            'grids_compatible' : boolean, optional
                 If set to True the grid point index is used directly when
                 reading other, if False then lon, lat is used and a nearest
                 neighbour search is necessary.
                 default: False
-            'use_lut': boolean, optional
+            'use_lut' : boolean, optional
                 If set to True the grid point index (obtained from a
                 calculated lut between reference and other) is used when
                 reading other, if False then lon, lat is used and a
                 nearest neighbour search is necessary.
                 default: False
-            'lut_max_dist': float, optional
+            'lut_max_dist' : float, optional
                 Maximum allowed distance in meters for the lut calculation.
                 default: None
-    ref_name: string
+    ref_name : string
         Name of the reference dataset
     period : list, optional
         Of type [datetime start, datetime end]. If given then the two input
         datasets will be truncated to start <= dates <= end.
-    read_ts_names: string or dict of strings, optional
+    read_ts_names : string or dict of strings, optional
         if another method name than 'read_ts' should be used for reading the data
         then it can be specified here. If it is a dict then specify a
         function name for each dataset.
-    upscale_parms: dict, optional. Default is None.
+    upscale_parms : dict, optional. Default is None.
         dictionary with parameters for the upscaling methods. Keys:
             * 'upscaling_method': method for upscaling
             * 'temporal_stability': bool for using temporal stability
