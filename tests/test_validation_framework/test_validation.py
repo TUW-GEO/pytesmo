@@ -116,13 +116,8 @@ def ascat_reader():
     return ascat_reader
 
 
-@pytest.mark.slow
-@pytest.mark.full_framework
-def test_ascat_ismn_validation(ascat_reader):
-    """
-    Test processing framework with some ISMN and ASCAT sample data
-    """
-
+@pytest.fixture
+def ismn_reader():
     # Initialize ISMN reader
 
     ismn_data_folder = os.path.join(
@@ -135,6 +130,45 @@ def test_ascat_ismn_validation(ascat_reader):
     )
     ismn_reader = ISMN_Interface(ismn_data_folder)
 
+    return ismn_reader
+
+
+def check_results(
+        filename: str,
+        target_vars: dict,
+        variables: list = None,
+):
+    """
+    Check that standard vars are present and that nobs, rho and rmsd match the given values. Vars can be optionally
+    specified
+    """
+    if variables is not None:
+        vars_should = variables
+    else:
+        vars_should = [u"n_obs", u"tau", u"gpi", u"RMSD", u"lon", u"p_tau", u"BIAS", u"p_rho",
+                       u"rho", u"lat", u"R", u"p_R", u"time", u"idx", u"_row_size"]
+
+    with nc.Dataset(filename, mode="r") as results:
+        vars = results.variables.keys()
+        assert sorted(vars) == sorted(vars_should)
+
+        for varname, should_values in target_vars.items():
+            values = results.variables[varname][:]
+            if varname == "n_obs":
+                values = list(values)
+                assert sorted(values) == sorted(should_values)
+            elif varname == "network":
+                nptest.assert_equal(sorted(values), sorted(should_values))
+            else:
+                nptest.assert_allclose(sorted(values), sorted(should_values), rtol=1e-4)
+
+
+@pytest.mark.slow
+@pytest.mark.full_framework
+def test_ascat_ismn_validation(ascat_reader, ismn_reader):
+    """
+    Test processing framework with some ISMN and ASCAT sample data
+    """
     jobs = []
 
     ids = ismn_reader.get_dataset_ids(
@@ -194,82 +228,51 @@ def test_ascat_ismn_validation(ascat_reader):
     results_fname = os.path.join(
         save_path, "ASCAT.sm_with_ISMN.soil moisture.nc"
     )
-
-    vars_should = [
-        u"n_obs",
-        u"tau",
-        u"gpi",
-        u"RMSD",
-        u"lon",
-        u"p_tau",
-        u"BIAS",
-        u"p_rho",
-        u"rho",
-        u"lat",
-        u"R",
-        u"p_R",
-        u"time",
-        u"idx",
-        u"_row_size",
-    ]
-    n_obs_should = [357, 384, 1646, 1875, 1915, 467, 141, 251]
-    rho_should = np.array(
-        [
-            0.53934574,
-            0.7002289,
-            0.62200236,
-            0.53647155,
-            0.30413666,
-            0.6740655,
-            0.8418981,
-            0.74206454,
+    # targets
+    target_vars = {
+        "n_obs": [
+            357,
+            384,
+            1646,
+            1875,
+            1915,
+            467,
+            141,
+            251
         ],
-        dtype=np.float32,
-    )
-    rmsd_should = np.array(
-        [
-            11.583476,
-            7.729667,
-            17.441547,
-            21.125721,
-            14.31557,
-            14.187225,
-            13.0622425,
-            12.903898,
-        ],
-        dtype=np.float32,
-    )
+        "rho": np.array(
+            [0.53934574,
+             0.7002289,
+             0.62200236,
+             0.53647155,
+             0.30413666,
+             0.6740655,
+             0.8418981,
+             0.74206454
+             ], dtype=np.float32),
+        "RMSD": np.array(
+            [11.583476,
+             7.729667,
+             17.441547,
+             21.125721,
+             14.31557,
+             14.187225,
+             13.0622425,
+             12.903898
+             ], dtype=np.float32)}
 
-    with nc.Dataset(results_fname, mode="r") as results:
-        vars = results.variables.keys()
-        n_obs = results.variables["n_obs"][:].tolist()
-        rho = results.variables["rho"][:]
-        rmsd = results.variables["RMSD"][:]
-
-    assert sorted(vars) == sorted(vars_should)
-    assert sorted(n_obs) == sorted(n_obs_should)
-    nptest.assert_allclose(sorted(rho), sorted(rho_should), rtol=1e-4)
-    nptest.assert_allclose(sorted(rmsd), sorted(rmsd_should), rtol=1e-4)
+    check_results(
+        filename=results_fname,
+        target_vars=target_vars,
+    )
 
 
 @pytest.mark.slow
 @pytest.mark.full_framework
-def test_ascat_ismn_validation_metadata(ascat_reader):
+def test_ascat_ismn_validation_metadata(ascat_reader, ismn_reader):
     """
     Test processing framework with some ISMN and ASCAT sample data
     """
-    # Initialize ISMN reader
-
-    ismn_data_folder = os.path.join(
-        os.path.dirname(__file__),
-        "..",
-        "test-data",
-        "ismn",
-        "multinetwork",
-        "header_values",
-    )
-    ismn_reader = ISMN_Interface(ismn_data_folder)
-
     jobs = []
 
     ids = ismn_reader.get_dataset_ids(
@@ -349,85 +352,191 @@ def test_ascat_ismn_validation_metadata(ascat_reader):
     results_fname = os.path.join(
         save_path, "ASCAT.sm_with_ISMN.soil moisture.nc"
     )
-
+    target_vars = {
+        "n_obs": [
+            357,
+            384,
+            1646,
+            1875,
+            1915,
+            467,
+            141,
+            251
+        ],
+        "rho": np.array(
+            [0.53934574,
+             0.7002289,
+             0.62200236,
+             0.53647155,
+             0.30413666,
+             0.6740655,
+             0.8418981,
+             0.74206454,
+             ], dtype=np.float32),
+        "RMSD": np.array(
+            [11.583476,
+             7.729667,
+             17.441547,
+             21.125721,
+             14.31557,
+             14.187225,
+             13.0622425,
+             12.903898,
+             ], dtype=np.float32),
+        "network": np.array([
+            "MAQU",
+            "MAQU",
+            "SCAN",
+            "SCAN",
+            "SCAN",
+            "SOILSCAPE",
+            "SOILSCAPE",
+            "SOILSCAPE",
+        ], dtype="U256",)
+    }
     vars_should = [
-        u"n_obs",
-        u"tau",
-        u"gpi",
-        u"RMSD",
-        u"lon",
-        u"p_tau",
-        u"BIAS",
-        u"p_rho",
-        u"rho",
-        u"lat",
-        u"R",
-        u"p_R",
-        u"time",
-        u"idx",
-        u"_row_size",
+        'BIAS',
+        'R',
+        'RMSD',
+        '_row_size',
+        'climate',
+        'gpi',
+        'idx',
+        'landcover',
+        'lat',
+        'lon',
+        'n_obs',
+        'network',
+        'p_R',
+        'p_rho',
+        'p_tau',
+        'rho',
+        'station',
+        'tau',
+        'time'
     ]
-    for key, value in metadata_dict_template.items():
-        vars_should.append(key)
 
-    n_obs_should = [357, 384, 1646, 1875, 1915, 467, 141, 251]
-    rho_should = np.array(
-        [
-            0.53934574,
-            0.7002289,
-            0.62200236,
-            0.53647155,
-            0.30413666,
-            0.6740655,
-            0.8418981,
-            0.74206454,
-        ],
-        dtype=np.float32,
-    )
-    rmsd_should = np.array(
-        [
-            11.583476,
-            7.729667,
-            17.441547,
-            21.125721,
-            14.31557,
-            14.187225,
-            13.0622425,
-            12.903898,
-        ],
-        dtype=np.float32,
+    check_results(
+        filename=results_fname,
+        target_vars=target_vars,
+        variables=vars_should
     )
 
-    network_should = np.array(
-        [
-            "MAQU",
-            "MAQU",
-            "SCAN",
-            "SCAN",
-            "SCAN",
-            "SOILSCAPE",
-            "SOILSCAPE",
-            "SOILSCAPE",
-        ],
-        dtype="U256",
+
+def test_validation_with_averager(ascat_reader, ismn_reader):
+    """
+    Test processing framework with averaging module. ASCAT and ISMN data are used here with no geographical
+    considerations (the lut is provided more upstream and contains this information already)
+    """
+    while hasattr(ascat_reader, 'cls'):
+        ascat_reader = ascat_reader.cls
+    # lookup table between the ascat and ismn points - not geographically correct
+    upscaling_lut = {
+        "ISMN": {
+            1814367: [(0, 102.1333, 33.8833), (1, 102.1333, 33.6666)],
+            1803695: [(2, -86.55, 34.783), (3, -97.083, 37.133), (4, -105.417, 34.25)],
+            1856312: [(5, -120.9675, 38.43003), (6, -120.78559, 38.14956), (7, -120.80639, 38.17353)]
+        }}
+    gpis = (1814367, 1803695, 1856312)
+    lons, lats = [], []
+    for gpi in gpis:
+        lon, lat = ascat_reader.grid.gpi2lonlat(gpi)
+        lons.append(lon)
+        lats.append(lat)
+
+    jobs = [(gpis, lons, lats)]
+
+    # Create the variable ***save_path*** which is a string representing the
+    # path where the results will be saved. **DO NOT CHANGE** the name
+    # ***save_path*** because it will be searched during the parallel
+    # processing!
+
+    save_path = tempfile.mkdtemp()
+
+    # Create the validation object.
+
+    datasets = {
+        "ASCAT": {
+            "class": ascat_reader,
+            "columns": ["sm"],
+            "kwargs": {
+                "mask_frozen_prob": 80,
+                "mask_snow_prob": 80,
+                "mask_ssf": True,
+            }
+        },
+        "ISMN": {
+            "class": ismn_reader,
+            "columns": ["soil moisture"],
+        },
+    }
+
+    read_ts_names = {"ASCAT": "read", "ISMN": "read_ts"}
+    period = [datetime(2007, 1, 1), datetime(2014, 12, 31)]
+
+    datasets = DataManager(
+        datasets,
+        "ASCAT",
+        period,
+        read_ts_names=read_ts_names,
+        upscale_parms={
+            "upscaling_method": "average",
+            "temporal_stability": True,
+            "upscaling_lut": upscaling_lut,
+        },
+    )
+    process = Validation(
+        datasets,
+        "ASCAT",
+        temporal_ref="ISMN",
+        scaling="lin_cdf_match",
+        scaling_ref="ISMN",
+        metrics_calculators={
+            (2, 2): metrics_calculators.BasicMetrics(
+                other_name="k1"
+            ).calc_metrics
+        },
+        period=period,
     )
 
-    with nc.Dataset(results_fname, mode="r") as results:
-        vars = results.variables.keys()
-        n_obs = results.variables["n_obs"][:].tolist()
-        rho = results.variables["rho"][:]
-        rmsd = results.variables["RMSD"][:]
-        network = results.variables["network"][:]
+    for job in jobs:
+        results = process.calc(*job)
+        netcdf_results_manager(results, save_path)
 
-    assert sorted(vars) == sorted(vars_should)
-    assert sorted(n_obs) == sorted(n_obs_should)
-    nptest.assert_allclose(sorted(rho), sorted(rho_should), rtol=1e-4)
-    nptest.assert_allclose(sorted(rmsd), sorted(rmsd_should), rtol=1e-4)
-    nptest.assert_equal(sorted(network), sorted(network_should))
+    results_fname = os.path.join(
+        save_path, "ASCAT.sm_with_ISMN.soil moisture.nc"
+    )
+
+    target_vars = {
+        "n_obs": [
+            764,
+            2392,
+            904
+        ],
+        "rho": np.array(
+            [-0.012487,
+             0.255156,
+             0.635517
+             ], dtype=np.float32),
+        "RMSD": np.array(
+            [0.056428,
+             0.056508,
+             0.116294
+             ], dtype=np.float32),
+        "R": np.array(
+            [-0.012335,
+             0.257671,
+             0.657239
+             ], dtype=np.float32)
+    }
+
+    check_results(
+        filename=results_fname,
+        target_vars=target_vars,
+    )
 
 
 def test_validation_error_n2_k2():
-
     datasets = setup_TestDatasets()
 
     dm = DataManager(
@@ -454,7 +563,6 @@ def test_validation_error_n2_k2():
 
 
 def test_validation_n3_k2_temporal_matching_no_matches():
-
     tst_results = {}
 
     datasets = setup_two_without_overlap()
@@ -486,7 +594,6 @@ def test_validation_n3_k2_temporal_matching_no_matches():
 
 
 def test_validation_n3_k2_data_manager_argument():
-
     tst_results = {
         (("DS1", "x"), ("DS3", "y")): {
             "n_obs": np.array([1000], dtype=np.int32),
@@ -614,7 +721,6 @@ def test_validation_n3_k2_data_manager_argument():
 
 
 def test_validation_n3_k2():
-
     tst_results = {
         (("DS1", "x"), ("DS3", "y")): {
             "n_obs": np.array([1000], dtype=np.int32),
@@ -716,7 +822,6 @@ def test_validation_n3_k2():
 
 
 def test_validation_n3_k2_temporal_matching_no_matches2():
-
     tst_results = {
         (("DS1", "x"), ("DS3", "y")): {
             "n_obs": np.array([1000], dtype=np.int32),
@@ -776,7 +881,6 @@ def test_validation_n3_k2_temporal_matching_no_matches2():
 
 
 def test_validation_n3_k2_masking_no_data_remains():
-
     datasets = setup_TestDatasets()
 
     # setup masking datasets
@@ -846,7 +950,6 @@ def test_validation_n3_k2_masking_no_data_remains():
 
 
 def test_validation_n3_k2_masking():
-
     # test result for one gpi in a cell
     tst_results_one = {
         (("DS1", "x"), ("DS3", "y")): {
@@ -964,21 +1067,10 @@ def test_validation_n3_k2_masking():
 
 @pytest.mark.slow
 @pytest.mark.full_framework
-def test_ascat_ismn_validation_metadata_rolling(ascat_reader):
+def test_ascat_ismn_validation_metadata_rolling(ascat_reader, ismn_reader):
     """
     Test processing framework with some ISMN and ASCAT sample data
     """
-    # Initialize ISMN reader
-    ismn_data_folder = os.path.join(
-        os.path.dirname(__file__),
-        "..",
-        "test-data",
-        "ismn",
-        "multinetwork",
-        "header_values",
-    )
-    ismn_reader = ISMN_Interface(ismn_data_folder)
-
     jobs = []
 
     ids = ismn_reader.get_dataset_ids(
@@ -1054,22 +1146,8 @@ def test_ascat_ismn_validation_metadata_rolling(ascat_reader):
         save_path, "ASCAT.sm_with_ISMN.soil moisture.nc"
     )
 
-    vars_should = [
-        u"gpi",
-        u"lon",
-        u"lat",
-        u"R",
-        u"p_R",
-        u"time",
-        u"idx",
-        u"_row_size",
-    ]
-
-    for key, value in metadata_dict_template.items():
-        vars_should.append(key)
-
-    network_should = np.array(
-        [
+    target_vars = {
+        "network": np.array([
             "MAQU",
             "MAQU",
             "SCAN",
@@ -1079,12 +1157,30 @@ def test_ascat_ismn_validation_metadata_rolling(ascat_reader):
             "SOILSCAPE",
             "SOILSCAPE",
         ],
-        dtype="U256",
+            dtype="U256",)
+    }
+    vars_should = [
+        u"gpi",
+        u"RMSD",
+        u"lon",
+        u"lat",
+        u"R",
+        u"p_R",
+        u"time",
+        u"idx",
+        u"_row_size"
+    ]
+    for key, value in metadata_dict_template.items():
+        vars_should.append(key)
+
+    check_results(
+        filename=results_fname,
+        target_vars=target_vars,
+        variables=vars_should
     )
 
     reader = PointDataResults(results_fname, read_only=True)
     df = reader.read_loc(None)
-    nptest.assert_equal(sorted(network_should), sorted(df["network"].values))
     assert np.all(df.gpi.values == np.arange(8))
     assert reader.read_ts(0).index.size == 357
     assert np.all(
@@ -1093,7 +1189,6 @@ def test_ascat_ismn_validation_metadata_rolling(ascat_reader):
 
 
 def test_args_to_iterable_non_iterables():
-
     gpis = 1
     lons = 1
     lats = 1
@@ -1111,7 +1206,6 @@ def test_args_to_iterable_non_iterables():
 
 
 def test_args_to_iterable_n3():
-
     gpis = [1, 2, 3]
     lons = [2, 3, 4]
     lats = [3, 4, 5]
@@ -1133,7 +1227,6 @@ def test_args_to_iterable_n3():
 
 
 def test_args_to_iterable_mixed():
-
     gpis = [1, 2, 3]
     lons = [2, 3, 4]
     lats = 1
@@ -1147,7 +1240,6 @@ def test_args_to_iterable_mixed():
 
 
 def test_args_to_iterable_mixed_strings():
-
     gpis = [1, 2, 3]
     lons = [2, 3, 4]
     lats = 1
@@ -1204,7 +1296,7 @@ def create_datasets(n_datasets, npoints, nsamples, missing=False):
         index = pd.date_range("1980", periods=nsamples, freq="D")
         dfs.append(pd.DataFrame(
             data, index=index, columns=(
-                ["refcol"] + [f"other{i}col" for i in range(1, n_datasets)]
+                    ["refcol"] + [f"other{i}col" for i in range(1, n_datasets)]
             )
         ))
 
@@ -1213,20 +1305,20 @@ def create_datasets(n_datasets, npoints, nsamples, missing=False):
         "columns": ["refcol"],
         "class": DummyReader(dfs, "refcol")
     }
-    for i in range(1, n_datasets-1):
+    for i in range(1, n_datasets - 1):
         datasets[f"{i}-ESA_CCI_SM_combined"] = {
             "columns": [f"other{i}col"],
             "class": DummyReader(dfs, f"other{i}col")
         }
     if missing:
-        datasets[f"{n_datasets-1}-missing"] = {
-            "columns": [f"other{n_datasets-1}col"],
-            "class": DummyNoneReader(dfs, f"other{n_datasets-1}col")
+        datasets[f"{n_datasets - 1}-missing"] = {
+            "columns": [f"other{n_datasets - 1}col"],
+            "class": DummyNoneReader(dfs, f"other{n_datasets - 1}col")
         }
     else:
-        datasets[f"{n_datasets-1}-ESA_CCI_SM_combined"] = {
-            "columns": [f"other{n_datasets-1}col"],
-            "class": DummyReader(dfs, f"other{n_datasets-1}col")
+        datasets[f"{n_datasets - 1}-ESA_CCI_SM_combined"] = {
+            "columns": [f"other{n_datasets - 1}col"],
+            "class": DummyReader(dfs, f"other{n_datasets - 1}col")
         }
     return datasets
 

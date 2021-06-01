@@ -25,7 +25,7 @@ dependencies:
     - pynetcf
     - pygeobase
     - ascat>=2.0
-    - ismn
+    - ismn==0.4
     - repurpose
     - pytest
     - pytest-cov

@@ -27,14 +27,11 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import itertools
-import warnings
 
-import pandas as pd
-
-from pygeobase.object_base import TS
+from pytesmo.validation_framework.upscaling import Upscaling, MixinReadTs
 
 
-class DataManager(object):
+class DataManager(MixinReadTs):
 
     """
     Class to handle the data management.
@@ -42,40 +39,45 @@ class DataManager(object):
     Parameters
     ----------
     datasets : dict of dicts
-        :Keys: string, datasets names
-        :Values: dict, containing the following fields
+        :Keys : string, datasets names
+        :Values : dict, containing the following fields
 
-            'class': object
+            'class' : object
                 Class containing the method read_ts for reading the data.
-            'columns': list
+            'columns' : list
                 List of columns which will be used in the validation process.
-            'args': list, optional
+            'args' : list, optional
                 Args that are passed to the reading function.
-            'kwargs': dict, optional
+            'kwargs' : dict, optional
                 Kwargs that are passed to the reading function.
-            'grids_compatible': boolean, optional
+            'grids_compatible' : boolean, optional
                 If set to True the grid point index is used directly when
                 reading other, if False then lon, lat is used and a nearest
                 neighbour search is necessary.
                 default: False
-            'use_lut': boolean, optional
+            'use_lut' : boolean, optional
                 If set to True the grid point index (obtained from a
                 calculated lut between reference and other) is used when
                 reading other, if False then lon, lat is used and a
                 nearest neighbour search is necessary.
                 default: False
-            'lut_max_dist': float, optional
+            'lut_max_dist' : float, optional
                 Maximum allowed distance in meters for the lut calculation.
                 default: None
-    ref_name: string
+    ref_name : string
         Name of the reference dataset
     period : list, optional
         Of type [datetime start, datetime end]. If given then the two input
         datasets will be truncated to start <= dates <= end.
-    read_ts_names: string or dict of strings, optional
+    read_ts_names : string or dict of strings, optional
         if another method name than 'read_ts' should be used for reading the data
         then it can be specified here. If it is a dict then specify a
         function name for each dataset.
+    upscale_parms : dict, optional. Default is None.
+        dictionary with parameters for the upscaling methods. Keys:
+            * 'upscaling_method': method for upscaling
+            * 'temporal_stability': bool for using temporal stability
+            * 'upscaling_lut': dict of shape {'other_name':{ref gpi: [other gpis]}}
 
     Methods
     -------
@@ -90,15 +92,17 @@ class DataManager(object):
         Function to read and prepare the other datasets.
     """
 
-    def __init__(self, datasets, ref_name,
-                 period=None,
-                 read_ts_names='read_ts'):
-        """
-        Initialize parameters.
-        """
+    def __init__(
+            self, datasets,
+            ref_name,
+            period=None,
+            read_ts_names='read_ts',
+            upscale_parms=None,
+    ):
         self.datasets = datasets
         self._add_default_values()
         self.reference_name = ref_name
+        self.upscale_parms = upscale_parms
 
         self.other_name = []
         for dataset in datasets.keys():
@@ -114,7 +118,8 @@ class DataManager(object):
             self.reference_grid = None
 
         self.period = period
-        self.luts = self.get_luts()
+
+        # get reading functions
         if type(read_ts_names) is dict:
             self.read_ts_names = read_ts_names
         else:
@@ -122,6 +127,22 @@ class DataManager(object):
             for dataset in datasets:
                 d[dataset] = read_ts_names
             self.read_ts_names = d
+
+        # match points in space
+        if upscale_parms:
+            # initialize class that performs upscaling operations
+            others_class = {}
+            for other in self.other_name:
+                others_class[other] = self.datasets[other]["class"]
+            self.luts = Upscaling(
+                ref_class=datasets[self.reference_name]["class"],
+                others_class=others_class,
+                upscaling_lut=upscale_parms["upscaling_lut"],
+                manager_parms=self.__dict__,
+            )
+        else:
+            # combine ref to NNs only
+            self.luts = self.get_luts()
 
     def _add_default_values(self):
         """
@@ -220,76 +241,6 @@ class DataManager(object):
         """
         return self.read_ds(name, *args)
 
-    def read_ds(self, name, *args):
-        """
-        Function to read and prepare a datasets.
-
-        Calls read_ts of the dataset.
-
-        Takes either 1 (gpi) or 2 (lon, lat) arguments.
-
-        Parameters
-        ----------
-        name : string
-            Name of the other dataset.
-        gpi : int
-            Grid point index
-        lon : float
-            Longitude of point
-        lat : float
-            Latitude of point
-
-        Returns
-        -------
-        data_df : pandas.DataFrame or None
-            Data DataFrame.
-
-        """
-        ds = self.datasets[name]
-        args = list(args)
-        args.extend(ds['args'])
-
-        try:
-            func = getattr(ds['class'], self.read_ts_names[name])
-            data_df = func(*args, **ds['kwargs'])
-            if type(data_df) is TS or issubclass(type(data_df), TS):
-                data_df = data_df.data
-        except IOError:
-            warnings.warn(
-                "IOError while reading dataset {} with args {:}".format(name,
-                                                                        args))
-            return None
-        except RuntimeError as e:
-            if e.args[0] == "No such file or directory":
-                warnings.warn(
-                    "IOError while reading dataset {} with args {:}".format(name,
-                                                                            args))
-                return None
-            else:
-                raise e
-
-        if len(data_df) == 0:
-            warnings.warn("No data for dataset {}".format(name))
-            return None
-
-        if isinstance(data_df, pd.DataFrame) == False:
-            warnings.warn("Data is not a DataFrame {:}".format(args))
-            return None
-
-        if self.period is not None:
-            # here we use the isoformat since pandas slice behavior is
-            # different when using datetime objects.
-            data_df = data_df[
-                self.period[0].isoformat():self.period[1].isoformat()]
-
-        if len(data_df) == 0:
-            warnings.warn("No data for dataset {} with arguments {:}".format(name,
-                                                                             args))
-            return None
-
-        else:
-            return data_df
-
     def get_data(self, gpi, lon, lat):
         """
         Get all the data from this manager for a certain
@@ -360,6 +311,12 @@ class DataManager(object):
             if grids_compatible:
                 other_dataframe = self.read_other(
                     other_name, gpi)
+            elif isinstance(self.luts, Upscaling):
+                other_dataframe = self.luts.get_upscaled_ts(
+                    gpi=gpi,
+                    other_name=other_name,
+                    **self.upscale_parms
+                )
             elif self.luts[other_name] is not None:
                 other_gpi = self.luts[other_name][gpi]
                 if other_gpi == -1:
