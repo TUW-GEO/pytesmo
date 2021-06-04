@@ -6,6 +6,13 @@ Unreleased
 ==========
 -
 
+Version 0.11.3, 2021-06-01
+==========================
+- removed ``ascat`` and ``ismn`` from the package dependencies
+- fixed a few bugs in ``pytesmo.temporal_collocation.combined_temporal_collocation``.
+- updated documentation
+- added Python 3.9 to CI
+
 Version 0.11.0, 2021-05-12
 ==========================
 - Analytical and bootstrapping confidence intervals for metrics (PR #206). This
