@@ -143,8 +143,8 @@ def test_mse(arange_testdata):
         mse_bias_pred = 2. ** 2
         mse_obs, _, mse_bias, _ = met.mse(x, y)
 
-        nptest.assert_equal(mse_obs, mse_pred)
-        nptest.assert_equal(mse_bias, mse_bias_pred)
+        nptest.assert_almost_equal(mse_obs, mse_pred)
+        nptest.assert_almost_equal(mse_bias, mse_bias_pred)
 
         # example 2, with outlier
         y[-1] = 51.
