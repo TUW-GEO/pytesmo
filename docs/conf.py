@@ -18,9 +18,10 @@ import subprocess
 on_rtd = "READTHEDOCS" in os.environ and os.environ["READTHEDOCS"]
 if on_rtd:
     rtd_project = os.environ["READTHEDOCS_PROJECT"]
+    rtd_version = os.environ["READTHEDOCS_VERSION"]
     interpreter = (
         f"/home/docs/checkouts/readthedocs.org/user_builds/{rtd_project}/"
-        "conda/latest/bin/python"
+        f"conda/{rtd_version}/bin/python"
     )
 else:
     interpreter = "python"
