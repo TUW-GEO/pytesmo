@@ -36,7 +36,6 @@ import operator
 from pytesmo.time_series.anomaly import calc_anomaly
 from pytesmo.time_series.anomaly import calc_climatology
 from pandas import DataFrame
-import pandas as pd
 
 
 class BasicAdapter(object):
@@ -350,16 +349,16 @@ class ColumnCombAdapter(BasicAdapter):
         self.columns = columns
         self.new_name = new_name
 
-    def apply(self, data: pd.DataFrame) -> pd.DataFrame:
+    def apply(self, data: DataFrame) -> DataFrame:
         columns = data.columns if self.columns is None else self.columns
         new_col = data[columns].apply(self.func, **self.func_kwargs)
         data[self.new_name] = new_col
         return data
 
-    def read_ts(self, *args, **kwargs) -> pd.DataFrame:
+    def read_ts(self, *args, **kwargs) -> DataFrame:
         data = super(ColumnCombAdapter, self).read_ts(*args, **kwargs)
         return self.apply(data)
 
-    def read(self, *args, **kwargs) -> pd.DataFrame:
+    def read(self, *args, **kwargs) -> DataFrame:
         data = super(ColumnCombAdapter, self).read(*args, **kwargs)
         return self.apply(data)
