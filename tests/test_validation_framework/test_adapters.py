@@ -41,6 +41,7 @@ import warnings
 from pytesmo.validation_framework.adapters import (
     MaskingAdapter,
     AdvancedMaskingAdapter,
+    ColumnCombineAdapter
 )
 from pytesmo.validation_framework.adapters import SelfMaskingAdapter
 from pytesmo.validation_framework.adapters import AnomalyAdapter
@@ -264,3 +265,17 @@ def test_timezone_removal():
 
     reader_clim = AnomalyClimAdapter(tz_reader, columns=["data"])
     assert reader_clim.read_ts(0) is not None
+
+
+def test_column_comb_adapter():
+    ds = TestDataset("", n=20)
+    orig = ds.read()
+    ds_adapted = ColumnCombineAdapter(ds, func=pd.DataFrame.mean, columns=["x", "y"],
+                                      func_kwargs={'skipna': True}, new_name='xy_mean')
+    ds_mean1 = ds_adapted.read_ts()
+    ds_mean2 = ds_adapted.read()
+
+    for ds_mean in [ds_mean1, ds_mean2]:
+        nptest.assert_equal(ds_mean["x"].values, orig["x"].values)
+        nptest.assert_equal(ds_mean["y"].values, orig["y"].values)
+        nptest.assert_equal(ds_mean["xy_mean"].values, (ds_mean["x"] + ds_mean["y"]) / 2.)
