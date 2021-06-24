@@ -316,7 +316,7 @@ class AnomalyClimAdapter(BasicAdapter):
         return self.calc_anom(data)
 
 
-class ColumnCombAdapter(BasicAdapter):
+class ColumnCombineAdapter(BasicAdapter):
     """
     Takes the pandas DataFrame that the read_ts or read method of the instance
     returns and applies a function to merge multiple columns into one.
@@ -336,13 +336,14 @@ class ColumnCombAdapter(BasicAdapter):
             e.g. pd.DataFrame.mean
         func_kwargs : dict, optional (default: None)
             kwargs that are passed to method
-        columns: list, optional
-            columns in the dataset that are combined.
+        columns: list, optional (default: None)
+            Columns in the dataset that are combined. If None are selected
+            all columns are used.
         new_name: str, optional (default: merged)
             Name that the merged column will have in the returned data frame.
         """
 
-        super(ColumnCombAdapter, self).__init__(cls)
+        super(ColumnCombineAdapter, self).__init__(cls)
         self.func = func
         self.func_kwargs = func_kwargs if func_kwargs is not None else {}
         self.func_kwargs['axis'] = 1
@@ -356,9 +357,8 @@ class ColumnCombAdapter(BasicAdapter):
         return data
 
     def read_ts(self, *args, **kwargs) -> DataFrame:
-        data = super(ColumnCombAdapter, self).read_ts(*args, **kwargs)
+        data = super(ColumnCombineAdapter, self).read_ts(*args, **kwargs)
         return self.apply(data)
 
     def read(self, *args, **kwargs) -> DataFrame:
-        data = super(ColumnCombAdapter, self).read(*args, **kwargs)
-        return self.apply(data)
+        return self.read_ts(*args, **kwargs)
