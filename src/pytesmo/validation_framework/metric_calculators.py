@@ -1259,9 +1259,9 @@ class RollingMetrics(MetadataMetrics):
         window_size_jd = pd.Timedelta(
             window_size).to_numpy()/np.timedelta64(1, 'D')
         pr_arr, rmsd_arr = metrics.rolling_pr_rmsd(
-            timestamps.astype('float32'),
-            xy[:, 0],
-            xy[:, 1],
+            timestamps.astype('float64'),
+            xy[:, 0].astype('float64'),
+            xy[:, 1].astype('float64'),
             window_size_jd,
             center,
             min_periods
