@@ -338,10 +338,10 @@ cpdef _pearsonr_from_moments(floating varx, floating vary, floating cov, int n):
 # This implementation is much faster than the old version with numba:
 # old: 76.7 ms ± 1.62 ms per loop (mean ± std. dev. of 7 runs, 10 loops each)
 # new: 117 µs ± 836 ns per loop (mean ± std. dev. of 7 runs, 10000 loops each)
-cpdef rolling_pr_rmsd(floating [:] timestamps,
+cpdef rolling_pr_rmsd(double [:] timestamps,
                       floating [:] x,
                       floating [:] y,
-                      floating window_size,
+                      double window_size,
                       int center,
                       int min_periods):
     """
@@ -353,7 +353,7 @@ cpdef rolling_pr_rmsd(floating [:] timestamps,
         Time stamps as julian dates.
     data : numpy.ndarray
         Time series data in 2d array.
-    window_size : float
+    window_size : float64
         Window size in fraction of days.
     center : bool
         Set window at the center and include window_size in both directions.
