@@ -57,9 +57,6 @@ from pytesmo.metrics._fast_pairwise import (
 )
 from pytesmo.metrics.pairwise import (
     _bias_ci_from_moments,
-    _mse_bias_ci_from_moments,
-    msd_ci,
-    rmsd_ci,
     ubrmsd_ci,
     pearson_r_ci,
     spearman_r_ci,
@@ -1326,10 +1323,6 @@ class PairwiseMetricsMixin:
         if self.analytical_cis:
             metrics += [
                 "BIAS_ci_lower", "BIAS_ci_upper",
-                "mse_bias_ci_lower", "mse_bias_ci_upper",
-                "RMSD_ci_lower", "RMSD_ci_upper",
-                "mse_ci_lower", "mse_ci_upper",
-                "RSS_ci_lower", "RSS_ci_upper",
                 "urmsd_ci_lower", "urmsd_ci_upper",
                 "R_ci_lower", "R_ci_upper",
             ]
@@ -1339,7 +1332,11 @@ class PairwiseMetricsMixin:
                 metrics += ["tau_ci_lower", "tau_ci_upper"]
         if self.bootstrap_cis:
             metrics += ["mse_var_ci_lower", "mse_var_ci_upper",
-                        "mse_corr_ci_lower", "mse_corr_ci_upper"]
+                        "mse_corr_ci_lower", "mse_corr_ci_upper",
+                        "mse_bias_ci_lower", "mse_bias_ci_upper",
+                        "RMSD_ci_lower", "RMSD_ci_upper",
+                        "mse_ci_lower", "mse_ci_upper",
+                        "RSS_ci_lower", "RSS_ci_upper",]
         return metrics
 
     def _calc_pairwise_metrics(self, x, y, mx, my, varx, vary, cov,
@@ -1401,27 +1398,6 @@ class PairwiseMetricsMixin:
                 result["BIAS_ci_lower" + suffix][0],
                 result["BIAS_ci_upper" + suffix][0]
             ) = _bias_ci_from_moments(0.05, mx, my, varx, vary, cov, n_obs)
-            (
-                result["mse_bias_ci_lower" + suffix][0],
-                result["mse_bias_ci_upper" + suffix][0]
-            ) = _mse_bias_ci_from_moments(0.05, mx, my, varx, vary, cov, n_obs)
-            # MSE is the same as MSD
-            (
-                result["mse_ci_lower" + suffix][0],
-                result["mse_ci_upper" + suffix][0]
-            ) = msd_ci(x, y, result["mse" + suffix][0])
-
-            (
-                result["RMSD_ci_lower" + suffix][0],
-                result["RMSD_ci_upper" + suffix][0]
-            ) = rmsd_ci(x, y, result["RMSD" + suffix][0])
-
-            result["RSS_ci_lower" + suffix][0] = (
-                result["mse_ci_lower" + suffix][0] * n_obs
-            )
-            result["RSS_ci_upper" + suffix][0] = (
-                result["mse_ci_upper" + suffix][0] * n_obs
-            )
 
             (
                 result["urmsd_ci_lower" + suffix][0],
@@ -1445,8 +1421,13 @@ class PairwiseMetricsMixin:
                 ) = kendall_tau_ci(x, y, result["tau" + suffix][0])
 
         if self.bootstrap_cis:
-            for m in ["mse_var", "mse_corr"]:
-                metric_func = getattr(pairwise, m)
+            for m in ["mse_var", "mse_corr", "mse_bias", "mse", "RMSD"]:
+                if m == "mse":
+                    metric_func = pairwise.msd
+                elif m == "RMSD":
+                    metric_func = pairwise.rmsd
+                else:
+                    metric_func = getattr(pairwise, m)
                 _, lb, ub = with_bootstrapped_ci(metric_func, x, y)
                 result[f"{m}_ci_lower" + suffix][0] = lb
                 result[f"{m}_ci_upper" + suffix][0] = ub

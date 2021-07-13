@@ -57,10 +57,6 @@ from pytesmo.metrics._fast_pairwise import (  # noqa: F401
 
 has_ci = [
     "bias",
-    "mse_bias",
-    "msd",
-    "rmsd",
-    "nrmsd",
     "ubrmsd",
     "pearson_r",
     "spearman_r",
@@ -70,6 +66,10 @@ has_ci = [
 no_ci = [
     "aad",
     "mad",
+    "mse_bias",
+    "msd",
+    "rmsd",
+    "nrmsd",
     "mse_corr",
     "mse_var",
     "nash_sutcliffe",
@@ -100,7 +100,7 @@ def bias_ci(x, y, b, alpha=0.05):
         Lower and upper confidence interval bounds.
     """
     n = len(x)
-    delta = np.std(x - y, ddof=1) / np.sqrt(n) * stats.t.ppf(1 - alpha / 2, n)
+    delta = np.std(x - y, ddof=1) / np.sqrt(n) * stats.t.ppf(1 - alpha / 2, n - 1)
     return b - delta, b + delta
 
 
@@ -111,63 +111,9 @@ def _bias_ci_from_moments(alpha, mx, my, varx, vary, cov, n):
     # std(x - y, ddof=1) = sqrt(var(x - y, ddof=1))
     #                    = sqrt(n/(n-1) * var(x-y))
     std = np.sqrt(n / (n - 1) * (varx + vary - 2 * cov))
-    delta = std / np.sqrt(n) * stats.t.ppf(1 - alpha / 2, n)
+    delta = std / np.sqrt(n) * stats.t.ppf(1 - alpha / 2, n - 1)
     b = mx - my
     return b - delta, b + delta
-
-
-def mse_bias_ci(x, y, bsq, alpha=0.05):
-    """
-    Confidence interval for MSE bias component = bias ** 2.
-
-    Assuming that x and y are normally distributed with means mx, my and
-    variances varx, vary, the bias is normally distributed with mean ``m = mx -
-    my`` and variance ``var = (varx + vary) / n``.
-
-    ``mse_bias / var`` then follows a non-central chi-square distribution with
-    one degree of freedom and non-centrality parameter ``l = m**2 / var``.
-    Since the variances are estimated from the data, we will calculate them
-    with ``ddof=1``.
-
-    Parameters
-    ----------
-    x : numpy.ndarray
-        First input vector.
-    y : numpy.ndarray
-        Second input vector.
-    bsq : float
-        bias ** 2
-    alpha : float, optional
-        1 - confidence level, default is 0.05
-
-    Returns
-    -------
-    lower, upper : float
-        Lower and upper confidence interval bounds.
-    """
-    n = len(x)
-    std = np.std(x - y, ddof=1) / np.sqrt(n)
-    nc = bsq / std ** 2
-    lower = stats.ncx2.ppf(alpha / 2, 1, nc) * std ** 2
-    upper = stats.ncx2.ppf(1 - alpha / 2, 1, nc) * std ** 2
-    return lower, upper
-
-
-def _mse_bias_ci_from_moments(alpha, mx, my, varx, vary, cov, n):
-    # This is based on the fact that:
-    # var(x - y) = var(x) + var(y) - 2*cov(x,y)
-    # and therefore
-    # std(x - y, ddof=1) = sqrt(var(x - y, ddof=1))
-    #                    = sqrt(n/(n-1) * var(x-y))
-    # the standard deviation of the bias is then
-    # std(bias) = std(x - y, ddof) / sqrt(n)
-    #           = sqrt(var(x - y) / (n-1))
-    b = mx - my
-    std = np.sqrt((varx + vary - 2 * cov) / (n - 1))
-    nc = b ** 2 / std ** 2
-    lower = stats.ncx2.ppf(alpha / 2, 1, nc) * std ** 2
-    upper = stats.ncx2.ppf(1 - alpha / 2, 1, nc) * std ** 2
-    return lower, upper
 
 
 def aad(x, y):
@@ -247,35 +193,6 @@ def msd(x, y):
     return RSS(x, y) / len(x)
 
 
-def msd_ci(x, y, m, alpha=0.05):
-    """
-    Confidence interval for MSD.
-
-    This can be calculated similar to confidence intervals to the sample
-    variance.
-
-    Parameters
-    ----------
-    x : numpy.ndarray
-        First input vector
-    y : numpy.ndarray
-        Second input vector
-    m : float
-        MSD for this data
-    alpha : float, optional
-        1 - confidence level, default is 0.05
-
-    Returns
-    -------
-    lower, upper : float
-        Lower and upper confidence interval bounds.
-    """
-    n = len(x)
-    lb_msd = n * m / stats.chi2.ppf(1 - alpha / 2, n)
-    ub_msd = n * m / stats.chi2.ppf(alpha / 2, n)
-    return lb_msd, ub_msd
-
-
 def rmsd(x, y, ddof=0):
     """
     Root-mean-square deviation (RMSD).
@@ -311,35 +228,6 @@ def rmsd(x, y, ddof=0):
         return np.sqrt(RSS(x, y) / (len(x) - ddof))
 
 
-def rmsd_ci(x, y, rmsd, alpha=0.05):
-    """
-    Confidence interval for RMSD.
-
-    This is calculated using standard results for CIs for the sample variance.
-
-    Parameters
-    ----------
-    x : numpy.ndarray
-        First input vector
-    y : numpy.ndarray
-        Second input vector
-    rmsd : float
-        RMSD for this data
-    alpha : float, optional
-        1 - confidence level, default is 0.05
-
-    Returns
-    -------
-    lower, upper : float
-        Lower and upper confidence interval bounds.
-    """
-    n = len(x)
-    msd = rmsd ** 2
-    lb_msd = n * msd / stats.chi2.ppf(1 - alpha / 2, n)
-    ub_msd = n * msd / stats.chi2.ppf(alpha / 2, n)
-    return np.sqrt(lb_msd), np.sqrt(ub_msd)
-
-
 def nrmsd(x, y, ddof=0):
     """
     Normalized root-mean-square deviation (nRMSD).
@@ -363,33 +251,6 @@ def nrmsd(x, y, ddof=0):
         Normalized root-mean-square deviation (nRMSD).
     """
     return rmsd(x, y, ddof) / (np.max([x, y]) - np.min([x, y]))
-
-
-def nrmsd_ci(x, y, nrmsd, alpha=0.05):
-    """
-    Confidence interval for normalized RMSD.
-
-    This is calculated using standard results for CIs for the sample variance.
-
-    Parameters
-    ----------
-    x : numpy.ndarray
-        First input vector
-    y : numpy.ndarray
-        Second input vector
-    nrmsd : float
-        nRMSD for this data
-    alpha : float, optional
-        1 - confidence level, default is 0.05
-
-    Returns
-    -------
-    lower, upper : float
-        Lower and upper confidence interval bounds.
-    """
-    c = np.max([x, y]) - np.min([x, y])
-    lb, ub = rmsd_ci(x, y, nrmsd * c, alpha)
-    return lb / c, ub / c
 
 
 def ubrmsd(x, y, ddof=0):
@@ -455,8 +316,8 @@ def ubrmsd_ci(x, y, ubrmsd, alpha=0.05):
     """
     n = len(x)
     ubMSD = ubrmsd ** 2
-    lb_ubMSD = n * ubMSD / stats.chi2.ppf(1 - alpha / 2, n)
-    ub_ubMSD = n * ubMSD / stats.chi2.ppf(alpha / 2, n)
+    lb_ubMSD = n * ubMSD / stats.chi2.ppf(1 - alpha / 2, n - 1)
+    ub_ubMSD = n * ubMSD / stats.chi2.ppf(alpha / 2, n - 1)
     return np.sqrt(lb_ubMSD), np.sqrt(ub_ubMSD)
 
 
