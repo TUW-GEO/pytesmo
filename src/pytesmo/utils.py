@@ -33,20 +33,47 @@ import numpy as np
 import scipy.interpolate as sc_int
 import scipy.optimize as sc_opt
 import scipy.special as sc_special
-import warnings
-import functools
 
-def deprecated(func):
-    # mark func as deprecated (warn when used)
-    @functools.wraps(func)
-    def new_func(*args, **kwargs):
-        warnings.simplefilter('always', DeprecationWarning)
-        warnings.warn(f"Pytesmo function {func.__name__} is deprecated and will be removed soon",
-                      category=DeprecationWarning,
-                      stacklevel=2)
-        warnings.simplefilter('default', DeprecationWarning)  # reset filter
-        return func(*args, **kwargs)
-    return new_func
+import functools
+import inspect
+import warnings
+
+
+def deprecated(message: str = None):
+    """
+    Decorator for classes or functions to mark them as deprecated.
+    If the decorator is applied without a specific message (`@deprecated()`),
+    the default warning is shown when using the function/class. To specify
+    a custom message use it like:
+        @deprecated('Don't use this function anymore!').
+
+    Parameters
+    ----------
+    message : str, optional (default: None)
+        Custom message to show with the DeprecationWarning.
+    """
+
+    def decorator(src):
+        default_msg = f"Pytesmo " \
+                      f"{'class' if inspect.isclass(src) else 'method'} " \
+                      f"'{src.__module__}.{src.__name__}' " \
+                      f"is deprecated and will be removed soon."
+
+        @functools.wraps(src)
+        def new_func(*args, **kwargs):
+            warnings.simplefilter('always', DeprecationWarning)
+
+            warnings.warn(
+                default_msg if message is None else message,
+                category=DeprecationWarning,
+                stacklevel=2
+            )
+            warnings.simplefilter('default', DeprecationWarning)
+            return src(*args, **kwargs)
+
+        return new_func
+    return decorator
+
 
 def ml_percentile(in_data, percentiles):
     """
@@ -104,7 +131,8 @@ def interp_uniq(src):
             if len(pos) > 1:
                 if pos[0] == 0 and pos[-1] < size - 1:
                     src[
-                        pos[-1]] = (src[pos[len(pos) - 2]] + src[pos[-1] + 1]) / 2.0
+                        pos[-1]] = (src[pos[len(pos) - 2]] +
+                                    src[pos[-1] + 1]) / 2.0
                 elif pos[-1] == size - 1:
                     src[pos[0]] = (
                         src[pos[1]] + src[pos[0] - 1]) / 2.0
@@ -254,6 +282,7 @@ def ensure_iterable(el):
         return [el]
     else:
         return el
+
 
 def array_dropna(*arrs):
     """
