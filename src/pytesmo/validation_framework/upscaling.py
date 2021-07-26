@@ -1,30 +1,30 @@
-# Copyright (c) 2021, Vienna University of Technology (TU Wien), Department
-# of Geodesy and Geoinformation (GEO).
+# Copyright (c) 2021, TU Wien, Department of Geodesy and Geoinformation
 # All rights reserved.
 
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
 #   * Redistributions of source code must retain the above copyright
 #     notice, this list of conditions and the following disclaimer.
-#   * Redistributions in binary form must reproduce the above copyright
-#     notice, this list of conditions and the following disclaimer in the
-#     documentation and/or other materials provided with the distribution.
-#   * Neither the name of the Vienna University of Technology, Department
-#     of Geodesy and Geoinformation nor the names of its contributors may
-#     be used to endorse or promote products derived from this software
-#     without specific prior written permission.
+#    * Redistributions in binary form must reproduce the above copyright
+#      notice, this list of conditions and the following disclaimer in the
+#      documentation and/or other materials provided with the distribution.
+#    * Neither the name of the TU Wien, Department of Geodesy and
+#      Geoinformation nor the names of its contributors may be used to endorse
+#      or promote products derived from this software without specific prior
+#      written permission.
 
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-# DISCLAIMED. IN NO EVENT SHALL VIENNA UNIVERSITY OF TECHNOLOGY,
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL VIENNA UNIVERSITY OF TECHNOLOGY,
 # DEPARTMENT OF GEODESY AND GEOINFORMATION BE LIABLE FOR ANY
 # DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
 # (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
 # LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 # ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+# THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 
 import warnings
 from typing import Union
@@ -37,7 +37,8 @@ from pytesmo.temporal_matching import combined_temporal_collocation
 
 
 class MixinReadTs:
-    """Mixin class to provide the reading function in DataAverager and DataManager"""
+    """Mixin class to provide the reading function in DataAverager
+    and DataManager"""
 
     def read_ds(self, name, *args):
         """
@@ -64,23 +65,27 @@ class MixinReadTs:
         """
         ds = self.datasets[name]
         args = list(args)
-        args.extend(ds['args'])
+        args.extend(ds["args"])
 
         try:
-            func = getattr(ds['class'], self.read_ts_names[name])
-            data_df = func(*args, **ds['kwargs'])
+            func = getattr(ds["class"], self.read_ts_names[name])
+            data_df = func(*args, **ds["kwargs"])
             if type(data_df) is TS or issubclass(type(data_df), TS):
                 data_df = data_df.data
         except IOError:
             warnings.warn(
-                "IOError while reading dataset {} with args {:}".format(name,
-                                                                        args))
+                "IOError while reading dataset {} with args {:}".format(
+                    name, args
+                )
+            )
             return None
         except RuntimeError as e:
             if e.args[0] == "No such file or directory":
                 warnings.warn(
-                    "IOError while reading dataset {} with args {:}".format(name,
-                                                                            args))
+                    "IOError while reading dataset {} with args {:}".format(
+                        name, args
+                    )
+                )
                 return None
             else:
                 raise e
@@ -97,11 +102,13 @@ class MixinReadTs:
             # here we use the isoformat since pandas slice behavior is
             # different when using datetime objects.
             data_df = data_df[
-                      self.period[0].isoformat():self.period[1].isoformat()]
+                self.period[0].isoformat(): self.period[1].isoformat()
+            ]
 
         if len(data_df) == 0:
-            warnings.warn("No data for dataset {} with arguments {:}".format(name,
-                                                                             args))
+            warnings.warn(
+                "No data for dataset {} with arguments {:}".format(name, args)
+            )
             return None
 
         else:
@@ -110,10 +117,12 @@ class MixinReadTs:
 
 class Upscaling(MixinReadTs):
     """
-    This class provides methods to combine the measurements of validation datasets (others) that fall under the same
-    gridpoint of the dataset being validated (reference).
+    This class provides methods to combine the measurements of validation
+    datasets (others) that fall under the same gridpoint of the dataset being
+    validated (reference).
 
-    The goal is to include here all identified upscaling methods to provide an estimate at the reference footprint scale.
+    The goal is to include here all identified upscaling methods to provide
+    an estimate at the reference footprint scale.
 
     Implemented methods:
 
@@ -123,7 +132,8 @@ class Upscaling(MixinReadTs):
     Parameters
     ----------
     ref_class : <reader object> of the reference
-        Class containing the method read_ts for reading the data of the reference
+        Class containing the method read_ts for reading the data of
+        the reference
     others_class : dict
         Dict of shape {'other_name': <reader object>} for the other dataset
     upscaling_lut : dict
@@ -133,11 +143,11 @@ class Upscaling(MixinReadTs):
     """
 
     def __init__(
-            self,
-            ref_class,
-            others_class,
-            upscaling_lut,
-            manager_parms,
+        self,
+        ref_class,
+        others_class,
+        upscaling_lut,
+        manager_parms,
     ):
         self.ref_class = ref_class
         self.others_class = others_class
@@ -148,9 +158,9 @@ class Upscaling(MixinReadTs):
         self.read_ts_names = manager_parms["read_ts_names"]
 
     def _read(
-            self,
-            points,
-            other_name,
+        self,
+        points,
+        other_name,
     ) -> list:
         """
         Get the timeseries for given points info and return them in a list.
@@ -177,10 +187,7 @@ class Upscaling(MixinReadTs):
 
     @staticmethod
     def temporal_match(
-            to_match,
-            hours=6,
-            drop_missing=False,
-            **kwargs
+        to_match, hours=6, drop_missing=False, **kwargs
     ) -> pd.DataFrame:
         """
         Temporal match to the longest timeseries
@@ -192,7 +199,8 @@ class Upscaling(MixinReadTs):
         hours : int
             window to perform the temporal matching
         drop_missing : bool, optional. Default is False.
-            If true, only time steps when all points have measurements are kept
+            If true, only time steps when all points have measurements
+            are kept
 
         Returns
         -------
@@ -227,20 +235,24 @@ class Upscaling(MixinReadTs):
 
     @staticmethod
     def tstability_filter(
-            df,
-            r_min=0.6,
-            see_max=0.05,
-            min_n=4,
-            **kwargs,
+        df,
+        r_min=0.6,
+        see_max=0.05,
+        min_n=4,
+        **kwargs,
     ) -> pd.DataFrame:
         """
-        Uses time stability concepts to filter point-measurements (pms). Determines wether the upscaled measurement
-        based on a simple average of all the pms is in sufficient agreement with each pm, and if not eliminates pm
-        from the pool.
+        Uses time stability concepts to filter point-measurements (pms).
+        Determines whether the upscaled measurement based on a simple average
+        of all the pms is in sufficient agreement with each pm, and if not
+        eliminates pm from the pool.
 
-        Thresholds are based on Wagner W, Pathe C, Doubkova M, Sabel D, Bartsch A, Hasenauer S, Blöschl G, Scipal K,
-        Martínez-Fernández J, Löw A. Temporal Stability of Soil Moisture and Radar Backscatter Observed by the Advanced
-        Synthetic Aperture Radar (ASAR). Sensors. 2008; 8(2):1174-1197. https://doi.org/10.3390/s80201174
+        Thresholds are based on:
+        Wagner W, Pathe C, Doubkova M, Sabel D, Bartsch A, Hasenauer S,
+        Blöschl G, Scipal K, Martínez-Fernández J, Löw A.
+        Temporal Stability of Soil Moisture and Radar Backscatter Observed
+        by the Advanced Synthetic Aperture Radar (ASAR). Sensors. 2008;
+        8(2):1174-1197. https://doi.org/10.3390/s80201174
 
         Parameters
         ----------
@@ -267,10 +279,7 @@ class Upscaling(MixinReadTs):
         filter_out = []
         for n, pm in enumerate(df):
             pm_values = df[pm]
-            regr = linregress(
-                estimate,
-                pm_values
-            )
+            regr = linregress(estimate, pm_values)
             if regr.rvalue < r_min or regr.stderr > see_max:
                 filter_out.append(pm)
 
@@ -278,9 +287,10 @@ class Upscaling(MixinReadTs):
 
         return filtered
 
-    def upscale(self, df, method='average', **kwargs) -> pd.Series:
+    def upscale(self, df, method="average", **kwargs) -> pd.Series:
         """
-        Handle the column names and return the upscaled Dataframe with the specified method.
+        Handle the column names and return the upscaled Dataframe with the
+        specified method.
 
         Parameters
         ----------
@@ -302,7 +312,10 @@ class Upscaling(MixinReadTs):
         }
         if method not in up_function.keys():
             raise KeyError(
-                "The selected method {} is not implemented in the upscaling options".format(method)
+                "The selected method {} is not implemented in the "
+                "upscaling options".format(
+                    method
+                )
             )
         f = up_function[method]
 
@@ -316,15 +329,16 @@ class Upscaling(MixinReadTs):
         return out
 
     def get_upscaled_ts(
-            self,
-            gpi,
-            other_name,
-            upscaling_method="average",
-            temporal_stability=False,
-            **kwargs
+        self,
+        gpi,
+        other_name,
+        upscaling_method="average",
+        temporal_stability=False,
+        **kwargs,
     ) -> Union[None, pd.DataFrame]:
         """
-        Find the upscale estimate timeseries with given method, for a certain reference gpi
+        Find the upscale estimate timeseries with given method, for a certain
+        reference gpi
 
         Parameters
         ----------
@@ -343,7 +357,8 @@ class Upscaling(MixinReadTs):
         Returns
         -------
         upscaled : pd.DataFrame or None
-            upscaled time series; if there are no points under the specific gpi, None is returned
+            upscaled time series; if there are no points under the specific
+            gpi, None is returned
         """
         other_lut = self.lut[other_name]
         # check that there are points for specific reference gpi
@@ -353,10 +368,7 @@ class Upscaling(MixinReadTs):
             other_points = other_lut[gpi]
 
         # read non-reference points and filter out Nones
-        tss = self._read(
-            points=other_points,
-            other_name=other_name
-        )
+        tss = self._read(points=other_points, other_name=other_name)
         tss = [df for df in tss if df is not None]
 
         # handle situation with single timeseries or all None
@@ -365,13 +377,16 @@ class Upscaling(MixinReadTs):
                 return None
             return tss[0]
 
-        # here we collect only the variable columns; flags are irrelevant at this point and can be dropped
+        # here we collect only the variable columns; flags are irrelevant at
+        # this point and can be dropped
         target_column = self.datasets[other_name]["columns"][0]
         to_match = []
         for n, point_df in enumerate(tss):
             point_ts = point_df[target_column]
             to_match.append(
-                point_ts.to_frame(name=target_column + "_{}".format(n))  # avoid name clashing
+                point_ts.to_frame(
+                    name=target_column + "_{}".format(n)
+                )  # avoid name clashing
             )
 
         tss = self.temporal_match(to_match, **kwargs)
@@ -379,9 +394,8 @@ class Upscaling(MixinReadTs):
             tss = self.tstability_filter(tss, **kwargs)
 
         # perform upscaling and return correct name
-        upscaled = self.upscale(
-            tss,
-            method=upscaling_method
-        ).to_frame(target_column)
+        upscaled = self.upscale(tss, method=upscaling_method).to_frame(
+            target_column
+        )
 
         return upscaled
