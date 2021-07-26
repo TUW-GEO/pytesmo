@@ -250,7 +250,7 @@ def mean_std(src, ref, **kwargs):
     return ((src - np.mean(src)) / np.std(src)) * np.std(ref) + np.mean(ref)
 
 
-@utils.deprecated
+@utils.deprecated()
 def lin_cdf_match(
     src,
     ref,
@@ -347,7 +347,7 @@ def lin_cdf_match_stored_params(
     )
 
 
-@utils.deprecated
+@utils.deprecated()
 def cdf_match(
     src, ref, min_val=None, max_val=None, nbins=100, minobs=None, **kwargs
 ):
