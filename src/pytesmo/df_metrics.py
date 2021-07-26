@@ -14,10 +14,10 @@
 #      names of its contributors may be used to endorse or promote products
 #      derived from this software without specific prior written permission.
 
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-# DISCLAIMED. IN NO EVENT SHALL VIENNA UNIVERSITY OF TECHNOLOGY,
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL VIENNA UNIVERSITY OF TECHNOLOGY,
 # DEPARTMENT OF GEODESY AND GEOINFORMATION BE LIABLE FOR ANY
 # DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
 # (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
@@ -67,7 +67,9 @@ def n_combinations(iterable, n, must_include=None, permutations=False):
         The possible combinations of n elements.
     """
     if must_include:
-        if (not isinstance(must_include, Iterable)) or isinstance(must_include, str):
+        if (not isinstance(must_include, Iterable)) or isinstance(
+            must_include, str
+        ):
             must_include = [must_include]
 
     if permutations:
@@ -111,8 +113,7 @@ def _wrap_metric(metric, symmetric=True, name=None):
 
     def wrapped(df):
         return _dict_to_namedtuple(
-            nwise_apply(df, metric, n=2, comm=symmetric),
-            metric_name
+            nwise_apply(df, metric, n=2, comm=symmetric), metric_name
         )
 
     # add name and docstring
@@ -172,13 +173,15 @@ def mse_decomposition(df):
     mse, mse_corr, mse_bias, mse_var = nwise_apply(
         df, metrics.mse_decomposition, n=2, comm=True
     )
-    return (_dict_to_namedtuple(mse, 'MSE'),
-            _dict_to_namedtuple(mse_corr, 'MSEcorr'),
-            _dict_to_namedtuple(mse_bias, 'MSEbias'),
-            _dict_to_namedtuple(mse_var, 'MSEvar'))
+    return (
+        _dict_to_namedtuple(mse, "MSE"),
+        _dict_to_namedtuple(mse_corr, "MSEcorr"),
+        _dict_to_namedtuple(mse_bias, "MSEbias"),
+        _dict_to_namedtuple(mse_var, "MSEvar"),
+    )
 
 
-@deprecated
+@deprecated()
 def mse(df):
     """
     Deprecated: use :py:func:`pytesmo.df_metrics.msd` and the functions for the
@@ -201,14 +204,18 @@ def mse(df):
     pytesmo.metrics.mse
 
     """
-    MSE, MSEcorr, MSEbias, MSEvar = nwise_apply(df, metrics.mse, n=2, comm=True)
-    return (_dict_to_namedtuple(MSE, 'MSE'),
-            _dict_to_namedtuple(MSEcorr, 'MSEcorr'),
-            _dict_to_namedtuple(MSEbias, 'MSEbias'),
-            _dict_to_namedtuple(MSEvar, 'MSEvar'))
+    MSE, MSEcorr, MSEbias, MSEvar = nwise_apply(
+        df, metrics.mse, n=2, comm=True
+    )
+    return (
+        _dict_to_namedtuple(MSE, "MSE"),
+        _dict_to_namedtuple(MSEcorr, "MSEcorr"),
+        _dict_to_namedtuple(MSEbias, "MSEbias"),
+        _dict_to_namedtuple(MSEvar, "MSEvar"),
+    )
 
 
-@deprecated
+@deprecated()
 def tcol_error(df):
     """
     Deprecated: use :py:func:`pytesmo.df_metrics.tcol_metrics` instead.
@@ -231,19 +238,21 @@ def tcol_error(df):
     """
     # For TC, the input order has NO effect --> comm=True
     err0, err1, err2 = nwise_apply(df, metrics.tcol_error, n=3, comm=True)
-    trips = list(err0.keys()) # triples in all err are equal
+    trips = list(err0.keys())  # triples in all err are equal
     assert trips == list(err0.keys()) == list(err1.keys()) == list(err2.keys())
 
     errors = []
     for trip in trips:
         res = [err0[trip], err1[trip], err2[trip]]
-        Inner = namedtuple('triple_collocation_error', OrderedDict(zip(trip, res)))
+        Inner = namedtuple(
+            "triple_collocation_error", OrderedDict(zip(trip, res))
+        )
         errors.append(Inner(*res))
 
     return tuple(errors)
 
 
-@deprecated
+@deprecated()
 def tcol_snr(df, ref_ind=0):
     """DEPRECATED: use `tcol_metrics` instead."""
     return tcol_metrics(df, ref_ind=0)
@@ -282,18 +291,24 @@ def tcol_metrics(df, ref_ind=0):
         # the reference.
         incl = None
         ref_ind = 0
-    snr, err, beta = nwise_apply(df, metrics.tcol_metrics, n=3, comm=True,
-                                 must_include=incl, ref_ind=ref_ind)
+    snr, err, beta = nwise_apply(
+        df,
+        metrics.tcol_metrics,
+        n=3,
+        comm=True,
+        must_include=incl,
+        ref_ind=ref_ind,
+    )
 
     results = {}
-    var_dict = {'snr': snr, 'err_std_dev': err, 'beta': beta}
+    var_dict = {"snr": snr, "err_std_dev": err, "beta": beta}
     for var_name, var_vals in var_dict.items():
         results[var_name] = []
         for trip, res in var_vals.items():
             Inner = namedtuple(var_name, OrderedDict(zip(trip, res)))
             results[var_name].append(Inner(*res))
 
-    return (results['snr'], results['err_std_dev'], results['beta'])
+    return (results["snr"], results["err_std_dev"], results["beta"])
 
 
 def pearsonr(df):
@@ -314,10 +329,9 @@ def pearsonr(df):
     """
     r, p = nwise_apply(df, stats.pearsonr, n=2, comm=True)
     return (
-        _dict_to_namedtuple(r, 'Pearsons_r'),
-        _dict_to_namedtuple(p, 'p_value')
+        _dict_to_namedtuple(r, "Pearsons_r"),
+        _dict_to_namedtuple(p, "p_value"),
     )
-        
 
 
 def spearmanr(df):
@@ -338,8 +352,8 @@ def spearmanr(df):
     """
     r, p = nwise_apply(df, stats.spearmanr, n=2, comm=True)
     return (
-        _dict_to_namedtuple(r, 'Spearman_r'),
-        _dict_to_namedtuple(p, 'p_value')
+        _dict_to_namedtuple(r, "Spearman_r"),
+        _dict_to_namedtuple(p, "p_value"),
     )
 
 
@@ -361,8 +375,8 @@ def kendalltau(df):
     """
     r, p = nwise_apply(df, stats.kendalltau, n=2, comm=True)
     return (
-        _dict_to_namedtuple(r, 'Kendall_tau'),
-        _dict_to_namedtuple(p, 'p_value')
+        _dict_to_namedtuple(r, "Kendall_tau"),
+        _dict_to_namedtuple(p, "p_value"),
     )
 
 
@@ -386,7 +400,7 @@ def pairwise_apply(df, method, comm=False):
     """
     warnings.warn(
         "pairwise_apply() is deprecated, use nwise_apply(..., n=2) instead",
-        DeprecationWarning
+        DeprecationWarning,
     )
     numeric_df = df._get_numeric_data()
     cols = numeric_df.columns
@@ -432,8 +446,16 @@ def pairwise_apply(df, method, comm=False):
         return tuple(return_list)
 
 
-def nwise_apply(df, method, n=2, comm=False, as_df=False, ds_names=True,
-                must_include=None, **method_kwargs):
+def nwise_apply(
+    df,
+    method,
+    n=2,
+    comm=False,
+    as_df=False,
+    ds_names=True,
+    must_include=None,
+    **method_kwargs,
+):
     """
     Compute given method for column combinations of a data frame, excluding
     NA/null values.
@@ -493,7 +515,7 @@ def nwise_apply(df, method, n=2, comm=False, as_df=False, ds_names=True,
     c = applyf(*array_dropna(*[mat[i] for i in range(n)]))
     for index, value in enumerate(np.atleast_1d(c)):
         result.append(OrderedDict([(c, np.nan) for c in combs]))
-    result = np.array(result)    # array of OrderedDicts
+    result = np.array(result)  # array of OrderedDicts
     # each return value result is a dict that gets filled with dicts that have
     # the cols and keys and the results as values
 
@@ -516,12 +538,13 @@ def nwise_apply(df, method, n=2, comm=False, as_df=False, ds_names=True,
 
     if as_df:
         if n != 2:
-            raise ValueError('Array structure only available for n=2')
+            raise ValueError("Array structure only available for n=2")
         else:
             if not ds_names:
                 lut_comb_cols = None
-            result = [_to_df(r, comm=comm, lut_names=lut_comb_cols)
-                      for r in result]
+            result = [
+                _to_df(r, comm=comm, lut_names=lut_comb_cols) for r in result
+            ]
     else:
         if ds_names:
             formatted_results = []
@@ -559,7 +582,7 @@ def _to_df(result, comm=False, lut_names=None):
     # find out how large the matrix is
     imax = max([max(r) for r in list(result.keys())])
     # create and fill the matrix
-    res = np.full((imax+1, imax+1), np.nan)
+    res = np.full((imax + 1, imax + 1), np.nan)
     for k, v in result.items():
         res[k[::-1]] = v
     res = res.transpose()
@@ -571,8 +594,7 @@ def _to_df(result, comm=False, lut_names=None):
 
     if lut_names is not None:
         res = pd.DataFrame(
-            data={lut_names[i]: res[:, i]
-                  for i in list(range(max(res.shape)))}
+            data={lut_names[i]: res[:, i] for i in list(range(max(res.shape)))}
         )
     else:
         res = pd.DataFrame(
@@ -592,7 +614,7 @@ def _dict_to_namedtuple(res_dict, name):
     values = []
 
     for k, v in res_dict.items():
-        names.append('_and_'.join(k))
+        names.append("_and_".join(k))
         values.append(v)
 
     result = namedtuple(name, names)
