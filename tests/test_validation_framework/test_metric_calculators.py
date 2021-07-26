@@ -825,12 +825,12 @@ def test_PairwiseIntercomparisonMetrics_confidence_intervals():
         "R": "pearson_r",
         "rho": "spearman_r",
         "tau": "kendall_tau",
-        "RMSD": "rmsd",
-        "urmsd": "ubrmsd",
-        "mse": "msd",
-        "mse_bias": "mse_bias",
     }
     metrics_with_bs_ci = {
+        "mse": "msd",
+        "mse_bias": "mse_bias",
+        "RMSD": "rmsd",
+        "urmsd": "ubrmsd",
         "mse_corr": "mse_corr",
         "mse_var": "mse_var",
     }

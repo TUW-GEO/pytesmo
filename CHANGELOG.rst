@@ -6,6 +6,13 @@ Unreleased
 ==========
 -
 
+Version 0.11.4, 2021-07-13
+==========================
+- fixed some bugs in the confidence interval calculation, for some metrics only bootstrapped CIs are
+  available now
+- fixed bug in rolling metric calculation (now also works with float32 input data)
+- minor bug fixes
+
 Version 0.11.3, 2021-06-01
 ==========================
 - removed ``ascat`` and ``ismn`` from the package dependencies

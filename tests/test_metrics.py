@@ -14,8 +14,6 @@ from pytesmo.metrics._fast_pairwise import (
 from pytesmo.metrics.pairwise import (
     has_ci,
     no_ci,
-    mse_bias_ci,
-    _mse_bias_ci_from_moments,
 )
 import pytesmo.metrics.deprecated as deprecated
 
@@ -95,13 +93,14 @@ def test_bootstrap_cis_simple(method):
 
 
 @pytest.mark.slow
-def test_bootstrapped_cis(testdata):
+@pytest.mark.parametrize("method", ["BCa", "basic", "percentile"])
+def test_bootstrapped_cis(method, testdata):
     x, y = testdata
     for funcname in has_ci:
         func = getattr(pytesmo.metrics, funcname)
         m, lb, ub = with_analytical_ci(func, x, y, alpha=0.1)
         m_bs, lb_bs, ub_bs = with_bootstrapped_ci(
-            func, x, y, alpha=0.1, nsamples=1000, method="BCa"
+            func, x, y, alpha=0.1, nsamples=1000, method=method
         )
         assert m == m_bs
         assert lb_bs < ub_bs
@@ -115,7 +114,7 @@ def test_bootstrapped_cis(testdata):
             assert abs(lb - lb_bs) < 1e-1
     for funcname in no_ci:
         m, lb, ub = with_bootstrapped_ci(
-            func, x, y, alpha=0.1, nsamples=1000, method="BCa"
+            func, x, y, alpha=0.1, nsamples=1000, method=method
         )
         assert lb < m
         assert m < ub
@@ -518,23 +517,3 @@ def test_moments_welford():
     nptest.assert_almost_equal(np.var(x), varx, 14)
     nptest.assert_almost_equal(np.var(y), vary, 14)
     nptest.assert_almost_equal(np.cov(x, y, ddof=0)[0, 1], cov, 14)
-
-
-def test_mse_bias_ci_from_moments():
-    x = np.random.randn(1000)
-    y = np.random.randn(1000) + 2
-
-    mx = np.mean(x)
-    my = np.mean(y)
-    varx = np.var(x)
-    vary = np.var(y)
-    cov = np.cov(x, y)[0, 1]
-
-    b = bias(x, y)
-    lb, ub = mse_bias_ci(x, y, b ** 2)
-    lower, upper = _mse_bias_ci_from_moments(
-        0.05, mx, my, varx, vary, cov, len(x)
-    )
-
-    nptest.assert_almost_equal(lb, lower, 5)
-    nptest.assert_almost_equal(ub, upper, 5)
