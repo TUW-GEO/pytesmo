@@ -1,30 +1,30 @@
-# Copyright (c) 2015, Vienna University of Technology (TU Wien), Department
-# of Geodesy and Geoinformation (GEO).
+# Copyright (c) 2016,Vienna University of Technology,
+# Department of Geodesy and Geoinformation
 # All rights reserved.
 
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-#   * Redistributions of source code must retain the above copyright
-#     notice, this list of conditions and the following disclaimer.
-#   * Redistributions in binary form must reproduce the above copyright
-#     notice, this list of conditions and the following disclaimer in the
-#     documentation and/or other materials provided with the distribution.
-#   * Neither the name of the Vienna University of Technology, Department
-#     of Geodesy and Geoinformation nor the names of its contributors may
-#     be used to endorse or promote products derived from this software
-#     without specific prior written permission.
+#   * Redistributions of source code must retain the above copyright notice,
+#     this list of conditions and the following disclaimer.
+#   * Redistributions in binary form must reproduce the above copyright notice,
+#     this list of conditions and the following disclaimer in the documentation
+#     and/or other materials provided with the distribution.
+#   * Neither the name of the Vienna University of Technology, Department of
+#     Geodesy and Geoinformation nor the names of its contributors may be used
+#     to endorse or promote products derived from this software without
+#     specific prior written permission.
 
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-# DISCLAIMED. IN NO EVENT SHALL VIENNA UNIVERSITY OF TECHNOLOGY,
-# DEPARTMENT OF GEODESY AND GEOINFORMATION BE LIABLE FOR ANY
-# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL VIENNA UNIVERSITY OF TECHNOLOGY, DEPARTMENT
+# OF GEODESY AND GEOINFORMATION BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+# OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+# OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+# ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import itertools
 
@@ -43,7 +43,7 @@ class DataManager(MixinReadTs):
         :Values : dict, containing the following fields
 
             'class' : object
-                Class containing the method read_ts for reading the data.
+                Class containing the method `read` for reading the data.
             'columns' : list
                 List of columns which will be used in the validation process.
             'args' : list, optional
@@ -70,14 +70,15 @@ class DataManager(MixinReadTs):
         Of type [datetime start, datetime end]. If given then the two input
         datasets will be truncated to start <= dates <= end.
     read_ts_names : string or dict of strings, optional
-        if another method name than 'read_ts' should be used for reading the data
+        if another method name than 'read' should be used for reading the data
         then it can be specified here. If it is a dict then specify a
         function name for each dataset.
     upscale_parms : dict, optional. Default is None.
         dictionary with parameters for the upscaling methods. Keys:
             * 'upscaling_method': method for upscaling
             * 'temporal_stability': bool for using temporal stability
-            * 'upscaling_lut': dict of shape {'other_name':{ref gpi: [other gpis]}}
+            * 'upscaling_lut': dict of shape
+                {'other_name':{ref gpi: [other gpis]}}
 
     Methods
     -------
@@ -93,11 +94,12 @@ class DataManager(MixinReadTs):
     """
 
     def __init__(
-            self, datasets,
-            ref_name,
-            period=None,
-            read_ts_names='read_ts',
-            upscale_parms=None,
+        self,
+        datasets,
+        ref_name,
+        period=None,
+        read_ts_names="read",
+        upscale_parms=None,
     ):
         self.datasets = datasets
         self._add_default_values()
@@ -108,12 +110,13 @@ class DataManager(MixinReadTs):
         for dataset in datasets.keys():
             if dataset != ref_name:
                 self.other_name.append(dataset)
-                if 'use_lut' not in self.datasets[dataset]:
-                    self.datasets[dataset]['use_lut'] = False
+                if "use_lut" not in self.datasets[dataset]:
+                    self.datasets[dataset]["use_lut"] = False
 
         try:
-            self.reference_grid = self.datasets[
-                self.reference_name]['class'].grid
+            self.reference_grid = self.datasets[self.reference_name][
+                "class"
+            ].grid
         except AttributeError:
             self.reference_grid = None
 
@@ -149,11 +152,13 @@ class DataManager(MixinReadTs):
         Add defaults for args, kwargs, grids_compatible, use_lut and
         lut_max_dist to dataset dictionary.
         """
-        defaults = {'use_lut': False,
-                    'args': [],
-                    'kwargs': {},
-                    'grids_compatible': False,
-                    'lut_max_dist': None}
+        defaults = {
+            "use_lut": False,
+            "args": [],
+            "kwargs": {},
+            "grids_compatible": False,
+            "lut_max_dist": None,
+        }
         for dataset in self.datasets.keys():
             new_defaults = dict(defaults)
             new_defaults.update(self.datasets[dataset])
@@ -172,10 +177,11 @@ class DataManager(MixinReadTs):
         """
         luts = {}
         for other_name in self.other_name:
-            if self.datasets[other_name]['use_lut']:
+            if self.datasets[other_name]["use_lut"]:
                 luts[other_name] = self.reference_grid.calc_lut(
-                    self.datasets[other_name]['class'].grid,
-                    max_dist=self.datasets[other_name]['lut_max_dist'])
+                    self.datasets[other_name]["class"].grid,
+                    max_dist=self.datasets[other_name]["lut_max_dist"],
+                )
             else:
                 luts[other_name] = None
 
@@ -185,7 +191,7 @@ class DataManager(MixinReadTs):
     def ds_dict(self):
         ds_dict = {}
         for dataset in self.datasets.keys():
-            ds_dict[dataset] = self.datasets[dataset]['columns']
+            ds_dict[dataset] = self.datasets[dataset]["columns"]
         return ds_dict
 
     def get_results_names(self, n=2):
@@ -196,7 +202,7 @@ class DataManager(MixinReadTs):
         """
         Function to read and prepare the reference dataset.
 
-        Calls read_ts of the dataset.
+        Calls read of the dataset.
         Takes either 1 (gpi) or 2 (lon, lat) arguments.
 
         Parameters
@@ -219,7 +225,7 @@ class DataManager(MixinReadTs):
         """
         Function to read and prepare non-reference datasets.
 
-        Calls read_ts of the dataset.
+        Calls read of the dataset.
 
         Takes either 1 (gpi) or 2 (lon, lat) arguments.
 
@@ -306,26 +312,20 @@ class DataManager(MixinReadTs):
 
         other_dataframes = {}
         for other_name in self.other_name:
-            grids_compatible = self.datasets[
-                other_name]['grids_compatible']
+            grids_compatible = self.datasets[other_name]["grids_compatible"]
             if grids_compatible:
-                other_dataframe = self.read_other(
-                    other_name, gpi)
+                other_dataframe = self.read_other(other_name, gpi)
             elif isinstance(self.luts, Upscaling):
                 other_dataframe = self.luts.get_upscaled_ts(
-                    gpi=gpi,
-                    other_name=other_name,
-                    **self.upscale_parms
+                    gpi=gpi, other_name=other_name, **self.upscale_parms
                 )
             elif self.luts[other_name] is not None:
                 other_gpi = self.luts[other_name][gpi]
                 if other_gpi == -1:
                     continue
-                other_dataframe = self.read_other(
-                    other_name, other_gpi)
+                other_dataframe = self.read_other(other_name, other_gpi)
             else:
-                other_dataframe = self.read_other(
-                    other_name, lon, lat)
+                other_dataframe = self.read_other(other_name, lon, lat)
 
             if other_dataframe is not None:
                 other_dataframes[other_name] = other_dataframe
@@ -333,15 +333,15 @@ class DataManager(MixinReadTs):
 
 
 def flatten(seq):
-    l = []
+    eltl = []
     for elt in seq:
         t = type(elt)
         if t is tuple or t is list:
             for elt2 in flatten(elt):
-                l.append(elt2)
+                eltl.append(elt2)
         else:
-            l.append(elt)
-    return l
+            eltl.append(elt)
+    return eltl
 
 
 def get_result_combinations(ds_dict, n=2):
@@ -356,7 +356,8 @@ def get_result_combinations(ds_dict, n=2):
     n: int
         Number of datasets for combine with each other.
         If n=2 always two datasets will be combined into one result.
-        If n=3 always three datasets will be combined into one results and so on.
+        If n=3 always three datasets will be combined into one results and
+        so on.
         n has to be <= the number of total datasets.
 
     Returns
@@ -387,7 +388,8 @@ def get_result_names(ds_dict, refkey, n=2):
     n: int
         Number of datasets for combine with each other.
         If n=2 always two datasets will be combined into one result.
-        If n=3 always three datasets will be combined into one results and so on.
+        If n=3 always three datasets will be combined into one results and
+        so on.
         n has to be <= the number of total datasets.
 
     Returns
@@ -409,8 +411,9 @@ def get_result_names(ds_dict, refkey, n=2):
         for column in ds_dict[other]:
             other_columns.append((other, column))
 
-    for comb in itertools.product(ref_columns,
-                                  itertools.combinations(other_columns, n - 1)):
+    for comb in itertools.product(
+        ref_columns, itertools.combinations(other_columns, n - 1)
+    ):
         results_names.append(comb)
 
     # flatten to one level and remove those that do not have n unique
@@ -419,7 +422,10 @@ def get_result_names(ds_dict, refkey, n=2):
 
     # iterate in chunks of n*2 over the list
     result_combos = []
-    for chunk in [results_names[pos:pos + n * 2] for pos in range(0, len(results_names), n * 2)]:
+    for chunk in [
+        results_names[pos: pos + n * 2]
+        for pos in range(0, len(results_names), n * 2)
+    ]:
         combo = []
         datasets = chunk[::2]
         columns = chunk[1::2]
