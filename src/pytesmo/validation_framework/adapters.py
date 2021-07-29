@@ -146,14 +146,19 @@ class MaskingAdapter(BasicAdapter):
     Parameters
     ----------
     cls: object
-        has to have a read_ts or read method
+        Reader object, has to have a `read_ts` or `read` method or a method
+        name must be specified in the `read_name` kwarg. The same method will
+        be available for the adapted version of the reader.
     op: str or Callable
-        one of '<', '<=', '==', '>=', '>', '!=' or a function that takes
-        data and threshold as arguments.
-    threshold:
-        value to use as the threshold combined with the operator
-    column_name: str, optional
-        name of the column to cut the read masking dataset to
+        Either a string to look up a function from
+        :const:`pytesmo/validation_framework/adapters.py._op_lookup`
+        or a function that takes `data` and `threshold` as arguments.
+    threshold: Any
+        Value to use as the threshold combined with the operator to mask
+        elements in `column_name`
+    column_name: str, optional (default: None)
+        Name of the column to apply `op` to. If None is passed,
+        nothing happens.
     data_property_name: str, optional (default: "data")
         Attribute name under which the pandas DataFrame containing the time
         series is found in the object returned by the read function of the
@@ -202,14 +207,18 @@ class SelfMaskingAdapter(BasicAdapter):
     Parameters
     ----------
     cls: object
-        has to have a read_ts or read method
-    op: Callable or str
-        one of '<', '<=', '==', '>=', '>', '!=' or a function that takes
-        data and threshold as arguments.
-    threshold:
-        value to use as the threshold combined with the operator
+        Reader object, has to have a `read_ts` or `read` method or a method
+        name must be specified in the `read_name` kwarg. The same method will
+        be available for the adapted version of the reader.
+    op: str or Callable
+        Either a string to look up a function from
+        :const:`pytesmo/validation_framework/adapters.py._op_lookup`
+        or a function that takes `data` and `threshold` as arguments.
+    threshold: Any
+        Value to use as the threshold combined with the operator to mask
+        elements in `column_name`
     column_name: str
-        name of the column to apply the threshold to
+        Name of the column to apply `op` to
     data_property_name: str, optional (default: "data")
         Attribute name under which the pandas DataFrame containing the time
         series is found in the object returned by the read function of the
@@ -258,8 +267,9 @@ class AdvancedMaskingAdapter(BasicAdapter):
     Parameters
     ----------
     cls: object
-        has to have a read_ts or read method, if not specify a different method
-        name that is then mapped to `self.read` using the `read_name` kwarg.
+        Reader object, has to have a `read_ts` or `read` method or a method
+        name must be specified in the `read_name` kwarg. The same method will
+        be available for the adapted version of the reader.
     filter_list: list of 3-tuples: column_name, operator, and threshold.
         'column_name': string
             name of the column to apply the operator to
@@ -313,20 +323,18 @@ class AdvancedMaskingAdapter(BasicAdapter):
 
 class AnomalyAdapter(BasicAdapter):
     """
-    Takes the pandas DataFrame that the read_ts or read method of the instance
-    returns and calculates the anomaly of the time series based on a moving
-    average.
+    Takes the pandas DataFrame that reader returns and calculates the
+    anomaly of the time series based on a moving average.
 
     Parameters
     ----------
-    cls : class instance
-        Must have a read_ts or read method returning a pandas.DataFrame or the
-        name of the method to map to `read` in the adapted version of cls must
-        must be set.
-    window_size : float, optional
+    cls: object
+        Reader object, has to have a `read_ts` or `read` method or a method
+        name must be specified in the `read_name` kwarg. The same method will
+        be available for the adapted version of the reader.
+    window_size : float, optional (default: 35)
         The window-size [days] of the moving-average window to calculate the
-        anomaly reference (only used if climatology is not provided)
-        Default: 35 (days)
+        anomaly reference.
     columns: list, optional
         columns in the dataset for which to calculate anomalies.
     data_property_name: str, optional (default: "data")
@@ -367,19 +375,18 @@ class AnomalyAdapter(BasicAdapter):
 
 class AnomalyClimAdapter(BasicAdapter):
     """
-    Takes the pandas DataFrame that the read_ts or read method of the instance
-    returns and calculates the anomaly of the time series based on a moving
-    average.
+    Takes the pandas DataFrame that reader returns and calculates the
+    anomaly of the time series based on the (long-term) average of the series.
 
     Parameters
     ----------
-    cls: class instance
-        Must have a read_ts or read method returning a pandas.DataFrame, or a
-        method name to map to read() must be specified in cls_kwargs
-    cls_kwargs: dict, optional (default: None)
-        Kwargs that are passed to create BasicAdapter.
-    columns: list, optional
-        columns in the dataset for which to calculate anomalies.
+    cls: object
+        Reader object, has to have a `read_ts` or `read` method or a method
+        name must be specified in the `read_name` kwarg. The same method will
+        be available for the adapted version of the reader.
+    columns: list, optional (default: None)
+        Columns in the dataset for which to calculate anomalies. If None is
+        passed, the anomaly is calculated for all columns.
     data_property_name: str, optional (default: "data")
         Attribute name under which the pandas DataFrame containing the time
         series is found in the object returned by the read function of the
@@ -395,8 +402,8 @@ class AnomalyClimAdapter(BasicAdapter):
         If None is passed, only data from `read` and `read_ts` of cls
         will be adapted.
     kwargs:
-        Any remaining keyword arguments will be given to the
-        `calc_climatology` function.
+        Any remaining keyword arguments will be given to
+        :func:`pytesmo.time_series.anomaly.calc_climatology`
     """
 
     def __init__(self, cls, columns=None, **kwargs):
@@ -446,24 +453,28 @@ class ColumnCombineAdapter(BasicAdapter):
         """
         Parameters
         ----------
-        cls : class instance
-            Must have a read_ts or read method returning a pandas.DataFrame
+        cls : object
+            Reader object, has to have a `read_ts` or `read` method or a
+            method name must be specified in the `read_name` kwarg.
+            The same method will be available for the adapted version of the
+            reader.
         func: Callable
             Will be applied to dataframe columns using
             pd.DataFrame.apply(..., axis=1)
             additional kwargs for this must be given in func_kwargs,
-            e.g. pd.DataFrame.mean
+            e.g. :func:`pd.DataFrame.mean`
         func_kwargs : dict, optional (default: None)
-            kwargs that are passed to method
+            kwargs that are passed to method or None to use the default ones.
         columns: list, optional (default: None)
             Columns in the dataset that are combined. If None are selected
             all columns are used.
         new_name: str, optional (default: merged)
             Name that the merged column will have in the returned data frame.
         data_property_name: str, optional (default: "data")
-            Attribute name under which the pandas DataFrame containing the time
-            series is found in the object returned by the read function of the
-            original reader. Ignored if no attribute of this name is found.
+            Attribute name under which the pandas DataFrame containing the
+            time series is found in the object returned by the read function
+            of the original reader.
+            Ignored if no attribute of this name is found.
             Then it is required that the DataFrame is already the return value
             of the read function.
         read_name: str, optional (default: None)
@@ -482,9 +493,6 @@ class ColumnCombineAdapter(BasicAdapter):
         self.func_kwargs["axis"] = 1
         self.columns = columns
         self.new_name = new_name
-
-        if self.read_name:
-            setattr(self, self.read_name, self._adapt_custom)
 
     def _adapt(self, data: DataFrame) -> DataFrame:
         data = super()._adapt(data)
