@@ -1,30 +1,30 @@
-# Copyright (c) 2016,Vienna University of Technology,
-# Department of Geodesy and Geoinformation
+# Copyright (c) 2020, TU Wien, Department of Geodesy and Geoinformation
 # All rights reserved.
 
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-#   * Redistributions of source code must retain the above copyright notice,
-#     this list of conditions and the following disclaimer.
-#   * Redistributions in binary form must reproduce the above copyright notice,
-#     this list of conditions and the following disclaimer in the documentation
-#     and/or other materials provided with the distribution.
-#   * Neither the name of the Vienna University of Technology, Department of
-#     Geodesy and Geoinformation nor the names of its contributors may be used
-#     to endorse or promote products derived from this software without
-#     specific prior written permission.
+#   * Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#    * Redistributions in binary form must reproduce the above copyright
+#      notice, this list of conditions and the following disclaimer in the
+#      documentation and/or other materials provided with the distribution.
+#    * Neither the name of the TU Wien, Department of Geodesy and
+#      Geoinformation nor the names of its contributors may be used to endorse
+#      or promote products derived from this software without specific prior
+#      written permission.
 
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-# ARE DISCLAIMED. IN NO EVENT SHALL VIENNA UNIVERSITY OF TECHNOLOGY, DEPARTMENT
-# OF GEODESY AND GEOINFORMATION BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-# OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
-# OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
-# ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# ARE DISCLAIMED. IN NO EVENT SHALL VIENNA UNIVERSITY OF TECHNOLOGY,
+# DEPARTMENT OF GEODESY AND GEOINFORMATION BE LIABLE FOR ANY
+# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+# THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 
 """
 Module containing adapters that can be used together with the validation
@@ -36,7 +36,6 @@ from pytesmo.time_series.anomaly import calc_anomaly
 from pytesmo.time_series.anomaly import calc_climatology
 from pandas import DataFrame
 import warnings
-from pytesmo.utils import deprecated
 
 
 class BasicAdapter:
@@ -44,14 +43,15 @@ class BasicAdapter:
     Adapter to harmonise certain parts of base reader classes.
 
      - Pick data frame from objects that have a `data_property_name`,
-     i.e. ascat time series.
+     i.e. ascat time series objects.
      - Removes unnecessary timezone information in pandas data frames which
      pytesmo can not use.
-     - Maps the `read` function of the adapted reader to a different function
-     of the base class as specified in `read_name`.
+     - adds a method with the name given in `read_name` that calls the same
+       method from cls but modifies the returned data frame.
+
     """
 
-    def __init__(self, cls, data_property_name="data", read_name="read"):
+    def __init__(self, cls, data_property_name="data", read_name=None):
         """
         Parameters
         ----------
@@ -61,14 +61,21 @@ class BasicAdapter:
             Attribute name under which the pandas DataFrame containing the time
             series is found in the object returned by the read function of the
             original reader.
-        read_name: str, optional (default: 'read')
-            Function name(s) in the original reader that is mapped to the
-            adapters 'read' function. By default 'read' is used.
+        read_name: str, optional (default: None)
+            To enable the adapter for a method other than `read` or `read_ts`
+            give the function name here (a function of that name must exist in
+            cls). A method of the same name will be added to the BasicAdapter
+            which takes the same arguments as the base method.
+            The output of this function will be changed by the adapter.
+            If None is passed, only read and read_ts from cls will be adapted.
         """
 
         self.cls = cls
         self.data_property_name = data_property_name
         self.read_name = read_name
+
+        if read_name:
+            setattr(self, read_name, self._adapt_custom)
 
     def __get_dataframe(self, data):
         if (
@@ -90,24 +97,22 @@ class BasicAdapter:
             data.index = data.index.tz_convert(None)
         return data
 
-    def __read(self, *args, **kwargs):
-        # calls whatever function was set as `read_name`, default: `read()`
-        data = getattr(self.cls, self.read_name)(*args, **kwargs)
-        data = self.__drop_tz_info(self.__get_dataframe(data))
-        return data
+    def _adapt(self, df: DataFrame) -> DataFrame:
+        # drop time zone info and extract df from ASCAT TS object
+        return self.__drop_tz_info(self.__get_dataframe(df))
 
-    @deprecated(
-        "`read_ts` is deprecated, use `read` instead."
-        "To map to a method other than `read` specify it in "
-        "`read_name`."
-    )
+    def _adapt_custom(self, *args, **kwargs):
+        # modifies data from whatever function was set as `read_name`.
+        data = getattr(self.cls, self.read_name)(*args, **kwargs)
+        return self._adapt(data)
+
     def read_ts(self, *args, **kwargs):
-        data = self.cls.read_ts(*args, **kwargs)
-        data = self.__drop_tz_info(self.__get_dataframe(data))
-        return data
+        data = getattr(self.cls, 'read_ts')(*args, **kwargs)
+        return self._adapt(data)
 
     def read(self, *args, **kwargs):
-        return self.__read(*args, **kwargs)
+        data = getattr(self.cls, 'read')(*args, **kwargs)
+        return self._adapt(data)
 
     @property
     def grid(self):
@@ -163,22 +168,24 @@ class MaskingAdapter(BasicAdapter):
 
         self.column_name = column_name
 
+        if self.read_name:
+            setattr(self, self.read_name, self._adapt_custom)
+
     def __mask(self, data):
         if self.column_name is not None:
             data = data.loc[:, [self.column_name]]
         return self.operator(data, self.threshold)
 
-    @deprecated(
-        "`read_ts` is deprecated, use `read` instead."
-        "To map to a method other than `read` specify it in "
-        "`read_name`."
-    )
     def read_ts(self, *args, **kwargs):
         data = super(MaskingAdapter, self).read_ts(*args, **kwargs)
         return self.__mask(data)
 
     def read(self, *args, **kwargs):
         data = super(MaskingAdapter, self).read(*args, **kwargs)
+        return self.__mask(data)
+
+    def _adapt_custom(self, *args, **kwargs):
+        data = super()._adapt_custom(*args, **kwargs)
         return self.__mask(data)
 
 
@@ -221,26 +228,28 @@ class SelfMaskingAdapter(BasicAdapter):
         elif op in self.op_lookup:
             self.operator = self.op_lookup[op]
         else:
-            raise ValueError('"{}" is not a valid operator'.format(op))
+            raise ValueError(f"'{op}' is not a valid operator")
 
         self.threshold = threshold
         self.column_name = column_name
+
+        if self.read_name:
+            setattr(self, self.read_name, self._adapt_custom)
 
     def __mask(self, data):
         mask = self.operator(data[self.column_name], self.threshold)
         return data[mask]
 
-    @deprecated(
-        "`read_ts` is deprecated, use `read` instead."
-        "To map to a method other than `read` specify it in "
-        "`read_name`."
-    )
     def read_ts(self, *args, **kwargs):
-        data = super(SelfMaskingAdapter, self).read_ts(*args, **kwargs)
+        data = super().read_ts(*args, **kwargs)
         return self.__mask(data)
 
     def read(self, *args, **kwargs):
-        data = super(SelfMaskingAdapter, self).read(*args, **kwargs)
+        data = super().read(*args, **kwargs)
+        return self.__mask(data)
+
+    def _adapt_custom(self, *args, **kwargs):
+        data = super()._adapt_custom(*args, **kwargs)
         return self.__mask(data)
 
 
@@ -284,6 +293,9 @@ class AdvancedMaskingAdapter(BasicAdapter):
 
         self.filter_list = filter_list
 
+        if self.read_name:
+            setattr(self, self.read_name, self._adapt_custom)
+
     def __mask(self, data):
         mask = None
         for column_name, op, threshold in self.filter_list:
@@ -303,17 +315,16 @@ class AdvancedMaskingAdapter(BasicAdapter):
 
         return data[mask]
 
-    @deprecated(
-        "`read_ts` is deprecated, use `read` instead."
-        "To map to a method other than `read` specify it in "
-        "`read_name`."
-    )
     def read_ts(self, *args, **kwargs):
-        data = super(AdvancedMaskingAdapter, self).read_ts(*args, **kwargs)
+        data = super().read_ts(*args, **kwargs)
         return self.__mask(data)
 
     def read(self, *args, **kwargs):
-        data = super(AdvancedMaskingAdapter, self).read(*args, **kwargs)
+        data = super().read(*args, **kwargs)
+        return self.__mask(data)
+
+    def _adapt_custom(self, *args, **kwargs):
+        data = super()._adapt_custom(*args, **kwargs)
         return self.__mask(data)
 
 
@@ -341,8 +352,12 @@ class AnomalyAdapter(BasicAdapter):
 
     def __init__(self, cls, window_size=35, columns=None, **kwargs):
         super(AnomalyAdapter, self).__init__(cls, **kwargs)
+
         self.window_size = window_size
         self.columns = columns
+
+        if self.read_name:
+            setattr(self, self.read_name, self._adapt_custom)
 
     def calc_anom(self, data):
         if self.columns is None:
@@ -355,17 +370,16 @@ class AnomalyAdapter(BasicAdapter):
             )
         return data
 
-    @deprecated(
-        "`read_ts` is deprecated, use `read` instead."
-        "To map to a method other than `read` specify it in "
-        "`read_name`."
-    )
     def read_ts(self, *args, **kwargs):
-        data = super(AnomalyAdapter, self).read_ts(*args, **kwargs)
+        data = super().read_ts(*args, **kwargs)
         return self.calc_anom(data)
 
     def read(self, *args, **kwargs):
-        data = super(AnomalyAdapter, self).read(*args, **kwargs)
+        data = super().read(*args, **kwargs)
+        return self.calc_anom(data)
+
+    def _adapt_custom(self, *args, **kwargs):
+        data = super()._adapt_custom(*args, **kwargs)
         return self.calc_anom(data)
 
 
@@ -406,6 +420,9 @@ class AnomalyClimAdapter(BasicAdapter):
         self.kwargs = kwargs
         self.columns = columns
 
+        if self.read_name:
+            setattr(self, self.read_name, self._adapt_custom)
+
     def calc_anom(self, data):
         if self.columns is None:
             ite = data
@@ -414,19 +431,19 @@ class AnomalyClimAdapter(BasicAdapter):
         for column in ite:
             clim = calc_climatology(data[column], **self.kwargs)
             data[column] = calc_anomaly(data[column], climatology=clim)
+
         return data
 
-    @deprecated(
-        "`read_ts` is deprecated, use `read` instead."
-        "To map to a method other than `read` specify it in "
-        "`read_name`."
-    )
     def read_ts(self, *args, **kwargs):
-        data = super(AnomalyClimAdapter, self).read_ts(*args, **kwargs)
+        data = super().read_ts(*args, **kwargs)
         return self.calc_anom(data)
 
     def read(self, *args, **kwargs):
-        data = super(AnomalyClimAdapter, self).read(*args, **kwargs)
+        data = super().read(*args, **kwargs)
+        return self.calc_anom(data)
+
+    def _adapt_custom(self, *args, **kwargs):
+        data = super()._adapt_custom(*args, **kwargs)
         return self.calc_anom(data)
 
 
@@ -476,15 +493,23 @@ class ColumnCombineAdapter(BasicAdapter):
         self.columns = columns
         self.new_name = new_name
 
+        if self.read_name:
+            setattr(self, self.read_name, self._adapt_custom)
+
     def apply(self, data: DataFrame) -> DataFrame:
         columns = data.columns if self.columns is None else self.columns
         new_col = data[columns].apply(self.func, **self.func_kwargs)
         data[self.new_name] = new_col
         return data
 
-    def read_ts(self, *args, **kwargs) -> DataFrame:
-        data = super(ColumnCombineAdapter, self).read_ts(*args, **kwargs)
+    def read_ts(self, *args, **kwargs):
+        data = super().read_ts(*args, **kwargs)
         return self.apply(data)
 
-    def read(self, *args, **kwargs) -> DataFrame:
-        return self.read_ts(*args, **kwargs)
+    def read(self, *args, **kwargs):
+        data = super().read(*args, **kwargs)
+        return self.apply(data)
+
+    def _adapt_custom(self, *args, **kwargs):
+        data = super()._adapt_custom(*args, **kwargs)
+        return self.apply(data)
