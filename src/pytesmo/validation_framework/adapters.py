@@ -34,21 +34,29 @@ framework.
 import operator
 from pytesmo.time_series.anomaly import calc_anomaly
 from pytesmo.time_series.anomaly import calc_climatology
+from pytesmo.utils import deprecated
 from pandas import DataFrame
 import warnings
+
+_op_lookup = {
+    "<": operator.lt,
+    "<=": operator.le,
+    "==": operator.eq,
+    "!=": operator.ne,
+    ">=": operator.ge,
+    ">": operator.gt,
+}
 
 
 class BasicAdapter:
     """
-    Adapter to harmonise certain parts of base reader classes.
-
-     - Pick data frame from objects that have a `data_property_name`,
-     i.e. ascat time series objects.
-     - Removes unnecessary timezone information in pandas data frames which
-     pytesmo can not use.
-     - adds a method with the name given in `read_name` that calls the same
-       method from cls but modifies the returned data frame.
-
+    Adapter to modify the return value of reading functions from base class.
+    - Pick data frame from objects that have a `data_property_name`,
+      i.e. ascat time series objects.
+    - Removes unnecessary timezone information in pandas data frames which
+      pytesmo can not use.
+    - adds a method with the name given in `read_name` that calls the same
+      method from cls but modifies the returned data frame.
     """
 
     def __init__(self, cls, data_property_name="data", read_name=None):
@@ -57,17 +65,20 @@ class BasicAdapter:
         ----------
         cls: object
             The original reader to adapt.
-        data_property_name: str
+        data_property_name: str, optional (default: "data")
             Attribute name under which the pandas DataFrame containing the time
             series is found in the object returned by the read function of the
-            original reader.
+            original reader. Ignored if no attribute of this name is found.
+            Then it is required that the DataFrame is already the return value
+            of the read function.
         read_name: str, optional (default: None)
             To enable the adapter for a method other than `read` or `read_ts`
             give the function name here (a function of that name must exist in
-            cls). A method of the same name will be added to the BasicAdapter
-            which takes the same arguments as the base method.
-            The output of this function will be changed by the adapter.
-            If None is passed, only read and read_ts from cls will be adapted.
+            cls). A method of the same name will be added to the adapted
+            Reader, which takes the same arguments as the base method.
+            The output of this method will be changed by the adapter.
+            If None is passed, only data from `read` and `read_ts` of cls
+            will be adapted.
         """
 
         self.cls = cls
@@ -81,9 +92,7 @@ class BasicAdapter:
         if (
             (not isinstance(data, DataFrame))
             and (hasattr(data, self.data_property_name))
-            and (
-                isinstance(getattr(data, self.data_property_name), DataFrame)
-            )
+            and (isinstance(getattr(data, self.data_property_name), DataFrame))
         ):
             data = getattr(data, self.data_property_name)
         return data
@@ -107,11 +116,11 @@ class BasicAdapter:
         return self._adapt(data)
 
     def read_ts(self, *args, **kwargs):
-        data = getattr(self.cls, 'read_ts')(*args, **kwargs)
+        data = getattr(self.cls, "read_ts")(*args, **kwargs)
         return self._adapt(data)
 
     def read(self, *args, **kwargs):
-        data = getattr(self.cls, 'read')(*args, **kwargs)
+        data = getattr(self.cls, "read")(*args, **kwargs)
         return self._adapt(data)
 
     @property
@@ -123,6 +132,10 @@ class BasicAdapter:
             return self.cls.grid
 
 
+@deprecated(
+    "`MaskingAdapter` is deprecated, use `SelfMaskingAdapter` "
+    "or `AdvancedMaskingAdapter` instead."
+)
 class MaskingAdapter(BasicAdapter):
     """
     Transform the given class to return a boolean dataset given the operator
@@ -141,26 +154,30 @@ class MaskingAdapter(BasicAdapter):
         value to use as the threshold combined with the operator
     column_name: str, optional
         name of the column to cut the read masking dataset to
-    kwargs:
-        Additional kwargs are passed to BasicAdapter.
+    data_property_name: str, optional (default: "data")
+        Attribute name under which the pandas DataFrame containing the time
+        series is found in the object returned by the read function of the
+        original reader. Ignored if no attribute of this name is found.
+        Then it is required that the DataFrame is already the return value
+        of the read function.
+    read_name: str, optional (default: None)
+        To enable the adapter for a method other than `read` or `read_ts`
+        give the function name here (a function of that name must exist in
+        cls). A method of the same name will be added to the adapted
+        Reader, which takes the same arguments as the base method.
+        The output of this method will be changed by the adapter.
+        If None is passed, only data from `read` and `read_ts` of cls
+        will be adapted.
     """
 
     def __init__(self, cls, op, threshold, column_name=None, **kwargs):
-        super(MaskingAdapter, self).__init__(cls, **kwargs)
 
-        self.op_lookup = {
-            "<": operator.lt,
-            "<=": operator.le,
-            "==": operator.eq,
-            "!=": operator.ne,
-            ">=": operator.ge,
-            ">": operator.gt,
-        }
+        super().__init__(cls, **kwargs)
 
         if callable(op):
             self.operator = op
-        elif op in self.op_lookup:
-            self.operator = self.op_lookup[op]
+        elif op in _op_lookup:
+            self.operator = _op_lookup[op]
         else:
             raise ValueError('"{}" is not a valid operator'.format(op))
 
@@ -168,25 +185,11 @@ class MaskingAdapter(BasicAdapter):
 
         self.column_name = column_name
 
-        if self.read_name:
-            setattr(self, self.read_name, self._adapt_custom)
-
-    def __mask(self, data):
+    def _adapt(self, data):
+        data = super()._adapt(data)
         if self.column_name is not None:
             data = data.loc[:, [self.column_name]]
         return self.operator(data, self.threshold)
-
-    def read_ts(self, *args, **kwargs):
-        data = super(MaskingAdapter, self).read_ts(*args, **kwargs)
-        return self.__mask(data)
-
-    def read(self, *args, **kwargs):
-        data = super(MaskingAdapter, self).read(*args, **kwargs)
-        return self.__mask(data)
-
-    def _adapt_custom(self, *args, **kwargs):
-        data = super()._adapt_custom(*args, **kwargs)
-        return self.__mask(data)
 
 
 class SelfMaskingAdapter(BasicAdapter):
@@ -207,50 +210,40 @@ class SelfMaskingAdapter(BasicAdapter):
         value to use as the threshold combined with the operator
     column_name: str
         name of the column to apply the threshold to
-    kwargs:
-        Additional kwargs are passed to BasicAdapter.
+    data_property_name: str, optional (default: "data")
+        Attribute name under which the pandas DataFrame containing the time
+        series is found in the object returned by the read function of the
+        original reader. Ignored if no attribute of this name is found.
+        Then it is required that the DataFrame is already the return value
+        of the read function.
+    read_name: str, optional (default: None)
+        To enable the adapter for a method other than `read` or `read_ts`
+        give the function name here (a function of that name must exist in
+        cls). A method of the same name will be added to the adapted
+        Reader, which takes the same arguments as the base method.
+        The output of this method will be changed by the adapter.
+        If None is passed, only data from `read` and `read_ts` of cls
+        will be adapted.
     """
 
     def __init__(self, cls, op, threshold, column_name, **kwargs):
-        super(SelfMaskingAdapter, self).__init__(cls, **kwargs)
 
-        self.op_lookup = {
-            "<": operator.lt,
-            "<=": operator.le,
-            "==": operator.eq,
-            "!=": operator.ne,
-            ">=": operator.ge,
-            ">": operator.gt,
-        }
+        super().__init__(cls, **kwargs)
 
         if callable(op):
             self.operator = op
-        elif op in self.op_lookup:
-            self.operator = self.op_lookup[op]
+        elif op in _op_lookup:
+            self.operator = _op_lookup[op]
         else:
             raise ValueError(f"'{op}' is not a valid operator")
 
         self.threshold = threshold
         self.column_name = column_name
 
-        if self.read_name:
-            setattr(self, self.read_name, self._adapt_custom)
-
-    def __mask(self, data):
+    def _adapt(self, data):
+        data = super()._adapt(data)
         mask = self.operator(data[self.column_name], self.threshold)
         return data[mask]
-
-    def read_ts(self, *args, **kwargs):
-        data = super().read_ts(*args, **kwargs)
-        return self.__mask(data)
-
-    def read(self, *args, **kwargs):
-        data = super().read(*args, **kwargs)
-        return self.__mask(data)
-
-    def _adapt_custom(self, *args, **kwargs):
-        data = super()._adapt_custom(*args, **kwargs)
-        return self.__mask(data)
 
 
 class AdvancedMaskingAdapter(BasicAdapter):
@@ -258,7 +251,7 @@ class AdvancedMaskingAdapter(BasicAdapter):
     Transform the given (reader) class to return a dataset that is masked based
     on the given list of filters. A filter is a 3-tuple of column_name,
     operator, and threshold.
-    This class calls the read_ts or read method of the given reader instance,
+    This class calls the reading method of the given reader instance,
     applies all filters separately, ANDs all filters together, and masks the
     whole dataframe with the result.
 
@@ -275,34 +268,36 @@ class AdvancedMaskingAdapter(BasicAdapter):
             function that takes data and threshold as arguments.
         'threshold':
             value to use as the threshold combined with the operator;
-    kwargs:
-        Additional kwargs are passed to BasicAdapter.
+    data_property_name: str, optional (default: "data")
+        Attribute name under which the pandas DataFrame containing the time
+        series is found in the object returned by the read function of the
+        original reader. Ignored if no attribute of this name is found.
+        Then it is required that the DataFrame is already the return value
+        of the read function.
+    read_name: str, optional (default: None)
+        To enable the adapter for a method other than `read` or `read_ts`
+        give the function name here (a function of that name must exist in
+        cls). A method of the same name will be added to the adapted
+        Reader, which takes the same arguments as the base method.
+        The output of this method will be changed by the adapter.
+        If None is passed, only data from `read` and `read_ts` of cls
+        will be adapted.
     """
 
     def __init__(self, cls, filter_list, **kwargs):
-        super(AdvancedMaskingAdapter, self).__init__(cls, **kwargs)
 
-        self.op_lookup = {
-            "<": operator.lt,
-            "<=": operator.le,
-            "==": operator.eq,
-            "!=": operator.ne,
-            ">=": operator.ge,
-            ">": operator.gt,
-        }
+        super().__init__(cls, **kwargs)
 
         self.filter_list = filter_list
 
-        if self.read_name:
-            setattr(self, self.read_name, self._adapt_custom)
-
-    def __mask(self, data):
+    def _adapt(self, data):
+        data = super()._adapt(data)
         mask = None
         for column_name, op, threshold in self.filter_list:
             if callable(op):
                 operator = op
-            elif op in self.op_lookup:
-                operator = self.op_lookup[op]
+            elif op in _op_lookup:
+                operator = _op_lookup[op]
             else:
                 raise ValueError('"{}" is not a valid operator'.format(op))
 
@@ -314,18 +309,6 @@ class AdvancedMaskingAdapter(BasicAdapter):
                 mask = new_mask
 
         return data[mask]
-
-    def read_ts(self, *args, **kwargs):
-        data = super().read_ts(*args, **kwargs)
-        return self.__mask(data)
-
-    def read(self, *args, **kwargs):
-        data = super().read(*args, **kwargs)
-        return self.__mask(data)
-
-    def _adapt_custom(self, *args, **kwargs):
-        data = super()._adapt_custom(*args, **kwargs)
-        return self.__mask(data)
 
 
 class AnomalyAdapter(BasicAdapter):
@@ -346,20 +329,31 @@ class AnomalyAdapter(BasicAdapter):
         Default: 35 (days)
     columns: list, optional
         columns in the dataset for which to calculate anomalies.
-    kwargs:
-        Additional kwargs are passed to BasicAdapter.
+    data_property_name: str, optional (default: "data")
+        Attribute name under which the pandas DataFrame containing the time
+        series is found in the object returned by the read function of the
+        original reader. Ignored if no attribute of this name is found.
+        Then it is required that the DataFrame is already the return value
+        of the read function.
+    read_name: str, optional (default: None)
+        To enable the adapter for a method other than `read` or `read_ts`
+        give the function name here (a function of that name must exist in
+        cls). A method of the same name will be added to the adapted
+        Reader, which takes the same arguments as the base method.
+        The output of this method will be changed by the adapter.
+        If None is passed, only data from `read` and `read_ts` of cls
+        will be adapted.
     """
 
     def __init__(self, cls, window_size=35, columns=None, **kwargs):
-        super(AnomalyAdapter, self).__init__(cls, **kwargs)
+
+        super().__init__(cls, **kwargs)
 
         self.window_size = window_size
         self.columns = columns
 
-        if self.read_name:
-            setattr(self, self.read_name, self._adapt_custom)
-
-    def calc_anom(self, data):
+    def _adapt(self, data):
+        data = super()._adapt(data)
         if self.columns is None:
             ite = data
         else:
@@ -369,18 +363,6 @@ class AnomalyAdapter(BasicAdapter):
                 data[column], window_size=self.window_size
             )
         return data
-
-    def read_ts(self, *args, **kwargs):
-        data = super().read_ts(*args, **kwargs)
-        return self.calc_anom(data)
-
-    def read(self, *args, **kwargs):
-        data = super().read(*args, **kwargs)
-        return self.calc_anom(data)
-
-    def _adapt_custom(self, *args, **kwargs):
-        data = super()._adapt_custom(*args, **kwargs)
-        return self.calc_anom(data)
 
 
 class AnomalyClimAdapter(BasicAdapter):
@@ -398,32 +380,40 @@ class AnomalyClimAdapter(BasicAdapter):
         Kwargs that are passed to create BasicAdapter.
     columns: list, optional
         columns in the dataset for which to calculate anomalies.
+    data_property_name: str, optional (default: "data")
+        Attribute name under which the pandas DataFrame containing the time
+        series is found in the object returned by the read function of the
+        original reader. Ignored if no attribute of this name is found.
+        Then it is required that the DataFrame is already the return value
+        of the read function.
+    read_name: str, optional (default: None)
+        To enable the adapter for a method other than `read` or `read_ts`
+        give the function name here (a function of that name must exist in
+        cls). A method of the same name will be added to the adapted
+        Reader, which takes the same arguments as the base method.
+        The output of this method will be changed by the adapter.
+        If None is passed, only data from `read` and `read_ts` of cls
+        will be adapted.
     kwargs:
-        Any additional arguments will be given to the calc_climatology
-        function.
-        If 'data_property_name' or 'read_name' are in kwargs, they will be
-        used to initialise the BasicAdapter.
+        Any remaining keyword arguments will be given to the
+        `calc_climatology` function.
     """
 
     def __init__(self, cls, columns=None, **kwargs):
 
         cls_kwargs = dict()
         if "data_property_name" in kwargs:
-            cls_kwargs["data_property_name"] = kwargs.pop(
-                "data_property_name"
-            )
+            cls_kwargs["data_property_name"] = kwargs.pop("data_property_name")
         if "read_name" in kwargs:
             cls_kwargs["read_name"] = kwargs.pop("read_name")
 
-        super(AnomalyClimAdapter, self).__init__(cls, **cls_kwargs)
+        super().__init__(cls, **cls_kwargs)
 
         self.kwargs = kwargs
         self.columns = columns
 
-        if self.read_name:
-            setattr(self, self.read_name, self._adapt_custom)
-
-    def calc_anom(self, data):
+    def _adapt(self, data):
+        data = super()._adapt(data)
         if self.columns is None:
             ite = data
         else:
@@ -433,18 +423,6 @@ class AnomalyClimAdapter(BasicAdapter):
             data[column] = calc_anomaly(data[column], climatology=clim)
 
         return data
-
-    def read_ts(self, *args, **kwargs):
-        data = super().read_ts(*args, **kwargs)
-        return self.calc_anom(data)
-
-    def read(self, *args, **kwargs):
-        data = super().read(*args, **kwargs)
-        return self.calc_anom(data)
-
-    def _adapt_custom(self, *args, **kwargs):
-        data = super()._adapt_custom(*args, **kwargs)
-        return self.calc_anom(data)
 
 
 class ColumnCombineAdapter(BasicAdapter):
@@ -482,11 +460,23 @@ class ColumnCombineAdapter(BasicAdapter):
             all columns are used.
         new_name: str, optional (default: merged)
             Name that the merged column will have in the returned data frame.
-        kwargs:
-            Additional kwargs are passed to BasicAdapter.
+        data_property_name: str, optional (default: "data")
+            Attribute name under which the pandas DataFrame containing the time
+            series is found in the object returned by the read function of the
+            original reader. Ignored if no attribute of this name is found.
+            Then it is required that the DataFrame is already the return value
+            of the read function.
+        read_name: str, optional (default: None)
+            To enable the adapter for a method other than `read` or `read_ts`
+            give the function name here (a function of that name must exist in
+            cls). A method of the same name will be added to the adapted
+            Reader, which takes the same arguments as the base method.
+            The output of this method will be changed by the adapter.
+            If None is passed, only data from `read` and `read_ts` of cls
+            will be adapted.
         """
 
-        super(ColumnCombineAdapter, self).__init__(cls, **kwargs)
+        super().__init__(cls, **kwargs)
         self.func = func
         self.func_kwargs = func_kwargs if func_kwargs is not None else {}
         self.func_kwargs["axis"] = 1
@@ -496,20 +486,9 @@ class ColumnCombineAdapter(BasicAdapter):
         if self.read_name:
             setattr(self, self.read_name, self._adapt_custom)
 
-    def apply(self, data: DataFrame) -> DataFrame:
+    def _adapt(self, data: DataFrame) -> DataFrame:
+        data = super()._adapt(data)
         columns = data.columns if self.columns is None else self.columns
         new_col = data[columns].apply(self.func, **self.func_kwargs)
         data[self.new_name] = new_col
         return data
-
-    def read_ts(self, *args, **kwargs):
-        data = super().read_ts(*args, **kwargs)
-        return self.apply(data)
-
-    def read(self, *args, **kwargs):
-        data = super().read(*args, **kwargs)
-        return self.apply(data)
-
-    def _adapt_custom(self, *args, **kwargs):
-        data = super()._adapt_custom(*args, **kwargs)
-        return self.apply(data)
