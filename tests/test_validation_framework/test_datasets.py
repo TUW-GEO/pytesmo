@@ -61,6 +61,9 @@ class TestDataset(object):
         df = pd.DataFrame({'x': x, 'y': y}, columns=['x', 'y'], index=index)
         return df
 
+    def alias_read(self, *args, **kwargs):
+        return self.read(*args, **kwargs)
+
     def write(self, gpi, data):
         return None
 
