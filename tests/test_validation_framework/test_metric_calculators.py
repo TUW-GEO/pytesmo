@@ -523,7 +523,7 @@ class DummyReader:
     def __init__(self, df, name):
         self.data = pd.DataFrame(df[name])
 
-    def read_ts(self, *args, **kwargs):
+    def read(self, *args, **kwargs):
         return self.data
 
 

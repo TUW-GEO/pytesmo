@@ -1,34 +1,33 @@
-# Copyright (c) 2017,Vienna University of Technology,
-# Department of Geodesy and Geoinformation
+# Copyright (c) 2020, TU Wien, Department of Geodesy and Geoinformation
 # All rights reserved.
 
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-#   * Redistributions of source code must retain the above copyright notice,
-#     this list of conditions and the following disclaimer.
-#   * Redistributions in binary form must reproduce the above copyright notice,
-#     this list of conditions and the following disclaimer in the documentation
-#     and/or other materials provided with the distribution.
-#   * Neither the name of the Vienna University of Technology, Department of
-#     Geodesy and Geoinformation nor the names of its contributors may be used
-#     to endorse or promote products derived from this software without specific
-#     prior written permission.
+#   * Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#    * Redistributions in binary form must reproduce the above copyright
+#      notice, this list of conditions and the following disclaimer in the
+#      documentation and/or other materials provided with the distribution.
+#    * Neither the name of the TU Wien, Department of Geodesy and
+#      Geoinformation nor the names of its contributors may be used to endorse
+#      or promote products derived from this software without specific prior
+#      written permission.
 
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-# DISCLAIMED. IN NO EVENT SHALL VIENNA UNIVERSITY OF TECHNOLOGY, DEPARTMENT OF
-# GEODESY AND GEOINFORMATION BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
-# BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
-# IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-# POSSIBILITY OF SUCH DAMAGE.
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL VIENNA UNIVERSITY OF TECHNOLOGY,
+# DEPARTMENT OF GEODESY AND GEOINFORMATION BE LIABLE FOR ANY
+# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+# THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''
+"""
 Data scaler classes to be used together with the validation framework.
-'''
+"""
 
 import numpy as np
 import pandas as pd
@@ -75,9 +74,9 @@ class DefaultScaler(object):
         ValueError
             if scaling is not successful
         """
-        return scaling.scale(data,
-                             method=self.method,
-                             reference_index=reference_index)
+        return scaling.scale(
+            data, method=self.method, reference_index=reference_index
+        )
 
 
 class CDFStoreParamsScaler(object):
@@ -99,13 +98,18 @@ class CDFStoreParamsScaler(object):
         Percentiles to use for CDF matching
     """
 
-    def __init__(self, path, grid,
-                 percentiles=[0, 5, 10, 30, 50, 70, 90, 95, 100]):
+    def __init__(
+        self, path, grid, percentiles=[0, 5, 10, 30, 50, 70, 90, 95, 100]
+    ):
         self.path = path
         self.grid = grid
         self.percentiles = np.asanyarray(percentiles)
-        self.io = GriddedPointData(path, grid, mode='a',
-                                   ioclass_kws={'add_dims': {'percentiles': self.percentiles.size}})
+        self.io = GriddedPointData(
+            path,
+            grid,
+            mode="a",
+            ioclass_kws={"add_dims": {"percentiles": self.percentiles.size}},
+        )
 
     def scale(self, data, reference_index, gpi_info):
         """
@@ -139,10 +143,11 @@ class CDFStoreParamsScaler(object):
             src_percentiles = parameters[series]
             ref_percentiles = parameters[reference_name]
             data[series] = pd.Series(
-                lin_cdf_match_stored_params(data[series].values,
-                                            src_percentiles,
-                                            ref_percentiles),
-                index=data.index)
+                lin_cdf_match_stored_params(
+                    data[series].values, src_percentiles, ref_percentiles
+                ),
+                index=data.index,
+            )
 
         data.insert(reference_index, reference.name, reference)
         return data
@@ -167,8 +172,9 @@ class CDFStoreParamsScaler(object):
         for column in data.columns:
             c_data = data[column].values
             perc = np.percentile(c_data, self.percentiles)
-            perc = unique_percentiles_interpolate(perc,
-                                                  percentiles=self.percentiles)
+            perc = unique_percentiles_interpolate(
+                perc, percentiles=self.percentiles
+            )
             parameters[column] = perc
 
         return parameters
@@ -202,7 +208,7 @@ class CDFStoreParamsScaler(object):
     def load_parameters(self, gpi):
         data = self.io.read(gpi)
         if data is not None:
-            unwanted_keys = ['lat', 'lon', 'alt', 'time', 'location_id']
+            unwanted_keys = ["lat", "lon", "alt", "time", "location_id"]
             for key in unwanted_keys:
                 del data[key]
 
@@ -226,13 +232,15 @@ class CDFStoreParamsScaler(object):
         """
         data = []
         dtypes = []
-        dim_info = {'dims': {}}
+        dim_info = {"dims": {}}
         for key in parameters:
-            dim_info['dims'][key] = ('obs', 'percentiles')
+            dim_info["dims"][key] = ("obs", "percentiles")
             dtypes.append(
-                (key, parameters[key].dtype, (parameters[key].size, )))
+                (key, parameters[key].dtype, (parameters[key].size,))
+            )
             data.append(parameters[key])
 
-        data = np.core.records.fromarrays(data, dtype=np.dtype(dtypes,
-                                                               metadata=dim_info))
+        data = np.core.records.fromarrays(
+            data, dtype=np.dtype(dtypes, metadata=dim_info)
+        )
         self.io.write(gpi, data)

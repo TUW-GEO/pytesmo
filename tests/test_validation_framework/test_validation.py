@@ -200,7 +200,7 @@ def test_ascat_ismn_validation(ascat_reader, ismn_reader):
         },
     }
 
-    read_ts_names = {"ASCAT": "read", "ISMN": "read_ts"}
+    read_ts_names = {"ASCAT": "read", "ISMN": "read"}
     period = [datetime(2007, 1, 1), datetime(2014, 12, 31)]
 
     datasets = DataManager(
@@ -325,7 +325,7 @@ def test_ascat_ismn_validation_metadata(ascat_reader, ismn_reader):
         },
     }
 
-    read_ts_names = {"ASCAT": "read", "ISMN": "read_ts"}
+    read_ts_names = {"ASCAT": "read", "ISMN": "read"}
     period = [datetime(2007, 1, 1), datetime(2014, 12, 31)]
 
     datasets = DataManager(
@@ -471,7 +471,7 @@ def test_validation_with_averager(ascat_reader, ismn_reader):
         },
     }
 
-    read_ts_names = {"ASCAT": "read", "ISMN": "read_ts"}
+    read_ts_names = {"ASCAT": "read", "ISMN": "read"}
     period = [datetime(2007, 1, 1), datetime(2014, 12, 31)]
 
     datasets = DataManager(
@@ -1115,7 +1115,7 @@ def test_ascat_ismn_validation_metadata_rolling(ascat_reader, ismn_reader):
         },
     }
 
-    read_ts_names = {"ASCAT": "read", "ISMN": "read_ts"}
+    read_ts_names = {"ASCAT": "read", "ISMN": "read"}
     period = [datetime(2007, 1, 1), datetime(2014, 12, 31)]
 
     datasets = DataManager(
@@ -1271,7 +1271,7 @@ class DummyReader:
     def __init__(self, dfs, name):
         self.data = [pd.DataFrame(dfs[i][name]) for i in range(len(dfs))]
 
-    def read_ts(self, gpi, *args, **kwargs):
+    def read(self, gpi, *args, **kwargs):
         return self.data[gpi]
 
 
@@ -1279,7 +1279,7 @@ class DummyNoneReader:
     def __init__(self, dfs, name):
         self.data = [pd.DataFrame(dfs[i][name]) for i in range(len(dfs))]
 
-    def read_ts(self, gpi, *args, **kwargs):
+    def read(self, gpi, *args, **kwargs):
         names = self.data[gpi].columns
         return pd.DataFrame(np.zeros((0, len(names))), columns=names)
 

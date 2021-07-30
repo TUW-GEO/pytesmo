@@ -13,7 +13,7 @@ from pytesmo.metrics.pairwise import bias
 __all__ = []
 
 
-@deprecated
+@deprecated()
 def tcol_error(x, y, z):
     """
     DEPRECATED: Use ``pytesmo.metrics.tcol_metrics`` instead.
@@ -68,7 +68,7 @@ def tcol_error(x, y, z):
 
 
 @np.errstate(invalid="ignore")
-@deprecated
+@deprecated()
 def tcol_snr(x, y, z, ref_ind=0):
     """
     DEPRECATED: Use the function `tcol_metrics` instead.
@@ -195,7 +195,7 @@ def tcol_snr(x, y, z, ref_ind=0):
     return snr, np.sqrt(err_var) * beta, beta
 
 
-@deprecated
+@deprecated()
 def mse(x, y, ddof=0):
     """
     DEPRECATED: use `msd`, `msd_corr`, `msd_bias`, or `msd_var` for the
@@ -245,7 +245,7 @@ def mse(x, y, ddof=0):
     return mse, mse_corr, mse_bias, mse_var
 
 
-@deprecated
+@deprecated()
 def pearsonr(x, y):
     """
     DEPRECATED: use :func:`pytesmo.metrics.pearson_r` instead if you want
@@ -275,7 +275,7 @@ def pearsonr(x, y):
 
 
 @np.errstate(invalid="ignore")
-@deprecated
+@deprecated()
 def pearsonr_recursive(
     x, y, n_old=0, sum_xi_yi=0, sum_xi=0, sum_yi=0, sum_x2=0, sum_y2=0
 ):
@@ -336,7 +336,7 @@ def pearsonr_recursive(
     return r, (n_new, sum_xi_yi, sum_xi, sum_yi, sum_x2, sum_y2)
 
 
-@deprecated
+@deprecated()
 def pearson_conf(r, n, c=95):
     """
     DEPRECATED: use :func:`pytesmo.metrics.pearson_r` instead.
@@ -376,7 +376,7 @@ def pearson_conf(r, n, c=95):
     return np.tanh(z_lower), np.tanh(z_upper)
 
 
-@deprecated
+@deprecated()
 def spearmanr(x, y):
     """
     DEPRECATED: use :func:`pytesmo.metrics.spearman_r` instead if you
@@ -407,7 +407,7 @@ def spearmanr(x, y):
     return stats.spearmanr(x, y)
 
 
-@deprecated
+@deprecated()
 def kendalltau(x, y):
     """
     DEPRECATED: use :func:`pytesmo.metrics.kendall_tau` instead if you want
@@ -479,8 +479,8 @@ def rolling_pr_rmsd(timestamps, data, window_size, center, min_periods):
         if n_obs == 0 or n_obs < min_periods:
             pr_arr[i, :] = np.nan
         else:
-            sub1 = data[idx[0]:idx[-1]+1, 0]
-            sub2 = data[idx[0]:idx[-1]+1, 1]
+            sub1 = data[idx[0]: idx[-1] + 1, 0]
+            sub2 = data[idx[0]: idx[-1] + 1, 1]
 
             # pearson r
             pr_arr[i, 0] = np.corrcoef(sub1, sub2)[0, 1]
@@ -489,15 +489,19 @@ def rolling_pr_rmsd(timestamps, data, window_size, center, min_periods):
             if np.abs(pr_arr[i, 0]) == 1.0:
                 pr_arr[i, 1] = 0.0
             else:
-                df = n_obs - 2.
-                t_squared = pr_arr[i, 0]*pr_arr[i, 0] * \
-                    (df / ((1.0 - pr_arr[i, 0]) * (1.0 + pr_arr[i, 0])))
+                df = n_obs - 2.0
+                t_squared = (
+                    pr_arr[i, 0]
+                    * pr_arr[i, 0]
+                    * (df / ((1.0 - pr_arr[i, 0]) * (1.0 + pr_arr[i, 0])))
+                )
                 x = df / (df + t_squared)
                 x = np.ma.where(x < 1.0, x, 1.0)
-                pr_arr[i, 1] = betainc(0.5*df, 0.5, x)
+                pr_arr[i, 1] = betainc(0.5 * df, 0.5, x)
 
             # rmsd
             rmsd_arr[i] = np.sqrt(
-                np.sum((sub1 - sub2) ** 2) / (sub1.size - ddof))
+                np.sum((sub1 - sub2) ** 2) / (sub1.size - ddof)
+            )
 
     return pr_arr, rmsd_arr

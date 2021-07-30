@@ -26,11 +26,11 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''
+"""
 Created on Sep 24, 2013
 
 @author: Christoph.Paulik@geo.tuwien.ac.at
-'''
+"""
 
 import itertools
 import pandas as pd
@@ -60,8 +60,13 @@ class BasicTemporalMatching(object):
         """
         ref_df = pd.DataFrame(reference)
         return temporal_matching.combined_temporal_collocation(
-            ref_df, args, self.window, dropna=True, dropduplicates=True,
-            add_ref_data=True, combined_dropna="all"
+            ref_df,
+            args,
+            self.window,
+            dropna=True,
+            dropduplicates=True,
+            add_ref_data=True,
+            combined_dropna="all",
         )
 
     def combinatory_matcher(self, df_dict, refkey, n=2, **kwargs):
@@ -110,8 +115,7 @@ class BasicTemporalMatching(object):
                 match_key.append(key)
 
             matched_key = tuple([refkey] + sorted(match_key))
-            joined = self.match(ref_df,
-                                *match_list)
+            joined = self.match(ref_df, *match_list)
 
             if len(joined) != 0:
                 matched[matched_key] = joined
@@ -194,10 +198,16 @@ def make_combined_temporal_matcher(window):
         # this comes from Validation.temporal_match_datasets but is not
         # required
         return dfdict_combined_temporal_collocation(
-            dfs, refname, k, window=window, dropna=True,
-            combined_dropna="any", dropduplicates=True,
+            dfs,
+            refname,
+            k,
+            window=window,
+            dropna=True,
+            combined_dropna="any",
+            dropduplicates=True,
             **kwargs
         )
+
     return matcher
 
 

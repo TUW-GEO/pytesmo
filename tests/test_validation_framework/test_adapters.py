@@ -1,31 +1,4 @@
-# Copyright (c) 2016,Vienna University of Technology,
-# Department of Geodesy and Geoinformation
-# All rights reserved.
 import pytest
-
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
-#   * Redistributions of source code must retain the above copyright notice,
-#     this list of conditions and the following disclaimer.
-#   * Redistributions in binary form must reproduce the above copyright notice,
-#     this list of conditions and the following disclaimer in the documentation
-#     and/or other materials provided with the distribution.
-#   * Neither the name of the Vienna University of Technology, Department of
-#     Geodesy and Geoinformation nor the names of its contributors may be used
-#     to endorse or promote products derived from this software without
-#     specific prior written permission.
-
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-# ARE DISCLAIMED. IN NO EVENT SHALL VIENNA UNIVERSITY OF TECHNOLOGY, DEPARTMENT
-# OF GEODESY AND GEOINFORMATION BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-# OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
-# OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
-# ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
 Test for the adapters.
@@ -147,7 +120,7 @@ def test_anomaly_adapter():
 def test_anomaly_adapter_one_column():
     ds = TestDataset("", n=20)
     ds_anom = AnomalyAdapter(ds, columns=["x"])
-    data_anom = ds_anom.read_ts()
+    data_anom = ds_anom.read()
     nptest.assert_almost_equal(data_anom["x"].values[0], -8.5)
     nptest.assert_almost_equal(data_anom["y"].values[0], 0)
 
@@ -171,8 +144,22 @@ def test_anomaly_clim_adapter_one_column():
     nptest.assert_almost_equal(data_anom["y"].values[4], 2)
 
 
-# the ascat reader gives back an ascat timeseries instead of a dataframe - make
-# sure the adapters can deal with that
+def test_adapters_custom_fct_name():
+    def assert_all_read_fcts(reader):
+        assert(np.all(reader.read() == reader.read_ts()))
+        assert(np.all(reader.read() == reader.alias_read()))
+
+    base = TestDataset("", n=20)
+    assert_all_read_fcts(base)
+    sma = SelfMaskingAdapter(base, '>=', 5, column_name='y',
+                             read_name='alias_read')
+    assert_all_read_fcts(sma)
+    smanom = AnomalyAdapter(sma, read_name='alias_read')
+    assert_all_read_fcts(smanom)
+
+
+# the ascat reader gives back an ascat timeseries instead of a dataframe -
+# make sure the adapters can deal with that
 def test_adapters_with_ascat():
     ascat_data_folder = os.path.join(
         os.path.dirname(__file__),
@@ -270,12 +257,14 @@ def test_timezone_removal():
 def test_column_comb_adapter():
     ds = TestDataset("", n=20)
     orig = ds.read()
-    ds_adapted = ColumnCombineAdapter(ds, func=pd.DataFrame.mean, columns=["x", "y"],
-                                      func_kwargs={'skipna': True}, new_name='xy_mean')
+    ds_adapted = ColumnCombineAdapter(
+        ds, func=pd.DataFrame.mean, columns=["x", "y"],
+        func_kwargs={'skipna': True}, new_name='xy_mean')
     ds_mean1 = ds_adapted.read_ts()
     ds_mean2 = ds_adapted.read()
 
     for ds_mean in [ds_mean1, ds_mean2]:
         nptest.assert_equal(ds_mean["x"].values, orig["x"].values)
         nptest.assert_equal(ds_mean["y"].values, orig["y"].values)
-        nptest.assert_equal(ds_mean["xy_mean"].values, (ds_mean["x"] + ds_mean["y"]) / 2.)
+        nptest.assert_equal(ds_mean["xy_mean"].values,
+                            (ds_mean["x"] + ds_mean["y"]) / 2.)
