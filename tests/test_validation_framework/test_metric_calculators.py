@@ -1216,6 +1216,3 @@ def test_temporal_matching_ascat_ismn():
 # results = val.calc(1, 1, 1)
 
 # assert 0
-
-if __name__ == "__main__":
-    test_BasicSeasonalMetrics()
