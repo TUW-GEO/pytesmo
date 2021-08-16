@@ -379,7 +379,8 @@ class PointDataResults(Dataset):
 
 
 def netcdf_results_manager(
-    results, save_path, ts_vars: list = None, zlib=True, attr=None
+    results, save_path, filename: dict = None,
+    ts_vars: list = None, zlib=True, attr=None
 ):
     """
     Write validation results to netcdf file.
@@ -394,12 +395,15 @@ def netcdf_results_manager(
         (if there are metrics over time in the results - e.g due to
         RollingMetrics)
     save_path : str
-        Directory where the netcdf file(s) are are created, filenames follow
-        from the results keysS
+        Directory where the netcdf file(s) are are created.
+    filename: dict, optional (default: None)
+        Filename(s) (value), for each dataset combination in results (key).
+        By default (if None is passed) the keys in results are used to
+        generate a file name.
     ts_vars : list, optional (default: None)
         List of variables in results that are treated as time series
     zlib : bool, optional (default: True)
-        Activate comparession
+        Activate compression
     attr : dict, optional (default: None)
         Variable attributes, variable names as keys, attributes as another
         dict in values.
@@ -408,9 +412,12 @@ def netcdf_results_manager(
     if len(results) == 0:
         warnings.warn(f"Empty results, {save_path} will not be created.")
     for ds_names, res in results.items():
-        filename = build_filename(save_path, ds_names)
+        if filename is None:
+            fname = build_filename(save_path, ds_names)
+        else:
+            fname = os.path.join(save_path, filename[ds_names])
 
-        with PointDataResults(filename, zlib=zlib) as writer:
+        with PointDataResults(fname, zlib=zlib) as writer:
             lons = res.pop("lon")
             lats = res.pop("lat")
             if ts_vars is not None:
