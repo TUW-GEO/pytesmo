@@ -825,7 +825,6 @@ def test_PairwiseIntercomparisonMetrics(testdata_generator, seas_metrics):
         assert all(map(lambda x: isinstance(x, tuple), key))
         assert isinstance(results_pw[key], dict)
         res_metrics = list(results_pw[key].keys())
-        assert all([l in res_metrics for l in []])
         assert all([v in res_metrics for v in ["lon", "lat", "gpi"]])
         for m in metrics:
             if m in expected[key]:

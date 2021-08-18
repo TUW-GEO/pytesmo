@@ -45,7 +45,7 @@ class MonthsMetricsAdapter(object):
     Adapt MetricCalculators to calculate metrics for groups across months
     """
 
-    _supported = (
+    _supported_metric_calculators = (
         PairwiseIntercomparisonMetrics,
         TripleCollocationMetrics,
     )
@@ -57,14 +57,28 @@ class MonthsMetricsAdapter(object):
 
         Parameters
         ----------
-        calculator : MetadataMetrics or any child of it (not Rolling metrics)
+        calculator : PairwiseIntercomparisonMetrics or TripleCollocationMetrics
+            A metric calculator to adapt. Preferably an instance of a metric
+             calculator listed in `_supported_metric_calculators`
         sets : dict, optional (default: None)
-            A dictionary consisting of a set name (which is added to the metric
-            name as a suffix) and the list of months that belong to that set.
-            If None is passed, we use 4 (seasonal) sets named after the fist
-            letter of each month used.
+            Define groups of data. With group names as key and a list of
+            months (1-12) that belong to the group as values.
+
+            e.g. {'Group1': [4,5,6,7,8,9], 'Group2': [10,11,12,1,2,3]} will
+            split the data used by the metric calculator into 2 groups.
+            One using only observations made between April and September,
+            and one using observations from the rest of the year.
+
+            The name will be used in the results to distinguish between the
+            same metrics for different groups:
+            e.g. ('Group1', 'BIAS'): ..., ('Group2', 'BIAS'): ..., etc.
+
+            The default groups are based on 4 seasons plus one group that uses
+            all data (as the unadapted metric calculator would do):
+            {'DJF': [12,1,2], 'MAM': [3,4,5], 'JJA': [6, 7, 8],
+             'SON': [9, 10, 11], 'ALL': list(range(1, 13))}
         """
-        if not isinstance(calculator, self._supported):
+        if not isinstance(calculator, self._supported_metric_calculators):
             warnings.warn(f"Adapting {calculator.__class__} is not supported.")
         self.cls = calculator
         if sets is None:
@@ -91,9 +105,9 @@ class MonthsMetricsAdapter(object):
         for name in sets.keys():
             for k, v in all_metrics.items():
                 if k in self.non_seas_metrics:
-                    subset_metrics[f"{k}"] = v
+                    subset_metrics[k] = np.array(v)
                 else:
-                    subset_metrics[(f"{name}", f"{k}")] = v
+                    subset_metrics[(f"{name}", f"{k}")] = np.array(v)
 
         self.result_template = subset_metrics
 
@@ -105,7 +119,8 @@ class MonthsMetricsAdapter(object):
         Parameters
         ----------
         df : pd.DataFrame
-            Time series (index.month must exist) that is filtered
+            Time series (index.month must exist) that is split up into the
+            selected groups.
         months : list
             Months for which data is kept, e.g. [12,1,2] to keep data for
             winter
