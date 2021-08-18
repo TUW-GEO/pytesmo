@@ -107,7 +107,7 @@ class MonthsMetricsAdapter(object):
                 if k in self.non_seas_metrics:
                     subset_metrics[k] = np.array(v)
                 else:
-                    subset_metrics[(f"{name}", f"{k}")] = np.array(v)
+                    subset_metrics[(name, k)] = np.array(v)
 
         self.result_template = subset_metrics
 
