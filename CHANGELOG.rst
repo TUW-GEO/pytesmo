@@ -6,6 +6,11 @@ Unreleased
 ==========
 -
 
+Version 0.12.0, 2021-08-19
+==========================
+- Add option for custom reading method name to all reading adapters (PR `#245 <https://github.com/TUW-GEO/pytesmo/pull/245>`_)
+- `MonthMetricsAdapter` for new `PairwiseIntercomparisonMetrics` and `TripleCollocationMetrics` calculators (PR `#246 <https://github.com/TUW-GEO/pytesmo/pull/246>`_)
+
 Version 0.11.4, 2021-07-13
 ==========================
 - fixed some bugs in the confidence interval calculation, for some metrics only bootstrapped CIs are
