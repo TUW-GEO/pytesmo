@@ -1,7 +1,7 @@
 pytesmo - a Python Toolbox for the Evaluation of Soil Moisture Observations
 ***************************************************************************
 
-.. image:: https://github.com/TUW-GEO/pytesmo/workflows/Automated%20Tests/badge.svg?branch=master&event=push
+.. image:: https://github.com/TUW-GEO/pytesmo/workflows/Automated%20Tests/badge.svg?branch=master
    :target: https://github.com/TUW-GEO/pytesmo/actions
 
 .. image:: https://coveralls.io/repos/TUW-GEO/pytesmo/badge.png?branch=master
