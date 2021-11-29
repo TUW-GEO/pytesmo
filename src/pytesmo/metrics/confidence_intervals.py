@@ -1,5 +1,6 @@
 import numpy as np
 from scipy import stats
+import warnings
 
 from pytesmo.metrics import pairwise
 from pytesmo.metrics.tcol import tcol_metrics
@@ -135,15 +136,17 @@ def with_bootstrapped_ci(
     # Then it would probably be best to make this function only a lookup table
     # which calls a cpdef'd method, which itself calls the cdef'd metric
     # function with a cdef'd bootstrap implementation.
+    orig_metric = metric_func(x, y)
     n = len(x)
     if n < minimum_data_length:
-        raise ValueError(
+        warnings.warn(
             "Not enough data for bootstrapping. Your data should contain at"
             f" least {minimum_data_length} samples.\n"
             f"You can pass 'minimum_data_length={n}' if you want to do"
             "bootstrapping nevertheless."
         )
-    orig_metric = metric_func(x, y)
+        return orig_metric, np.nan, np.nan
+
     bootstrapped_metric = np.empty(nsamples, dtype=float)
     if method == "BCa":
         orig_jk = _jackknife(metric_func, x, y)
@@ -228,18 +231,32 @@ def tcol_metrics_with_bootstrapped_ci(
     # Then it would probably be best to make this function only a lookup table
     # which calls a cpdef'd method, which itself calls the cdef'd metric
     # function with a cdef'd bootstrap implementation.
+    orig_snr, orig_err_std, orig_beta = tcol_metrics(x, y, z, ref_ind=ref_ind)
+    lower_snr = np.empty(3) * np.nan
+    upper_snr = np.empty(3) * np.nan
+    lower_err_std = np.empty(3) * np.nan
+    upper_err_std = np.empty(3) * np.nan
+    lower_beta = np.empty(3) * np.nan
+    upper_beta = np.empty(3) * np.nan
+
     n = len(x)
     if n < minimum_data_length:
-        raise ValueError(
+        warnings.warn(
             "Not enough data for bootstrapping. Your data should contain at"
             f" least {minimum_data_length} samples.\n"
             f"You can pass 'minimum_data_length={n}' if you want to do"
             "bootstrapping nevertheless."
         )
-    orig_snr, orig_err_std, orig_beta = tcol_metrics(x, y, z, ref_ind=ref_ind)
+        return (
+            (orig_snr, lower_snr, upper_snr),
+            (orig_err_std, lower_err_std, upper_err_std),
+            (orig_beta, lower_beta, upper_beta),
+        )
+
     bootstrapped_snr = np.empty((nsamples, 3), dtype=float)
     bootstrapped_err_std = np.empty((nsamples, 3), dtype=float)
     bootstrapped_beta = np.empty((nsamples, 3), dtype=float)
+
     if method == "BCa":
         snr_jk = np.empty((n, 3))
         err_std_jk = np.empty((n, 3))
@@ -260,12 +277,6 @@ def tcol_metrics_with_bootstrapped_ci(
             bootstrapped_beta[i, :],
         ) = tcol_metrics(_x, _y, _z, ref_ind=ref_ind)
 
-    lower_snr = np.empty(3)
-    upper_snr = np.empty(3)
-    lower_err_std = np.empty(3)
-    upper_err_std = np.empty(3)
-    lower_beta = np.empty(3)
-    upper_beta = np.empty(3)
     for i in range(3):
         if method == "percentile":
             lower_snr[i], upper_snr[i] = _percentile_bs_ci(

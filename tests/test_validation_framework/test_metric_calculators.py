@@ -1113,6 +1113,70 @@ def test_TripleCollocationMetrics(testdata_generator, seas_metrics):
                     )
 
 
+def test_TripleCollocationMetrics_insufficient_data():
+    # test if there are no errors when calling tcol with less data than
+    # required for bootstrapping
+    np.random.seed(42)
+    dr = pd.date_range("2000-01-01", "2000-02-01", freq="D")
+    n = len(dr)
+    n_datasets = 4
+
+    # generating random correlated data
+    r = 0.8
+    C = np.ones((n_datasets, n_datasets)) * r
+    for i in range(n_datasets):
+        C[i, i] = 1
+    A = np.linalg.cholesky(C)
+    X = (A @ np.random.randn(n_datasets, n)).T
+
+    ref = X[:, 0]
+    x1 = X[:, 1]
+    x2 = X[:, 2]
+    x3 = X[:, 3]
+    ref[10] = np.nan
+    x2[20] = np.nan
+    df = pd.DataFrame(
+        {
+            "reference": ref,
+            "col1": x1,
+            "col2": x2,
+            "zcol3": x3,
+        },
+        index=dr,
+    )
+    datasets = make_datasets(df)
+    refname = "reference_name"
+    othernames = list(datasets.keys())
+    othernames.remove(refname)
+
+    triplet_metrics_calculator = TripleCollocationMetrics(
+        refname, bootstrap_cis=True
+    )
+    matcher = make_combined_temporal_matcher(pd.Timedelta(6, "H"))
+
+    val_triplet = Validation(
+        datasets,
+        "reference_name",
+        scaling=None,  # doesn't work with the constant test data
+        temporal_matcher=matcher,
+        metrics_calculators={(4, 3): triplet_metrics_calculator.calc_metrics},
+    )
+    results = val_triplet.calc(
+        [1], [1], [1], rename_cols=False, only_with_temporal_ref=True
+    )
+    for key in results:
+        for dset, _ in key:
+            for metric in ["snr", "err_std", "beta"]:
+                lkey = (f"{metric}_ci_lower",)
+                ukey = (f"{metric}_ci_upper",)
+                mkey = (f"{metric}",)
+                assert (*lkey, dset) in results[key]
+                assert (*ukey, dset) in results[key]
+                assert np.isnan(results[key][(*lkey, dset)])
+                assert np.isnan(results[key][(*ukey, dset)])
+                assert not np.isnan(results[key][(*mkey, dset)])
+
+
 def test_temporal_matching_ascat_ismn():
     """
     This test uses a CSV file of ASCAT and ISMN data to test if the temporal
