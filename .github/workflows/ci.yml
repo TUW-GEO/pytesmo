@@ -56,8 +56,7 @@ jobs:
         run: |
           pip install .
           # This separation avoids segfaults:
-          pytest --cache-clear -m 'not slow'
-          pytest --cache-clear -m 'slow'
+          pytest --cache-clear
       - name: Upload Coverage
         shell: bash -l {0}
         run: |
