@@ -163,8 +163,8 @@ def check_results(
                 nptest.assert_allclose(sorted(values), sorted(should_values), rtol=1e-4)
 
 
-@pytest.mark.slow
-@pytest.mark.full_framework
+# @pytest.mark.slow
+# @pytest.mark.full_framework
 def test_ascat_ismn_validation(ascat_reader, ismn_reader):
     """
     Test processing framework with some ISMN and ASCAT sample data
@@ -267,8 +267,8 @@ def test_ascat_ismn_validation(ascat_reader, ismn_reader):
     )
 
 
-@pytest.mark.slow
-@pytest.mark.full_framework
+# @pytest.mark.slow
+# @pytest.mark.full_framework
 def test_ascat_ismn_validation_metadata(ascat_reader, ismn_reader):
     """
     Test processing framework with some ISMN and ASCAT sample data
@@ -1065,8 +1065,8 @@ def test_validation_n3_k2_masking():
             )
 
 
-@pytest.mark.slow
-@pytest.mark.full_framework
+# @pytest.mark.slow
+# @pytest.mark.full_framework
 def test_ascat_ismn_validation_metadata_rolling(ascat_reader, ismn_reader):
     """
     Test processing framework with some ISMN and ASCAT sample data
