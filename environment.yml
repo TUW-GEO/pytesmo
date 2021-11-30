@@ -37,3 +37,4 @@ dependencies:
     - build
     - sphinx_rtd_theme
     - nbsphinx
+    - pyparsing<=2.4.7
