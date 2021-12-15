@@ -265,7 +265,14 @@ class Validation(object):
             for field_name in results[key][0].keys():
                 entries = []
                 for result in results[key]:
-                    entries.append(result[field_name][0])
+                    try:
+                        entries.append(result[field_name][0])
+                    except KeyError:
+                        # indicating a metric result was not produced
+                        warnings.warn(
+                            f"No TCA results for gpi: {result['gpi']}"
+                        )
+                        entries.append(np.nan)
                 compact_results[key][field_name] = np.array(
                     entries, dtype=results[key][0][field_name].dtype
                 )
