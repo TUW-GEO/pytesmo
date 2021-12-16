@@ -94,12 +94,12 @@ def _index_units(year, month, day, unit="day", respect_leap_years=True) -> (np.a
     else:
         args = month, day
 
-    idx_lut = {
-        "day": (doy(*args), 366),
-        "month": (month, 12),
-    }
-
-    return idx_lut[unit]
+    if unit == "day":
+        return doy(*args), 366
+    elif unit == "month":
+        return month, 12
+    else:
+        raise ValueError(f"Invalid unit: {unit}")
 
 
 def calc_climatology(Ser,
@@ -108,7 +108,7 @@ def calc_climatology(Ser,
                      median=False,
                      timespan=None,
                      fill=np.nan,
-                     wraparound=False,
+                     wraparound=True,
                      respect_leap_years=False,
                      interpolate_leapday=False,
                      fillna=True,
@@ -211,6 +211,8 @@ def calc_climatology(Ser,
     clim_ser = pd.Series(clim.values.flatten(),
                          index=clim.index.values)
 
+    clim_ser = clim_ser.reindex(np.arange(n_idx) + 1)
+
     if wraparound:
         index_old = clim_ser.index.copy()
         left_mirror = clim_ser.iloc[-moving_avg_clim:]
@@ -228,8 +230,6 @@ def calc_climatology(Ser,
         clim_ser.index = index_old
     else:
         clim_ser = moving_average(clim_ser, window_size=moving_avg_clim, fillna=fillna, min_obs=min_obs_clim)
-
-    clim_ser = clim_ser.reindex(np.arange(n_idx) + 1)
 
     # keep hardcoding as it's only for doys
     if interpolate_leapday and not respect_leap_years:
