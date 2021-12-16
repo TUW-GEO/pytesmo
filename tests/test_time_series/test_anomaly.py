@@ -29,6 +29,7 @@
 '''
 Test for climatology and anomaly calculation.
 '''
+import pdb
 
 import pandas as pd
 import pandas.testing as pdt
@@ -94,13 +95,29 @@ def test_climatology_always_366():
     assert clim.size == 366
 
 
+def test_monthly_climatology_always_12():
+    ts = pd.Series(np.sin(np.arange(366) / 366. * 2 * np.pi), index=pd.date_range(
+        '2000-01-01', freq='D', periods=366))
+    # remove a part of the time series
+    ts['2000-02-01': '2000-02-28'] = np.nan
+    ts = ts.dropna()
+    clim = anomaly.calc_climatology(ts, unit="month")
+    assert clim.size == 12
+
+    # this should also be the case if interpolate_leapday is set
+    ts = pd.Series(np.sin(np.arange(10)), index=pd.date_range(
+        '2000-01-01', freq='D', periods=10))
+    clim = anomaly.calc_climatology(ts, unit="month")
+    assert clim.size == 12
+
+
 def test_climatology_always_366_fill():
     ts = pd.Series(np.sin(np.arange(366) / 366. * 2 * np.pi), index=pd.date_range(
         '2000-01-01', freq='D', periods=366))
     # remove a part of the time series
     ts['2000-02-01': '2000-02-28'] = np.nan
     ts = ts.dropna()
-    clim = anomaly.calc_climatology(ts, fill=-1)
+    clim = anomaly.calc_climatology(ts, fill=-1, moving_avg_clim=1)
     assert clim.size == 366
     assert clim.iloc[31] == -1
 
@@ -115,17 +132,3 @@ def test_climatology_closed():
     assert clim.size == 366
     # test that the arange was closed during the second moving average
     assert clim.iloc[365] - 187.90 < 0.01
-
-
-def test_climatology_interpolate_leapday():
-    ts = pd.Series(np.arange(365), index=pd.date_range(
-        '2001-01-01', freq='D', periods=365))
-    # remove a part of the time series
-    clim = anomaly.calc_climatology(ts, wraparound=True, respect_leap_years=False, fill=-1)
-    assert clim[60] == -1
-    clim = anomaly.calc_climatology(ts, wraparound=True, respect_leap_years=True, fill=-1)
-    assert clim[366] == -1
-    clim = anomaly.calc_climatology(ts, wraparound=True, respect_leap_years=False, fill=-1, interpolate_leapday=True)
-    assert clim[60] == np.mean((clim[59], clim[61]))
-    clim = anomaly.calc_climatology(ts, wraparound=True, respect_leap_years=True, fill=-1, interpolate_leapday=True)
-    assert clim[366] == np.mean((clim[365], clim[1]))
