@@ -1717,16 +1717,17 @@ class TripleCollocationMetrics(MetadataMetrics, PairwiseMetricsMixin):
         result = super().calc_metrics(data, gpi_info)
         n_obs = len(data)
         result["n_obs"][0] = n_obs
-        if n_obs < self.min_obs:
-            warnings.warn(
-                "Not enough observations to calculate metrics.", UserWarning
-            )
-            return result
 
         # get the remaining metrics template for this specific combination
         othernames = list(data.columns)
         othernames.remove(self.refname)
         result.update(self._get_metric_template(self.refname, othernames))
+
+        if n_obs < self.min_obs:
+            warnings.warn(
+                "Not enough observations to calculate metrics.", UserWarning
+            )
+            return result
 
         # calculate triple collocation metrics
         ds_names = (self.refname, *othernames)
@@ -1737,10 +1738,16 @@ class TripleCollocationMetrics(MetadataMetrics, PairwiseMetricsMixin):
                 for j, metric in enumerate(["snr", "err_std", "beta"]):
                     result[(metric, name)][0] = res[j][i]
         else:
-            res = tcol_metrics_with_bootstrapped_ci(*arrays)
-            for i, name in enumerate(ds_names):
-                for j, metric in enumerate(["snr", "err_std", "beta"]):
-                    result[(metric, name)][0] = res[j][0][i]
-                    result[(metric + "_ci_lower", name)][0] = res[j][1][i]
-                    result[(metric + "_ci_upper", name)][0] = res[j][2][i]
+            try:
+                # handle failing bootstrapping because e.g.
+                # too small sample size
+                res = tcol_metrics_with_bootstrapped_ci(*arrays)
+                for i, name in enumerate(ds_names):
+                    for j, metric in enumerate(["snr", "err_std", "beta"]):
+                        result[(metric, name)][0] = res[j][0][i]
+                        result[(metric + "_ci_lower", name)][0] = res[j][1][i]
+                        result[(metric + "_ci_upper", name)][0] = res[j][2][i]
+            except ValueError:
+                # if the calculation fails, the template results (np.nan) are used
+                pass
         return result
