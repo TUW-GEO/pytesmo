@@ -1738,10 +1738,16 @@ class TripleCollocationMetrics(MetadataMetrics, PairwiseMetricsMixin):
                 for j, metric in enumerate(["snr", "err_std", "beta"]):
                     result[(metric, name)][0] = res[j][i]
         else:
-            res = tcol_metrics_with_bootstrapped_ci(*arrays)
-            for i, name in enumerate(ds_names):
-                for j, metric in enumerate(["snr", "err_std", "beta"]):
-                    result[(metric, name)][0] = res[j][0][i]
-                    result[(metric + "_ci_lower", name)][0] = res[j][1][i]
-                    result[(metric + "_ci_upper", name)][0] = res[j][2][i]
+            try:
+                # handle failing bootstrapping because e.g.
+                # too small sample size
+                res = tcol_metrics_with_bootstrapped_ci(*arrays)
+                for i, name in enumerate(ds_names):
+                    for j, metric in enumerate(["snr", "err_std", "beta"]):
+                        result[(metric, name)][0] = res[j][0][i]
+                        result[(metric + "_ci_lower", name)][0] = res[j][1][i]
+                        result[(metric + "_ci_upper", name)][0] = res[j][2][i]
+            except ValueError:
+                # if the calculation fails, the template results (np.nan) are used
+                pass
         return result
