@@ -105,6 +105,7 @@ def _index_units(year, month, day, unit="day", respect_leap_years=True) -> (np.a
 def calc_climatology(Ser,
                      moving_avg_orig=5,
                      moving_avg_clim=35,
+                     moving_avg_month_clim=3,
                      median=False,
                      timespan=None,
                      fill=np.nan,
@@ -128,9 +129,14 @@ def calc_climatology(Ser,
         Default: 5
 
     moving_avg_clim : float, optional
-        The size of the moving_average window [units] that will be applied on the
+        The size of the moving_average window in days that will be applied on the
         calculated climatology (long-term event correction)
         Default: 35
+
+    moving_avg_month_clim: : float, optional
+        Same as for 'moving_avg_clim', but applied to monthly climatologies. In case
+        unit='month', this value overrides 'moving_avg_clim'
+        Default: 3
 
     median : boolean, optional
         if set to True, the climatology will be based on the median conditions
@@ -180,6 +186,9 @@ def calc_climatology(Ser,
     """
     if unit != "day":
         respect_leap_years, interpolate_leapday = False, False
+
+    if unit == "month":
+        moving_avg_clim = moving_avg_month_clim
 
     if timespan is not None:
         Ser = Ser.truncate(before=timespan[0], after=timespan[1])
