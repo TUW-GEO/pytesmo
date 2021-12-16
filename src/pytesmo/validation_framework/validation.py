@@ -267,10 +267,11 @@ class Validation(object):
                 for result in results[key]:
                     try:
                         entries.append(result[field_name][0])
-                    except KeyError:
+                    except KeyError as e:
                         # indicating a metric result was not produced
                         warnings.warn(
-                            f"No TCA results for gpi: {result['gpi']}"
+                            f"No TCA results for gpi: {result['gpi']}. Error "
+                            f"message: {e}"
                         )
                         entries.append(np.nan)
                 compact_results[key][field_name] = np.array(
