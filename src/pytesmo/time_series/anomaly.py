@@ -168,7 +168,8 @@ def calc_climatology(Ser,
         moving average applied on the calculated climatology
 
     unit: str, optional
-        Unit of the year to apply the climatology calculation to. Currently supported options are 'day', 'month'.
+        Unit of the year to apply the climatology calculation to. Currently,
+        supported options are 'day', 'month'.
         Default: 'day'
 
     Returns

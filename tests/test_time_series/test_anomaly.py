@@ -94,6 +94,22 @@ def test_climatology_always_366():
     assert clim.size == 366
 
 
+def test_monthly_climatology_always_12():
+    ts = pd.Series(np.sin(np.arange(366) / 366. * 2 * np.pi), index=pd.date_range(
+        '2000-01-01', freq='D', periods=366))
+    # remove a part of the time series
+    ts['2000-02-01': '2000-02-28'] = np.nan
+    ts = ts.dropna()
+    clim = anomaly.calc_climatology(ts, unit="month")
+    assert clim.size == 12
+
+    # this should also be the case if interpolate_leapday is set
+    ts = pd.Series(np.sin(np.arange(10)), index=pd.date_range(
+        '2000-01-01', freq='D', periods=10))
+    clim = anomaly.calc_climatology(ts, unit="month", interpolate_leapday=True)
+    assert clim.size == 12
+
+
 def test_climatology_always_366_fill():
     ts = pd.Series(np.sin(np.arange(366) / 366. * 2 * np.pi), index=pd.date_range(
         '2000-01-01', freq='D', periods=366))
