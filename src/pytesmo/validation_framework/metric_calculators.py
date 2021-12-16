@@ -1717,16 +1717,17 @@ class TripleCollocationMetrics(MetadataMetrics, PairwiseMetricsMixin):
         result = super().calc_metrics(data, gpi_info)
         n_obs = len(data)
         result["n_obs"][0] = n_obs
-        if n_obs < self.min_obs:
-            warnings.warn(
-                "Not enough observations to calculate metrics.", UserWarning
-            )
-            return result
 
         # get the remaining metrics template for this specific combination
         othernames = list(data.columns)
         othernames.remove(self.refname)
         result.update(self._get_metric_template(self.refname, othernames))
+
+        if n_obs < self.min_obs:
+            warnings.warn(
+                "Not enough observations to calculate metrics.", UserWarning
+            )
+            return result
 
         # calculate triple collocation metrics
         ds_names = (self.refname, *othernames)
