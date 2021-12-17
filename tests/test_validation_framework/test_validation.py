@@ -172,11 +172,11 @@ def test_ascat_ismn_validation(ascat_reader, ismn_reader):
     jobs = []
 
     ids = ismn_reader.get_dataset_ids(
-        variable="soil moisture", min_depth=0, max_depth=0.1
+        variable="soil_moisture", min_depth=0, max_depth=0.1
     )
     for idx in ids:
-        metadata = ismn_reader.metadata[idx]
-        jobs.append((idx, metadata["longitude"], metadata["latitude"]))
+        metadata = ismn_reader.read_metadata(idx)
+        jobs.append((idx, metadata["longitude"].val, metadata["latitude"].val))
 
     # Create the variable ***save_path*** which is a string representing the
     # path where the results will be saved. **DO NOT CHANGE** the name
@@ -188,7 +188,7 @@ def test_ascat_ismn_validation(ascat_reader, ismn_reader):
     # Create the validation object.
 
     datasets = {
-        "ISMN": {"class": ismn_reader, "columns": ["soil moisture"]},
+        "ISMN": {"class": ismn_reader, "columns": ["soil_moisture"]},
         "ASCAT": {
             "class": ascat_reader,
             "columns": ["sm"],
@@ -226,7 +226,7 @@ def test_ascat_ismn_validation(ascat_reader, ismn_reader):
         netcdf_results_manager(results, save_path)
 
     results_fname = os.path.join(
-        save_path, "ASCAT.sm_with_ISMN.soil moisture.nc"
+        save_path, "ASCAT.sm_with_ISMN.soil_moisture.nc"
     )
     # targets
     target_vars = {
@@ -276,7 +276,7 @@ def test_ascat_ismn_validation_metadata(ascat_reader, ismn_reader):
     jobs = []
 
     ids = ismn_reader.get_dataset_ids(
-        variable="soil moisture", min_depth=0, max_depth=0.1
+        variable="soil_moisture", min_depth=0, max_depth=0.1
     )
 
     metadata_dict_template = {
@@ -287,17 +287,18 @@ def test_ascat_ismn_validation_metadata(ascat_reader, ismn_reader):
     }
 
     for idx in ids:
-        metadata = ismn_reader.metadata[idx]
+        metadata = ismn_reader.read_metadata(idx, 'obj')
         metadata_dict = [
             {
-                "network": metadata["network"],
-                "station": metadata["station"],
-                "landcover": metadata["landcover_2010"],
-                "climate": metadata["climate"],
+                "network": metadata["network"][1],
+                "station": metadata["station"][1],
+                "landcover": metadata["lc_2010"][1],
+                "climate": metadata["climate_KG"][1],
             }
         ]
         jobs.append(
-            (idx, metadata["longitude"], metadata["latitude"], metadata_dict)
+            (idx, metadata["longitude"][1], metadata["latitude"][1],
+             metadata_dict)
         )
 
     # Create the variable ***save_path*** which is a string representing the
@@ -312,7 +313,7 @@ def test_ascat_ismn_validation_metadata(ascat_reader, ismn_reader):
     datasets = {
         "ISMN": {
             "class": ismn_reader,
-            "columns": ["soil moisture"],
+            "columns": ["soil_moisture"],
         },
         "ASCAT": {
             "class": ascat_reader,
@@ -350,7 +351,7 @@ def test_ascat_ismn_validation_metadata(ascat_reader, ismn_reader):
         netcdf_results_manager(results, save_path)
 
     results_fname = os.path.join(
-        save_path, "ASCAT.sm_with_ISMN.soil moisture.nc"
+        save_path, "ASCAT.sm_with_ISMN.soil_moisture.nc"
     )
     target_vars = {
         "n_obs": [
@@ -467,7 +468,7 @@ def test_validation_with_averager(ascat_reader, ismn_reader):
         },
         "ISMN": {
             "class": ismn_reader,
-            "columns": ["soil moisture"],
+            "columns": ["soil_moisture"],
         },
     }
 
@@ -504,7 +505,7 @@ def test_validation_with_averager(ascat_reader, ismn_reader):
         netcdf_results_manager(results, save_path)
 
     results_fname = os.path.join(
-        save_path, "ASCAT.sm_with_ISMN.soil moisture.nc"
+        save_path, "ASCAT.sm_with_ISMN.soil_moisture.nc"
     )
 
     target_vars = {
@@ -1074,7 +1075,7 @@ def test_ascat_ismn_validation_metadata_rolling(ascat_reader, ismn_reader):
     jobs = []
 
     ids = ismn_reader.get_dataset_ids(
-        variable="soil moisture", min_depth=0, max_depth=0.1
+        variable="soil_moisture", min_depth=0, max_depth=0.1
     )
 
     metadata_dict_template = {
@@ -1085,17 +1086,18 @@ def test_ascat_ismn_validation_metadata_rolling(ascat_reader, ismn_reader):
     }
 
     for idx in ids:
-        metadata = ismn_reader.metadata[idx]
+        metadata = ismn_reader.read_metadata(idx, format='obj')
         metadata_dict = [
             {
-                "network": metadata["network"],
-                "station": metadata["station"],
-                "landcover": metadata["landcover_2010"],
-                "climate": metadata["climate"],
+                "network": metadata["network"][1],
+                "station": metadata["station"][1],
+                "landcover": metadata["lc_2010"][1],
+                "climate": metadata["climate_KG"][1],
             }
         ]
         jobs.append(
-            (idx, metadata["longitude"], metadata["latitude"], metadata_dict)
+            (idx, metadata["longitude"][1], metadata["latitude"][1],
+             metadata_dict)
         )
 
     save_path = tempfile.mkdtemp()
@@ -1103,7 +1105,7 @@ def test_ascat_ismn_validation_metadata_rolling(ascat_reader, ismn_reader):
     # Create the validation object.
 
     datasets = {
-        "ISMN": {"class": ismn_reader, "columns": ["soil moisture"]},
+        "ISMN": {"class": ismn_reader, "columns": ["soil_moisture"]},
         "ASCAT": {
             "class": ascat_reader,
             "columns": ["sm"],
@@ -1143,7 +1145,7 @@ def test_ascat_ismn_validation_metadata_rolling(ascat_reader, ismn_reader):
         )
 
     results_fname = os.path.join(
-        save_path, "ASCAT.sm_with_ISMN.soil moisture.nc"
+        save_path, "ASCAT.sm_with_ISMN.soil_moisture.nc"
     )
 
     target_vars = {
