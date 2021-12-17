@@ -11,7 +11,7 @@ Setup
     conda env create -f environment.yml
     conda activate pytesmo
     ```
-     
+
 3) Install pytesmo for development:
     ```
     pip install -e .
@@ -27,8 +27,8 @@ Setup
     ```
    This runs a few checks before you commit your code to make sure it's nicely
    formatted.
-   
-   
+
+
 Now you should be ready to go.
 
 
@@ -52,7 +52,7 @@ Create a local branch:
     ```
     git checkout -b my_feature_branch
     ```
-    
+
 Now add your feature. Please add some tests in the test directory. See below for
 how to run them. Once you are done, you can add and commit your changes (`git
 add <changed files>` and `git commit`) and  push them to your fork. The first
@@ -76,7 +76,7 @@ Working with Cython
 
 In case you change something in the cython extensions, make sure to run:
 
-    python setup.py build_ext --inplace
+    python setup.py build_ext --inplace --cythonize
 
 after you applied your changes. There will be some warnings like this:
 
@@ -86,6 +86,9 @@ Ignore the warnings about unused entries, e.g. 'dtype_signed', 'itemsize',
 'kind', 'memslice', 'ndarray', and maybe some more. If there are other warnings
 than unused entry, or if one of the unused entries looks like a variable name
 you used, you should probably investigate them.
+
+Remember to check in the generated C-files, because the built binary packages
+uploaded to PyPI will be based on those.
 
 
 Setup.py commands
@@ -113,7 +116,7 @@ Creating a release
 ------------------
 
 To release a new version of this package, make sure all tests are passing
-on the master branch and the `CHANGELOG.rst` is up-to-date, with changes for 
+on the master branch and the `CHANGELOG.rst` is up-to-date, with changes for
 the new version at the top.
 
 Then draft a new release on [GitHub](https://github.com/TUW-GEO/pytesmo/releases).
@@ -124,5 +127,5 @@ all tests have passed.
 If this does not work (tests pass but upload fails) you can download the
 ``whl`` and ``dist`` packages for each workflow run from
 https://github.com/TUW-GEO/pytesmo/actions (Artifacts) and push them manually to
-https://pypi.org/project/pytesmo/ e.g. using [twine](https://pypi.org/project/twine/) 
+https://pypi.org/project/pytesmo/ e.g. using [twine](https://pypi.org/project/twine/)
 (you need to be a package maintainer on pypi for that).
