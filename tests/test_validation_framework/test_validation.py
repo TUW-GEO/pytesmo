@@ -128,7 +128,8 @@ def ismn_reader():
         "multinetwork",
         "header_values",
     )
-    ismn_reader = ISMN_Interface(ismn_data_folder)
+    meta_path = tempfile.mkdtemp()
+    ismn_reader = ISMN_Interface(ismn_data_folder, meta_path=meta_path)
 
     return ismn_reader
 
@@ -265,6 +266,8 @@ def test_ascat_ismn_validation(ascat_reader, ismn_reader):
         filename=results_fname,
         target_vars=target_vars,
     )
+
+    ascat_reader.close()
 
 
 @pytest.mark.slow
@@ -423,6 +426,8 @@ def test_ascat_ismn_validation_metadata(ascat_reader, ismn_reader):
         variables=vars_should
     )
 
+    ascat_reader.close()
+
 
 def test_validation_with_averager(ascat_reader, ismn_reader):
     """
@@ -535,6 +540,8 @@ def test_validation_with_averager(ascat_reader, ismn_reader):
         filename=results_fname,
         target_vars=target_vars,
     )
+
+    ascat_reader.close()
 
 
 def test_validation_error_n2_k2():
@@ -1188,6 +1195,8 @@ def test_ascat_ismn_validation_metadata_rolling(ascat_reader, ismn_reader):
     assert np.all(
         reader.read_ts(1).columns.values == np.array(["R", "p_R", "RMSD"])
     )
+
+    ascat_reader.close()
 
 
 def test_args_to_iterable_non_iterables():
