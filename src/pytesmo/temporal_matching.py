@@ -315,6 +315,7 @@ def temporal_collocation(
             )
         if other.index.tz != ref_dr.tz:
             other = other.tz_convert(ref_dr.tz)
+
     if dropduplicates or method == "nearest":
         other = other[~other.index.duplicated(keep="first")]
         ref_duplicated = ref_dr.duplicated(keep="first")
@@ -354,32 +355,30 @@ def temporal_collocation(
             )
 
     elif method == "mean":
+
         window_days = 2 * window / pd.Timedelta(1, "D")
         other_times = other.index.to_julian_date().values
         if not has_invalid or use_invalid:
             mask = np.ones_like(other_times, dtype=bool)
         else:
             mask = ~flagged
-        if isinstance(other, pd.DataFrame):
-            data = [
-                resample_mean(
-                    other_times,
-                    other[col].values[mask],
-                    ref_dr.to_julian_date().values,
-                    window_days
-                )
-                for col in other
-            ]
-            collocated = pd.DataFrame(np.vstack(data).T, index=ref_dr, columns=other.columns)
-        elif isinstance(other, pd.Series):
-            data = resample_mean(
-                other_times,
-                other.values[mask],
-                ref_dr.to_julian_date().values,
-                window_days
+
+        other_is_series = isinstance(other, pd.Series)
+        if other_is_series:
+            other = pd.DataFrame(other, columns=[other.name])
+
+        ncols = other.shape[1]
+        data = np.empty((ncols, len(ref_dr)), dtype=other.iloc[:, 0].dtype)
+        ref_dr_jd = ref_dr.to_julian_date().values
+        for i in range(ncols):
+            other_data = other.iloc[:, 0].values[mask]
+            data[i, :] = resample_mean(
+                other_times, other_data, ref_dr_jd, window_days
             )
-            collocated = pd.Series(data, index=ref_dr)
-            collocated.name = other.name
+        collocated = pd.DataFrame(data.T, index=ref_dr, columns=other.columns)
+
+        if other_is_series:
+            collocated = collocated.iloc[:, 0]
 
     else:
         raise NotImplementedError(
