@@ -108,7 +108,8 @@ class BasicAdapter:
 
     def _adapt(self, df: DataFrame) -> DataFrame:
         # drop time zone info and extract df from ASCAT TS object
-        return self.__drop_tz_info(self.__get_dataframe(df))
+        return self.__drop_tz_info(self.__get_dataframe(df)
+                                   if df is not None else DataFrame())
 
     def _adapt_custom(self, *args, **kwargs):
         # modifies data from whatever function was set as `read_name`.
@@ -270,7 +271,8 @@ class AdvancedMaskingAdapter(BasicAdapter):
         Reader object, has to have a `read_ts` or `read` method or a method
         name must be specified in the `read_name` kwarg. The same method will
         be available for the adapted version of the reader.
-    filter_list: list of 3-tuples: column_name, operator, and threshold.
+    filter_list: list[tuple, tuple, tuple]
+        [column_name, operator, threshold]
         'column_name': string
             name of the column to apply the operator to
         'operator': Callable or str;
