@@ -55,7 +55,6 @@ jobs:
       - name: Install package and test
         shell: bash -l {0}
         run: |
-          git status
           pip install .
           # This separation avoids segfaults:
           pytest --cache-clear
