@@ -10,6 +10,7 @@ import pandas as pd
 import scipy.interpolate as sc_int
 from warnings import warn
 import pytesmo.utils as utils
+from pytesmo.cdf_matching import CDFMatching
 
 
 def add_scaled(df, method="linreg", label_in=None, label_scale=None, **kwargs):
@@ -347,140 +348,6 @@ def lin_cdf_match_stored_params(
     )
 
 
-@utils.deprecated()
-def cdf_match(
-    src, ref, min_val=None, max_val=None, nbins=100, minobs=None, **kwargs
-):
-    """
-    computes cumulative density functions of src and ref at their
-    respective bin-edges by 5th order spline interpolation; then matches CDF of
-    src to CDF of ref.
-
-    This function does not make sure that the percentiles are unique so
-    it can happen that multiple measurements are scaled to one point or that
-    there are NaN values in the output array.
-
-    Parameters
-    ----------
-    src: numpy.array
-        input dataset which will be scaled
-    ref: numpy.array
-        src will be scaled to this dataset
-    min_val: float, optional
-        Minimum allowed value, output data is capped at this value
-    max_val: float, optional
-        Maximum allowed value, output data is capped at this value
-    nbins: int, optional
-        Number of bins to use for estimation of the CDF
-    minobs : int
-        Minimum desired number of observations in a bin.
-    ** kwargs: dict
-        keywords to be passed onto the gen_cdf_match() function
-
-    Returns
-    -------
-    CDF matched values: numpy.array
-        dataset src with CDF as ref
-    """
-    percentiles = np.linspace(0, 100, nbins)
-
-    if minobs is not None:
-        percentiles = utils.resize_percentiles(src, percentiles, minobs)
-
-    perc_src = np.array(np.percentile(src, percentiles))
-    perc_src = utils.unique_percentiles_interpolate(
-        perc_src, percentiles=percentiles
-    )
-    perc_ref = np.array(np.percentile(ref, percentiles))
-    perc_ref = utils.unique_percentiles_interpolate(
-        perc_ref, percentiles=percentiles
-    )
-
-    return gen_cdf_match(
-        src,
-        perc_src,
-        perc_ref,
-        ref=ref,
-        min_val=min_val,
-        max_val=max_val,
-        k=5,
-        **kwargs,
-    )
-
-
-def cdf_beta_match(
-    src, ref, minobs=20, lin_edge_scaling=True, nbins=100, **kwargs
-):
-    """
-    takes the source timeseries, fits a beta distribution through its CDF and
-    finds unique percentile values corresponding to the number of bins used.
-    The size of bins is by default dynamically increased in case too few
-    observations (less than 20) are in a bin, leading to overfitting. Based on
-    Moesinger et al. (2020).
-
-    These values are used to scale the source to the reference by linear
-    interpolation between each pair of bin edges.
-
-    Uses the edge values linear scaling method described in Moesinger et
-    al. (2020) by default.
-
-    Parameters
-    ----------
-    src: numpy.array
-        input dataset which will be scaled
-    ref: numpy.array
-        src will be scaled to this dataset
-    minobs : int
-        Minimum desired number of observations in a bin.
-    nbins: int, optional
-        Number of bins to use for estimation of the CDF
-    ** kwargs: dict
-        keywords to be passed onto the gen_cdf_match() function
-
-    Returns
-    -------
-    CDF matched values: numpy.array
-        dataset src with CDF as ref
-    """
-    percentiles = np.linspace(0, 100, nbins)
-
-    if minobs is not None:
-        percentiles = utils.resize_percentiles(src, percentiles, minobs)
-
-    # match the two arrays
-    if len(src) != len(ref):
-        max_obs = max(len(src), len(ref))
-        d_perc = np.arange(max_obs, dtype="float") / (max_obs - 1) * 100
-
-        if len(src) < len(ref):
-            src = utils.ml_percentile(src, d_perc)
-        else:
-            ref = utils.ml_percentile(ref, d_perc)
-
-    # calculate percentiles using matlab method
-    perc_src = utils.ml_percentile(src, percentiles)
-    perc_ref = utils.ml_percentile(ref, percentiles)
-
-    # fit beta distributions through the source percentiles
-    if np.unique(perc_src).size == 1:
-        warn(
-            "There is only one percentile value on which the scaling is based"
-        )
-    else:
-        perc_src = utils.unique_percentiles_beta(
-            perc_src, percentiles=percentiles
-        )
-
-    return gen_cdf_match(
-        src,
-        perc_src,
-        perc_ref,
-        lin_edge_scaling=lin_edge_scaling,
-        ref=ref,
-        **kwargs,
-    )
-
-
 def gen_cdf_match(
     src,
     perc_src,
@@ -568,3 +435,77 @@ def gen_cdf_match(
         scaled[scaled < min_val] = min_val
 
     return scaled
+
+
+@utils.deprecated()
+def cdf_beta_match(
+    src, ref, minobs=20, lin_edge_scaling=True, nbins=100, **kwargs
+):
+    """
+    takes the source timeseries, fits a beta distribution through its CDF and
+    finds unique percentile values corresponding to the number of bins used.
+    The size of bins is by default dynamically increased in case too few
+    observations (less than 20) are in a bin, leading to overfitting. Based on
+    Moesinger et al. (2020).
+
+    These values are used to scale the source to the reference by linear
+    interpolation between each pair of bin edges.
+
+    Uses the edge values linear scaling method described in Moesinger et
+    al. (2020) by default.
+
+    Parameters
+    ----------
+    src: numpy.array
+        input dataset which will be scaled
+    ref: numpy.array
+        src will be scaled to this dataset
+    minobs : int
+        Minimum desired number of observations in a bin.
+    nbins: int, optional
+        Number of bins to use for estimation of the CDF
+    ** kwargs: dict
+        keywords to be passed onto the gen_cdf_match() function
+
+    Returns
+    -------
+    CDF matched values: numpy.array
+        dataset src with CDF as ref
+    """
+    return cdf_match(src, ref, minobs=minobs, linear_edge_scaling=lin_edge_scaling, nbins=nbins)
+
+
+def cdf_match(
+    src, ref, minobs=20, linear_edge_scaling=True, nbins=100
+):
+    """
+    Rescales by CDF matching.
+
+    This calculates the empirical CDFs for source and reference dataset using a
+    specified number of bins. In case of non-unique percentile values, a beta
+    distribution is fitted to the CDF.
+    For more robust estimation of the lower and upper bins, linear edge scaling
+    is used (see Moesinger et al., 2020 for details).
+
+    Parameters
+    ----------
+    src: numpy.array
+        input dataset which will be scaled
+    ref: numpy.array
+        src will be scaled to this dataset
+    minobs : int
+        Minimum desired number of observations in a bin.
+    nbins: int, optional
+        Number of bins to use for estimation of the CDF
+    linear_edge_scaling : bool, optional
+        Whether to use linear edge scaling. Default is True.
+
+    Returns
+    -------
+    CDF matched values: numpy.array
+        dataset src with CDF as ref
+    """
+    matcher = CDFMatching(
+        nbins=nbins, minobs=minobs, linear_edge_scaling=linear_edge_scaling
+    ).fit(src, ref)
+    return matcher.predict(src)

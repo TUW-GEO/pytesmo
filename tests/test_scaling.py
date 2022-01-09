@@ -78,7 +78,7 @@ def test_scaling_method(method):
     x = np.arange(n)
     y = np.arange(n) * 0.5
 
-    if method in ["lin_cdf_match", "cdf_match"]:
+    if method in ["lin_cdf_match", "cdf_beta_match"]:
         with pytest.deprecated_call():
             o = getattr(scaling, method)(y, x)
     else:
@@ -101,9 +101,11 @@ def test_scaling_kwargs(method):
               'minobs': 20,
               'max_val': 950,
               'min_val': 50}
-    if method in ["lin_cdf_match", "cdf_match"]:
+    if method in ["lin_cdf_match", "cdf_beta_match"]:
         with pytest.deprecated_call():
             getattr(scaling, method)(y, x, **kwargs)
+    elif method == "cdf_match":
+        scaling.cdf_match(y, x, linear_edge_scaling=True, nbins=100, minobs=20)
     else:
         getattr(scaling, method)(y, x, **kwargs)
 
@@ -116,7 +118,7 @@ def test_scale(method):
     y = np.arange(n) * 0.5
 
     df = pd.DataFrame({'x': x, 'y': y}, columns=['x', 'y'])
-    if method in ["lin_cdf_match", "cdf_match"]:
+    if method in ["lin_cdf_match", "cdf_beta_match"]:
         with pytest.deprecated_call():
             df_scaled = scaling.scale(df,
                                       method=method,
@@ -167,7 +169,7 @@ def test_add_scale(method):
     y = np.arange(n) * 0.5
 
     df = pd.DataFrame({'x': x, 'y': y}, columns=['x', 'y'])
-    if method in ["lin_cdf_match", "cdf_match"]:
+    if method in ["lin_cdf_match", "cdf_beta_match"]:
         with pytest.deprecated_call():
             df_scaled = scaling.add_scaled(df, method=method)
             # test the scaling the other way round
@@ -216,8 +218,8 @@ def test_single_percentile_data():
     with pytest.deprecated_call():
         s = scaling.lin_cdf_match(y, x)
     nptest.assert_almost_equal(s, np.full_like(s, np.nan))
-    with pytest.deprecated_call():
-        s = scaling.cdf_match(y, x)
+
+    s = scaling.cdf_match(y, x)
     nptest.assert_almost_equal(s, np.full_like(s, np.nan))
 
 

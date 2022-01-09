@@ -42,9 +42,9 @@ class CDFMatching(RegressorMixin, BaseEstimator):
         of bins was reduced during fitting due to insufficient data, it is
         right-padded with NaNs.
     ref_perc_ : np.ndarray (nbins,)
-        The percentile values derived from the reference (y) data. If the number
-        of bins was reduced during fitting due to insufficient data, it is
-        right-padded with NaNs.
+        The percentile values derived from the reference (y) data. If the
+        number of bins was reduced during fitting due to insufficient data, it
+        is right-padded with NaNs.
 
     Notes
     -----
@@ -115,32 +115,31 @@ class CDFMatching(RegressorMixin, BaseEstimator):
             else:
                 y = _resample_ecdf(y, max_samples)
 
-        # for a single bin just do a linear interpolation
         if tmp_nbins == 1 and self.linear_edge_scaling:
+            # for a single bin just do a linear interpolation in case linear
+            # edge scaling is activated
             x_perc, y_perc = _linreg_percentiles(x_unsorted, y_unsorted)
         else:
-
-            x_perc = _matlab_percentile(x, tmp_percentiles)
-            y_perc = _matlab_percentile(y, tmp_percentiles)
+            # calculate unique percentiles
+            x_perc = _matlab_percentile_from_sorted(x, tmp_percentiles)
+            y_perc = _matlab_percentile_from_sorted(y, tmp_percentiles)
             x_all_equal = x[0] == x[-1]  # because it's sorted
             if not x_all_equal:
                 x_perc, y_perc = self._calc_unique_percentiles(
-                    x_perc, y_perc, tmp_percentiles
-                )
+                    x_perc, y_perc, tmp_percentiles)
             if self.linear_edge_scaling:
                 x_perc, y_perc = self._linear_edge_scaling(
-                    x, y, x_perc, y_perc, tmp_percentiles
-                )
+                    x, y, x_perc, y_perc, tmp_percentiles)
 
         # fill self.x_perc_ and self.y_perc_ with NaN on the right in case the
         # bin size was reduced, so we always get arrays of size nbins as
         # self.x_perc_ and self.y_perc_
-        self.x_perc_ = np.zeros(self.nbins + 1, dtype=x.dtype) * np.nan
-        self.y_perc_ = np.zeros(self.nbins + 1, dtype=x.dtype) * np.nan
-        self.percentiles_ = np.zeros(self.nbins + 1, dtype=x.dtype) * np.nan
-        self.percentiles_[0 : tmp_nbins + 1] = tmp_percentiles
-        self.x_perc_[0 : tmp_nbins + 1] = x_perc
-        self.y_perc_[0 : tmp_nbins + 1] = y_perc
+        self.x_perc_ = np.zeros(self.nbins, dtype=x.dtype) * np.nan
+        self.y_perc_ = np.zeros(self.nbins, dtype=x.dtype) * np.nan
+        self.percentiles_ = np.zeros(self.nbins, dtype=x.dtype) * np.nan
+        self.percentiles_[0:tmp_nbins + 1] = tmp_percentiles
+        self.x_perc_[0:tmp_nbins + 1] = x_perc
+        self.y_perc_[0:tmp_nbins + 1] = y_perc
         return self
 
     def predict(self, X):
@@ -158,20 +157,16 @@ class CDFMatching(RegressorMixin, BaseEstimator):
             return np.zeros(len(x), dtype=x.dtype) * np.nan
         else:
             spline = interpolate.InterpolatedUnivariateSpline(
-                xp, yp, k=1, ext=0
-            )
+                xp, yp, k=1, ext=0)
             return spline(x)
 
     def _calc_percentiles(self, nsamples):
         # calculate percentiles, potentially resize them
         percentiles = (
-            np.arange(self.nbins + 1, dtype=np.float64) / self.nbins * 100
-        )
+            np.arange(self.nbins, dtype=np.float64) / self.nbins * 100)
         minbinsize = percentiles[1] - percentiles[0]
-        if (
-            self.minobs is not None
-            and nsamples * minbinsize / 100 < self.minobs
-        ):
+        if (self.minobs is not None and
+                nsamples * minbinsize / 100 < self.minobs):
             warnings.warn("The bins have been resized")
             nbins = np.int32(np.floor(nsamples / self.minobs))
             if nbins == 0:
@@ -189,19 +184,13 @@ class CDFMatching(RegressorMixin, BaseEstimator):
 
         # make sure ref percentiles are unique if not then linear interpolation
         # is used
-        # TODO: do this without using np.unique, we already know the data is
-        # sorted, so it's much easier to do this by hand
-        uniq, uniq_ind = np.unique(
-            y_perc, return_index=True
-        )
+        uniq, uniq_ind = np.unique(y_perc, return_index=True)
         if uniq_ind.size != len(percentiles) and uniq_ind.size > 1:
             spline = interpolate.InterpolatedUnivariateSpline(
-                percentiles[uniq_ind], y_perc[uniq_ind], k=1, ext=0
-            )
+                percentiles[uniq_ind], y_perc[uniq_ind], k=1, ext=0)
             y_perc = spline(percentiles)
             spline = interpolate.InterpolatedUnivariateSpline(
-                percentiles[uniq_ind], x_perc[uniq_ind], k=1, ext=0
-            )
+                percentiles[uniq_ind], x_perc[uniq_ind], k=1, ext=0)
             x_perc = spline(percentiles)
         return x_perc, y_perc
 
@@ -230,15 +219,13 @@ class CDFMatching(RegressorMixin, BaseEstimator):
 
 
 def _resample_ecdf(x_sorted, n):
-    # get percentiles between 0 and 1
-    # p = (stats.rankdata(x_sorted) - 1) / (len(x_sorted)-1)
-    # this is a bit faster, but doesn't handle ties
-    p = np.arange(len(x_sorted) + 1, dtype=float) / len(x_sorted)
-    new_p = np.arange(n + 1, dtype=float) / n
-    return np.interp(new_p, p, x_sorted)
+    """Resample ECDF to n bins"""
+    # calculate percentiles for x_sorted
+    new_percentiles = np.arange(n, dtype=float) / (n - 1) * 100.0
+    return _matlab_percentile_from_sorted(x_sorted, new_percentiles)
 
 
-def _matlab_percentile(data, percentiles):
+def _matlab_percentile_from_sorted(data, percentiles):
     """
     Calculate percentiles in the way Matlab and IDL do it.
 
@@ -296,9 +283,8 @@ def _unique_percentiles_beta(perc_values, percentiles):
         percentiles = np.asanyarray(percentiles)
         percentiles = percentiles / 100.0
 
-        p, ier = optimize.curve_fit(
-            lambda x, a, b: special.betainc(a, b, x), percentiles, perc_values
-        )
+        p, ier = optimize.curve_fit(lambda x, a, b: special.betainc(a, b, x),
+                                    percentiles, perc_values)
         uniq_perc_values = special.betainc(p[0], p[1], percentiles)
         uniq_perc_values = uniq_perc_values * max_value + min_value
     else:
