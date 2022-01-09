@@ -8,6 +8,7 @@ dependencies:
   - numpy
   - scipy
   - pandas
+  - scikit-learn
   - netCDF4
   - pygrib
   - cython
