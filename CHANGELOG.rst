@@ -4,7 +4,14 @@ Changelog
 
 Unreleased
 ==========
--
+- Integration tests with new ISMN Interface
+- Add option to Validation Framework to ingnore errors in ``Validation.calc()``
+
+Version 0.13.2, 2021-12-17
+==========================
+- monthly climatologies
+- ``wraparound=True`` is the new default in the climatology calculation
+- better error handling in validation framework
 
 Version 0.12.0, 2021-08-19
 ==========================
