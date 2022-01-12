@@ -37,6 +37,7 @@ dependencies:
     - pytest-mpl
     - pre-commit
     - flake8
+    - yapf
     # optional, for documentation:
     - sphinx_rtd_theme
     - nbsphinx
