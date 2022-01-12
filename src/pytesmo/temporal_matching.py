@@ -356,7 +356,7 @@ def temporal_collocation(
         data = np.empty((ncols, len(ref_dr)), dtype=other.iloc[:, 0].dtype)
         ref_dr_jd = ref_dr.to_julian_date().values
         for i in range(ncols):
-            other_data = other.iloc[:, 0].values[mask]
+            other_data = other.iloc[:, i].values[mask]
             data[i, :] = resample_mean(other_times, other_data, ref_dr_jd,
                                        window_days)
         collocated = pd.DataFrame(data.T, index=ref_dr, columns=other.columns)
