@@ -71,7 +71,7 @@ clone the Github repository and install from source:
 
     git clone https://github.com/TUW-GEO/pytesmo.git --recursive
     cd pytesmo
-    conda create -n pytesmo python=3.6 # or any supported python version
+    conda create -n pytesmo python=3.7 # or any supported python version
     source activate pytesmo
     conda env update -f environment.yml -n pytesmo
     pip install -e .
