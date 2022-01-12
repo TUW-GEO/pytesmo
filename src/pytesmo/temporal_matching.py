@@ -8,7 +8,6 @@ import pandas as pd
 from pykdtree.kdtree import KDTree
 import warnings
 
-
 __all__ = ["temporal_collocation", "combined_temporal_collocation"]
 
 
@@ -87,19 +86,16 @@ def df_match(reference, *args, **kwds):
         valid_match = np.invert(np.isnan(matched))
 
         distance[valid_match] = (
-            arg.index.values[np.int32(matched[valid_match])]
-            - reference.index.values[valid_match]
-        ) / np.timedelta64(1, "D")
+            arg.index.values[np.int32(matched[valid_match])] -
+            reference.index.values[valid_match]) / np.timedelta64(1, "D")
 
         arg = arg.assign(index=arg.index.values, merge_key=np.arange(len(arg)))
 
-        arg_matched = pd.DataFrame(
-            {
-                "merge_key": matched,
-                "distance": distance,
-                "ref_index": reference.index.values,
-            }
-        )
+        arg_matched = pd.DataFrame({
+            "merge_key": matched,
+            "distance": distance,
+            "ref_index": reference.index.values,
+        })
         arg_matched = arg_matched.merge(arg, on="merge_key", how="left")
         arg_matched.index = arg_matched["ref_index"].values
         arg_matched = arg_matched.sort_index()
@@ -110,24 +106,18 @@ def df_match(reference, *args, **kwds):
             if asym_window == "<=":
                 # this means that only distance in the interval [distance[ are
                 # taken
-                valid_dist = (
-                    (arg_matched["distance"] >= 0.0)
-                    & (arg_matched["distance"] <= window)
-                ) | (
-                    (arg_matched["distance"] <= 0.0)
-                    & (arg_matched["distance"] > -window)
-                )
+                valid_dist = ((arg_matched["distance"] >= 0.0)
+                              & (arg_matched["distance"] <= window)) | (
+                                  (arg_matched["distance"] <= 0.0)
+                                  & (arg_matched["distance"] > -window))
                 invalid_dist = ~valid_dist
             if asym_window == ">=":
                 # this means that only distance in the interval ]distance] are
                 # taken
-                valid_dist = (
-                    (arg_matched["distance"] >= 0.0)
-                    & (arg_matched["distance"] < window)
-                ) | (
-                    (arg_matched["distance"] <= 0.0)
-                    & (arg_matched["distance"] >= -window)
-                )
+                valid_dist = ((arg_matched["distance"] >= 0.0)
+                              & (arg_matched["distance"] < window)) | (
+                                  (arg_matched["distance"] <= 0.0)
+                                  & (arg_matched["distance"] >= -window))
                 invalid_dist = ~valid_dist
             arg_matched.loc[invalid_dist] = np.nan
 
@@ -141,8 +131,7 @@ def df_match(reference, *args, **kwds):
             arg_matched = arg_matched.loc[min_dists]
 
         temporal_matched_args.append(
-            arg_matched.drop(["merge_key", "ref_index"], axis=1)
-        )
+            arg_matched.drop(["merge_key", "ref_index"], axis=1))
 
     if len(temporal_matched_args) == 1:
         return temporal_matched_args[0]
@@ -178,8 +167,7 @@ def matching(reference, *args, **kwargs):
         DeprecationWarning,
     )
     matched_datasets = df_match(
-        reference, *args, dropna=True, dropduplicates=True, **kwargs
-    )
+        reference, *args, dropna=True, dropduplicates=True, **kwargs)
 
     if type(matched_datasets) != tuple:
         matched_datasets = [matched_datasets]
@@ -320,10 +308,8 @@ def temporal_collocation(
         other = other[~other.index.duplicated(keep="first")]
         ref_duplicated = ref_dr.duplicated(keep="first")
         if np.any(ref_duplicated):
-            warnings.warn(
-                "Dropping duplicated indices in reference."
-                " This might indicate issues with your data."
-            )
+            warnings.warn("Dropping duplicated indices in reference."
+                          " This might indicate issues with your data.")
             ref_dr = ref_dr[~ref_dr.duplicated(keep="first")]
 
     # collocation
@@ -351,8 +337,7 @@ def temporal_collocation(
 
         if return_distance:
             collocated["distance_other"] = (
-                collocated["index_other"] - collocated.index
-            )
+                collocated["index_other"] - collocated.index)
 
     elif method == "mean":
 
@@ -372,9 +357,8 @@ def temporal_collocation(
         ref_dr_jd = ref_dr.to_julian_date().values
         for i in range(ncols):
             other_data = other.iloc[:, 0].values[mask]
-            data[i, :] = resample_mean(
-                other_times, other_data, ref_dr_jd, window_days
-            )
+            data[i, :] = resample_mean(other_times, other_data, ref_dr_jd,
+                                       window_days)
         collocated = pd.DataFrame(data.T, index=ref_dr, columns=other.columns)
 
         if other_is_series:
@@ -382,8 +366,7 @@ def temporal_collocation(
 
     else:
         raise NotImplementedError(
-            "Only nearest neighbour collocation is implemented so far"
-        )
+            "Only nearest neighbour collocation is implemented so far")
 
     # postprocessing
     # --------------
@@ -483,8 +466,7 @@ def combined_temporal_collocation(
             checkna=checkna,
             flag=flag,
             use_invalid=use_invalid,
-        )
-        for other in others
+        ) for other in others
     ]
     if isinstance(reference, (pd.DataFrame, pd.Series)) and add_ref_data:
         # first, check if we have to remove duplicates
@@ -534,9 +516,8 @@ def combined_temporal_collocation(
     "(n), (n), (m), () -> (m)",
     nopython=True,
 )
-def resample_mean(
-    times, values, target_times, window, resampled
-):  # pragma: no cover
+def resample_mean(times, values, target_times, window,
+                  resampled):  # pragma: no cover
     """
     Resamples to new times by taking a mean over a given window.
 
@@ -580,4 +561,4 @@ def resample_mean(
         if nobs == 0:
             resampled[i] = np.nan
         else:
-            resampled[i] = np.nanmean(values[lower : (upper + 1)])
+            resampled[i] = np.nanmean(values[lower:(upper + 1)])
