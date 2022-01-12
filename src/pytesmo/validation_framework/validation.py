@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 from pygeogrids.grids import CellGrid
 import warnings
+import logging
 
 from pytesmo.validation_framework.data_manager import DataManager
 from pytesmo.validation_framework.data_manager import get_result_names
@@ -189,6 +190,7 @@ class Validation(object):
         *args,
         rename_cols=True,
         only_with_temporal_ref=False,
+        handle_errors='raise',
     ):
         """
         The argument iterables (lists or numpy.ndarrays) are processed one
@@ -218,6 +220,10 @@ class Validation(object):
         only_with_temporal_ref : bool, optional
             If this is enabled, only combinations that include the temmporal
             reference are calculated.
+        handle_errors: Literal['raise', 'ignore'], optional (default: 'raise')
+            `raise`: If an error occurs during validation, raise exception.
+            `ignore`: If an error occurs during validation, log it and
+             continue with next GPI.
 
         Returns
         -------
@@ -229,6 +235,7 @@ class Validation(object):
 
         """
         results = {}
+
         if len(args) > 0:
             gpis, lons, lats, args = args_to_iterable(
                 gpis, lons, lats, *args, n=3
@@ -238,20 +245,32 @@ class Validation(object):
 
         for gpi_info in zip(gpis, lons, lats, *args):
 
-            df_dict = self.data_manager.get_data(
-                gpi_info[0], gpi_info[1], gpi_info[2]
-            )
+            try:
+                df_dict = self.data_manager.get_data(
+                    gpi_info[0], gpi_info[1], gpi_info[2]
+                )
 
-            # if no data is available continue with the next gpi
-            if len(df_dict) == 0:
-                continue
-            matched_data, result, used_data = self.perform_validation(
-                df_dict,
-                gpi_info,
-                rename_cols=rename_cols,
-                only_with_temporal_ref=only_with_temporal_ref,
-            )
-
+                # if no data is available continue with the next gpi
+                if len(df_dict) == 0:
+                    continue
+                matched_data, result, used_data = self.perform_validation(
+                    df_dict,
+                    gpi_info,
+                    rename_cols=rename_cols,
+                    only_with_temporal_ref=only_with_temporal_ref,
+                )
+            except Exception as e:
+                if handle_errors.lower() == 'ignore':
+                    logging.error(f"{gpi_info}: {e}")
+                    continue
+                elif handle_errors.lower() == 'raise':
+                    raise e
+                else:
+                    raise NotImplementedError(
+                        f"Unknown `handle_errors` option: "
+                        f"{handle_errors.lower()}. "
+                        f"Choose `ignore` or `raise`."
+                    )
             # add result of one gpi to global results dictionary
             for r in result:
                 if r not in results:

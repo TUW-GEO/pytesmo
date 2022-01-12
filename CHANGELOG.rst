@@ -4,7 +4,19 @@ Changelog
 
 Unreleased
 ==========
--
+
+Version 0.14.0, 2022-01-12
+==========================
+- Integration tests with new ISMN Interface
+- Add option to Validation Framework to ingnore errors in ``Validation.calc()``
+- Drop support for python 3.6
+- use `oldest-supported-numpy` in `pyproject.toml` to avoid errors due to incompatible numpy versions used in build-time.
+
+Version 0.13.2, 2021-12-17
+==========================
+- monthly climatologies
+- ``wraparound=True`` is the new default in the climatology calculation
+- better error handling in validation framework
 
 Version 0.12.0, 2021-08-19
 ==========================
