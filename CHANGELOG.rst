@@ -6,6 +6,8 @@ Unreleased
 ==========
 - Integration tests with new ISMN Interface
 - Add option to Validation Framework to ingnore errors in ``Validation.calc()``
+- Drop support for python 3.6
+- use `oldest-supported-numpy` in `pyproject.toml`.
 
 Version 0.13.2, 2021-12-17
 ==========================
