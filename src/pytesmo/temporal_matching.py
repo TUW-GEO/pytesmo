@@ -371,7 +371,7 @@ def temporal_collocation(
         data = np.empty((ncols, len(ref_dr)), dtype=other.iloc[:, 0].dtype)
         ref_dr_jd = ref_dr.to_julian_date().values
         for i in range(ncols):
-            other_data = other.iloc[:, 0].values[mask]
+            other_data = other.iloc[:, i].values[mask]
             data[i, :] = resample_mean(
                 other_times, other_data, ref_dr_jd, window_days
             )
@@ -565,18 +565,21 @@ def resample_mean(
     for i in range(n_target):
         for j in range(lower, n_orig + 1):
             lower = j
-            if times[j] >= target_times[i] - half_window:
+            if (
+                lower == n_orig
+                or times[j] >= target_times[i] + offset - half_window
+            ):
                 break
         # check if the current window is still below the last time that we have
         if times[n_orig - 1] > target_times[i] + half_window:
-            for j in range(upper, n_orig):
+            for j in range(max(0, upper), n_orig):
                 upper = j - 1
                 if times[j] > target_times[i] + half_window:
                     break
         else:
             upper = n_orig - 1
 
-        nobs = upper - lower + 1
+        nobs = max(upper - lower + 1, 0)
         if nobs == 0:
             resampled[i] = np.nan
         else:
