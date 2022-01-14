@@ -567,7 +567,7 @@ def resample_mean(
             lower = j
             if (
                 lower == n_orig
-                or times[j] >= target_times[i] + offset - half_window
+                or times[j] >= target_times[i] - half_window
             ):
                 break
         # check if the current window is still below the last time that we have
