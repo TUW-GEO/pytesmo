@@ -15,8 +15,8 @@ dependencies:
   - pykdtree
   - pyresample
   - numba
-  - matplotlib<=3.4.3
-  # optional, for documentation:
+  - matplotlib
+  # optional, for documentation and testing:
   - nb_conda
   - ipykernel
   - pip
@@ -29,7 +29,7 @@ dependencies:
     - build
     - repurpose
     - cadati
-    # optional, for testing:
+    # optional, for documentation and testing:
     - ascat>=2.0
     - ismn>=1.2.0
     - pytest
@@ -38,6 +38,5 @@ dependencies:
     - pre-commit
     - flake8
     - yapf
-    # optional, for documentation:
     - sphinx_rtd_theme
     - nbsphinx
