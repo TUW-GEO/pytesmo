@@ -732,3 +732,47 @@ def test_mean_collocation():
     s = tmatching.temporal_collocation(ref_dr, other[0], window, method="mean")
     assert (s == resampled[0]).all()
     assert isinstance(s, pd.Series)
+
+
+def test_mean_collocation_missing_start_end():
+    # In this test the first and last ten timestamps have no values within the
+    # window. This is to make sure that indexing at the start and end works as
+    # expected.
+
+    dr = pd.date_range("2019", "2020", freq="D", tz="UTC")
+    other_dr = pd.date_range("2019", "2020", freq="D", tz="UTC").values
+    other_dr[0:10] += pd.Timedelta(12, "H")
+    other_dr[-10:] -= pd.Timedelta(12, "H")
+    other = pd.DataFrame(
+        np.vstack(
+            (np.arange(len(dr), dtype=float), np.arange(len(dr), dtype=float))
+        ).T,
+        index=other_dr,
+    )
+
+    resampled = tmatching.temporal_collocation(
+        dr, other, pd.Timedelta(6, "H"), method="mean"
+    )
+
+    assert np.all(np.isnan(resampled[0:10]))
+    assert np.all(np.isnan(resampled[-10:]))
+    np.testing.assert_equal(other[10:-10].values, resampled[10:-10].values)
+
+    # test with "random" data that uses a seed with similar properties
+    np.random.seed(8986)
+    ref = pd.date_range("2020-01-01", "2020-12-31", freq="D")
+    values = np.random.randn(len(ref), 3)
+    random_shift = np.random.uniform(-12, 12, len(ref))
+    random = pd.DataFrame(
+        values, index=ref + pd.to_timedelta(random_shift, "H"),
+        columns=list(map(lambda x: f"random_{x}", range(3)))
+    )
+    window = pd.Timedelta(hours=6)
+    matched = tmatching.temporal_collocation(
+        ref, random, window, method="mean"
+    )
+
+    should_be_nan = np.abs(random_shift) > 6
+    expected = np.array(values)
+    expected[should_be_nan, :] = np.nan
+    np.testing.assert_equal(expected, matched)
