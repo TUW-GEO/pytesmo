@@ -8,9 +8,9 @@ import os
 from nbconvert.preprocessors import ExecutePreprocessor
 import nbformat
 import pytest
+from pytesmo.utils import rootdir
 
-examples_path = os.path.join(
-    os.path.dirname(__file__), '..', '..', 'docs', 'examples')
+examples_path = os.path.join(rootdir(), 'docs', 'examples')
 
 @pytest.mark.parametrize("notebook", [
     "anomalies.ipynb",
@@ -21,7 +21,7 @@ examples_path = os.path.join(
     "validation_framework.ipynb",
 ])
 @pytest.mark.skipif(
-    not os.path.exists(examples_path),
+    not os.path.isdir(examples_path),
     reason=f"Directory '{examples_path}' not found. "
            "Pytesmo is probably not installed in `editable` mode."
 )
