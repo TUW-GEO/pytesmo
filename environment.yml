@@ -14,29 +14,29 @@ dependencies:
   - cython
   - pykdtree
   - pyresample
-  - numba
   - matplotlib
   # optional, for documentation and testing:
   - nb_conda
   - ipykernel
   - pip
   - pip:
-    - pynetcf
-    - pygeogrids
-    - pynetcf
-    - pygeobase
-    - more_itertools
-    - build
-    - repurpose
-    - cadati
-    # optional, for documentation and testing:
-    - ascat>=2.0
-    - ismn>=1.2.0
-    - pytest
-    - pytest-cov
-    - pytest-mpl
-    - pre-commit
-    - flake8
-    - yapf
-    - sphinx_rtd_theme
-    - nbsphinx
+      - pynetcf
+      - pygeogrids
+      - pynetcf
+      - pygeobase
+      - more_itertools
+      - build
+      - repurpose
+      - cadati
+      - numba
+      # optional, for documentation and testing:
+      - ascat>=2.0
+      - ismn>=1.2.0
+      - pytest
+      - pytest-cov
+      - pytest-mpl
+      - pre-commit
+      - flake8
+      - yapf
+      - sphinx_rtd_theme
+      - nbsphinx
