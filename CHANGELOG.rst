@@ -4,7 +4,22 @@ Changelog
 
 Unreleased
 ==========
--
+- fixed bugs in resample_mean (PR `#262 <https://github.com/TUW-GEO/pytesmo/pull/262>`_)
+- Integration tests with new ISMN Interface
+- Add option to Validation Framework to ignore errors in ``Validation.calc()``
+- ipynb files from docs/examples are now also used as (optional) tests
+- ``yapf`` for code formatting (see developers guide) (Fix #248)
+
+
+Version 0.13.3, 2022-01-12
+==========================
+- use `oldest-supported-numpy` in `pyproject.toml` to avoid errors due to incompatible numpy versions used in build-time.
+
+Version 0.13.2, 2021-12-17
+==========================
+- monthly climatologies
+- ``wraparound=True`` is the new default in the climatology calculation
+- better error handling in validation framework
 
 Version 0.12.0, 2021-08-19
 ==========================

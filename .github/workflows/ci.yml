@@ -16,7 +16,7 @@ jobs:
     strategy:
       matrix:
         os: ["ubuntu-latest", "windows-latest"]
-        python-version: ['3.6', '3.7', '3.8', '3.9']
+        python-version: ['3.7', '3.8', '3.9']
         ymlfile: ['environment.yml']
     name: Py${{ matrix.python-version }}@${{ matrix.os }}🐍
     runs-on: ${{ matrix.os }}
@@ -26,7 +26,7 @@ jobs:
         with:
           submodules: true # does not work with self-hosted testdata
           fetch-depth: 0
-      - uses: conda-incubator/setup-miniconda@v2.0.1
+      - uses: conda-incubator/setup-miniconda@v2
         with:
           miniconda-version: "latest"
           auto-update-conda: true
@@ -55,8 +55,7 @@ jobs:
       - name: Install package and test
         shell: bash -l {0}
         run: |
-          pip install .
-          # This separation avoids segfaults:
+          pip install -e .
           pytest --cache-clear
       - name: Upload Coverage
         shell: bash -l {0}
@@ -99,7 +98,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   publish:
     name: Upload to PyPI
-    if: startsWith(github.ref, 'refs/tags/v') && startsWith(github.repository, 'TUW-GEO')
+    if: |
+      startsWith(github.ref, 'refs/tags/v') &&
+      startsWith(github.repository, 'TUW-GEO')
     needs: build
     runs-on: ubuntu-latest
     steps:

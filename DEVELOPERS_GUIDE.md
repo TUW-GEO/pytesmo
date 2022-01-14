@@ -64,6 +64,14 @@ Afterwards, `git push` is enough.
 
 Once your done you can open a pull request on Github.
 
+Code Formatting
+---------------
+To apply pep8 conform styling to any changed files [we use `yapf`](https://github.com/google/yapf). The correct
+settings are already set in `setup.cfg`. Therefore the following command
+should be enough:
+
+    yapf file.py --in-place
+
 Testing
 -------
 
