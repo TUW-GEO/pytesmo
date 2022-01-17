@@ -14,7 +14,6 @@ dependencies:
   - cython
   - pykdtree
   - pyresample
-  - numba
   - matplotlib
   # optional, for documentation and testing:
   - nb_conda
@@ -29,6 +28,7 @@ dependencies:
     - build
     - repurpose
     - cadati
+    - numba
     # optional, for documentation and testing:
     - ascat>=2.0
     - ismn>=1.2.0

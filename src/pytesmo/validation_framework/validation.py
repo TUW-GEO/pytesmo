@@ -95,7 +95,7 @@ class Validation(object):
         method of these datasets has to return pandas.DataFrames with only
         boolean columns. True means that the observations at this timestamp
         should be masked and False means that it should be kept.
-    scaling : string, None or class instance
+    scaling : str or None or class instance
         - If set then the data will be scaled into the reference space using
           the method specified by the string using the
           :py:class:`pytesmo.validation_framework.data_scalers.DefaultScaler`
