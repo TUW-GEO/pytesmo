@@ -783,7 +783,7 @@ def test_PairwiseIntercomparisonMetrics(testdata_generator, seas_metrics):
         metrics_calculators={(4, 2): (metrics_calculator.calc_metrics)},
     )
     results_pw = val.calc(
-        [1], [1], [1], rename_cols=False, only_with_temporal_ref=True
+        [1], [1], [1], rename_cols=False, only_with_reference=True
     )
 
     # in results_pw, there are four entries with keys (("c1name", "c1"),
@@ -940,7 +940,7 @@ def test_PairwiseIntercomparisonMetrics_confidence_intervals():
         },
     )
     results_pw = val.calc(
-        [1], [1], [1], rename_cols=False, only_with_temporal_ref=True
+        [1], [1], [1], rename_cols=False, only_with_reference=True
     )
 
     metrics_with_ci = {
@@ -1024,7 +1024,7 @@ def test_TripleCollocationMetrics(testdata_generator, seas_metrics):
         metrics_calculators={(4, 3): triplet_metrics_calculator.calc_metrics},
     )
     results_triplet = val_triplet.calc(
-        [1], [1], [1], rename_cols=False, only_with_temporal_ref=True
+        [1], [1], [1], rename_cols=False, only_with_reference=True
     )
 
     if "col1_name" in datasets.keys():
@@ -1088,7 +1088,7 @@ def test_TripleCollocationMetrics(testdata_generator, seas_metrics):
             },
         )
         results_triplet = val_triplet.calc(
-            [1], [1], [1], rename_cols=False, only_with_temporal_ref=True
+            [1], [1], [1], rename_cols=False, only_with_reference=True
         )
         for key in results_triplet:
             for dset, _ in key:
@@ -1152,7 +1152,7 @@ def test_temporal_matching_ascat_ismn():
         },
     )
     new_results = new_val.calc(
-        1, 1, 1, rename_cols=False, only_with_temporal_ref=True
+        1, 1, 1, rename_cols=False, only_with_reference=True
     )
 
     # old setup
