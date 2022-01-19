@@ -25,6 +25,8 @@ examples_path = os.path.join(rootdir(), 'docs', 'examples')
     reason=f"Directory '{examples_path}' not found. "
            "Pytesmo is probably not installed in `editable` mode."
 )
+@pytest.mark.slow
+@pytest.mark.doc_example
 def test_ipython_notebook(notebook):
     """
     Run selected ipynb example files from docs/examples as tests.
