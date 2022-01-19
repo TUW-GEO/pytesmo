@@ -189,7 +189,7 @@ class Validation(object):
         lats,
         *args,
         rename_cols=True,
-        only_with_temporal_ref=False,
+        only_with_reference=False,
         handle_errors='raise',
     ):
         """
@@ -217,9 +217,9 @@ class Validation(object):
         rename_cols : bool, optional
             Whether to rename the columns to "ref", "k1", ... before passing
             the dataframe to the metrics calculators. Default is True.
-        only_with_temporal_ref : bool, optional
-            If this is enabled, only combinations that include the temmporal
-            reference are calculated.
+        only_with_reference : bool, optional
+            If this is enabled, only combinations that include the reference
+            dataset (from the data manager) are calculated.
         handle_errors: Literal['raise', 'ignore'], optional (default: 'raise')
             `raise`: If an error occurs during validation, raise exception.
             `ignore`: If an error occurs during validation, log it and
@@ -257,7 +257,7 @@ class Validation(object):
                     df_dict,
                     gpi_info,
                     rename_cols=rename_cols,
-                    only_with_temporal_ref=only_with_temporal_ref,
+                    only_with_reference=only_with_reference,
                 )
             except Exception as e:
                 if handle_errors.lower() == 'ignore':
@@ -296,7 +296,7 @@ class Validation(object):
         df_dict,
         gpi_info,
         rename_cols=True,
-        only_with_temporal_ref=False,
+        only_with_reference=False,
     ):
         """
         Perform the validation for one grid point index and return the
@@ -311,6 +311,9 @@ class Validation(object):
         rename_cols : bool, optional
             Whether to rename the columns to "ref", "k1", ... before passing
             the dataframe to the metrics calculators. Default is True.
+        only_with_reference: bool, optional (default: False)
+            Only compute metrics for dataset combinations where the reference
+            is included.
 
         Returns
         -------
@@ -356,8 +359,8 @@ class Validation(object):
                 # it might also be a good idea to move this to
                 # `get_result_combinations`
                 result_ds_names = [key[0] for key in result_key]
-                if only_with_temporal_ref:
-                    if self.temporal_ref not in result_ds_names:
+                if only_with_reference:
+                    if self.data_manager.reference_name not in result_ds_names:
                         continue
 
                 if len(data) == 0:
