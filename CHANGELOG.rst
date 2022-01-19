@@ -5,15 +5,20 @@ Changelog
 Unreleased
 ==========
 - fixed bugs in resample_mean (PR `#262 <https://github.com/TUW-GEO/pytesmo/pull/262>`_)
-- Integration tests with new ISMN Interface
-- Add option to Validation Framework to ignore errors in ``Validation.calc()``
-- ipynb files from docs/examples are now also used as (optional) tests
-- ``yapf`` for code formatting (see developers guide) (Fix #248)
+- Integration tests with new ISMN Interface (PR `#263 <https://github.com/TUW-GEO/pytesmo/pull/263>`_)
+- Add option to Validation Framework to ignore errors in ``Validation.calc()`` (PR `#263 <https://github.com/TUW-GEO/pytesmo/pull/263>`_)
+- ipynb files from docs/examples are now also used as (optional) tests (PR `#263 <https://github.com/TUW-GEO/pytesmo/pull/263>`_)
+- ``yapf`` for code formatting (see developers guide) (Fix #248, PR `#263 <https://github.com/TUW-GEO/pytesmo/pull/263>`_))
+- validation framework option to force dataset combinations that include reference dataset updated (PR `#265 <https://github.com/TUW-GEO/pytesmo/pull/265>`_)
 
 
-Version 0.13.3, 2022-01-12
+Version 0.13.4, 2022-01-12
 ==========================
 - use `oldest-supported-numpy` in `pyproject.toml` to avoid errors due to incompatible numpy versions used in build-time.
+
+Version 0.13.3, 2022-01-11
+==========================
+- rollback to old C-files due to numpy compatibility issues
 
 Version 0.13.2, 2021-12-17
 ==========================
