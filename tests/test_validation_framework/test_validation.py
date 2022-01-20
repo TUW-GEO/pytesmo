@@ -53,11 +53,9 @@ from pytesmo.validation_framework.validation import Validation
 from pytesmo.validation_framework.validation import args_to_iterable
 
 from pytesmo.validation_framework.metric_calculators import (
-    PairwiseIntercomparisonMetrics
-)
+    PairwiseIntercomparisonMetrics)
 from pytesmo.validation_framework.temporal_matchers import (
-    make_combined_temporal_matcher
-)
+    make_combined_temporal_matcher)
 
 from ismn.interface import ISMN_Interface
 
@@ -135,19 +133,22 @@ def ismn_reader():
 
 
 def check_results(
-        filename: str,
-        target_vars: dict,
-        variables: list = None,
+    filename: str,
+    target_vars: dict,
+    variables: list = None,
 ):
     """
-    Check that standard vars are present and that nobs, rho and rmsd match the given values. Vars can be optionally
-    specified
+    Check that standard vars are present and that nobs, rho and rmsd match
+    the given values. Vars can be optionally specified
     """
     if variables is not None:
         vars_should = variables
     else:
-        vars_should = [u"n_obs", u"tau", u"gpi", u"RMSD", u"lon", u"p_tau", u"BIAS", u"p_rho",
-                       u"rho", u"lat", u"R", u"p_R", u"time", u"idx", u"_row_size"]
+        vars_should = [
+            u"n_obs", u"tau", u"gpi", u"RMSD", u"lon", u"p_tau", u"BIAS",
+            u"p_rho", u"rho", u"lat", u"R", u"p_R", u"time", u"idx",
+            u"_row_size"
+        ]
 
     with nc.Dataset(filename, mode="r") as results:
         vars = results.variables.keys()
@@ -161,7 +162,8 @@ def check_results(
             elif varname == "network":
                 nptest.assert_equal(sorted(values), sorted(should_values))
             else:
-                nptest.assert_allclose(sorted(values), sorted(should_values), rtol=1e-4)
+                nptest.assert_allclose(
+                    sorted(values), sorted(should_values), rtol=1e-4)
 
 
 @pytest.mark.slow
@@ -173,8 +175,7 @@ def test_ascat_ismn_validation(ascat_reader, ismn_reader):
     jobs = []
 
     ids = ismn_reader.get_dataset_ids(
-        variable="soil_moisture", min_depth=0, max_depth=0.1
-    )
+        variable="soil_moisture", min_depth=0, max_depth=0.1)
     for idx in ids:
         metadata = ismn_reader.read_metadata(idx)
         jobs.append((idx, metadata["longitude"].val, metadata["latitude"].val))
@@ -189,7 +190,10 @@ def test_ascat_ismn_validation(ascat_reader, ismn_reader):
     # Create the validation object.
 
     datasets = {
-        "ISMN": {"class": ismn_reader, "columns": ["soil_moisture"]},
+        "ISMN": {
+            "class": ismn_reader,
+            "columns": ["soil_moisture"]
+        },
         "ASCAT": {
             "class": ascat_reader,
             "columns": ["sm"],
@@ -205,8 +209,7 @@ def test_ascat_ismn_validation(ascat_reader, ismn_reader):
     period = [datetime(2007, 1, 1), datetime(2014, 12, 31)]
 
     datasets = DataManager(
-        datasets, "ISMN", period, read_ts_names=read_ts_names
-    )
+        datasets, "ISMN", period, read_ts_names=read_ts_names)
 
     process = Validation(
         datasets,
@@ -215,9 +218,8 @@ def test_ascat_ismn_validation(ascat_reader, ismn_reader):
         scaling="lin_cdf_match",
         scaling_ref="ASCAT",
         metrics_calculators={
-            (2, 2): metrics_calculators.BasicMetrics(
-                other_name="k1"
-            ).calc_metrics
+            (2, 2):
+                metrics_calculators.BasicMetrics(other_name="k1").calc_metrics
         },
         period=period,
     )
@@ -226,41 +228,24 @@ def test_ascat_ismn_validation(ascat_reader, ismn_reader):
         results = process.calc(*job)
         netcdf_results_manager(results, save_path)
 
-    results_fname = os.path.join(
-        save_path, "ASCAT.sm_with_ISMN.soil_moisture.nc"
-    )
+    results_fname = os.path.join(save_path,
+                                 "ASCAT.sm_with_ISMN.soil_moisture.nc")
     # targets
     target_vars = {
-        "n_obs": [
-            357,
-            384,
-            1646,
-            1875,
-            1915,
-            467,
-            141,
-            251
-        ],
-        "rho": np.array(
-            [0.53934574,
-             0.7002289,
-             0.62200236,
-             0.53647155,
-             0.30413666,
-             0.6740655,
-             0.8418981,
-             0.74206454
-             ], dtype=np.float32),
-        "RMSD": np.array(
-            [11.583476,
-             7.729667,
-             17.441547,
-             21.125721,
-             14.31557,
-             14.187225,
-             13.0622425,
-             12.903898
-             ], dtype=np.float32)}
+        "n_obs": [357, 384, 1646, 1875, 1915, 467, 141, 251],
+        "rho":
+            np.array([
+                0.53934574, 0.7002289, 0.62200236, 0.53647155, 0.30413666,
+                0.6740655, 0.8418981, 0.74206454
+            ],
+                     dtype=np.float32),
+        "RMSD":
+            np.array([
+                11.583476, 7.729667, 17.441547, 21.125721, 14.31557, 14.187225,
+                13.0622425, 12.903898
+            ],
+                     dtype=np.float32)
+    }
 
     check_results(
         filename=results_fname,
@@ -279,8 +264,7 @@ def test_ascat_ismn_validation_metadata(ascat_reader, ismn_reader):
     jobs = []
 
     ids = ismn_reader.get_dataset_ids(
-        variable="soil_moisture", min_depth=0, max_depth=0.1
-    )
+        variable="soil_moisture", min_depth=0, max_depth=0.1)
 
     metadata_dict_template = {
         "network": np.array(["None"], dtype="U256"),
@@ -291,18 +275,14 @@ def test_ascat_ismn_validation_metadata(ascat_reader, ismn_reader):
 
     for idx in ids:
         metadata = ismn_reader.read_metadata(idx, 'obj')
-        metadata_dict = [
-            {
-                "network": metadata["network"][1],
-                "station": metadata["station"][1],
-                "landcover": metadata["lc_2010"][1],
-                "climate": metadata["climate_KG"][1],
-            }
-        ]
-        jobs.append(
-            (idx, metadata["longitude"][1], metadata["latitude"][1],
-             metadata_dict)
-        )
+        metadata_dict = [{
+            "network": metadata["network"][1],
+            "station": metadata["station"][1],
+            "landcover": metadata["lc_2010"][1],
+            "climate": metadata["climate_KG"][1],
+        }]
+        jobs.append((idx, metadata["longitude"][1], metadata["latitude"][1],
+                     metadata_dict))
 
     # Create the variable ***save_path*** which is a string representing the
     # path where the results will be saved. **DO NOT CHANGE** the name
@@ -333,8 +313,7 @@ def test_ascat_ismn_validation_metadata(ascat_reader, ismn_reader):
     period = [datetime(2007, 1, 1), datetime(2014, 12, 31)]
 
     datasets = DataManager(
-        datasets, "ISMN", period, read_ts_names=read_ts_names
-    )
+        datasets, "ISMN", period, read_ts_names=read_ts_names)
     process = Validation(
         datasets,
         "ISMN",
@@ -342,9 +321,10 @@ def test_ascat_ismn_validation_metadata(ascat_reader, ismn_reader):
         scaling="lin_cdf_match",
         scaling_ref="ASCAT",
         metrics_calculators={
-            (2, 2): metrics_calculators.BasicMetrics(
-                other_name="k1", metadata_template=metadata_dict_template
-            ).calc_metrics
+            (2, 2):
+                metrics_calculators.BasicMetrics(
+                    other_name="k1",
+                    metadata_template=metadata_dict_template).calc_metrics
         },
         period=period,
     )
@@ -353,96 +333,83 @@ def test_ascat_ismn_validation_metadata(ascat_reader, ismn_reader):
         results = process.calc(*job)
         netcdf_results_manager(results, save_path)
 
-    results_fname = os.path.join(
-        save_path, "ASCAT.sm_with_ISMN.soil_moisture.nc"
-    )
+    results_fname = os.path.join(save_path,
+                                 "ASCAT.sm_with_ISMN.soil_moisture.nc")
     target_vars = {
-        "n_obs": [
-            357,
-            384,
-            1646,
-            1875,
-            1915,
-            467,
-            141,
-            251
-        ],
-        "rho": np.array(
-            [0.53934574,
-             0.7002289,
-             0.62200236,
-             0.53647155,
-             0.30413666,
-             0.6740655,
-             0.8418981,
-             0.74206454,
-             ], dtype=np.float32),
-        "RMSD": np.array(
-            [11.583476,
-             7.729667,
-             17.441547,
-             21.125721,
-             14.31557,
-             14.187225,
-             13.0622425,
-             12.903898,
-             ], dtype=np.float32),
-        "network": np.array([
-            "MAQU",
-            "MAQU",
-            "SCAN",
-            "SCAN",
-            "SCAN",
-            "SOILSCAPE",
-            "SOILSCAPE",
-            "SOILSCAPE",
-        ], dtype="U256",)
+        "n_obs": [357, 384, 1646, 1875, 1915, 467, 141, 251],
+        "rho":
+            np.array([
+                0.53934574,
+                0.7002289,
+                0.62200236,
+                0.53647155,
+                0.30413666,
+                0.6740655,
+                0.8418981,
+                0.74206454,
+            ],
+                     dtype=np.float32),
+        "RMSD":
+            np.array([
+                11.583476,
+                7.729667,
+                17.441547,
+                21.125721,
+                14.31557,
+                14.187225,
+                13.0622425,
+                12.903898,
+            ],
+                     dtype=np.float32),
+        "network":
+            np.array(
+                [
+                    "MAQU",
+                    "MAQU",
+                    "SCAN",
+                    "SCAN",
+                    "SCAN",
+                    "SOILSCAPE",
+                    "SOILSCAPE",
+                    "SOILSCAPE",
+                ],
+                dtype="U256",
+            )
     }
     vars_should = [
-        'BIAS',
-        'R',
-        'RMSD',
-        '_row_size',
-        'climate',
-        'gpi',
-        'idx',
-        'landcover',
-        'lat',
-        'lon',
-        'n_obs',
-        'network',
-        'p_R',
-        'p_rho',
-        'p_tau',
-        'rho',
-        'station',
-        'tau',
-        'time'
+        'BIAS', 'R', 'RMSD', '_row_size', 'climate', 'gpi', 'idx', 'landcover',
+        'lat', 'lon', 'n_obs', 'network', 'p_R', 'p_rho', 'p_tau', 'rho',
+        'station', 'tau', 'time'
     ]
 
     check_results(
-        filename=results_fname,
-        target_vars=target_vars,
-        variables=vars_should
-    )
+        filename=results_fname, target_vars=target_vars, variables=vars_should)
 
     ascat_reader.close()
 
 
+@pytest.mark.slow
+@pytest.mark.full_framework
 def test_validation_with_averager(ascat_reader, ismn_reader):
     """
-    Test processing framework with averaging module. ASCAT and ISMN data are used here with no geographical
-    considerations (the lut is provided more upstream and contains this information already)
+    Test processing framework with averaging module. ASCAT and ISMN data are
+    used here with no geographical
+    considerations (the lut is provided more upstream and contains this
+    information already)
     """
     while hasattr(ascat_reader, 'cls'):
         ascat_reader = ascat_reader.cls
-    # lookup table between the ascat and ismn points - not geographically correct
+    # lookup table between the ascat and ismn points
+    # - not geographically correct
     upscaling_lut = {
         "ISMN": {
             1814367: [(0, 102.1333, 33.8833), (1, 102.1333, 33.6666)],
-            1803695: [(2, -86.55, 34.783), (3, -97.083, 37.133), (4, -105.417, 34.25)],
-            1856312: [(5, -120.9675, 38.43003), (6, -120.78559, 38.14956), (7, -120.80639, 38.17353)]
-        }}
+            1803695: [(2, -86.55, 34.783), (3, -97.083, 37.133),
+                      (4, -105.417, 34.25)],
+            1856312: [(5, -120.9675, 38.43003), (6, -120.78559, 38.14956),
+                      (7, -120.80639, 38.17353)]
+        }
+    }
     gpis = (1814367, 1803695, 1856312)
     lons, lats = [], []
     for gpi in gpis:
@@ -498,9 +465,8 @@ def test_validation_with_averager(ascat_reader, ismn_reader):
         scaling="lin_cdf_match",
         scaling_ref="ISMN",
         metrics_calculators={
-            (2, 2): metrics_calculators.BasicMetrics(
-                other_name="k1"
-            ).calc_metrics
+            (2, 2):
+                metrics_calculators.BasicMetrics(other_name="k1").calc_metrics
         },
         period=period,
     )
@@ -509,31 +475,14 @@ def test_validation_with_averager(ascat_reader, ismn_reader):
         results = process.calc(*job)
         netcdf_results_manager(results, save_path)
 
-    results_fname = os.path.join(
-        save_path, "ASCAT.sm_with_ISMN.soil_moisture.nc"
-    )
+    results_fname = os.path.join(save_path,
+                                 "ASCAT.sm_with_ISMN.soil_moisture.nc")
 
     target_vars = {
-        "n_obs": [
-            764,
-            2392,
-            904
-        ],
-        "rho": np.array(
-            [-0.012487,
-             0.255156,
-             0.635517
-             ], dtype=np.float32),
-        "RMSD": np.array(
-            [0.056428,
-             0.056508,
-             0.116294
-             ], dtype=np.float32),
-        "R": np.array(
-            [-0.012335,
-             0.257671,
-             0.657239
-             ], dtype=np.float32)
+        "n_obs": [764, 2392, 904],
+        "rho": np.array([-0.012487, 0.255156, 0.635517], dtype=np.float32),
+        "RMSD": np.array([0.056428, 0.056508, 0.116294], dtype=np.float32),
+        "R": np.array([-0.012335, 0.257671, 0.657239], dtype=np.float32)
     }
 
     check_results(
@@ -559,13 +508,12 @@ def test_validation_error_n2_k2():
             dm,
             "DS1",
             temporal_matcher=temporal_matchers.BasicTemporalMatching(
-                window=1 / 24.0
-            ).combinatory_matcher,
+                window=1 / 24.0).combinatory_matcher,
             scaling="lin_cdf_match",
             metrics_calculators={
-                (2, 2): metrics_calculators.BasicMetrics(
-                    other_name="k1"
-                ).calc_metrics
+                (2, 2):
+                    metrics_calculators.BasicMetrics(
+                        other_name="k1").calc_metrics
             },
         )
 
@@ -585,13 +533,11 @@ def test_validation_n3_k2_temporal_matching_no_matches():
         dm,
         "DS1",
         temporal_matcher=temporal_matchers.BasicTemporalMatching(
-            window=1 / 24.0
-        ).combinatory_matcher,
+            window=1 / 24.0).combinatory_matcher,
         scaling="lin_cdf_match",
         metrics_calculators={
-            (3, 2): metrics_calculators.BasicMetrics(
-                other_name="k1"
-            ).calc_metrics
+            (3, 2):
+                metrics_calculators.BasicMetrics(other_name="k1").calc_metrics
         },
     )
 
@@ -686,13 +632,11 @@ def test_validation_n3_k2_data_manager_argument():
         dm,
         "DS1",
         temporal_matcher=temporal_matchers.BasicTemporalMatching(
-            window=1 / 24.0
-        ).combinatory_matcher,
+            window=1 / 24.0).combinatory_matcher,
         scaling="lin_cdf_match",
         metrics_calculators={
-            (3, 2): metrics_calculators.BasicMetrics(
-                other_name="k1"
-            ).calc_metrics
+            (3, 2):
+                metrics_calculators.BasicMetrics(other_name="k1").calc_metrics
         },
     )
 
@@ -712,13 +656,11 @@ def test_validation_n3_k2_data_manager_argument():
         dm,
         "DS1",
         temporal_matcher=temporal_matchers.BasicTemporalMatching(
-            window=1 / 24.0
-        ).combinatory_matcher,
+            window=1 / 24.0).combinatory_matcher,
         scaling="lin_cdf_match",
         metrics_calculators={
-            (3, 2): metrics_calculators.BasicMetrics(
-                other_name="k1"
-            ).calc_metrics
+            (3, 2):
+                metrics_calculators.BasicMetrics(other_name="k1").calc_metrics
         },
     )
 
@@ -813,13 +755,11 @@ def test_validation_n3_k2():
         dm,
         "DS1",
         temporal_matcher=temporal_matchers.BasicTemporalMatching(
-            window=1 / 24.0
-        ).combinatory_matcher,
+            window=1 / 24.0).combinatory_matcher,
         scaling="lin_cdf_match",
         metrics_calculators={
-            (3, 2): metrics_calculators.BasicMetrics(
-                other_name="k1"
-            ).calc_metrics
+            (3, 2):
+                metrics_calculators.BasicMetrics(other_name="k1").calc_metrics
         },
     )
 
@@ -872,13 +812,11 @@ def test_validation_n3_k2_temporal_matching_no_matches2():
         dm,
         "DS1",
         temporal_matcher=temporal_matchers.BasicTemporalMatching(
-            window=1 / 24.0
-        ).combinatory_matcher,
+            window=1 / 24.0).combinatory_matcher,
         scaling="lin_cdf_match",
         metrics_calculators={
-            (3, 2): metrics_calculators.BasicMetrics(
-                other_name="k1"
-            ).calc_metrics
+            (3, 2):
+                metrics_calculators.BasicMetrics(other_name="k1").calc_metrics
         },
     )
 
@@ -908,7 +846,9 @@ def test_validation_n3_k2_masking_no_data_remains():
             "class": mds1,
             "columns": ["x"],
             "args": [],
-            "kwargs": {"limit": 500},
+            "kwargs": {
+                "limit": 500
+            },
             "use_lut": False,
             "grids_compatible": True,
         },
@@ -916,7 +856,9 @@ def test_validation_n3_k2_masking_no_data_remains():
             "class": mds2,
             "columns": ["x"],
             "args": [],
-            "kwargs": {"limit": 1000},
+            "kwargs": {
+                "limit": 1000
+            },
             "use_lut": False,
             "grids_compatible": True,
         },
@@ -926,13 +868,11 @@ def test_validation_n3_k2_masking_no_data_remains():
         datasets,
         "DS1",
         temporal_matcher=temporal_matchers.BasicTemporalMatching(
-            window=1 / 24.0
-        ).combinatory_matcher,
+            window=1 / 24.0).combinatory_matcher,
         scaling="lin_cdf_match",
         metrics_calculators={
-            (3, 2): metrics_calculators.BasicMetrics(
-                other_name="k1"
-            ).calc_metrics
+            (3, 2):
+                metrics_calculators.BasicMetrics(other_name="k1").calc_metrics
         },
         masking_datasets=mds,
     )
@@ -952,9 +892,8 @@ def test_validation_n3_k2_masking_no_data_remains():
         tst = []
         assert sorted(list(results)) == sorted(list(tst))
         for key, tst_key in zip(sorted(results), sorted(tst)):
-            nptest.assert_almost_equal(
-                results[key]["n_obs"], tst[tst_key]["n_obs"]
-            )
+            nptest.assert_almost_equal(results[key]["n_obs"],
+                                       tst[tst_key]["n_obs"])
 
 
 def test_validation_n3_k2_masking():
@@ -1018,7 +957,9 @@ def test_validation_n3_k2_masking():
             "class": mds1,
             "columns": ["x"],
             "args": [],
-            "kwargs": {"limit": 500},
+            "kwargs": {
+                "limit": 500
+            },
             "use_lut": False,
             "grids_compatible": True,
         },
@@ -1026,7 +967,9 @@ def test_validation_n3_k2_masking():
             "class": mds2,
             "columns": ["x"],
             "args": [],
-            "kwargs": {"limit": 750},
+            "kwargs": {
+                "limit": 750
+            },
             "use_lut": False,
             "grids_compatible": True,
         },
@@ -1036,13 +979,11 @@ def test_validation_n3_k2_masking():
         datasets,
         "DS1",
         temporal_matcher=temporal_matchers.BasicTemporalMatching(
-            window=1 / 24.0
-        ).combinatory_matcher,
+            window=1 / 24.0).combinatory_matcher,
         scaling="lin_cdf_match",
         metrics_calculators={
-            (3, 2): metrics_calculators.BasicMetrics(
-                other_name="k1"
-            ).calc_metrics
+            (3, 2):
+                metrics_calculators.BasicMetrics(other_name="k1").calc_metrics
         },
         masking_datasets=mds,
     )
@@ -1068,9 +1009,8 @@ def test_validation_n3_k2_masking():
         tst = tst_results[len(job[0])]
         assert sorted(list(results)) == sorted(list(tst))
         for key, tst_key in zip(sorted(results), sorted(tst)):
-            nptest.assert_almost_equal(
-                results[key]["n_obs"], tst[tst_key]["n_obs"]
-            )
+            nptest.assert_almost_equal(results[key]["n_obs"],
+                                       tst[tst_key]["n_obs"])
 
 
 @pytest.mark.slow
@@ -1082,8 +1022,7 @@ def test_ascat_ismn_validation_metadata_rolling(ascat_reader, ismn_reader):
     jobs = []
 
     ids = ismn_reader.get_dataset_ids(
-        variable="soil_moisture", min_depth=0, max_depth=0.1
-    )
+        variable="soil_moisture", min_depth=0, max_depth=0.1)
 
     metadata_dict_template = {
         "network": np.array(["None"], dtype="U256"),
@@ -1094,25 +1033,24 @@ def test_ascat_ismn_validation_metadata_rolling(ascat_reader, ismn_reader):
 
     for idx in ids:
         metadata = ismn_reader.read_metadata(idx, format='obj')
-        metadata_dict = [
-            {
-                "network": metadata["network"][1],
-                "station": metadata["station"][1],
-                "landcover": metadata["lc_2010"][1],
-                "climate": metadata["climate_KG"][1],
-            }
-        ]
-        jobs.append(
-            (idx, metadata["longitude"][1], metadata["latitude"][1],
-             metadata_dict)
-        )
+        metadata_dict = [{
+            "network": metadata["network"][1],
+            "station": metadata["station"][1],
+            "landcover": metadata["lc_2010"][1],
+            "climate": metadata["climate_KG"][1],
+        }]
+        jobs.append((idx, metadata["longitude"][1], metadata["latitude"][1],
+                     metadata_dict))
 
     save_path = tempfile.mkdtemp()
 
     # Create the validation object.
 
     datasets = {
-        "ISMN": {"class": ismn_reader, "columns": ["soil_moisture"]},
+        "ISMN": {
+            "class": ismn_reader,
+            "columns": ["soil_moisture"]
+        },
         "ASCAT": {
             "class": ascat_reader,
             "columns": ["sm"],
@@ -1128,8 +1066,7 @@ def test_ascat_ismn_validation_metadata_rolling(ascat_reader, ismn_reader):
     period = [datetime(2007, 1, 1), datetime(2014, 12, 31)]
 
     datasets = DataManager(
-        datasets, "ISMN", period, read_ts_names=read_ts_names
-    )
+        datasets, "ISMN", period, read_ts_names=read_ts_names)
 
     process = Validation(
         datasets,
@@ -1138,9 +1075,10 @@ def test_ascat_ismn_validation_metadata_rolling(ascat_reader, ismn_reader):
         scaling="lin_cdf_match",
         scaling_ref="ASCAT",
         metrics_calculators={
-            (2, 2): metrics_calculators.RollingMetrics(
-                other_name="k1", metadata_template=metadata_dict_template
-            ).calc_metrics
+            (2, 2):
+                metrics_calculators.RollingMetrics(
+                    other_name="k1",
+                    metadata_template=metadata_dict_template).calc_metrics
         },
         period=period,
     )
@@ -1148,53 +1086,43 @@ def test_ascat_ismn_validation_metadata_rolling(ascat_reader, ismn_reader):
     for job in jobs:
         results = process.calc(*job)
         netcdf_results_manager(
-            results, save_path, ts_vars=["R", "p_R", "RMSD"]
-        )
+            results, save_path, ts_vars=["R", "p_R", "RMSD"])
 
-    results_fname = os.path.join(
-        save_path, "ASCAT.sm_with_ISMN.soil_moisture.nc"
-    )
+    results_fname = os.path.join(save_path,
+                                 "ASCAT.sm_with_ISMN.soil_moisture.nc")
 
     target_vars = {
-        "network": np.array([
-            "MAQU",
-            "MAQU",
-            "SCAN",
-            "SCAN",
-            "SCAN",
-            "SOILSCAPE",
-            "SOILSCAPE",
-            "SOILSCAPE",
-        ],
-            dtype="U256",)
+        "network":
+            np.array(
+                [
+                    "MAQU",
+                    "MAQU",
+                    "SCAN",
+                    "SCAN",
+                    "SCAN",
+                    "SOILSCAPE",
+                    "SOILSCAPE",
+                    "SOILSCAPE",
+                ],
+                dtype="U256",
+            )
     }
     vars_should = [
-        u"gpi",
-        u"RMSD",
-        u"lon",
-        u"lat",
-        u"R",
-        u"p_R",
-        u"time",
-        u"idx",
+        u"gpi", u"RMSD", u"lon", u"lat", u"R", u"p_R", u"time", u"idx",
         u"_row_size"
     ]
     for key, value in metadata_dict_template.items():
         vars_should.append(key)
 
     check_results(
-        filename=results_fname,
-        target_vars=target_vars,
-        variables=vars_should
-    )
+        filename=results_fname, target_vars=target_vars, variables=vars_should)
 
     reader = PointDataResults(results_fname, read_only=True)
     df = reader.read_loc(None)
     assert np.all(df.gpi.values == np.arange(8))
     assert reader.read_ts(0).index.size == 357
     assert np.all(
-        reader.read_ts(1).columns.values == np.array(["R", "p_R", "RMSD"])
-    )
+        reader.read_ts(1).columns.values == np.array(["R", "p_R", "RMSD"]))
 
     ascat_reader.close()
 
@@ -1207,8 +1135,7 @@ def test_args_to_iterable_non_iterables():
     arg2 = 2
     arg3 = 3
     gpis_, lons_, lats_, args = args_to_iterable(
-        gpis, lons, lats, arg1, arg2, arg3, n=3
-    )
+        gpis, lons, lats, arg1, arg2, arg3, n=3)
 
     assert gpis_ == [gpis]
     assert lons_ == [lons]
@@ -1223,8 +1150,7 @@ def test_args_to_iterable_n3():
     arg1 = [1, 1, 1]
     arg2 = [1, 1, 1]
     gpis_, lons_, lats_, args = args_to_iterable(
-        gpis, lons, lats, arg1, arg2, n=3
-    )
+        gpis, lons, lats, arg1, arg2, n=3)
 
     assert gpis_ == gpis
     assert lons_ == lons
@@ -1279,6 +1205,7 @@ def create_correlated_data(n_datasets, n, r):
 
 
 class DummyReader:
+
     def __init__(self, dfs, name):
         self.data = [pd.DataFrame(dfs[i][name]) for i in range(len(dfs))]
 
@@ -1287,6 +1214,7 @@ class DummyReader:
 
 
 class DummyNoneReader:
+
     def __init__(self, dfs, name):
         self.data = [pd.DataFrame(dfs[i][name]) for i in range(len(dfs))]
 
@@ -1305,11 +1233,12 @@ def create_datasets(n_datasets, npoints, nsamples, missing=False):
         r = np.random.rand()
         data = create_correlated_data(n_datasets, nsamples, r)
         index = pd.date_range("1980", periods=nsamples, freq="D")
-        dfs.append(pd.DataFrame(
-            data, index=index, columns=(
-                    ["refcol"] + [f"other{i}col" for i in range(1, n_datasets)]
-            )
-        ))
+        dfs.append(
+            pd.DataFrame(
+                data,
+                index=index,
+                columns=(["refcol"] +
+                         [f"other{i}col" for i in range(1, n_datasets)])))
 
     datasets = {}
     datasets["0-ERA5"] = {
@@ -1350,7 +1279,7 @@ def test_missing_data():
         temporal_matcher=make_combined_temporal_matcher(pd.Timedelta(12, "H")),
     )
     gpis = list(range(npoints))
-    val.calc(gpis, gpis, gpis, rename_cols=False, only_with_temporal_ref=True)
+    val.calc(gpis, gpis, gpis, rename_cols=False, only_with_reference=True)
 
 
 def test_combined_matching_scaling():
@@ -1371,7 +1300,7 @@ def test_combined_matching_scaling():
         scaling_ref="0-ERA5",
     )
     gpis = list(range(npoints))
-    val.calc(gpis, gpis, gpis, rename_cols=False, only_with_temporal_ref=True)
+    val.calc(gpis, gpis, gpis, rename_cols=False, only_with_reference=True)
 
 
 if __name__ == "__main__":
