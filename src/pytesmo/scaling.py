@@ -472,11 +472,49 @@ def cdf_beta_match(
     CDF matched values: numpy.array
         dataset src with CDF as ref
     """
-    return cdf_match(src, ref, minobs=minobs, linear_edge_scaling=lin_edge_scaling, nbins=nbins)
+    # return cdf_match(src, ref, minobs=minobs, linear_edge_scaling=lin_edge_scaling, nbins=nbins)
+    percentiles = np.linspace(0, 100, nbins)
+
+    if minobs is not None:
+        percentiles = utils.resize_percentiles(src, percentiles, minobs)
+
+    # match the two arrays
+    if len(src) != len(ref):
+        max_obs = max(len(src), len(ref))
+        d_perc = np.arange(max_obs, dtype="float") / (max_obs - 1) * 100
+
+        if len(src) < len(ref):
+            src = utils.ml_percentile(src, d_perc)
+        else:
+            ref = utils.ml_percentile(ref, d_perc)
+
+    # calculate percentiles using matlab method
+    perc_src = utils.ml_percentile(src, percentiles)
+    perc_ref = utils.ml_percentile(ref, percentiles)
+
+    # fit beta distributions through the source percentiles
+    if np.unique(perc_src).size == 1:
+        warn(
+            "There is only one percentile value on which the scaling is based"
+        )
+    else:
+        perc_src = utils.unique_percentiles_beta(
+            perc_src, percentiles=percentiles
+        )
+
+    return gen_cdf_match(
+        src,
+        perc_src,
+        perc_ref,
+        lin_edge_scaling=lin_edge_scaling,
+        ref=ref,
+        **kwargs,
+    )
 
 
 def cdf_match(
-    src, ref, minobs=20, linear_edge_scaling=True, nbins=100
+        src, ref, minobs=20, linear_edge_scaling=True, nbins=100,
+        percentiles=None, combine_invalid=True
 ):
     """
     Rescales by CDF matching.
@@ -497,6 +535,10 @@ def cdf_match(
         Minimum desired number of observations in a bin.
     nbins: int, optional
         Number of bins to use for estimation of the CDF
+    percentiles : sequence, optional
+        Percentile values to use. If this is given, `nbins` is ignored. The
+        percentiles might still be changed if `minobs` is given and the number
+        data per bin is lower. Default is ``None``.
     linear_edge_scaling : bool, optional
         Whether to use linear edge scaling. Default is True.
 
@@ -506,6 +548,6 @@ def cdf_match(
         dataset src with CDF as ref
     """
     matcher = CDFMatching(
-        nbins=nbins, minobs=minobs, linear_edge_scaling=linear_edge_scaling
+        nbins=nbins, minobs=minobs, linear_edge_scaling=linear_edge_scaling, percentiles=percentiles
     ).fit(src, ref)
     return matcher.predict(src)

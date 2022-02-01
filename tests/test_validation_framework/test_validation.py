@@ -211,7 +211,7 @@ def test_ascat_ismn_validation(ascat_reader, ismn_reader):
         datasets,
         "ISMN",
         temporal_ref="ASCAT",
-        scaling="lin_cdf_match",
+        scaling="cdf_match",
         scaling_ref="ASCAT",
         metrics_calculators={
             (2, 2): metrics_calculators.BasicMetrics(
@@ -335,7 +335,7 @@ def test_ascat_ismn_validation_metadata(ascat_reader, ismn_reader):
         datasets,
         "ISMN",
         temporal_ref="ASCAT",
-        scaling="lin_cdf_match",
+        scaling="cdf_match",
         scaling_ref="ASCAT",
         metrics_calculators={
             (2, 2): metrics_calculators.BasicMetrics(
@@ -489,7 +489,7 @@ def test_validation_with_averager(ascat_reader, ismn_reader):
         datasets,
         "ASCAT",
         temporal_ref="ISMN",
-        scaling="lin_cdf_match",
+        scaling="cdf_match",
         scaling_ref="ISMN",
         metrics_calculators={
             (2, 2): metrics_calculators.BasicMetrics(
@@ -553,7 +553,7 @@ def test_validation_error_n2_k2():
             temporal_matcher=temporal_matchers.BasicTemporalMatching(
                 window=1 / 24.0
             ).combinatory_matcher,
-            scaling="lin_cdf_match",
+            scaling="cdf_match",
             metrics_calculators={
                 (2, 2): metrics_calculators.BasicMetrics(
                     other_name="k1"
@@ -579,7 +579,7 @@ def test_validation_n3_k2_temporal_matching_no_matches():
         temporal_matcher=temporal_matchers.BasicTemporalMatching(
             window=1 / 24.0
         ).combinatory_matcher,
-        scaling="lin_cdf_match",
+        scaling="cdf_match",
         metrics_calculators={
             (3, 2): metrics_calculators.BasicMetrics(
                 other_name="k1"
@@ -680,7 +680,7 @@ def test_validation_n3_k2_data_manager_argument():
         temporal_matcher=temporal_matchers.BasicTemporalMatching(
             window=1 / 24.0
         ).combinatory_matcher,
-        scaling="lin_cdf_match",
+        scaling="cdf_match",
         metrics_calculators={
             (3, 2): metrics_calculators.BasicMetrics(
                 other_name="k1"
@@ -706,7 +706,7 @@ def test_validation_n3_k2_data_manager_argument():
         temporal_matcher=temporal_matchers.BasicTemporalMatching(
             window=1 / 24.0
         ).combinatory_matcher,
-        scaling="lin_cdf_match",
+        scaling="cdf_match",
         metrics_calculators={
             (3, 2): metrics_calculators.BasicMetrics(
                 other_name="k1"
@@ -807,7 +807,7 @@ def test_validation_n3_k2():
         temporal_matcher=temporal_matchers.BasicTemporalMatching(
             window=1 / 24.0
         ).combinatory_matcher,
-        scaling="lin_cdf_match",
+        scaling="cdf_match",
         metrics_calculators={
             (3, 2): metrics_calculators.BasicMetrics(
                 other_name="k1"
@@ -866,7 +866,7 @@ def test_validation_n3_k2_temporal_matching_no_matches2():
         temporal_matcher=temporal_matchers.BasicTemporalMatching(
             window=1 / 24.0
         ).combinatory_matcher,
-        scaling="lin_cdf_match",
+        scaling="cdf_match",
         metrics_calculators={
             (3, 2): metrics_calculators.BasicMetrics(
                 other_name="k1"
@@ -920,7 +920,7 @@ def test_validation_n3_k2_masking_no_data_remains():
         temporal_matcher=temporal_matchers.BasicTemporalMatching(
             window=1 / 24.0
         ).combinatory_matcher,
-        scaling="lin_cdf_match",
+        scaling="cdf_match",
         metrics_calculators={
             (3, 2): metrics_calculators.BasicMetrics(
                 other_name="k1"
@@ -1030,7 +1030,7 @@ def test_validation_n3_k2_masking():
         temporal_matcher=temporal_matchers.BasicTemporalMatching(
             window=1 / 24.0
         ).combinatory_matcher,
-        scaling="lin_cdf_match",
+        scaling="cdf_match",
         metrics_calculators={
             (3, 2): metrics_calculators.BasicMetrics(
                 other_name="k1"
@@ -1126,7 +1126,7 @@ def test_ascat_ismn_validation_metadata_rolling(ascat_reader, ismn_reader):
         datasets,
         "ISMN",
         temporal_ref="ASCAT",
-        scaling="lin_cdf_match",
+        scaling="cdf_match",
         scaling_ref="ASCAT",
         metrics_calculators={
             (2, 2): metrics_calculators.RollingMetrics(
