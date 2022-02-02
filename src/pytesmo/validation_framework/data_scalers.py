@@ -148,9 +148,9 @@ class CDFStoreParamsScaler(object):
                 continue
             params = parameters[f"{column}_{refname}"]
             matcher = CDFMatching()
-            nbins = len(params) // 2
-            matcher.x_perc_ = params[:nbins]
-            matcher.y_perc_ = params[nbins:]
+            nbins = params.shape[1]
+            matcher.x_perc_ = params[0, :]
+            matcher.y_perc_ = params[1, :]
             data[column] = pd.Series(matcher.predict(data[column]),
                                      index=data.index)
 
@@ -181,8 +181,8 @@ class CDFStoreParamsScaler(object):
             matcher = CDFMatching(percentiles=self.percentiles,
                                   linear_edge_scaling=self.linear_edge_scaling)
             matcher.fit(data[column], data[refname])
-            nbins = matcher.nbins
-            params = np.zeros((2, nbins), matcher.x_perc_.dtype)
+            nperc = matcher.nbins + 1
+            params = np.zeros((2, nperc), matcher.x_perc_.dtype)
             params[0, :] = matcher.x_perc_
             params[1, :] = matcher.y_perc_
             parameters[f"{column}_{refname}"] = params

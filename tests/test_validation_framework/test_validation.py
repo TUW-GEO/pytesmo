@@ -514,16 +514,17 @@ def test_validation_with_averager(ascat_reader, ismn_reader):
         "rho": np.array(
             [-0.012487,
              0.255156,
-             0.635517
+             0.635517,
              ], dtype=np.float32),
         "RMSD": np.array([
             0.05699504,
-            0.05594504,
+            0.05602394,
             0.11864391
         ], dtype=np.float32),
-        "R": np.array([0.64792067,
-            -0.01263259,
-            0.2571585
+        "R": np.array([
+            0.64792067,
+            -0.01205776,
+            0.2571585,
         ], dtype=np.float32)
     }
 
