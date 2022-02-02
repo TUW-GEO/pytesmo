@@ -240,26 +240,31 @@ def test_ascat_ismn_validation(ascat_reader, ismn_reader):
             141,
             251
         ],
-        "rho": np.array(
-            [0.53934574,
-             0.7002289,
-             0.62200236,
-             0.53647155,
-             0.30413666,
-             0.6740655,
-             0.8418981,
-             0.74206454
-             ], dtype=np.float32),
-        "RMSD": np.array(
-            [11.583476,
-             7.729667,
-             17.441547,
-             21.125721,
-             14.31557,
-             14.187225,
-             13.0622425,
-             12.903898
-             ], dtype=np.float32)}
+        # reference values for rho were inferred from the unscaled rho, since
+        # the CDF scaling should not change rank correlation
+        "rho": np.array([
+            0.5393457276100486,
+            0.7002289363385688,
+            0.6220023416557768,
+            0.5364715553916934,
+            0.3041366641200411,
+            0.6759989589212635,
+            0.8418980829611084,
+            0.7391369789045885,
+        ], dtype=np.float32),
+        # reference values for RMSD were taken from the first run with the new
+        # CDF matching implementation
+        "RMSD": np.array([
+            11.537956,
+            7.788051,
+            17.73936,
+            21.144691,
+            14.091403,
+            13.738006,
+            12.1061,
+            13.058732,
+        ], dtype=np.float32)
+    }
 
     check_results(
         filename=results_fname,
@@ -363,26 +368,30 @@ def test_ascat_ismn_validation_metadata(ascat_reader, ismn_reader):
             141,
             251
         ],
-        "rho": np.array(
-            [0.53934574,
-             0.7002289,
-             0.62200236,
-             0.53647155,
-             0.30413666,
-             0.6740655,
-             0.8418981,
-             0.74206454,
-             ], dtype=np.float32),
-        "RMSD": np.array(
-            [11.583476,
-             7.729667,
-             17.441547,
-             21.125721,
-             14.31557,
-             14.187225,
-             13.0622425,
-             12.903898,
-             ], dtype=np.float32),
+        # reference values for rho were inferred from the unscaled rho, since
+        # the CDF scaling should not change rank correlation
+        "rho": np.array([
+            0.5393457276100486,
+            0.7002289363385688,
+            0.6220023416557768,
+            0.5364715553916934,
+            0.3041366641200411,
+            0.6759989589212635,
+            0.8418980829611084,
+            0.7391369789045885,
+        ], dtype=np.float32),
+        # reference values for RMSD were taken from the first run with the new
+        # CDF matching implementation
+        "RMSD": np.array([
+            11.537956,
+            7.788051,
+            17.73936,
+            21.144691,
+            14.091403,
+            13.738006,
+            12.1061,
+            13.058732,
+        ], dtype=np.float32),
         "network": np.array([
             "MAQU",
             "MAQU",
@@ -518,16 +527,16 @@ def test_validation_with_averager(ascat_reader, ismn_reader):
              0.255156,
              0.635517
              ], dtype=np.float32),
-        "RMSD": np.array(
-            [0.056428,
-             0.056508,
-             0.116294
-             ], dtype=np.float32),
-        "R": np.array(
-            [-0.012335,
-             0.257671,
-             0.657239
-             ], dtype=np.float32)
+        "RMSD": np.array([
+            0.05699504,
+            0.05594504,
+            0.11864391
+        ], dtype=np.float32),
+        "R": np.array([
+            0.64792067,
+            -0.01263259,
+            0.2571585
+        ], dtype=np.float32)
     }
 
     check_results(

@@ -113,15 +113,6 @@ class CDFMatching(RegressorMixin, BaseEstimator):
         # calculate percentiles, potentially resize them
         tmp_percentiles, tmp_nbins = self._calc_percentiles(len(x))
 
-        # resample if necessary to have the same amount of data for source and
-        # ref
-        if len(x) != len(y):
-            max_samples = max(len(x), len(y))
-            if len(x) < len(y):
-                x = _resample_ecdf(x, max_samples)
-            else:
-                y = _resample_ecdf(y, max_samples)
-
         if tmp_nbins == 1 and self.linear_edge_scaling:
             # for a single bin just do a linear interpolation in case linear
             # edge scaling is activated
@@ -191,27 +182,36 @@ class CDFMatching(RegressorMixin, BaseEstimator):
         return percentiles, nbins
 
     def _linear_edge_scaling(self, x, y, x_perc, y_perc, percentiles):
-        # the data are sorted, so the first n values are the values
-        # corresponding to y <= y_perc[1]
-        n = np.sum(y <= y_perc[1])
-        xlow = x[:n] - x_perc[1]
-        ylow = y[:n] - y_perc[1]
+        # scales the lower and upper edges of y_perc by replacing the values
+        # with values inferred from a linear regression between the n
+        # lowest/highest values for x and y. n is the minimum of the number of
+        # data in the lowest/highest y-bin and the number of data in the
+        # corresponding x-bin, which can be different in case the data is only
+        # on a few discrete levels.
+        xlow = x[x <= x_perc[1]] - x_perc[1]
+        ylow = y[y <= y_perc[1]] - y_perc[1]
+        n = len(ylow)
+        if len(xlow) != n:
+            xlow = _resample_ecdf(xlow, n)
         a, _, _, _ = np.linalg.lstsq(xlow.reshape(-1, 1), ylow, rcond=None)
         y_perc[0] = y_perc[1] + a[0] * (x_perc[0] - x_perc[1])
 
-        # the last n values correspond to the values in the last bin
-        n = np.sum(y >= y_perc[-2])
-        xhigh = x[-n:] - x_perc[1]
-        yhigh = y[-n:] - y_perc[1]
+        xhigh = x[x >= x_perc[-2]] - x_perc[-2]
+        yhigh = y[y >= y_perc[-2]] - y_perc[-2]
+        n = len(yhigh)
+        if len(xhigh) != n:
+            xhigh = _resample_ecdf(xhigh, n)
         a, _, _, _ = np.linalg.lstsq(xhigh.reshape(-1, 1), yhigh, rcond=None)
         y_perc[-1] = y_perc[-2] + a[0] * (x_perc[-1] - x_perc[-2])
 
         return x_perc, y_perc
 
 
-def _resample_ecdf(x_sorted, n):
+def _resample_ecdf(x_sorted, n, is_sorted=True):
     """Resample ECDF to n bins"""
     # calculate percentiles for x_sorted
+    if not is_sorted:
+        x_sorted = np.sort(x_sorted)
     new_percentiles = np.arange(n, dtype=float) / (n - 1) * 100.0
     return _matlab_percentile_from_sorted(x_sorted, new_percentiles)
 
