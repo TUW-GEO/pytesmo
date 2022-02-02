@@ -25,7 +25,6 @@
 # ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 '''
 Module containing utility functions that do not fit into other modules
 '''
@@ -37,6 +36,13 @@ import scipy.special as sc_special
 import functools
 import inspect
 import warnings
+import os
+from pathlib import Path
+
+
+def rootdir() -> Path:
+    return Path(os.path.join(os.path.dirname(
+        os.path.abspath(__file__)))).parents[1]
 
 
 def deprecated(message: str = None):
@@ -66,12 +72,12 @@ def deprecated(message: str = None):
             warnings.warn(
                 default_msg if message is None else message,
                 category=DeprecationWarning,
-                stacklevel=2
-            )
+                stacklevel=2)
             warnings.simplefilter('default', DeprecationWarning)
             return src(*args, **kwargs)
 
         return new_func
+
     return decorator
 
 
@@ -130,25 +136,22 @@ def interp_uniq(src):
             pos = np.where(src == src[uniq_ind[i]])[0]
             if len(pos) > 1:
                 if pos[0] == 0 and pos[-1] < size - 1:
-                    src[
-                        pos[-1]] = (src[pos[len(pos) - 2]] +
+                    src[pos[-1]] = (src[pos[len(pos) - 2]] +
                                     src[pos[-1] + 1]) / 2.0
                 elif pos[-1] == size - 1:
-                    src[pos[0]] = (
-                        src[pos[1]] + src[pos[0] - 1]) / 2.0
+                    src[pos[0]] = (src[pos[1]] + src[pos[0] - 1]) / 2.0
                 else:
-                    src[pos[0]] = (
-                        src[pos[1]] + src[pos[0] - 1]) / 2.0
-                    src[pos[1]] = (
-                        src[pos[0]] + src[pos[1] + 1]) / 2.0
+                    src[pos[0]] = (src[pos[1]] + src[pos[0] - 1]) / 2.0
+                    src[pos[1]] = (src[pos[0]] + src[pos[1] + 1]) / 2.0
             uniq_ind = np.unique(src, return_index=True)[1]
 
     return src
 
 
 def unique_percentiles_interpolate(perc_values,
-                                   percentiles=[0, 5, 10, 30, 50,
-                                                70, 90, 95, 100],
+                                   percentiles=[
+                                       0, 5, 10, 30, 50, 70, 90, 95, 100
+                                   ],
                                    k=1):
     """
     Try to ensure that percentile values are unique
@@ -181,14 +184,14 @@ def unique_percentiles_interpolate(perc_values,
     inter = sc_int.InterpolatedUnivariateSpline(
         np.array(percentiles)[uniq_ind],
         uniq_perc_values,
-        k=k, ext=0,
+        k=k,
+        ext=0,
         check_finite=True)
     uniq_perc_values = inter(percentiles)
     return uniq_perc_values
 
 
-def unique_percentiles_beta(perc_values,
-                            percentiles):
+def unique_percentiles_beta(perc_values, percentiles):
     """
     Compute unique percentile values
     by fitting the CDF of a beta distribution to the
@@ -223,9 +226,7 @@ def unique_percentiles_beta(perc_values,
         percentiles = np.asanyarray(percentiles)
         percentiles = percentiles / 100.0
 
-        p, ier = sc_opt.curve_fit(betainc,
-                                  percentiles,
-                                  perc_values)
+        p, ier = sc_opt.curve_fit(betainc, percentiles, perc_values)
         uniq_perc_values = sc_special.betainc(p[0], p[1], percentiles)
         uniq_perc_values = uniq_perc_values * max_value + min_value
     else:
@@ -340,10 +341,7 @@ def derive_edge_parameters(src, ref, perc_src, perc_ref):
     y_hi = ref[ref >= perc_ref[-2]] - perc_ref[-2]
 
     # calculate least squares regression parameters
-    def return_regress(x, y,
-                       where,
-                       perc_src=perc_src,
-                       perc_ref=perc_ref):
+    def return_regress(x, y, where, perc_src=perc_src, perc_ref=perc_ref):
         n = min(len(x), len(y))
         if where == "low":
             x, y = x[:n], y[:n]
@@ -352,9 +350,9 @@ def derive_edge_parameters(src, ref, perc_src, perc_ref):
         x, y = np.sort(x), np.sort(y)
         slope, res, rank, s = np.linalg.lstsq(x.reshape(-1, 1), y, rcond=None)
         if where == 'low':
-            intercept = perc_ref[1] - slope[0]*perc_src[1]
+            intercept = perc_ref[1] - slope[0] * perc_src[1]
         elif where == 'high':
-            intercept = perc_ref[-2] - slope[0]*perc_src[-2]
+            intercept = perc_ref[-2] - slope[0] * perc_src[-2]
 
         return slope[0], intercept
 
@@ -393,8 +391,7 @@ def scale_edges(scaled, src, ref, perc_src, perc_ref):
 
     # calculate scaling slope and new reference points at edges
     parms_lo, parms_hi, perc_ref = derive_edge_parameters(
-        src=src, ref=ref, perc_src=perc_src, perc_ref=perc_ref
-    )
+        src=src, ref=ref, perc_src=perc_src, perc_ref=perc_ref)
 
     # find indexes of edge values in source data
     ids_lo = np.where(src <= perc_src[1])
@@ -437,8 +434,8 @@ def resize_percentiles(in_data, percentiles, minobs):
         nbins = np.int32(np.floor(n / minobs))
         if nbins == 0:
             nbins = 1
-        elif nbins > len(percentiles)-1:
-            nbins = len(percentiles)-1
+        elif nbins > len(percentiles) - 1:
+            nbins = len(percentiles) - 1
 
         return np.arange(nbins + 1, dtype=np.float64) / nbins * 100
 

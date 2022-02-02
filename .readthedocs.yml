@@ -3,12 +3,6 @@ version: 2
 sphinx:
   configuration: docs/conf.py
 
-formats:
-  - pdf
-
-submodules:
-  include: all
-
 conda:
   environment: environment.yml
 

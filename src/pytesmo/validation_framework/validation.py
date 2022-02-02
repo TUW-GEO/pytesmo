@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 from pygeogrids.grids import CellGrid
 import warnings
+import logging
 
 from pytesmo.validation_framework.data_manager import DataManager
 from pytesmo.validation_framework.data_manager import get_result_names
@@ -188,7 +189,8 @@ class Validation(object):
         lats,
         *args,
         rename_cols=True,
-        only_with_temporal_ref=False,
+        only_with_reference=False,
+        handle_errors='raise',
     ):
         """
         The argument iterables (lists or numpy.ndarrays) are processed one
@@ -215,9 +217,13 @@ class Validation(object):
         rename_cols : bool, optional
             Whether to rename the columns to "ref", "k1", ... before passing
             the dataframe to the metrics calculators. Default is True.
-        only_with_temporal_ref : bool, optional
-            If this is enabled, only combinations that include the temmporal
-            reference are calculated.
+        only_with_reference : bool, optional
+            If this is enabled, only combinations that include the reference
+            dataset (from the data manager) are calculated.
+        handle_errors: Literal['raise', 'ignore'], optional (default: 'raise')
+            `raise`: If an error occurs during validation, raise exception.
+            `ignore`: If an error occurs during validation, log it and
+             continue with next GPI.
 
         Returns
         -------
@@ -229,6 +235,7 @@ class Validation(object):
 
         """
         results = {}
+
         if len(args) > 0:
             gpis, lons, lats, args = args_to_iterable(
                 gpis, lons, lats, *args, n=3
@@ -238,20 +245,32 @@ class Validation(object):
 
         for gpi_info in zip(gpis, lons, lats, *args):
 
-            df_dict = self.data_manager.get_data(
-                gpi_info[0], gpi_info[1], gpi_info[2]
-            )
+            try:
+                df_dict = self.data_manager.get_data(
+                    gpi_info[0], gpi_info[1], gpi_info[2]
+                )
 
-            # if no data is available continue with the next gpi
-            if len(df_dict) == 0:
-                continue
-            matched_data, result, used_data = self.perform_validation(
-                df_dict,
-                gpi_info,
-                rename_cols=rename_cols,
-                only_with_temporal_ref=only_with_temporal_ref,
-            )
-
+                # if no data is available continue with the next gpi
+                if len(df_dict) == 0:
+                    continue
+                matched_data, result, used_data = self.perform_validation(
+                    df_dict,
+                    gpi_info,
+                    rename_cols=rename_cols,
+                    only_with_reference=only_with_reference,
+                )
+            except Exception as e:
+                if handle_errors.lower() == 'ignore':
+                    logging.error(f"{gpi_info}: {e}")
+                    continue
+                elif handle_errors.lower() == 'raise':
+                    raise e
+                else:
+                    raise NotImplementedError(
+                        f"Unknown `handle_errors` option: "
+                        f"{handle_errors.lower()}. "
+                        f"Choose `ignore` or `raise`."
+                    )
             # add result of one gpi to global results dictionary
             for r in result:
                 if r not in results:
@@ -277,7 +296,7 @@ class Validation(object):
         df_dict,
         gpi_info,
         rename_cols=True,
-        only_with_temporal_ref=False,
+        only_with_reference=False,
     ):
         """
         Perform the validation for one grid point index and return the
@@ -292,6 +311,9 @@ class Validation(object):
         rename_cols : bool, optional
             Whether to rename the columns to "ref", "k1", ... before passing
             the dataframe to the metrics calculators. Default is True.
+        only_with_reference: bool, optional (default: False)
+            Only compute metrics for dataset combinations where the reference
+            is included.
 
         Returns
         -------
@@ -337,8 +359,8 @@ class Validation(object):
                 # it might also be a good idea to move this to
                 # `get_result_combinations`
                 result_ds_names = [key[0] for key in result_key]
-                if only_with_temporal_ref:
-                    if self.temporal_ref not in result_ds_names:
+                if only_with_reference:
+                    if self.data_manager.reference_name not in result_ds_names:
                         continue
 
                 if len(data) == 0:
