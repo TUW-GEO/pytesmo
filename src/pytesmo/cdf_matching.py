@@ -71,7 +71,7 @@ class CDFMatching(RegressorMixin, BaseEstimator):
         self.combine_invalid = combine_invalid
         self.percentiles = percentiles
         if self.percentiles is not None:
-            self.nbins = len(self.percentiles)
+            self.nbins = len(self.percentiles) - 1
 
     def fit(
         self,
@@ -129,9 +129,9 @@ class CDFMatching(RegressorMixin, BaseEstimator):
         # fill self.x_perc_ and self.y_perc_ with NaN on the right in case the
         # bin size was reduced, so we always get arrays of size nbins as
         # self.x_perc_ and self.y_perc_
-        self.x_perc_ = np.zeros(self.nbins, dtype=x.dtype) * np.nan
-        self.y_perc_ = np.zeros(self.nbins, dtype=x.dtype) * np.nan
-        self.percentiles_ = np.zeros(self.nbins, dtype=x.dtype) * np.nan
+        self.x_perc_ = np.zeros(self.nbins + 1, dtype=x.dtype) * np.nan
+        self.y_perc_ = np.zeros(self.nbins + 1, dtype=x.dtype) * np.nan
+        self.percentiles_ = np.zeros(self.nbins + 1, dtype=x.dtype) * np.nan
         self.percentiles_[0:tmp_nbins + 1] = tmp_percentiles
         self.x_perc_[0:tmp_nbins + 1] = x_perc
         self.y_perc_[0:tmp_nbins + 1] = y_perc
@@ -164,7 +164,7 @@ class CDFMatching(RegressorMixin, BaseEstimator):
         # calculate percentiles, potentially resize them
         if self.percentiles is None:
             percentiles = np.arange(
-                self.nbins, dtype=np.float64) / self.nbins * 100
+                self.nbins + 1, dtype=np.float64) / self.nbins * 100
         else:
             percentiles = self.percentiles
 
