@@ -21,7 +21,7 @@ class CDFMatching(RegressorMixin, BaseEstimator):
         Percentile values to use. If this is given, `nbins` is ignored. The
         percentiles might still be changed if `minobs` is given and the number
         data per bin is lower. Default is ``None``.
-    lin_edge_scaling : bool, optional
+    linear_edge_scaling : bool, optional
         Whether to derive the edge parameters via linear regression (more
         robust, see Moesinger et al. (2020) for more info). Default is
         ``True``.
@@ -70,6 +70,8 @@ class CDFMatching(RegressorMixin, BaseEstimator):
         self.linear_edge_scaling = linear_edge_scaling
         self.combine_invalid = combine_invalid
         self.percentiles = percentiles
+        if self.percentiles is not None:
+            self.nbins = len(self.percentiles)
 
     def fit(
         self,

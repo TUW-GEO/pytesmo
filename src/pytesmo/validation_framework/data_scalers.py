@@ -32,7 +32,7 @@ Data scaler classes to be used together with the validation framework.
 import numpy as np
 import pandas as pd
 import pytesmo.scaling as scaling
-from pytesmo.scaling import lin_cdf_match_stored_params
+from pytesmo.cdf_matching import CDFMatching
 from pytesmo.utils import unique_percentiles_interpolate
 from pynetcf.point_data import GriddedPointData
 
@@ -99,7 +99,8 @@ class CDFStoreParamsScaler(object):
     """
 
     def __init__(
-        self, path, grid, percentiles=[0, 5, 10, 30, 50, 70, 90, 95, 100]
+            self, path, grid, percentiles=[0, 5, 10, 30, 50, 70, 90, 95, 100],
+            linear_edge_scaling=True
     ):
         self.path = path
         self.grid = grid
@@ -108,8 +109,12 @@ class CDFStoreParamsScaler(object):
             path,
             grid,
             mode="a",
-            ioclass_kws={"add_dims": {"percentiles": self.percentiles.size}},
+            ioclass_kws={
+                "add_dims": {"src_ref": 2, "percentiles": len(percentiles)}
+            },
         )
+        self.percentiles = percentiles
+        self.linear_edge_scaling = linear_edge_scaling
 
     def scale(self, data, reference_index, gpi_info):
         """
@@ -134,25 +139,24 @@ class CDFStoreParamsScaler(object):
             if scaling is not successful
         """
         gpi = gpi_info[0]
-        parameters = self.get_parameters(data, gpi)
+        parameters = self.get_parameters(data, reference_index, gpi)
 
-        reference_name = data.columns.values[reference_index]
-        reference = data[reference_name]
-        data = data.drop([reference_name], axis=1)
-        for series in data:
-            src_percentiles = parameters[series]
-            ref_percentiles = parameters[reference_name]
-            data[series] = pd.Series(
-                lin_cdf_match_stored_params(
-                    data[series].values, src_percentiles, ref_percentiles
-                ),
-                index=data.index,
-            )
+        refname = data.columns.values[reference_index]
+        reference = data[refname]
+        for column in data:
+            if column == refname:
+                continue
+            params = parameters[f"{column}_{refname}"]
+            matcher = CDFMatching()
+            nbins = len(params) // 2
+            matcher.x_perc_ = params[:nbins]
+            matcher.y_perc_ = params[nbins:]
+            data[column] = pd.Series(matcher.predict(data[column]),
+                                     index=data.index)
 
-        data.insert(reference_index, reference.name, reference)
         return data
 
-    def calc_parameters(self, data):
+    def calc_parameters(self, data, reference_index):
         """
         Calculate the percentiles used for CDF matching.
 
@@ -163,23 +167,28 @@ class CDFStoreParamsScaler(object):
 
         Returns
         -------
-        parameters: dictionary
+        matchers: dictionary
             keys -> Names of columns in the input data frame
-            values -> numpy.ndarrays with the percentiles
+            values -> nbins x 3 numpy.ndarrays with columns x_perc, y_perc,
+                      percentiles
         """
 
         parameters = {}
+        refname = data.columns[reference_index]
         for column in data.columns:
-            c_data = data[column].values
-            perc = np.percentile(c_data, self.percentiles)
-            perc = unique_percentiles_interpolate(
-                perc, percentiles=self.percentiles
-            )
-            parameters[column] = perc
-
+            if column == refname:
+                continue
+            matcher = CDFMatching(percentiles=self.percentiles,
+                                  linear_edge_scaling=self.linear_edge_scaling)
+            matcher.fit(data[column], data[refname])
+            nbins = matcher.nbins
+            params = np.zeros((2, nbins), matcher.x_perc_.dtype)
+            params[0, :] = matcher.x_perc_
+            params[1, :] = matcher.y_perc_
+            parameters[f"{column}_{refname}"] = params
         return parameters
 
-    def get_parameters(self, data, gpi):
+    def get_parameters(self, data, reference_index, gpi):
         """
         Function to get scaling parameters.
         Try to load them, if they are not found we
@@ -201,7 +210,7 @@ class CDFStoreParamsScaler(object):
 
         params = self.load_parameters(gpi)
         if params is None:
-            params = self.calc_parameters(data)
+            params = self.calc_parameters(data, reference_index)
             self.store_parameters(gpi, params)
         return params
 
@@ -234,9 +243,9 @@ class CDFStoreParamsScaler(object):
         dtypes = []
         dim_info = {"dims": {}}
         for key in parameters:
-            dim_info["dims"][key] = ("obs", "percentiles")
+            dim_info["dims"][key] = ("obs", "src_ref", "percentiles")
             dtypes.append(
-                (key, parameters[key].dtype, (parameters[key].size,))
+                (key, parameters[key].dtype, (parameters[key].shape[-1],))
             )
             data.append(parameters[key])
 

@@ -107,9 +107,7 @@ def get_scaling_method_lut():
         "linreg": linreg,
         "mean_std": mean_std,
         "min_max": min_max,
-        "lin_cdf_match": lin_cdf_match,
         "cdf_match": cdf_match,
-        "cdf_beta_match": cdf_beta_match,
     }
 
     return lut
@@ -251,270 +249,9 @@ def mean_std(src, ref, **kwargs):
     return ((src - np.mean(src)) / np.std(src)) * np.std(ref) + np.mean(ref)
 
 
-@utils.deprecated()
-def lin_cdf_match(
-    src,
-    ref,
-    min_val=None,
-    max_val=None,
-    percentiles=[0, 5, 10, 30, 50, 70, 90, 95, 100],
-    minobs=None,
-    **kwargs,
-):
-    """
-    computes cumulative density functions of src and ref at their
-    respective bin-edges by linear interpolation; then matches CDF of
-    src to CDF of ref.
-
-    This function does not make sure that the percentiles are unique so
-    it can happen that multiple measurements are scaled to one point or that
-    there are NaN values in the output array.
-
-    Parameters
-    ----------
-    src: numpy.array
-        input dataset which will be scaled
-    ref: numpy.array
-        src will be scaled to this dataset
-    min_val: float, optional
-        Minimum allowed value, output data is capped at this value
-    max_val: float, optional
-        Maximum allowed value, output data is capped at this value
-    percentiles: list or numpy.ndarray
-        Percentiles to use for CDF matching
-    minobs : int
-        Minimum desired number of observations in a bin.
-    ** kwargs: dict
-        keywords to be passed onto the gen_cdf_match() function
-
-    Returns
-    -------
-    CDF matched values: numpy.array
-        dataset src with CDF as ref
-    """
-    if minobs is not None:
-        percentiles = utils.resize_percentiles(src, percentiles, minobs)
-
-    perc_src = np.array(np.percentile(src, percentiles))
-    perc_ref = np.array(np.percentile(ref, percentiles))
-
-    return lin_cdf_match_stored_params(
-        src,
-        perc_src,
-        perc_ref,
-        ref=ref,
-        min_val=min_val,
-        max_val=max_val,
-        **kwargs,
-    )
-
-
-def lin_cdf_match_stored_params(
-    src, perc_src, perc_ref, ref=None, min_val=None, max_val=None, **kwargs
-):
-    """
-    Performs cdf matching using given percentiles.
-
-    Parameters
-    ----------
-    src: numpy.array
-        input data to scale
-    perc_src: numpy.array
-        percentiles of src estimated through method of choice
-    perc_ref: numpy.array
-        percentiles of reference data
-        estimated through method of choice, must be same size as
-        perc_src
-    ref: numpy.array, optional.
-        Needs to be passed to scale_edges() to use lin_edge_scaling. The
-        default is None.
-    min_val: float, optional
-        Minimum allowed value, output data is capped at this value
-    max_val: float, optional
-        Maximum allowed value, output data is capped at this value
-    ** kwargs: dict
-        keywords to be passed onto the gen_cdf_match() function
-    """
-
-    return gen_cdf_match(
-        src,
-        perc_src,
-        perc_ref,
-        ref=ref,
-        min_val=min_val,
-        max_val=max_val,
-        k=1,
-        **kwargs,
-    )
-
-
-def gen_cdf_match(
-    src,
-    perc_src,
-    perc_ref,
-    lin_edge_scaling=False,
-    ref=None,
-    min_val=None,
-    max_val=None,
-    k=1,
-    **kwargs,
-):
-    """
-    General cdf matching:
-
-    1. computes discrete cumulative density functions of
-       src- and ref at the given percentiles
-    2. computes continuous CDFs by k-th order spline fitting
-    3. CDF of src is matched to CDF of ref
-
-    Parameters
-    ----------
-    src: numpy.array
-        input dataset which will be scaled
-    perc_src: numpy.array
-        percentiles of src
-    perc_ref: numpy.array
-        percentiles of reference data
-        estimated through method of choice, must be same size as
-        perc_src
-    lin_edge_scaling: Bool, optional.
-        uses the method scale_edges() to perform a linear regression on the
-        edge values. Method in Moesinger et al. (2020). The default is False.
-    ref: numpy.array, optional.
-        src will be scaled to this dataset, used by scale_edges(). The default
-        is None.
-    min_val: float, optional
-        Minimum allowed value, output data is capped at this value
-    max_val: float, optional
-        Maximum allowed value, output data is capped at this value
-    k : int, optional
-        Order of spline to fit
-    ** kwargs: dict
-        keywords for scale_edges() and InterpolatedUnivariateSpline()
-
-    Returns
-    -------
-    CDF matched values: numpy.array
-        dataset src with CDF as ref
-    """
-    # InterpolatedUnivariateSpline uses extrapolation
-    # outside of boundaries so all values can be rescaled
-    # This is important if the stored percentiles were generated
-    # using a subset of the data and the new data has values outside
-    # of this original range
-
-    try:
-        inter = sc_int.InterpolatedUnivariateSpline(
-            perc_src, perc_ref, k=k, **kwargs
-        )
-    except Exception:
-        # here we must catch all exceptions since scipy does not raise a proper
-        # Exception
-        warn("Too few percentiles for chosen k.")
-        return np.full_like(src, np.nan)
-
-    scaled = inter(src)
-
-    # linear scaling of the edge values
-    if lin_edge_scaling:
-        if ref is None:
-            pass
-        else:
-            scaled = utils.scale_edges(
-                scaled=scaled,
-                src=src,
-                ref=ref,
-                perc_src=perc_src,
-                perc_ref=perc_ref,
-                **kwargs,
-            )
-
-    if max_val is not None:
-        scaled[scaled > max_val] = max_val
-    if min_val is not None:
-        scaled[scaled < min_val] = min_val
-
-    return scaled
-
-
-@utils.deprecated()
-def cdf_beta_match(
-    src, ref, minobs=20, lin_edge_scaling=True, nbins=100, **kwargs
-):
-    """
-    takes the source timeseries, fits a beta distribution through its CDF and
-    finds unique percentile values corresponding to the number of bins used.
-    The size of bins is by default dynamically increased in case too few
-    observations (less than 20) are in a bin, leading to overfitting. Based on
-    Moesinger et al. (2020).
-
-    These values are used to scale the source to the reference by linear
-    interpolation between each pair of bin edges.
-
-    Uses the edge values linear scaling method described in Moesinger et
-    al. (2020) by default.
-
-    Parameters
-    ----------
-    src: numpy.array
-        input dataset which will be scaled
-    ref: numpy.array
-        src will be scaled to this dataset
-    minobs : int
-        Minimum desired number of observations in a bin.
-    nbins: int, optional
-        Number of bins to use for estimation of the CDF
-    ** kwargs: dict
-        keywords to be passed onto the gen_cdf_match() function
-
-    Returns
-    -------
-    CDF matched values: numpy.array
-        dataset src with CDF as ref
-    """
-    # return cdf_match(src, ref, minobs=minobs, linear_edge_scaling=lin_edge_scaling, nbins=nbins)
-    percentiles = np.linspace(0, 100, nbins)
-
-    if minobs is not None:
-        percentiles = utils.resize_percentiles(src, percentiles, minobs)
-
-    # match the two arrays
-    if len(src) != len(ref):
-        max_obs = max(len(src), len(ref))
-        d_perc = np.arange(max_obs, dtype="float") / (max_obs - 1) * 100
-
-        if len(src) < len(ref):
-            src = utils.ml_percentile(src, d_perc)
-        else:
-            ref = utils.ml_percentile(ref, d_perc)
-
-    # calculate percentiles using matlab method
-    perc_src = utils.ml_percentile(src, percentiles)
-    perc_ref = utils.ml_percentile(ref, percentiles)
-
-    # fit beta distributions through the source percentiles
-    if np.unique(perc_src).size == 1:
-        warn(
-            "There is only one percentile value on which the scaling is based"
-        )
-    else:
-        perc_src = utils.unique_percentiles_beta(
-            perc_src, percentiles=percentiles
-        )
-
-    return gen_cdf_match(
-        src,
-        perc_src,
-        perc_ref,
-        lin_edge_scaling=lin_edge_scaling,
-        ref=ref,
-        **kwargs,
-    )
-
-
 def cdf_match(
         src, ref, minobs=20, linear_edge_scaling=True, nbins=100,
-        percentiles=None, combine_invalid=True
+        percentiles=None, combine_invalid=True, max_val=None, min_val=None
 ):
     """
     Rescales by CDF matching.
@@ -541,13 +278,32 @@ def cdf_match(
         data per bin is lower. Default is ``None``.
     linear_edge_scaling : bool, optional
         Whether to use linear edge scaling. Default is True.
+    combine_invalid : bool, optional
+        Optional feature to combine the masks of invalid data (NaN, Inf) of
+        both source (X) and reference (y) data passed to `fit`. This only makes
+        sense if X and y are both timeseries data corresponding to the same
+        index. In this case, this makes sures that data is only used if values
+        for X and y are available, so that seasonal patterns in missing values
+        in one of them do not lead to distortions. (For example, if X is
+        available the whole year, but y is only available during summer, the
+        distribution of y should not be matched against the whole year CDF of
+        X, because that could introduce systematic seasonal biases).
+    max_val, min_val : float, optional
+        Maximum and minimum values to enforce.
 
     Returns
     -------
     CDF matched values: numpy.array
         dataset src with CDF as ref
     """
-    matcher = CDFMatching(
-        nbins=nbins, minobs=minobs, linear_edge_scaling=linear_edge_scaling, percentiles=percentiles
-    ).fit(src, ref)
-    return matcher.predict(src)
+    matcher = CDFMatching(nbins=nbins, minobs=minobs,
+                          linear_edge_scaling=linear_edge_scaling,
+                          percentiles=percentiles,
+                          combine_invalid=combine_invalid)
+    matcher.fit(src, ref)
+    scaled = matcher.predict(src)
+    if max_val is not None:
+        scaled[scaled > max_val] = max_val
+    if min_val is not None:
+        scaled[scaled > min_val] = min_val
+    return scaled

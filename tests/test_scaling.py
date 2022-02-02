@@ -78,11 +78,7 @@ def test_scaling_method(method):
     x = np.arange(n)
     y = np.arange(n) * 0.5
 
-    if method in ["lin_cdf_match", "cdf_beta_match"]:
-        with pytest.deprecated_call():
-            o = getattr(scaling, method)(y, x)
-    else:
-        o = getattr(scaling, method)(y, x)
+    o = getattr(scaling, method)(y, x)
     nptest.assert_almost_equal(x, o)
 
 
@@ -97,17 +93,11 @@ def test_scaling_kwargs(method):
     x = np.arange(n)
     y = np.arange(n) * 0.5
 
-    kwargs = {'lin_edge_scaling': True,
+    kwargs = {'linear_edge_scaling': True,
               'minobs': 20,
               'max_val': 950,
               'min_val': 50}
-    if method in ["lin_cdf_match", "cdf_beta_match"]:
-        with pytest.deprecated_call():
-            getattr(scaling, method)(y, x, **kwargs)
-    elif method == "cdf_match":
-        scaling.cdf_match(y, x, linear_edge_scaling=True, nbins=100, minobs=20)
-    else:
-        getattr(scaling, method)(y, x, **kwargs)
+    getattr(scaling, method)(y, x, **kwargs)
 
 
 @pytest.mark.parametrize('method', scaling_methods)
@@ -118,15 +108,9 @@ def test_scale(method):
     y = np.arange(n) * 0.5
 
     df = pd.DataFrame({'x': x, 'y': y}, columns=['x', 'y'])
-    if method in ["lin_cdf_match", "cdf_beta_match"]:
-        with pytest.deprecated_call():
-            df_scaled = scaling.scale(df,
-                                      method=method,
-                                      reference_index=0)
-    else:
-        df_scaled = scaling.scale(df,
-                                  method=method,
-                                  reference_index=0)
+    df_scaled = scaling.scale(df,
+                              method=method,
+                              reference_index=0)
     nptest.assert_almost_equal(df_scaled['x'].values,
                                df_scaled['y'].values)
 
@@ -169,19 +153,11 @@ def test_add_scale(method):
     y = np.arange(n) * 0.5
 
     df = pd.DataFrame({'x': x, 'y': y}, columns=['x', 'y'])
-    if method in ["lin_cdf_match", "cdf_beta_match"]:
-        with pytest.deprecated_call():
-            df_scaled = scaling.add_scaled(df, method=method)
-            # test the scaling the other way round
-            df_scaled2 = scaling.add_scaled(df, method=method,
-                                            label_in='y',
-                                            label_scale='x')
-    else:
-        df_scaled = scaling.add_scaled(df, method=method)
-        # test the scaling the other way round
-        df_scaled2 = scaling.add_scaled(df, method=method,
-                                        label_in='y',
-                                        label_scale='x')
+    df_scaled = scaling.add_scaled(df, method=method)
+    # test the scaling the other way round
+    df_scaled2 = scaling.add_scaled(df, method=method,
+                                    label_in='y',
+                                    label_scale='x')
     nptest.assert_almost_equal(df_scaled['y'].values,
                                df_scaled['x_scaled_' + method].values)
 
@@ -215,50 +191,5 @@ def test_single_percentile_data():
     x = np.arange(n, dtype=float)
     y = np.ones(n)
 
-    with pytest.deprecated_call():
-        s = scaling.lin_cdf_match(y, x)
-    nptest.assert_almost_equal(s, np.full_like(s, np.nan))
-
     s = scaling.cdf_match(y, x)
     nptest.assert_almost_equal(s, np.full_like(s, np.nan))
-
-
-def test_lin_cdf_match_stored_params():
-    """
-    Test scaling based on given percentiles.
-    """
-
-    perc_src = [10, 15, 22]
-    perc_ref = [100, 150, 220]
-
-    # this also tests scaling of data outside of the original range
-    src = np.arange(25)
-
-    o = scaling.lin_cdf_match_stored_params(src, perc_src, perc_ref)
-    nptest.assert_almost_equal(o, src * 10)
-
-
-def test_lin_cdf_match_stored_params_min_max():
-    """
-    Test scaling based on given percentiles.
-    Include minimum maximum capping.
-    """
-
-    perc_src = [10, 15, 22]
-    perc_ref = [100, 150, 220]
-
-    # this also tests scaling of data outside of the original range
-    src = np.arange(25)
-
-    o = scaling.lin_cdf_match_stored_params(src,
-                                            perc_src,
-                                            perc_ref,
-                                            max_val=230,
-                                            min_val=85)
-
-    o_should = np.array([85, 85, 85, 85, 85, 85,
-                         85, 85, 85, 90, 100,
-                         110, 120, 130, 140, 150,
-                         160, 170, 180, 190, 200,
-                         210, 220, 230, 230])
-    nptest.assert_almost_equal(o, o_should)
