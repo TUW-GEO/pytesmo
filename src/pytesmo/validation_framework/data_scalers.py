@@ -33,7 +33,6 @@ import numpy as np
 import pandas as pd
 import pytesmo.scaling as scaling
 from pytesmo.cdf_matching import CDFMatching
-from pytesmo.utils import unique_percentiles_interpolate
 from pynetcf.point_data import GriddedPointData
 
 
@@ -87,20 +86,22 @@ class CDFStoreParamsScaler(object):
 
     Parameters
     ----------
-    path: string
+    path : string
         Path where the data is/should be stored
-    grid: :py:class:`pygeogrids.grids.CellGrid` instance
+    grid : :py:class:`pygeogrids.grids.CellGrid` instance
         Grid on which the data is stored.
         Should be the same as the spatial reference grid
         of the validation framework instance in which this
         scaler is used.
-    percentiles: list or np.ndarray
+    percentiles : list or np.ndarray
         Percentiles to use for CDF matching
+    **matcher_kwargs : keyword arguments
+        Passed on to :py:class:`pytesmo.cdf_matching.CDFMatching``
     """
 
     def __init__(
-            self, path, grid, percentiles=[0, 5, 10, 30, 50, 70, 90, 95, 100],
-            linear_edge_scaling=True
+        self, path, grid, percentiles=[0, 5, 10, 30, 50, 70, 90, 95, 100],
+        **matcher_kwargs
     ):
         self.path = path
         self.grid = grid
@@ -113,8 +114,7 @@ class CDFStoreParamsScaler(object):
                 "add_dims": {"src_ref": 2, "percentiles": len(percentiles)}
             },
         )
-        self.percentiles = percentiles
-        self.linear_edge_scaling = linear_edge_scaling
+        self.matcher_kwargs = matcher_kwargs
 
     def scale(self, data, reference_index, gpi_info):
         """
@@ -147,8 +147,8 @@ class CDFStoreParamsScaler(object):
             if column == refname:
                 continue
             params = parameters[f"{column}_{refname}"]
-            matcher = CDFMatching()
-            nbins = params.shape[1]
+            matcher = CDFMatching(percentiles=self.percentiles,
+                                  **self.matcher_kwargs)
             matcher.x_perc_ = params[0, :]
             matcher.y_perc_ = params[1, :]
             data[column] = pd.Series(matcher.predict(data[column]),
@@ -164,6 +164,8 @@ class CDFStoreParamsScaler(object):
         ----------
         data: pandas.DataFrame
             temporally matched dataset
+        reference_index : int
+            Index of the reference column in the dataset.
 
         Returns
         -------
@@ -179,7 +181,7 @@ class CDFStoreParamsScaler(object):
             if column == refname:
                 continue
             matcher = CDFMatching(percentiles=self.percentiles,
-                                  linear_edge_scaling=self.linear_edge_scaling)
+                                  **self.matcher_kwargs)
             matcher.fit(data[column], data[refname])
             nperc = matcher.nbins + 1
             params = np.zeros((2, nperc), matcher.x_perc_.dtype)

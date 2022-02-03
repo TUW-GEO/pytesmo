@@ -15,8 +15,9 @@ class CDFMatching(RegressorMixin, BaseEstimator):
     Parameters
     ----------
     nbins : int, optional
-        Number of bins to use for the empirical CDF. Default is 100. This might
-        be reduced in case there's not enough data in each bin.
+        Number of bins to use for the empirical CDF. Default is 100. If
+        `minobs` is set, this might be reduced in case there's not enough data
+        in each bin.
     percentiles : sequence, optional
         Percentile values to use. If this is given, `nbins` is ignored. The
         percentiles might still be changed if `minobs` is given and the number
@@ -24,11 +25,14 @@ class CDFMatching(RegressorMixin, BaseEstimator):
     linear_edge_scaling : bool, optional
         Whether to derive the edge parameters via linear regression (more
         robust, see Moesinger et al. (2020) for more info). Default is
-        ``True``.
+        ``False``.
+        Note that this way only the outliers in the reference (y) CDF are
+        handled. Outliers in the input data (x) will not be removed and will
+        still show up in the data.
     minobs : int, optional
         Minimum desired number of observations in a bin. If there is less data
-        for a bin, the number of bins is reduced. Default is 20. Set to
-        ``None`` if no bin resizing should be performed.
+        for a bin, the number of bins is reduced. Default is ``None`` (no
+        resizing).
     combine_invalid : bool, optional
         Optional feature to combine the masks of invalid data (NaN, Inf) of
         both source (X) and reference (y) data passed to `fit`. This only makes
@@ -39,14 +43,15 @@ class CDFMatching(RegressorMixin, BaseEstimator):
         available the whole year, but y is only available during summer, the
         distribution of y should not be matched against the whole year CDF of
         X, because that could introduce systematic seasonal biases).
+        The default is ``False``.
 
     Attributes
     ----------
-    src_perc_ : np.ndarray (nbins,)
+    x_perc_ : np.ndarray (nbins,)
         The percentile values derived from the source (X) data. If the number
         of bins was reduced during fitting due to insufficient data, it is
         right-padded with NaNs.
-    ref_perc_ : np.ndarray (nbins,)
+    y_perc_ : np.ndarray (nbins,)
         The percentile values derived from the reference (y) data. If the
         number of bins was reduced during fitting due to insufficient data, it
         is right-padded with NaNs.
@@ -61,9 +66,9 @@ class CDFMatching(RegressorMixin, BaseEstimator):
         self,
         nbins: int = 100,
         percentiles: Sequence = None,
-        minobs: int = 20,
-        linear_edge_scaling: bool = True,
-        combine_invalid: bool = True,
+        minobs: int = None,
+        linear_edge_scaling: bool = False,
+        combine_invalid: bool = False,
     ):
         self.nbins = nbins
         self.minobs = minobs
@@ -90,16 +95,9 @@ class CDFMatching(RegressorMixin, BaseEstimator):
         """
 
         # make sure that x and y are 1D numpy arrays
-        if isinstance(X, (pd.Series, pd.DataFrame)):
-            X = X.values
         if isinstance(y, pd.Series):
             y = y.values
-        if len(X.shape) > 1:
-            assert len(X.shape) == 2
-            assert X.shape[1] == 1
-            x = X.ravel()
-        else:
-            x = X
+        x = _make_X_array(X)
 
         # drop invalid values and pre-sort to avoid multiple resorting later
         isvalid_x = np.isfinite(x)
@@ -113,43 +111,37 @@ class CDFMatching(RegressorMixin, BaseEstimator):
         y = np.sort(y_unsorted)
 
         # calculate percentiles, potentially resize them
-        tmp_percentiles, tmp_nbins = self._calc_percentiles(len(x))
+        nsamples = min(len(x), len(y))
+        tmp_percentiles, tmp_nbins = self._calc_percentiles(nsamples)
 
         if tmp_nbins == 1 and self.linear_edge_scaling:
             # for a single bin just do a linear interpolation in case linear
             # edge scaling is activated
             x_perc, y_perc = _linreg_percentiles(x_unsorted, y_unsorted)
         else:
-            x_perc = _matlab_percentile_from_sorted(x, tmp_percentiles)
-            y_perc = _matlab_percentile_from_sorted(y, tmp_percentiles)
+            x_perc = _percentile_values_from_sorted(x, tmp_percentiles)
+            y_perc = _percentile_values_from_sorted(y, tmp_percentiles)
             if self.linear_edge_scaling:
-                x_perc, y_perc = self._linear_edge_scaling(
+                y_perc = self._linear_edge_scaling(
                     x, y, x_perc, y_perc, tmp_percentiles)
 
         # fill self.x_perc_ and self.y_perc_ with NaN on the right in case the
         # bin size was reduced, so we always get arrays of size nbins as
         # self.x_perc_ and self.y_perc_
-        self.x_perc_ = np.zeros(self.nbins + 1, dtype=x.dtype) * np.nan
-        self.y_perc_ = np.zeros(self.nbins + 1, dtype=x.dtype) * np.nan
-        self.percentiles_ = np.zeros(self.nbins + 1, dtype=x.dtype) * np.nan
+        self.x_perc_ = np.full(self.nbins + 1, np.nan, dtype=x.dtype)
+        self.y_perc_ = np.full(self.nbins + 1, np.nan, dtype=x.dtype)
+        self.percentiles_ = np.full(self.nbins + 1, np.nan, dtype=x.dtype)
         self.percentiles_[0:tmp_nbins + 1] = tmp_percentiles
         self.x_perc_[0:tmp_nbins + 1] = x_perc
         self.y_perc_[0:tmp_nbins + 1] = y_perc
         return self
 
     def predict(self, X):
-        if isinstance(X, (pd.Series, pd.DataFrame)):
-            X = X.values
-        if len(X.shape) > 1:
-            assert len(X.shape) == 2
-            assert X.shape[1] == 1
-            x = X.ravel()
-        else:
-            x = X
+        x = _make_X_array(X)
         xp = self.x_perc_[~np.isnan(self.x_perc_)]
         yp = self.y_perc_[~np.isnan(self.y_perc_)]
         if len(xp) == 0 or len(yp) == 0:
-            return np.zeros(len(x), dtype=x.dtype) * np.nan
+            return np.full_like(x, np.nan)
         else:
             try:
                 spline = interpolate.InterpolatedUnivariateSpline(
@@ -186,10 +178,10 @@ class CDFMatching(RegressorMixin, BaseEstimator):
     def _linear_edge_scaling(self, x, y, x_perc, y_perc, percentiles):
         # scales the lower and upper edges of y_perc by replacing the values
         # with values inferred from a linear regression between the n
-        # lowest/highest values for x and y. n is the minimum of the number of
-        # data in the lowest/highest y-bin and the number of data in the
-        # corresponding x-bin, which can be different in case the data is only
-        # on a few discrete levels.
+        # lowest/highest values for x and y. n is the number of data in the
+        # lowest/highest y-bin, if there are more or less values in the
+        # corresponding x-bin, the values will be resampled from the empirical
+        # CDF. This can happen if the values are on only a few discrete levels.
         xlow = x[x <= x_perc[1]] - x_perc[1]
         ylow = y[y <= y_perc[1]] - y_perc[1]
         n = len(ylow)
@@ -206,7 +198,19 @@ class CDFMatching(RegressorMixin, BaseEstimator):
         a, _, _, _ = np.linalg.lstsq(xhigh.reshape(-1, 1), yhigh, rcond=None)
         y_perc[-1] = y_perc[-2] + a[0] * (x_perc[-1] - x_perc[-2])
 
-        return x_perc, y_perc
+        return y_perc
+
+
+def _make_X_array(X):
+    if isinstance(X, (pd.Series, pd.DataFrame)):
+        X = X.values
+    if len(X.shape) > 1:
+        assert len(X.shape) == 2
+        assert X.shape[1] == 1
+        x = X.ravel()
+    else:
+        x = X
+    return x
 
 
 def _resample_ecdf(x_sorted, n, is_sorted=True):
@@ -215,10 +219,15 @@ def _resample_ecdf(x_sorted, n, is_sorted=True):
     if not is_sorted:
         x_sorted = np.sort(x_sorted)
     new_percentiles = np.arange(n, dtype=float) / (n - 1) * 100.0
-    return _matlab_percentile_from_sorted(x_sorted, new_percentiles)
+    return _percentile_values_from_sorted(x_sorted, new_percentiles)
 
 
-def _matlab_percentile_from_sorted(data, percentiles):
+def _percentile_values_from_sorted(data, percentiles):
+    perc = _matlab_percentile_values_from_sorted(data, percentiles)
+    return _unique_percentile_interpolation(perc, percentiles)
+
+
+def _matlab_percentile_values_from_sorted(data, percentiles):
     """
     Calculate percentiles in the way Matlab and IDL do it.
 
@@ -238,12 +247,30 @@ def _matlab_percentile_from_sorted(data, percentiles):
     """
     p_rank = 100.0 * (np.arange(data.size) + 0.5) / data.size
     perc = np.interp(percentiles, p_rank, data, left=data[0], right=data[-1])
+    return perc
 
+
+def _unique_percentile_interpolation(perc, percentiles):
     # make sure the percentiles are unique
+    # assumes `perc` is sorted
     uniq, uniq_ind = np.unique(perc, return_index=True)
     if uniq_ind.size != len(percentiles) and uniq_ind.size > 1:
+        # If there are non-unique percentile values in perc, e.g.
+        # [1, 1, 1, 2, ...] corresponding to percentiles [0, 5, 10, 20, ...],
+        # we will interpolate the values for 5 and 10 to be between 1 and 2.
+        # uniq_ind contains the first index of the non-unique values, so
+        # selecting them will return [1, 2] and [0, 20].
+        new_percentiles = percentiles[uniq_ind]
+        new_perc = perc[uniq_ind]
+        # However, if we have non-unique indices at the end of the array, e.g.
+        # [..., 8, 10, 10, 10] corresponding to percentiles [..., 85, 90, 95,
+        # 100], this approach will return [8, 10] and [85, 90], meaning that
+        # the last percentile values will be extrapolated.
+        # To avoid this, we set the last non-unique percentile to the overall
+        # last percentile
+        new_percentiles[-1] = percentiles[-1]
         spline = interpolate.InterpolatedUnivariateSpline(
-            percentiles[uniq_ind], perc[uniq_ind], k=1, ext=0)
+            new_percentiles, new_perc, k=1, ext=0)
         perc = spline(percentiles)
     return perc
 

@@ -257,14 +257,14 @@ def test_ascat_ismn_validation(ascat_reader, ismn_reader):
         # reference values for RMSD were taken from the first run with the new
         # CDF matching implementation
         "RMSD": np.array([
-            11.537956,
+            11.577185,
             7.788051,
             17.73936,
-            21.144691,
-            14.091403,
-            13.738006,
+            21.145535,
+            14.092733,
+            13.741866,
             12.1061,
-            13.058732,
+            13.058796,
         ], dtype=np.float32)
 
     }
@@ -383,14 +383,14 @@ def test_ascat_ismn_validation_metadata(ascat_reader, ismn_reader):
         # reference values for RMSD were taken from the first run with the new
         # CDF matching implementation
         "RMSD": np.array([
-            11.537956,
+            11.577185,
             7.788051,
             17.73936,
-            21.144691,
-            14.091403,
-            13.738006,
+            21.145535,
+            14.092733,
+            13.741866,
             12.1061,
-            13.058732,
+            13.058796,
         ], dtype=np.float32),
         "network": np.array([
             "MAQU",
@@ -517,14 +517,14 @@ def test_validation_with_averager(ascat_reader, ismn_reader):
              0.635517,
              ], dtype=np.float32),
         "RMSD": np.array([
-            0.05699504,
-            0.05602394,
-            0.11864391
+            0.05708659,
+            0.05607013,
+            0.11864747
         ], dtype=np.float32),
         "R": np.array([
-            0.64792067,
-            -0.01205776,
-            0.2571585,
+            0.64745444,
+            -0.0121021,
+            0.2571774
         ], dtype=np.float32)
     }
 

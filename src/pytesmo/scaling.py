@@ -250,7 +250,7 @@ def mean_std(src, ref, **kwargs):
 
 
 def cdf_match(
-        src, ref, minobs=20, linear_edge_scaling=True, nbins=100,
+        src, ref, nbins=100, minobs=20, linear_edge_scaling=True,
         percentiles=None, combine_invalid=True, max_val=None, min_val=None
 ):
     """
@@ -268,16 +268,22 @@ def cdf_match(
         input dataset which will be scaled
     ref: numpy.array
         src will be scaled to this dataset
-    minobs : int
-        Minimum desired number of observations in a bin.
     nbins: int, optional
         Number of bins to use for estimation of the CDF
     percentiles : sequence, optional
         Percentile values to use. If this is given, `nbins` is ignored. The
         percentiles might still be changed if `minobs` is given and the number
         data per bin is lower. Default is ``None``.
+    minobs : int, optional
+        Minimum desired number of observations in a bin for bin resizing. If it
+        is ``None`` bins will not be resized. Default is 20.
     linear_edge_scaling : bool, optional
-        Whether to use linear edge scaling. Default is True.
+        Whether to derive the edge parameters via linear regression (more
+        robust, see Moesinger et al. (2020) for more info). Default is
+        ``True``.
+        Note that this way only the outliers in the reference (y) CDF are
+        handled. Outliers in the input data (x) will not be removed and will
+        still show up in the data.
     combine_invalid : bool, optional
         Optional feature to combine the masks of invalid data (NaN, Inf) of
         both source (X) and reference (y) data passed to `fit`. This only makes
@@ -288,6 +294,7 @@ def cdf_match(
         available the whole year, but y is only available during summer, the
         distribution of y should not be matched against the whole year CDF of
         X, because that could introduce systematic seasonal biases).
+        Default is True.
     max_val, min_val : float, optional
         Maximum and minimum values to enforce.
 
@@ -305,5 +312,5 @@ def cdf_match(
     if max_val is not None:
         scaled[scaled > max_val] = max_val
     if min_val is not None:
-        scaled[scaled > min_val] = min_val
+        scaled[scaled < min_val] = min_val
     return scaled
