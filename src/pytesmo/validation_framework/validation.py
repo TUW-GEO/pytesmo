@@ -347,8 +347,7 @@ class Validation(object):
 
         for n, k in self.metrics_c:
             n_matched_data = matched_n[(n, k)]
-            if len(n_matched_data) == 0:
-                continue
+
             result_names = get_result_combinations(
                 self.data_manager.ds_dict, n=k
             )
@@ -362,9 +361,6 @@ class Validation(object):
                 if only_with_reference:
                     if self.data_manager.reference_name not in result_ds_names:
                         continue
-
-                if len(data) == 0:
-                    continue
 
                 # at this stage we can drop the column multiindex and just use
                 # the dataset name
