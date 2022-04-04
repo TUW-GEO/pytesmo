@@ -27,7 +27,14 @@ class Test_GenericDateTime(unittest.TestCase):
 
     def test_doy(self):
         assert GenericDatetime.from_datetime(self.future).doy == 159
-        assert self.now.timetuple().tm_yday == self.gnow.doy
+        try:
+            _ = datetime(self.now.year, 2, 29)
+            assert self.now.timetuple().tm_yday == self.gnow.doy
+        except ValueError:
+            if self.now > datetime(self.now.year, 2, 28):
+                assert self.now.timetuple().tm_yday + 1 == self.gnow.doy
+            else:
+                assert self.now.timetuple().tm_yday == self.gnow.doy
 
     def test_to_dt(self):
         assert GenericDatetime.from_datetime(self.past).to_datetime(
