@@ -138,21 +138,24 @@ class CDFMatching(RegressorMixin, BaseEstimator):
 
     def predict(self, X):
         x = _make_X_array(X)
-        if np.all(np.isnan(x)):
-            return np.full_like(x, np.nan)
+        isvalid = np.isfinite(x)
+        prediction = np.full_like(x, np.nan)
+        if not np.any(isvalid):
+            return prediction
         xp = self.x_perc_[~np.isnan(self.x_perc_)]
         yp = self.y_perc_[~np.isnan(self.y_perc_)]
         if len(xp) == 0 or len(yp) == 0:
-            return np.full_like(x, np.nan)
+            return prediction
         else:
             try:
                 spline = interpolate.InterpolatedUnivariateSpline(
                     xp, yp, k=1, ext=0)
-                return spline(x)
+                prediction[isvalid] = spline(x[isvalid])
+                return prediction
             except ValueError:
                 # happens if there are non-unique values or not enough values
                 warnings.warn("Too few percentiles for chosen k.")
-                return np.full_like(x, np.nan)
+                return prediction
 
     def _calc_percentiles(self, nsamples):
         # calculate percentiles, potentially resize them
