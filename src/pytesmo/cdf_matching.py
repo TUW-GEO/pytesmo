@@ -138,6 +138,8 @@ class CDFMatching(RegressorMixin, BaseEstimator):
 
     def predict(self, X):
         x = _make_X_array(X)
+        if np.all(np.isnan(x)):
+            return np.full_like(x, np.nan)
         xp = self.x_perc_[~np.isnan(self.x_perc_)]
         yp = self.y_perc_[~np.isnan(self.y_perc_)]
         if len(xp) == 0 or len(yp) == 0:
