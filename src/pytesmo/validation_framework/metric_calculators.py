@@ -1517,7 +1517,13 @@ class PairwiseMetricsMixin:
                     metric_func = pairwise.rmsd
                 else:
                     metric_func = getattr(pairwise, m)
-                _, lb, ub = with_bootstrapped_ci(metric_func, x, y)
+                kwargs = {}
+                if hasattr(self, 'bootstrap_alpha'):
+                    kwargs['alpha'] = getattr(self, 'bootstrap_alpha')
+                if hasattr(self, 'bootstrap_min_obs'):
+                    kwargs['minimum_data_length'] = getattr(
+                        self, 'bootstrap_min_obs')
+                _, lb, ub = with_bootstrapped_ci(metric_func, x, y, **kwargs)
                 result[f"{m}_ci_lower" + suffix][0] = lb
                 result[f"{m}_ci_upper" + suffix][0] = ub
 
@@ -1555,29 +1561,28 @@ class PairwiseIntercomparisonMetrics(MetadataMetrics, PairwiseMetricsMixin):
     calc_kendall : bool, optional
         Whether to calculate Kendall's rank correlation coefficient. Default is
         True.
-    analytical_cis : bool, optional
+    analytical_cis : bool, optional (default: True)
         Whether to calculate analytical confidence intervals for the following
         metrics:
-
-        - BIAS
-        - mse_bias
-        - RMSD
-        - urmsd
-        - mse
-        - R
-        - rho (only if ``calc_spearman=True``)
-        - tau (only if ``calc_kendall=True``)
-
-        The default is `True`.
-
-    bootstrap_cis
+            - BIAS
+            - mse_bias
+            - RMSD
+            - urmsd
+            - mse
+            - R
+            - rho (only if ``calc_spearman=True``)
+            - tau (only if ``calc_kendall=True``)
+    bootstrap_cis: bool, optional (default: False)
         Whether to calculate bootstrap confidence intervals for the following
         metrics:
-
-        - mse_corr
-        - mse_var
-
+            - mse_corr
+            - mse_var
         The default is `False`. This might be a lot of computational effort.
+    bootstrap_min_obs: int, optional (default: 100)
+        Minimum number of observations to draw from the time series for boot-
+        strapping.
+    bootstrap_alpha: float, optional (default: 0.05)
+        Confidence level.
     """
 
     def __init__(
@@ -1587,14 +1592,18 @@ class PairwiseIntercomparisonMetrics(MetadataMetrics, PairwiseMetricsMixin):
         calc_kendall=True,
         analytical_cis=True,
         bootstrap_cis=False,
+        bootstrap_min_obs=100,
+        bootstrap_alpha=0.05,
         metadata_template=None,
     ):
-        super().__init__(min_obs=10, metadata_template=metadata_template)
+        super().__init__(min_obs=min_obs, metadata_template=metadata_template)
 
         self.calc_spearman = calc_spearman
         self.calc_kendall = calc_kendall
         self.analytical_cis = analytical_cis
         self.bootstrap_cis = bootstrap_cis
+        self.bootstrap_min_obs = bootstrap_min_obs
+        self.bootstrap_alpha = bootstrap_alpha
 
         metrics = self._pairwise_metric_names()
         metrics.append("n_obs")
@@ -1664,6 +1673,17 @@ class TripleCollocationMetrics(MetadataMetrics, PairwiseMetricsMixin):
         Whether to calculate bootstrap confidence intervals for triple
         collocation metrics.
         The default is `False`. This might be a lot of computational effort.
+    bootstrap_min_obs: int, optional (default: 100)
+        Minimum number of observations to draw from the time series for boot-
+        strapping.
+    bootstrap_alpha: float, optional (default: 0.05)
+        Confidence level.
+    metadata_template: dict, optional (default: None)
+        A dictionary containing additional fields (and types) of the form
+        dict = {'field': np.float32([np.nan]}. Allows users to specify
+        information in the job tuple, i.e. jobs.append((idx,
+        metadata['longitude'], metadata['latitude'], metadata_dict)) which
+        is then propagated to the end netCDF results file.
     """
 
     def __init__(
@@ -1671,12 +1691,16 @@ class TripleCollocationMetrics(MetadataMetrics, PairwiseMetricsMixin):
         refname,
         min_obs=10,
         bootstrap_cis=False,
+        bootstrap_min_obs=100,
+        bootstrap_alpha=0.05,
         metadata_template=None,
     ):
 
         super().__init__(min_obs=min_obs, metadata_template=metadata_template)
 
         self.bootstrap_cis = bootstrap_cis
+        self.bootstrap_min_obs = bootstrap_min_obs
+        self.bootstrap_alpha = bootstrap_alpha
         self.refname = refname
         self.result_template.update(_get_metric_template(["n_obs"]))
 
@@ -1741,7 +1765,9 @@ class TripleCollocationMetrics(MetadataMetrics, PairwiseMetricsMixin):
             try:
                 # handle failing bootstrapping because e.g.
                 # too small sample size
-                res = tcol_metrics_with_bootstrapped_ci(*arrays)
+                res = tcol_metrics_with_bootstrapped_ci(
+                    *arrays, minimum_data_length=self.bootstrap_min_obs,
+                    alpha=self.bootstrap_alpha)
                 for i, name in enumerate(ds_names):
                     for j, metric in enumerate(["snr", "err_std", "beta"]):
                         result[(metric, name)][0] = res[j][0][i]
