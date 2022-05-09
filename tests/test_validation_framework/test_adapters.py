@@ -1,5 +1,7 @@
 import pytest
 
+from src.pytesmo.validation_framework.adapters import TimestampAdapter
+
 """
 Test for the adapters.
 """
@@ -146,8 +148,8 @@ def test_anomaly_clim_adapter_one_column():
 
 def test_adapters_custom_fct_name():
     def assert_all_read_fcts(reader):
-        assert(np.all(reader.read() == reader.read_ts()))
-        assert(np.all(reader.read() == reader.alias_read()))
+        assert (np.all(reader.read() == reader.read_ts()))
+        assert (np.all(reader.read() == reader.alias_read()))
 
     base = TestDataset("", n=20)
     assert_all_read_fcts(base)
@@ -268,3 +270,37 @@ def test_column_comb_adapter():
         nptest.assert_equal(ds_mean["y"].values, orig["y"].values)
         nptest.assert_equal(ds_mean["xy_mean"].values,
                             (ds_mean["x"] + ds_mean["y"]) / 2.)
+
+
+def test_timestamp_adapter():
+    ds = TestDataset("", n=20)
+
+    index = np.arange('2005-02', '2005-03', dtype='datetime64[D]')
+    sm_var = np.random.randn(*index.shape)
+    time_offset_field = np.random.normal(loc=1000.0, scale=1.0, size=index.shape).astype(int)
+
+    def _read():
+        return pd.DataFrame(
+            data=np.array([sm_var, time_offset_field]).transpose(),
+            columns=["sm", "offset"],
+            index=index
+        )
+
+    setattr(ds, "read", _read)
+    origin = ds.read()
+
+    adapted_ds = TimestampAdapter(ds, time_offset_field="offset", time_units="s")
+    adapted = adapted_ds.read()
+
+    # Date should be unchanges as we are using a ~1000 sec offset
+    assert (origin.index.date == adapted.index.date).all()
+    # The offset is expressed in seconds
+    assert origin.index[0] + np.timedelta64(time_offset_field[0], "s") == adapted.index[0]
+    # The dataframe is integral
+    assert (origin.columns == adapted.columns).all()
+
+    adapted_ds = TimestampAdapter(ds, time_offset_field="offset", time_units="m")
+    adapted = adapted_ds.read()
+
+    # The offset is expressed in seconds
+    assert origin.index[0] + np.timedelta64(time_offset_field[0], "m") == adapted.index[0]

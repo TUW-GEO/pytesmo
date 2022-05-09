@@ -36,6 +36,7 @@ from pytesmo.time_series.anomaly import calc_anomaly
 from pytesmo.time_series.anomaly import calc_climatology
 from pytesmo.utils import deprecated
 from pandas import DataFrame
+import numpy as np
 import warnings
 
 _op_lookup = {
@@ -90,9 +91,9 @@ class BasicAdapter:
 
     def __get_dataframe(self, data):
         if (
-            (not isinstance(data, DataFrame))
-            and (hasattr(data, self.data_property_name))
-            and (isinstance(getattr(data, self.data_property_name), DataFrame))
+                (not isinstance(data, DataFrame))
+                and (hasattr(data, self.data_property_name))
+                and (isinstance(getattr(data, self.data_property_name), DataFrame))
         ):
             data = getattr(data, self.data_property_name)
         return data
@@ -444,13 +445,13 @@ class ColumnCombineAdapter(BasicAdapter):
     """
 
     def __init__(
-        self,
-        cls,
-        func,
-        func_kwargs=None,
-        columns=None,
-        new_name="merged",
-        **kwargs,
+            self,
+            cls,
+            func,
+            func_kwargs=None,
+            columns=None,
+            new_name="merged",
+            **kwargs,
     ):
         """
         Parameters
@@ -501,4 +502,62 @@ class ColumnCombineAdapter(BasicAdapter):
         columns = data.columns if self.columns is None else self.columns
         new_col = data[columns].apply(self.func, **self.func_kwargs)
         data[self.new_name] = new_col
+        return data
+
+
+class TimestampAdapter(BasicAdapter):
+    """
+    Class that adapts the (midnight) timestamp read with the generic read function
+    to the exact overpass time using the specified offset value
+
+    Parameters
+    ----------
+     cls: object
+        Reader object, has to have a `read_ts` or `read` method or a method
+        name must be specified in the `read_name` kwarg. The same method will
+        be available for the adapted version of the reader.
+    time_offset_field: str
+        name of the field that provides information on the time offset
+    time_units: str, optional. Default is "s".
+        time units that the time_offset_field is specified in. Can be any
+        of the np.datetime units:
+        https://numpy.org/doc/stable/reference/arrays.datetime.html
+    read_name: str, optional (default: None)
+        To enable the adapter for a method other than `read` or `read_ts`
+        give the function name here (a function of that name must exist in
+        cls). A method of the same name will be added to the adapted
+        Reader, which takes the same arguments as the base method.
+        The output of this method will be changed by the adapter.
+        If None is passed, only data from `read` and `read_ts` of cls
+        will be adapted.
+    """
+
+    def __init__(
+            self,
+            cls: object,
+            time_offset_field: str,
+            time_units: str,
+            **kwargs
+    ):
+        super().__init__(cls, **kwargs)
+
+        self.time_offset_field = time_offset_field
+        self.time_units = time_units
+
+    def _adapt(self, data: DataFrame) -> DataFrame:
+        """
+        Adapt the timestamps in the original with the specified offset
+        NOTE: assumes the index dtype is 'datetime64[ns]'
+        """
+        data = super()._adapt(data)
+
+        # Add time offset
+        offset = data[self.time_offset_field].map(
+            lambda x:
+            np.timedelta64(int(x), self.time_units) if not np.isnan(x)
+            else np.timedelta64(0, self.time_units)
+        )
+
+        data.index += offset
+
         return data
