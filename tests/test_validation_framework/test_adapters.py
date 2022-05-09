@@ -1,7 +1,6 @@
 import pytest
 
 from src.pytesmo.validation_framework.adapters import TimestampAdapter
-
 """
 Test for the adapters.
 """
@@ -13,11 +12,9 @@ import os
 import pandas as pd
 import warnings
 
-from pytesmo.validation_framework.adapters import (
-    MaskingAdapter,
-    AdvancedMaskingAdapter,
-    ColumnCombineAdapter
-)
+from pytesmo.validation_framework.adapters import (MaskingAdapter,
+                                                   AdvancedMaskingAdapter,
+                                                   ColumnCombineAdapter)
 from pytesmo.validation_framework.adapters import SelfMaskingAdapter
 from pytesmo.validation_framework.adapters import AnomalyAdapter
 from pytesmo.validation_framework.adapters import AnomalyClimAdapter
@@ -38,23 +35,21 @@ def test_masking_adapter():
         nptest.assert_almost_equal(
             data_masked["x"].values,
             np.concatenate(
-                [np.ones((10), dtype=bool), np.zeros((10), dtype=bool)]
-            ),
+                [np.ones((10), dtype=bool),
+                 np.zeros((10), dtype=bool)]),
         )
         nptest.assert_almost_equal(
             data_masked2["x"].values,
             np.concatenate(
-                [np.ones((10), dtype=bool), np.zeros((10), dtype=bool)]
-            ),
+                [np.ones((10), dtype=bool),
+                 np.zeros((10), dtype=bool)]),
         )
 
         if col is None:
-            nptest.assert_almost_equal(
-                data_masked["y"].values, np.ones((20), dtype=bool)
-            )
-            nptest.assert_almost_equal(
-                data_masked2["y"].values, np.ones((20), dtype=bool)
-            )
+            nptest.assert_almost_equal(data_masked["y"].values,
+                                       np.ones((20), dtype=bool))
+            nptest.assert_almost_equal(data_masked2["y"].values,
+                                       np.ones((20), dtype=bool))
 
 
 def test_self_masking_adapter():
@@ -147,14 +142,15 @@ def test_anomaly_clim_adapter_one_column():
 
 
 def test_adapters_custom_fct_name():
+
     def assert_all_read_fcts(reader):
         assert (np.all(reader.read() == reader.read_ts()))
         assert (np.all(reader.read() == reader.alias_read()))
 
     base = TestDataset("", n=20)
     assert_all_read_fcts(base)
-    sma = SelfMaskingAdapter(base, '>=', 5, column_name='y',
-                             read_name='alias_read')
+    sma = SelfMaskingAdapter(
+        base, '>=', 5, column_name='y', read_name='alias_read')
     assert_all_read_fcts(sma)
     smanom = AnomalyAdapter(sma, read_name='alias_read')
     assert_all_read_fcts(smanom)
@@ -223,23 +219,21 @@ def test_adapters_with_ascat():
 
 
 class TestTimezoneReader(object):
+
     def read(self, *args, **kwargs):
         data = np.arange(5.0)
         data[3] = np.nan
         return pd.DataFrame(
             {"data": data},
             index=pd.date_range(
-                datetime(2007, 1, 1, 0), "2007-01-05", freq="D", tz="UTC"
-            ),
+                datetime(2007, 1, 1, 0), "2007-01-05", freq="D", tz="UTC"),
         )
 
     def read_ts(self, *args, **kwargs):
         return self.read(*args, **kwargs)
 
 
-@pytest.mark.filterwarnings(
-    "ignore:Dropping timezone information:UserWarning"
-)
+@pytest.mark.filterwarnings("ignore:Dropping timezone information:UserWarning")
 def test_timezone_removal():
     tz_reader = TestTimezoneReader()
 
@@ -260,8 +254,11 @@ def test_column_comb_adapter():
     ds = TestDataset("", n=20)
     orig = ds.read()
     ds_adapted = ColumnCombineAdapter(
-        ds, func=pd.DataFrame.mean, columns=["x", "y"],
-        func_kwargs={'skipna': True}, new_name='xy_mean')
+        ds,
+        func=pd.DataFrame.mean,
+        columns=["x", "y"],
+        func_kwargs={'skipna': True},
+        new_name='xy_mean')
     ds_mean1 = ds_adapted.read_ts()
     ds_mean2 = ds_adapted.read()
 
@@ -277,30 +274,34 @@ def test_timestamp_adapter():
 
     index = np.arange('2005-02', '2005-03', dtype='datetime64[D]')
     sm_var = np.random.randn(*index.shape)
-    time_offset_field = np.random.normal(loc=1000.0, scale=1.0, size=index.shape).astype(int)
+    time_offset_field = np.random.normal(
+        loc=1000.0, scale=1.0, size=index.shape).astype(int)
 
     def _read():
         return pd.DataFrame(
             data=np.array([sm_var, time_offset_field]).transpose(),
             columns=["sm", "offset"],
-            index=index
-        )
+            index=index)
 
     setattr(ds, "read", _read)
     origin = ds.read()
 
-    adapted_ds = TimestampAdapter(ds, time_offset_field="offset", time_units="s")
+    adapted_ds = TimestampAdapter(
+        ds, time_offset_field="offset", time_units="s")
     adapted = adapted_ds.read()
 
     # Date should be unchanges as we are using a ~1000 sec offset
     assert (origin.index.date == adapted.index.date).all()
     # The offset is expressed in seconds
-    assert origin.index[0] + np.timedelta64(time_offset_field[0], "s") == adapted.index[0]
+    assert origin.index[0] + np.timedelta64(time_offset_field[0],
+                                            "s") == adapted.index[0]
     # The dataframe is integral
     assert (origin.columns == adapted.columns).all()
 
-    adapted_ds = TimestampAdapter(ds, time_offset_field="offset", time_units="m")
+    adapted_ds = TimestampAdapter(
+        ds, time_offset_field="offset", time_units="m")
     adapted = adapted_ds.read()
 
     # The offset is expressed in minutes
-    assert origin.index[0] + np.timedelta64(time_offset_field[0], "m") == adapted.index[0]
+    assert origin.index[0] + np.timedelta64(time_offset_field[0],
+                                            "m") == adapted.index[0]

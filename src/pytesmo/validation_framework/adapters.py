@@ -24,8 +24,6 @@
 # ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 # THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-
 """
 Module containing adapters that can be used together with the validation
 framework.
@@ -90,11 +88,9 @@ class BasicAdapter:
             setattr(self, read_name, self._adapt_custom)
 
     def __get_dataframe(self, data):
-        if (
-                (not isinstance(data, DataFrame))
-                and (hasattr(data, self.data_property_name))
-                and (isinstance(getattr(data, self.data_property_name), DataFrame))
-        ):
+        if ((not isinstance(data, DataFrame)) and
+            (hasattr(data, self.data_property_name)) and
+            (isinstance(getattr(data, self.data_property_name), DataFrame))):
             data = getattr(data, self.data_property_name)
         return data
 
@@ -102,15 +98,14 @@ class BasicAdapter:
         if hasattr(data.index, "tz") and (data.index.tz is not None):
             warnings.warn(
                 f"Dropping timezone information ({data.index.tz})"
-                f" for data from reader {self.cls.__class__.__name__}"
-            )
+                f" for data from reader {self.cls.__class__.__name__}")
             data.index = data.index.tz_convert(None)
         return data
 
     def _adapt(self, df: DataFrame) -> DataFrame:
         # drop time zone info and extract df from ASCAT TS object
-        return self.__drop_tz_info(self.__get_dataframe(df)
-                                   if df is not None else DataFrame())
+        return self.__drop_tz_info(
+            self.__get_dataframe(df) if df is not None else DataFrame())
 
     def _adapt_custom(self, *args, **kwargs):
         # modifies data from whatever function was set as `read_name`.
@@ -134,10 +129,8 @@ class BasicAdapter:
             return self.cls.grid
 
 
-@deprecated(
-    "`MaskingAdapter` is deprecated, use `SelfMaskingAdapter` "
-    "or `AdvancedMaskingAdapter` instead."
-)
+@deprecated("`MaskingAdapter` is deprecated, use `SelfMaskingAdapter` "
+            "or `AdvancedMaskingAdapter` instead.")
 class MaskingAdapter(BasicAdapter):
     """
     Transform the given class to return a boolean dataset given the operator
@@ -371,8 +364,7 @@ class AnomalyAdapter(BasicAdapter):
             ite = self.columns
         for column in ite:
             data[column] = calc_anomaly(
-                data[column], window_size=self.window_size
-            )
+                data[column], window_size=self.window_size)
         return data
 
 
@@ -445,13 +437,13 @@ class ColumnCombineAdapter(BasicAdapter):
     """
 
     def __init__(
-            self,
-            cls,
-            func,
-            func_kwargs=None,
-            columns=None,
-            new_name="merged",
-            **kwargs,
+        self,
+        cls,
+        func,
+        func_kwargs=None,
+        columns=None,
+        new_name="merged",
+        **kwargs,
     ):
         """
         Parameters
@@ -534,13 +526,11 @@ class TimestampAdapter(BasicAdapter):
         will be adapted.
     """
 
-    def __init__(
-            self,
-            cls: object,
-            time_offset_field: str,
-            time_units: str = "s",
-            **kwargs
-    ):
+    def __init__(self,
+                 cls: object,
+                 time_offset_field: str,
+                 time_units: str = "s",
+                 **kwargs):
         super().__init__(cls, **kwargs)
 
         self.time_offset_field = time_offset_field
@@ -555,10 +545,8 @@ class TimestampAdapter(BasicAdapter):
 
         # Add time offset
         offset = data[self.time_offset_field].map(
-            lambda x:
-            np.timedelta64(int(x), self.time_units) if not np.isnan(x)
-            else np.timedelta64(0, self.time_units)
-        )
+            lambda x: np.timedelta64(int(x), self.time_units)
+            if not np.isnan(x) else np.timedelta64(0, self.time_units))
 
         data.index += offset
 
