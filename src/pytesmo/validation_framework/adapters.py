@@ -507,8 +507,10 @@ class ColumnCombineAdapter(BasicAdapter):
 
 class TimestampAdapter(BasicAdapter):
     """
-    Class that adapts the (midnight) timestamp read with the generic read function
-    to the exact overpass time using the specified offset value
+    Class that adapts the "generic" (e.g. midnight or averaged) timestamp*
+    read with the generic read function to the exact overpass time using
+    the specified offset value. This is useful in aggregated products such as
+    L3 data sets
 
     Parameters
     ----------
@@ -536,7 +538,7 @@ class TimestampAdapter(BasicAdapter):
             self,
             cls: object,
             time_offset_field: str,
-            time_units: str,
+            time_units: str = "s",
             **kwargs
     ):
         super().__init__(cls, **kwargs)
