@@ -302,5 +302,5 @@ def test_timestamp_adapter():
     adapted_ds = TimestampAdapter(ds, time_offset_field="offset", time_units="m")
     adapted = adapted_ds.read()
 
-    # The offset is expressed in seconds
+    # The offset is expressed in minutes
     assert origin.index[0] + np.timedelta64(time_offset_field[0], "m") == adapted.index[0]
