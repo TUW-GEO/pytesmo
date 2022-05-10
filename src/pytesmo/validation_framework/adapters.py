@@ -30,6 +30,8 @@ framework.
 """
 
 import operator
+
+import pandas as pd
 from pytesmo.time_series.anomaly import calc_anomaly
 from pytesmo.time_series.anomaly import calc_climatology
 from pytesmo.utils import deprecated
@@ -499,10 +501,28 @@ class ColumnCombineAdapter(BasicAdapter):
 
 class TimestampAdapter(BasicAdapter):
     """
-    Class that adapts the "generic" (e.g. midnight or averaged) timestamp*
-    read with the generic read function to the exact overpass time using
-    the specified offset value. This is useful in aggregated products such as
-    L3 data sets
+    Class that combines two or more timestamp fields to a single exact
+    measurement time. The fields of interest specify:
+
+    1. A generic observation time (e.g. days at midnight) which can
+        be expressed in timestamp (YYYY-mm-dd) or with respect to a
+        reference time (days since YYYY-mm-dd)
+    2. One or more (minute, s, µs) offset times to be added cumulatively
+
+    -------------------
+    Example input:
+
+         variable  generic_time [w.r.t. 2005-02-01]  offset [min]  offset [sec]
+    100  0.889751                            100.0          38.0         999.0
+    101  0.108279                            101.0          40.0        1000.0
+    102 -1.201708                            102.0          39.0         999.0
+
+    Example output:
+
+                         variable
+    2005-05-12 00:55:42  0.889751
+    2005-05-13 00:57:39  0.108279
+    2005-05-14 00:56:38 -1.201708
 
     Parameters
     ----------
@@ -510,31 +530,80 @@ class TimestampAdapter(BasicAdapter):
         Reader object, has to have a `read_ts` or `read` method or a method
         name must be specified in the `read_name` kwarg. The same method will
         be available for the adapted version of the reader.
-    time_offset_field: str
-        name of the field that provides information on the time offset
-    time_units: str, optional. Default is "s".
-        time units that the time_offset_field is specified in. Can be any
-        of the np.datetime units:
+    time_offset_fields: str, list or None
+        name or list of names of the fields that provide information on the time offset.
+        If a list is given, all values will contribute to the offset, assuming that
+        each refers to the previous. For instance:
+        offset = minutes + seconds in the minute + µs in the second
+        NOTE: np.nan values are counted as 0 offset
+        NOTE: if None, no offset is considered
+    time_units: str or list
+        time units that the time_offset_fields are specified in. If a list is given,
+        it should have the same size as the 'time_offset_fields' parameter
+        Can be any of the np.datetime[64] units:
         https://numpy.org/doc/stable/reference/arrays.datetime.html
-    read_name: str, optional (default: None)
-        To enable the adapter for a method other than `read` or `read_ts`
-        give the function name here (a function of that name must exist in
-        cls). A method of the same name will be added to the adapted
-        Reader, which takes the same arguments as the base method.
-        The output of this method will be changed by the adapter.
-        If None is passed, only data from `read` and `read_ts` of cls
-        will be adapted.
+    generic_time_field: str, optional. Default is None.
+        If a name is provided, the generic time field will be searched for
+        in the columns; otherwise, it is assumed to be the index
+        NOTE: np.nan values in this field are dropped
+    generic_time_reference: str, optional. Default is None.
+        String of format 'YYYY-mm-dd' that can be specified to tranform the
+        'generic_time_field' from [units since generic_time_reference] to
+        np.datetime[64]. If not provided, it will be assumed that the generic_time_field
+        is already in np.datetime[64] units
+    generic_time_units: str, optional. Default is "D"
+        Units that the generic_time_field is specified in. Only applicable with 'generic_time_reference'
+    replace_index: str, optional. Default is None.
+        If a name is specified, an additional column is generated under the name,
+        with the exact timestamp. Otherwise, the exact timestamp is used as index
+    drop_original: bool, optional. Default is True.
+        Whether the generic_time_field and time_offset_fields should be dropped in the
+        final DataFrame
     """
 
     def __init__(self,
                  cls: object,
-                 time_offset_field: str,
-                 time_units: str = "s",
+                 time_offset_fields: str or list,
+                 time_units: str or list = "s",
+                 generic_time_field: str = None,
+                 generic_time_reference: str = None,
+                 generic_time_units: str = "D",
+                 replace_index: str = None,
+                 drop_original: bool = True,
                  **kwargs):
         super().__init__(cls, **kwargs)
 
-        self.time_offset_field = time_offset_field
-        self.time_units = time_units
+        self.time_offset_fields = time_offset_fields if isinstance(
+            time_offset_fields, list) else [time_offset_fields]
+        self.time_units = time_units if isinstance(time_units,
+                                                   list) else [time_units]
+
+        self.generic_time_field = generic_time_field
+        self.generic_time_reference = np.datetime64(
+            generic_time_reference
+        ) if generic_time_reference is not None else None
+        self.generic_time_units = generic_time_units
+
+        self.replace_index = replace_index
+        self.drop_original = drop_original
+
+    def convert_generic(self, time_arr: np.array) -> np.array:
+        """Convert the generic time field to np.datetime[64] dtype"""
+        time_delta = time_arr.astype(int).astype('timedelta64[D]')
+        time_date = np.full(time_delta.shape,
+                            self.generic_time_reference) + time_delta
+
+        return time_date
+
+    def add_offset_cumulative(self, data: DataFrame) -> np.array:
+        """Return an array of timedelta calculated with all the time_offset_fields"""
+        total_offset = np.full(data.index.shape, 0, dtype='timedelta64[s]')
+        for field, unit in zip(self.time_offset_fields, self.time_units):
+            total_offset += data[field].map(
+                lambda x: np.timedelta64(int(x), unit)
+                if not np.isnan(x) else np.timedelta64(0, unit)).values
+
+        return total_offset
 
     def _adapt(self, data: DataFrame) -> DataFrame:
         """
@@ -543,11 +612,36 @@ class TimestampAdapter(BasicAdapter):
         """
         data = super()._adapt(data)
 
-        # Add time offset
-        offset = data[self.time_offset_field].map(
-            lambda x: np.timedelta64(int(x), self.time_units)
-            if not np.isnan(x) else np.timedelta64(0, self.time_units))
+        # Get the generic time array
+        if self.generic_time_field is not None:
+            generic_time = data[self.generic_time_field]
+        else:
+            generic_time = data.index
 
-        data.index += offset
+        # Take only the valid dates
+        data = data[generic_time.notna()]
+        generic_time_values = generic_time.dropna().values
+
+        if self.generic_time_reference is not None:
+            generic_time_values = self.convert_generic(generic_time_values)
+
+        # If no offset is specified
+        if self.time_offset_fields is None:
+            exact_time = generic_time_values
+        else:
+            # Add time offset to the generic time
+            offset = self.add_offset_cumulative(data)
+            exact_time = generic_time_values + offset
+
+        # generate the final frame
+        if self.replace_index is not None:
+            data[self.replace_index] = exact_time
+        else:
+            data.index = exact_time
+
+        if self.drop_original:
+            data.drop(columns=self.time_offset_fields, inplace=True)
+            if self.generic_time_field in data.columns:
+                data.drop(columns=[self.generic_time_field], inplace=True)
 
         return data

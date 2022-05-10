@@ -272,6 +272,9 @@ def test_column_comb_adapter():
 def test_timestamp_adapter():
     ds = TestDataset("", n=20)
 
+    # Simple case
+    # ================
+
     index = np.arange('2005-02', '2005-03', dtype='datetime64[D]')
     sm_var = np.random.randn(*index.shape)
     time_offset_field = np.random.normal(
@@ -284,10 +287,10 @@ def test_timestamp_adapter():
             index=index)
 
     setattr(ds, "read", _read)
-    origin = ds.read()
+    origin = ds.read().drop(columns="offset")
 
     adapted_ds = TimestampAdapter(
-        ds, time_offset_field="offset", time_units="s")
+        ds, time_offset_fields="offset", time_units="s")
     adapted = adapted_ds.read()
 
     # Date should be unchanges as we are using a ~1000 sec offset
@@ -299,9 +302,95 @@ def test_timestamp_adapter():
     assert (origin.columns == adapted.columns).all()
 
     adapted_ds = TimestampAdapter(
-        ds, time_offset_field="offset", time_units="m")
+        ds, time_offset_fields="offset", time_units="m")
     adapted = adapted_ds.read()
 
     # The offset is expressed in minutes
     assert origin.index[0] + np.timedelta64(time_offset_field[0],
                                             "m") == adapted.index[0]
+
+    # This time we do not drop the columns
+    origin = ds.read()
+    adapted_ds = TimestampAdapter(
+        ds, time_offset_fields="offset", time_units="s", drop_original=False)
+    adapted = adapted_ds.read()
+
+    # The dataframe is integral
+    assert (origin.columns == adapted.columns).all()
+
+    # test use of new column
+    # -----------------------
+    adapted_ds = TimestampAdapter(
+        ds,
+        time_offset_fields="offset",
+        time_units="s",
+        replace_index="exact_timestamp")
+    adapted = adapted_ds.read()
+    assert (adapted.columns == ["sm", "exact_timestamp"]).all()
+
+    # test NaNs in offset and generic time
+    # -----------------------
+    index = np.arange('2005-02', '2005-03', dtype='datetime64[D]')
+    index[4] = np.datetime64("NaT")
+    sm_var = np.random.randn(*index.shape)
+    time_offset_field = np.random.normal(
+        loc=1000.0, scale=1.0, size=index.shape)
+    time_offset_field[7] = np.nan
+
+    def _read_nans():
+        return pd.DataFrame(
+            data=np.array([sm_var, time_offset_field]).transpose(),
+            columns=["sm", "offset"],
+            index=index)
+
+    setattr(ds, "read", _read_nans)
+    origin = ds.read()
+
+    adapted_ds = TimestampAdapter(
+        ds, time_offset_fields="offset", time_units="s")
+    adapted = adapted_ds.read()
+
+    # One index (NaT) value should be dropped
+    assert len(adapted.index) == len(origin.index) - 1
+    # The Nan offset should be interpreted as 0
+    assert adapted.index[6] == datetime(2005, 2, 8, 0, 0)
+
+    # Complex case
+    # ================
+    generic_time = np.arange(100, 200)
+    index = generic_time.copy()
+    sm_var = np.random.randn(*index.shape)
+    time_offset_field_min = np.random.normal(
+        loc=40.0, scale=1.0, size=index.shape).astype(int)
+    time_offset_field_sec = np.random.normal(
+        loc=1000.0, scale=1.0, size=index.shape).astype(int)
+
+    def _read_complex():
+        return pd.DataFrame(
+            data=np.array([
+                sm_var, generic_time, time_offset_field_min,
+                time_offset_field_sec
+            ]).transpose(),
+            columns=["sm", "generic_time", "offset_min", "offset_sec"],
+            index=index)
+
+    setattr(ds, "read", _read_complex)
+    origin = ds.read()
+
+    adapted_ds = TimestampAdapter(
+        ds,
+        time_offset_fields=["offset_min", "offset_sec"],
+        time_units=["m", "s"],
+        generic_time_field="generic_time",
+        generic_time_reference="2005-02-01")
+
+    adapted = adapted_ds.read()
+
+    should_be = origin.apply(
+        lambda row: np.datetime64("2005-02-01") + np.timedelta64(
+            int(row["generic_time"]), "D") + np.timedelta64(
+                int(row["offset_min"]), "m") + np.timedelta64(
+                    int(row["offset_sec"]), "s"),
+        axis=1).values
+
+    assert (adapted.index.values == should_be).all()
