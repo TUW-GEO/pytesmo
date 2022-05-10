@@ -553,9 +553,12 @@ class TimestampAdapter(BasicAdapter):
         is already in np.datetime[64] units
     generic_time_units: str, optional. Default is "D"
         Units that the generic_time_field is specified in. Only applicable with 'generic_time_reference'
-    replace_index: str, optional. Default is None.
+    replace_index: bool, optional. Default is True.
+        If True, the exact timestamp is used as index. Else, it will be added
+        to the dataframe on the column 'output_field'
+    output_field: str, optional. Default is None.
         If a name is specified, an additional column is generated under the name,
-        with the exact timestamp. Otherwise, the exact timestamp is used as index
+        with the exact timestamp. Only with 'replace_index' == False
     drop_original: bool, optional. Default is True.
         Whether the generic_time_field and time_offset_fields should be dropped in the
         final DataFrame
@@ -568,7 +571,8 @@ class TimestampAdapter(BasicAdapter):
                  generic_time_field: str = None,
                  generic_time_reference: str = None,
                  generic_time_units: str = "D",
-                 replace_index: str = None,
+                 replace_index: bool = True,
+                 output_field: str = None,
                  drop_original: bool = True,
                  **kwargs):
         super().__init__(cls, **kwargs)
@@ -585,6 +589,18 @@ class TimestampAdapter(BasicAdapter):
         self.generic_time_units = generic_time_units
 
         self.replace_index = replace_index
+        if not replace_index and output_field is None:
+            raise ValueError(
+                "'output_field' should be specified in case the new timestamp"
+                "should not be used as index. Alternatively, set 'replace_index' to True"
+            )
+        elif replace_index and output_field is not None:
+            warnings.warn(
+                "Ignoring the 'output_field' value. Set 'replace_index' to True to"
+                "avoid this behavior")
+        else:
+            self.output_field = output_field
+
         self.drop_original = drop_original
 
     def convert_generic(self, time_arr: np.array) -> np.array:
@@ -634,8 +650,8 @@ class TimestampAdapter(BasicAdapter):
             exact_time = generic_time_values + offset
 
         # generate the final frame
-        if self.replace_index is not None:
-            data[self.replace_index] = exact_time
+        if not self.replace_index:
+            data[self.output_field] = exact_time
         else:
             data.index = exact_time
 

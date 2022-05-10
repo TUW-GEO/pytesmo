@@ -324,7 +324,8 @@ def test_timestamp_adapter():
         ds,
         time_offset_fields="offset",
         time_units="s",
-        replace_index="exact_timestamp")
+        replace_index=False,
+        output_field="exact_timestamp")
     adapted = adapted_ds.read()
     assert (adapted.columns == ["sm", "exact_timestamp"]).all()
 
