@@ -628,6 +628,10 @@ class TimestampAdapter(BasicAdapter):
         """
         data = super()._adapt(data)
 
+        # Make sure the dataframes contains values
+        if data.empty:
+            return data
+
         # Get the generic time array
         if self.generic_time_field is not None:
             generic_time = data[self.generic_time_field]
