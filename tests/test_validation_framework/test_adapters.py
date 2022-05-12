@@ -358,8 +358,8 @@ def test_timestamp_adapter():
 
     # Complex case
     # ================
-    generic_time = np.arange(100, 200)
-    index = generic_time.copy()
+    base_time = np.arange(100, 200)
+    index = base_time.copy()
     sm_var = np.random.randn(*index.shape)
     time_offset_field_min = np.random.normal(
         loc=40.0, scale=1.0, size=index.shape).astype(int)
@@ -369,10 +369,10 @@ def test_timestamp_adapter():
     def _read_complex():
         return pd.DataFrame(
             data=np.array([
-                sm_var, generic_time, time_offset_field_min,
+                sm_var, base_time, time_offset_field_min,
                 time_offset_field_sec
             ]).transpose(),
-            columns=["sm", "generic_time", "offset_min", "offset_sec"],
+            columns=["sm", "base_time", "offset_min", "offset_sec"],
             index=index)
 
     setattr(ds, "read", _read_complex)
@@ -382,14 +382,14 @@ def test_timestamp_adapter():
         ds,
         time_offset_fields=["offset_min", "offset_sec"],
         time_units=["m", "s"],
-        generic_time_field="generic_time",
-        generic_time_reference="2005-02-01")
+        base_time_field="base_time",
+        base_time_reference="2005-02-01")
 
     adapted = adapted_ds.read()
 
     should_be = origin.apply(
         lambda row: np.datetime64("2005-02-01") + np.timedelta64(
-            int(row["generic_time"]), "D") + np.timedelta64(
+            int(row["base_time"]), "D") + np.timedelta64(
                 int(row["offset_min"]), "m") + np.timedelta64(
                     int(row["offset_sec"]), "s"),
         axis=1).values

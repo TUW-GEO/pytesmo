@@ -542,17 +542,17 @@ class TimestampAdapter(BasicAdapter):
         it should have the same size as the 'time_offset_fields' parameter
         Can be any of the np.datetime[64] units:
         https://numpy.org/doc/stable/reference/arrays.datetime.html
-    generic_time_field: str, optional. Default is None.
+    base_time_field: str, optional. Default is None.
         If a name is provided, the generic time field will be searched for
         in the columns; otherwise, it is assumed to be the index
         NOTE: np.nan values in this field are dropped
-    generic_time_reference: str, optional. Default is None.
+    base_time_reference: str, optional. Default is None.
         String of format 'YYYY-mm-dd' that can be specified to tranform the
-        'generic_time_field' from [units since generic_time_reference] to
-        np.datetime[64]. If not provided, it will be assumed that the generic_time_field
+        'base_time_field' from [units since base_time_reference] to
+        np.datetime[64]. If not provided, it will be assumed that the base_time_field
         is already in np.datetime[64] units
-    generic_time_units: str, optional. Default is "D"
-        Units that the generic_time_field is specified in. Only applicable with 'generic_time_reference'
+    base_time_units: str, optional. Default is "D"
+        Units that the base_time_field is specified in. Only applicable with 'base_time_reference'
     replace_index: bool, optional. Default is True.
         If True, the exact timestamp is used as index. Else, it will be added
         to the dataframe on the column 'output_field'
@@ -560,7 +560,7 @@ class TimestampAdapter(BasicAdapter):
         If a name is specified, an additional column is generated under the name,
         with the exact timestamp. Only with 'replace_index' == False
     drop_original: bool, optional. Default is True.
-        Whether the generic_time_field and time_offset_fields should be dropped in the
+        Whether the base_time_field and time_offset_fields should be dropped in the
         final DataFrame
     """
 
@@ -568,9 +568,9 @@ class TimestampAdapter(BasicAdapter):
                  cls: object,
                  time_offset_fields: str or list,
                  time_units: str or list = "s",
-                 generic_time_field: str = None,
-                 generic_time_reference: str = None,
-                 generic_time_units: str = "D",
+                 base_time_field: str = None,
+                 base_time_reference: str = None,
+                 base_time_units: str = "D",
                  replace_index: bool = True,
                  output_field: str = None,
                  drop_original: bool = True,
@@ -582,11 +582,11 @@ class TimestampAdapter(BasicAdapter):
         self.time_units = time_units if isinstance(time_units,
                                                    list) else [time_units]
 
-        self.generic_time_field = generic_time_field
-        self.generic_time_reference = np.datetime64(
-            generic_time_reference
-        ) if generic_time_reference is not None else None
-        self.generic_time_units = generic_time_units
+        self.base_time_field = base_time_field
+        self.base_time_reference = np.datetime64(
+            base_time_reference
+        ) if base_time_reference is not None else None
+        self.base_time_units = base_time_units
 
         self.replace_index = replace_index
         if not replace_index and output_field is None:
@@ -607,7 +607,7 @@ class TimestampAdapter(BasicAdapter):
         """Convert the generic time field to np.datetime[64] dtype"""
         time_delta = time_arr.astype(int).astype('timedelta64[D]')
         time_date = np.full(time_delta.shape,
-                            self.generic_time_reference) + time_delta
+                            self.base_time_reference) + time_delta
 
         return time_date
 
@@ -633,25 +633,25 @@ class TimestampAdapter(BasicAdapter):
             return data
 
         # Get the generic time array
-        if self.generic_time_field is not None:
-            generic_time = data[self.generic_time_field]
+        if self.base_time_field is not None:
+            base_time = data[self.base_time_field]
         else:
-            generic_time = data.index
+            base_time = data.index
 
         # Take only the valid dates
-        data = data[generic_time.notna()]
-        generic_time_values = generic_time.dropna().values
+        data = data[base_time.notna()]
+        base_time_values = base_time.dropna().values
 
-        if self.generic_time_reference is not None:
-            generic_time_values = self.convert_generic(generic_time_values)
+        if self.base_time_reference is not None:
+            base_time_values = self.convert_generic(base_time_values)
 
         # If no offset is specified
         if self.time_offset_fields is None:
-            exact_time = generic_time_values
+            exact_time = base_time_values
         else:
             # Add time offset to the generic time
             offset = self.add_offset_cumulative(data)
-            exact_time = generic_time_values + offset
+            exact_time = base_time_values + offset
 
         # generate the final frame
         if not self.replace_index:
@@ -661,7 +661,7 @@ class TimestampAdapter(BasicAdapter):
 
         if self.drop_original:
             data.drop(columns=self.time_offset_fields, inplace=True)
-            if self.generic_time_field in data.columns:
-                data.drop(columns=[self.generic_time_field], inplace=True)
+            if self.base_time_field in data.columns:
+                data.drop(columns=[self.base_time_field], inplace=True)
 
         return data
