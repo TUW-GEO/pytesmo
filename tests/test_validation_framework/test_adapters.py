@@ -356,6 +356,54 @@ def test_timestamp_adapter():
     # The Nan offset should be interpreted as 0
     assert adapted.index[6] == datetime(2005, 2, 8, 0, 0)
 
+    # test all NaNs in dataframe
+    # -----------------------
+    index = np.arange('2005-02', '2005-03', dtype='datetime64[D]')
+    index[:] = np.datetime64("NaT")
+    sm_var = np.random.randn(*index.shape)
+    time_offset_field = np.random.normal(
+        loc=1000.0, scale=1.0, size=index.shape)
+    time_offset_field[7] = np.nan
+
+    def _read_all_nans():
+        return pd.DataFrame(
+            data=np.array([sm_var, time_offset_field]).transpose(),
+            columns=["sm", "offset"],
+            index=index)
+
+    setattr(ds, "read", _read_all_nans)
+    origin = ds.read()
+
+    adapted_ds = TimestampAdapter(
+        ds, time_offset_fields="offset", time_units="s")
+    adapted = adapted_ds.read()
+
+    # The original should be returned
+    pd.testing.assert_frame_equal(origin, adapted)
+
+    adapted_ds = TimestampAdapter(
+        ds,
+        time_offset_fields="offset",
+        time_units="s",
+        handle_invalid="return_null")
+    adapted = adapted_ds.read()
+
+    # The empty dataframe should be returned with dropped time fields
+    assert adapted.empty
+    assert adapted.columns == ["sm"]
+
+    adapted_ds = TimestampAdapter(
+        ds,
+        time_offset_fields="offset",
+        time_units="s",
+        handle_invalid="return_null",
+        drop_original=False)
+    adapted = adapted_ds.read()
+
+    # The original but empty dataframe should be returned
+    assert adapted.empty
+    assert (adapted.columns == ["sm", "offset"]).all()
+
     # Complex case
     # ================
     base_time = np.arange(100, 200)
@@ -369,8 +417,7 @@ def test_timestamp_adapter():
     def _read_complex():
         return pd.DataFrame(
             data=np.array([
-                sm_var, base_time, time_offset_field_min,
-                time_offset_field_sec
+                sm_var, base_time, time_offset_field_min, time_offset_field_sec
             ]).transpose(),
             columns=["sm", "base_time", "offset_min", "offset_sec"],
             index=index)

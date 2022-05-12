@@ -504,7 +504,7 @@ class TimestampAdapter(BasicAdapter):
     Class that combines two or more timestamp fields to a single exact
     measurement time. The fields of interest specify:
 
-    1. A generic observation time (e.g. days at midnight) which can
+    1. A basic observation time (e.g. days at midnight) which can
         be expressed in timestamp (YYYY-mm-dd) or with respect to a
         reference time (days since YYYY-mm-dd)
     2. One or more (minute, s, µs) offset times to be added cumulatively
@@ -512,7 +512,7 @@ class TimestampAdapter(BasicAdapter):
     -------------------
     Example input:
 
-         variable  generic_time [w.r.t. 2005-02-01]  offset [min]  offset [sec]
+         variable    base_time [w.r.t. 2005-02-01]  offset [min]  offset [sec]
     100  0.889751                            100.0          38.0         999.0
     101  0.108279                            101.0          40.0        1000.0
     102 -1.201708                            102.0          39.0         999.0
@@ -562,6 +562,11 @@ class TimestampAdapter(BasicAdapter):
     drop_original: bool, optional. Default is True.
         Whether the base_time_field and time_offset_fields should be dropped in the
         final DataFrame
+    handle_invalid: str, optional. Default is 'return_original'
+        How to handle cases where all the entries in the generic observation time (base_time_field)
+        are NaT. Options:
+        - 'return_original': the original dataframe is returned
+        - 'return_null': an empty dataframe is returned, with columns defined by the 'drop_original' parameter
     """
 
     def __init__(self,
@@ -574,6 +579,7 @@ class TimestampAdapter(BasicAdapter):
                  replace_index: bool = True,
                  output_field: str = None,
                  drop_original: bool = True,
+                 handle_invalid: str = 'return_original',
                  **kwargs):
         super().__init__(cls, **kwargs)
 
@@ -584,8 +590,7 @@ class TimestampAdapter(BasicAdapter):
 
         self.base_time_field = base_time_field
         self.base_time_reference = np.datetime64(
-            base_time_reference
-        ) if base_time_reference is not None else None
+            base_time_reference) if base_time_reference is not None else None
         self.base_time_units = base_time_units
 
         self.replace_index = replace_index
@@ -602,6 +607,7 @@ class TimestampAdapter(BasicAdapter):
             self.output_field = output_field
 
         self.drop_original = drop_original
+        self.handle_invalid = handle_invalid
 
     def convert_generic(self, time_arr: np.array) -> np.array:
         """Convert the generic time field to np.datetime[64] dtype"""
@@ -627,10 +633,7 @@ class TimestampAdapter(BasicAdapter):
         NOTE: assumes the index dtype is 'datetime64[ns]'
         """
         data = super()._adapt(data)
-
-        # Make sure the dataframes contains values
-        if data.empty:
-            return data
+        original = data.copy()
 
         # Get the generic time array
         if self.base_time_field is not None:
@@ -641,6 +644,19 @@ class TimestampAdapter(BasicAdapter):
         # Take only the valid dates
         data = data[base_time.notna()]
         base_time_values = base_time.dropna().values
+
+        # Make sure the dataframes contains values after dropna()
+        if data.empty and self.handle_invalid == "return_original":
+            return original
+
+        elif data.empty and self.handle_invalid == "return_null":
+            # Define the shape of the output (empty) dataframe
+            if self.drop_original:
+                data.drop(columns=self.time_offset_fields, inplace=True)
+                if self.base_time_field in data.columns:
+                    data.drop(columns=[self.base_time_field], inplace=True)
+
+            return data
 
         if self.base_time_reference is not None:
             base_time_values = self.convert_generic(base_time_values)
