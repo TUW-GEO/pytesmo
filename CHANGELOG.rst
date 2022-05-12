@@ -10,6 +10,7 @@ Unreleased
 - ipynb files from docs/examples are now also used as (optional) tests (PR `#263 <https://github.com/TUW-GEO/pytesmo/pull/263>`_)
 - ``yapf`` for code formatting (see developers guide) (Fix #248, PR `#263 <https://github.com/TUW-GEO/pytesmo/pull/263>`_)
 - validation framework option to force dataset combinations that include reference dataset updated (PR `#265 <https://github.com/TUW-GEO/pytesmo/pull/265>`_)
+- Added `TimestampAdapter` to the validation framework to deal with datasets that have different date/time specification fields (PR `#268 <https://github.com/TUW-GEO/pytesmo/pull/268>`_)
 
 Version 0.13.4, 2022-01-12
 ==========================
