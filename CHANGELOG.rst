@@ -4,6 +4,9 @@ Changelog
 
 Unreleased
 ==========
+
+Version 0.14.0, 2022-05-13
+==========================
 - fixed bugs in resample_mean (PR `#262 <https://github.com/TUW-GEO/pytesmo/pull/262>`_)
 - Integration tests with new ISMN Interface (PR `#263 <https://github.com/TUW-GEO/pytesmo/pull/263>`_)
 - Add option to Validation Framework to ignore errors in ``Validation.calc()`` (PR `#263 <https://github.com/TUW-GEO/pytesmo/pull/263>`_)
