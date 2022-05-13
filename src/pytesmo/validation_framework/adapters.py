@@ -562,11 +562,6 @@ class TimestampAdapter(BasicAdapter):
     drop_original: bool, optional. Default is True.
         Whether the base_time_field and time_offset_fields should be dropped in the
         final DataFrame
-    handle_invalid: str, optional. Default is 'return_original'
-        How to handle cases where all the entries in the generic observation time (base_time_field)
-        are NaT. Options:
-        - 'return_original': the original dataframe is returned
-        - 'return_null': an empty dataframe is returned, with columns defined by the 'drop_original' parameter
     """
 
     def __init__(self,
@@ -579,7 +574,6 @@ class TimestampAdapter(BasicAdapter):
                  replace_index: bool = True,
                  output_field: str = None,
                  drop_original: bool = True,
-                 handle_invalid: str = 'return_original',
                  **kwargs):
         super().__init__(cls, **kwargs)
 
@@ -607,7 +601,6 @@ class TimestampAdapter(BasicAdapter):
             self.output_field = output_field
 
         self.drop_original = drop_original
-        self.handle_invalid = handle_invalid
 
     def convert_generic(self, time_arr: np.array) -> np.array:
         """Convert the generic time field to np.datetime[64] dtype"""
@@ -646,17 +639,13 @@ class TimestampAdapter(BasicAdapter):
         base_time_values = base_time.dropna().values
 
         # Make sure the dataframes contains values after dropna()
-        if data.empty and self.handle_invalid == "return_original":
+        if data.empty:
+            warnings.warn(
+                "The input DataFrame is either empty or has all NaT values"
+                " in the specified `base_time_field`, therefore the original"
+                " non-adapted is returned")
+
             return original
-
-        elif data.empty and self.handle_invalid == "return_null":
-            # Define the shape of the output (empty) dataframe
-            if self.drop_original:
-                data.drop(columns=self.time_offset_fields, inplace=True)
-                if self.base_time_field in data.columns:
-                    data.drop(columns=[self.base_time_field], inplace=True)
-
-            return data
 
         if self.base_time_reference is not None:
             base_time_values = self.convert_generic(base_time_values)

@@ -381,26 +381,20 @@ def test_timestamp_adapter():
     # The original should be returned
     pd.testing.assert_frame_equal(origin, adapted)
 
-    adapted_ds = TimestampAdapter(
-        ds,
-        time_offset_fields="offset",
-        time_units="s",
-        handle_invalid="return_null")
-    adapted = adapted_ds.read()
+    # test empty Dataframe
+    # -----------------------
 
-    # The empty dataframe should be returned with dropped time fields
-    assert adapted.empty
-    assert adapted.columns == ["sm"]
+    def _read_empty():
+        return pd.DataFrame(columns=["sm", "offset"],)
+
+    setattr(ds, "read", _read_empty)
+    origin = ds.read()
 
     adapted_ds = TimestampAdapter(
-        ds,
-        time_offset_fields="offset",
-        time_units="s",
-        handle_invalid="return_null",
-        drop_original=False)
+        ds, time_offset_fields="offset", time_units="s")
     adapted = adapted_ds.read()
 
-    # The original but empty dataframe should be returned
+    # The original should be returned
     assert adapted.empty
     assert (adapted.columns == ["sm", "offset"]).all()
 
