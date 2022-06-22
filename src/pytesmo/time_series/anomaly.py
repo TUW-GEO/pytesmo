@@ -1,6 +1,7 @@
 '''
 Created on June 20, 2013
 '''
+import warnings
 
 import pandas as pd
 import numpy as np
@@ -87,7 +88,11 @@ def calc_anomaly(Ser,
     return anomaly
 
 
-def _index_units(year, month, day, unit="day", respect_leap_years=True) -> (np.array, int):
+def _index_units(year,
+                 month,
+                 day,
+                 unit="day",
+                 respect_leap_years=True) -> (np.array, int):
     """Provide the indices for the specified unit type and the index lenth"""
     if respect_leap_years:
         args = month, day, year
@@ -104,8 +109,7 @@ def _index_units(year, month, day, unit="day", respect_leap_years=True) -> (np.a
 
 def calc_climatology(Ser,
                      moving_avg_orig=5,
-                     moving_avg_clim=35,
-                     moving_avg_month_clim=3,
+                     moving_avg_clim=None,
                      median=False,
                      timespan=None,
                      fill=np.nan,
@@ -115,7 +119,7 @@ def calc_climatology(Ser,
                      fillna=True,
                      min_obs_orig=1,
                      min_obs_clim=1,
-                     unit="day"):
+                     output_freq="day"):
     """
     Calculates the climatology of a data set.
 
@@ -130,13 +134,11 @@ def calc_climatology(Ser,
 
     moving_avg_clim : float, optional
         The size of the moving_average window in days that will be applied on the
-        calculated climatology (long-term event correction)
-        Default: 35
-
-    moving_avg_month_clim: : float, optional
-        Same as for 'moving_avg_clim', but applied to monthly climatologies. In case
-        unit='month', this value overrides 'moving_avg_clim'
-        Default: 3
+        calculated climatology (long-term event correction). If None is passed, it
+        will be calculated from the 'output_freq' value:
+            - 'day': 35
+            - 'month': 3
+        Default: None
 
     median : boolean, optional
         if set to True, the climatology will be based on the median conditions
@@ -173,27 +175,41 @@ def calc_climatology(Ser,
         Minimum observations required to give a valid output in the second
         moving average applied on the calculated climatology
 
-    unit: str, optional
-        Unit of the year to apply the climatology calculation to. Currently,
-        supported options are 'day', 'month'.
+    output_freq: str, optional
+        Determines the output frequency (time unit) of the climatology
+        calculation (independently of the 'Ser' input frequency).
+        Currently, supported options are 'day', 'month'.
         Default: 'day'
 
     Returns
     -------
     climatology : pandas.Series
-        Series containing the calculated climatology
-        Always has 366 values behaving like a leap year
+        Containing the calculated climatology. The size of the series depends on
+        the type of climatology being calculated, based on the value of 'output_freq':
+            - 366 values for a daily climatology, behaving as a leap year
+            - 12 values for a monthly climatology
     """
-    if unit != "day":
-        respect_leap_years, interpolate_leapday = False, False
+    # establish the moving window size
+    default_moving_avg_clim = {"day": 35, "month": 3}
 
-    if unit == "month":
-        moving_avg_clim = moving_avg_month_clim
+    if moving_avg_clim is None:
+        moving_avg_clim = default_moving_avg_clim[output_freq]
+
+    if output_freq == "month" and moving_avg_clim > 5:
+        # in case someone changes unit but not moving_avg_clim a warning might be useful
+        warnings.warn(
+            f"Window for moving average of climatology set to {moving_avg_clim} months, is this intentional?"
+        )
+
+    if output_freq != "day":
+        # irrelevant at lower frequencies than daily
+        respect_leap_years, interpolate_leapday = False, False
 
     if timespan is not None:
         Ser = Ser.truncate(before=timespan[0], after=timespan[1])
 
-    Ser = moving_average(Ser, window_size=moving_avg_orig, fillna=fillna, min_obs=min_obs_orig)
+    Ser = moving_average(
+        Ser, window_size=moving_avg_orig, fillna=fillna, min_obs=min_obs_orig)
 
     Ser = pd.DataFrame(Ser)
 
@@ -206,10 +222,11 @@ def calc_climatology(Ser,
 
     # provide indices for the selected unit
     indices, n_idx = _index_units(
-        year, month, day,
-        unit=unit,
-        respect_leap_years=respect_leap_years
-    )
+        year,
+        month,
+        day,
+        unit=output_freq,
+        respect_leap_years=respect_leap_years)
     Ser['unit'] = indices
 
     if median:
@@ -217,8 +234,7 @@ def calc_climatology(Ser,
     else:
         clim = Ser.groupby('unit').mean()
 
-    clim_ser = pd.Series(clim.values.flatten(),
-                         index=clim.index.values)
+    clim_ser = pd.Series(clim.values.flatten(), index=clim.index.values)
 
     clim_ser = clim_ser.reindex(np.arange(n_idx) + 1)
 
@@ -230,15 +246,21 @@ def calc_climatology(Ser,
         # to run over a whole year while keeping gaps the same size
         right_mirror.index = right_mirror.index + n_idx * 2
         clim_ser.index = clim_ser.index + n_idx
-        clim_ser = pd.concat([left_mirror,
-                              clim_ser,
-                              right_mirror])
+        clim_ser = pd.concat([left_mirror, clim_ser, right_mirror])
 
-        clim_ser = moving_average(clim_ser, window_size=moving_avg_clim, fillna=fillna, min_obs=min_obs_clim)
+        clim_ser = moving_average(
+            clim_ser,
+            window_size=moving_avg_clim,
+            fillna=fillna,
+            min_obs=min_obs_clim)
         clim_ser = clim_ser.iloc[moving_avg_clim:-moving_avg_clim]
         clim_ser.index = index_old
     else:
-        clim_ser = moving_average(clim_ser, window_size=moving_avg_clim, fillna=fillna, min_obs=min_obs_clim)
+        clim_ser = moving_average(
+            clim_ser,
+            window_size=moving_avg_clim,
+            fillna=fillna,
+            min_obs=min_obs_clim)
 
     # keep hardcoding as it's only for doys
     if interpolate_leapday and not respect_leap_years:
