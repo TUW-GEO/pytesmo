@@ -577,8 +577,10 @@ class TimestampAdapter(BasicAdapter):
                  **kwargs):
         super().__init__(cls, **kwargs)
 
-        self.time_offset_fields = time_offset_fields if isinstance(
-            time_offset_fields, list) else [time_offset_fields]
+        if time_offset_fields is None or isinstance(time_offset_fields, list):
+            self.time_offset_fields = time_offset_fields
+        else:
+            self.time_offset_fields = [time_offset_fields]
         self.time_units = time_units if isinstance(time_units,
                                                    list) else [time_units]
 
