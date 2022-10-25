@@ -602,9 +602,9 @@ class TimestampAdapter(BasicAdapter):
 
         self.drop_original = drop_original
 
-    def convert_generic(self, time_arr: np.array) -> np.array:
+    def convert_generic(self, time_arr: np.array, units: str = 'D') -> np.array:
         """Convert the generic time field to np.datetime[64] dtype"""
-        time_delta = time_arr.astype(int).astype('timedelta64[D]')
+        time_delta = time_arr.astype(int).astype(f'timedelta64[{units}]')
         time_date = np.full(time_delta.shape,
                             self.base_time_reference) + time_delta
 
@@ -648,7 +648,7 @@ class TimestampAdapter(BasicAdapter):
             return original
 
         if self.base_time_reference is not None:
-            base_time_values = self.convert_generic(base_time_values)
+            base_time_values = self.convert_generic(base_time_values, self.base_time_units)
 
         # If no offset is specified
         if self.time_offset_fields is None:
@@ -668,5 +668,8 @@ class TimestampAdapter(BasicAdapter):
             data.drop(columns=self.time_offset_fields, inplace=True)
             if self.base_time_field in data.columns:
                 data.drop(columns=[self.base_time_field], inplace=True)
+
+        # Remove NaNs from index, if present
+        data = data.loc[data.index.dropna()]
 
         return data
