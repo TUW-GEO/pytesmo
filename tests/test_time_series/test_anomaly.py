@@ -101,13 +101,14 @@ def test_monthly_climatology_always_12():
     # remove a part of the time series
     ts['2000-02-01': '2000-02-28'] = np.nan
     ts = ts.dropna()
-    clim = anomaly.calc_climatology(ts, unit="month")
+    clim = anomaly.calc_climatology(ts, output_freq="month")
     assert clim.size == 12
 
     # this should also be the case if interpolate_leapday is set
     ts = pd.Series(np.sin(np.arange(10)), index=pd.date_range(
         '2000-01-01', freq='D', periods=10))
-    clim = anomaly.calc_climatology(ts, unit="month")
+    # and if the window size is changed
+    clim = anomaly.calc_climatology(ts, moving_avg_clim=5, output_freq="month")
     assert clim.size == 12
 
 
