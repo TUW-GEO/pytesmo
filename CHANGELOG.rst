@@ -5,6 +5,10 @@ Changelog
 Unreleased
 ==========
 
+Version 0.14.1, 2022-10-25
+==========================
+- small bug fixes and documentation updates (PRs `#272 <https://github.com/TUW-GEO/pytesmo/pull/272>`_, `#271 <https://github.com/TUW-GEO/pytesmo/pull/271>`_, `#270 <https://github.com/TUW-GEO/pytesmo/pull/270>`_)
+
 Version 0.14.0, 2022-05-13
 ==========================
 - fixed bugs in resample_mean (PR `#262 <https://github.com/TUW-GEO/pytesmo/pull/262>`_)
