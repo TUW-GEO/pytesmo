@@ -374,7 +374,6 @@ class AnomalyClimAdapter(BasicAdapter):
     """
     Takes the pandas DataFrame that reader returns and calculates the
     anomaly of the time series based on the (long-term) average of the series.
-
     Parameters
     ----------
     cls: object
@@ -398,12 +397,15 @@ class AnomalyClimAdapter(BasicAdapter):
         The output of this method will be changed by the adapter.
         If None is passed, only data from `read` and `read_ts` of cls
         will be adapted.
+    return_clim: bool, optional (default: False)
+        If True, then a column for the climatology is added to the DataFrame
+        returned by the read function.
     kwargs:
         Any remaining keyword arguments will be given to
         :func:`pytesmo.time_series.anomaly.calc_climatology`
     """
 
-    def __init__(self, cls, columns=None, **kwargs):
+    def __init__(self, cls, columns=None, return_clim=False, **kwargs):
 
         cls_kwargs = dict()
         if "data_property_name" in kwargs:
@@ -413,6 +415,7 @@ class AnomalyClimAdapter(BasicAdapter):
 
         super().__init__(cls, **cls_kwargs)
 
+        self.return_clim = return_clim
         self.kwargs = kwargs
         self.columns = columns
 
@@ -424,7 +427,13 @@ class AnomalyClimAdapter(BasicAdapter):
             ite = self.columns
         for column in ite:
             clim = calc_climatology(data[column], **self.kwargs)
-            data[column] = calc_anomaly(data[column], climatology=clim)
+            anom = calc_anomaly(data[column], climatology=clim,
+                                return_clim=self.return_clim)
+            if self.return_clim:
+                data[column] = anom['anomaly']
+                data[f"{column}_climatology"] = anom['climatology']
+            else:
+                data[column] = anom
 
         return data
 
