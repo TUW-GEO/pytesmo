@@ -566,7 +566,7 @@ class TimestampAdapter(BasicAdapter):
 
     def __init__(self,
                  cls: object,
-                 time_offset_fields: str or list,
+                 time_offset_fields: str or list or None,
                  time_units: str or list = "s",
                  base_time_field: str = None,
                  base_time_reference: str = None,
@@ -577,8 +577,11 @@ class TimestampAdapter(BasicAdapter):
                  **kwargs):
         super().__init__(cls, **kwargs)
 
-        self.time_offset_fields = time_offset_fields if isinstance(
-            time_offset_fields, list) else [time_offset_fields]
+        if time_offset_fields is None:
+            self.time_offset_fields = None
+        else:
+            self.time_offset_fields = time_offset_fields if isinstance(
+                time_offset_fields, list) else [time_offset_fields]
         self.time_units = time_units if isinstance(time_units,
                                                    list) else [time_units]
 
@@ -665,7 +668,8 @@ class TimestampAdapter(BasicAdapter):
             data.index = exact_time
 
         if self.drop_original:
-            data.drop(columns=self.time_offset_fields, inplace=True)
+            if self.time_offset_fields is not None:
+                data.drop(columns=self.time_offset_fields, inplace=True)
             if self.base_time_field in data.columns:
                 data.drop(columns=[self.base_time_field], inplace=True)
 
