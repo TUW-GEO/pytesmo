@@ -676,7 +676,8 @@ class TimestampAdapter(BasicAdapter):
             data.index = exact_time
 
         if self.drop_original:
-            data.drop(columns=self.time_offset_fields, inplace=True)
+            if self.time_offset_fields is not None:
+                data.drop(columns=self.time_offset_fields, inplace=True)
             if self.base_time_field in data.columns:
                 data.drop(columns=[self.base_time_field], inplace=True)
 
