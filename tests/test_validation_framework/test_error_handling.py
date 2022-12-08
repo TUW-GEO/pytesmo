@@ -34,24 +34,43 @@ def test_error_handling_empty_df():
     gpis = list(range(npoints))
 
     for handle_errors in ["ignore", "deprecated"]:
-        results = val.calc(gpis, gpis, gpis, rename_cols=False,
-                           only_with_reference=True, handle_errors=handle_errors)
+        with pytest.warns(UserWarning, match="No data for dataset 4-missing"):
+            results = val.calc(
+                gpis,
+                gpis,
+                gpis,
+                rename_cols=False,
+                only_with_reference=True,
+                handle_errors=handle_errors)
         assert results == {}
 
     # 'raise' should raise an error
     with pytest.raises(eh.NoTempMatchedDataError):
-        results = val.calc(gpis, gpis, gpis, rename_cols=False,
-                           only_with_reference=True, handle_errors="raise")
+        with pytest.warns(UserWarning, match="No data for dataset 4-missing"):
+            results = val.calc(
+                gpis,
+                gpis,
+                gpis,
+                rename_cols=False,
+                only_with_reference=True,
+                handle_errors="raise")
 
     # 'returncode' should modify the status code, but not raise an error
-    results = val.calc(gpis, gpis, gpis, rename_cols=False,
-                       only_with_reference=True, handle_errors="returncode")
+    with pytest.warns(UserWarning, match="No data for dataset 4-missing"):
+        results = val.calc(
+            gpis,
+            gpis,
+            gpis,
+            rename_cols=False,
+            only_with_reference=True,
+            handle_errors="returncode")
     for key in results:
         for metric in results[key]:
             assert len(results[key][metric]) == npoints
             if metric not in ["status", "gpi", "lat", "lon", "n_obs"]:
                 assert np.all(np.isnan(results[key][metric]))
         assert np.all(results[key]["status"] == eh.NO_TEMP_MATCHED_DATA)
+
 
 def test_error_handling_nodata():
     # this tests if we get the NoGpiDataError if one dataset doesn't have any
@@ -74,24 +93,43 @@ def test_error_handling_nodata():
     gpis = list(range(npoints))
 
     for handle_errors in ["ignore", "deprecated"]:
-        results = val.calc(gpis, gpis, gpis, rename_cols=False,
-                           only_with_reference=True, handle_errors=handle_errors)
+        with pytest.warns(UserWarning, match="No data for dataset 1-missing"):
+            results = val.calc(
+                gpis,
+                gpis,
+                gpis,
+                rename_cols=False,
+                only_with_reference=True,
+                handle_errors=handle_errors)
         assert results == {}
 
     # 'raise' should raise an error
     with pytest.raises(eh.NoGpiDataError):
-        results = val.calc(gpis, gpis, gpis, rename_cols=False,
-                           only_with_reference=True, handle_errors="raise")
+        with pytest.warns(UserWarning, match="No data for dataset 1-missing"):
+            results = val.calc(
+                gpis,
+                gpis,
+                gpis,
+                rename_cols=False,
+                only_with_reference=True,
+                handle_errors="raise")
 
     # 'returncode' should modify the status code, but not raise an error
-    results = val.calc(gpis, gpis, gpis, rename_cols=False,
-                       only_with_reference=True, handle_errors="returncode")
+    with pytest.warns(UserWarning, match="No data for dataset 1-missing"):
+        results = val.calc(
+            gpis,
+            gpis,
+            gpis,
+            rename_cols=False,
+            only_with_reference=True,
+            handle_errors="returncode")
     for key in results:
         for metric in results[key]:
             assert len(results[key][metric]) == npoints
             if metric not in ["status", "gpi", "lat", "lon", "n_obs"]:
                 assert np.all(np.isnan(results[key][metric]))
         assert np.all(results[key]["status"] == eh.NO_GPI_DATA)
+
 
 def test_error_handling_not_enough_data():
     # This tests if we get a proper warning if we have not enough data to
@@ -114,8 +152,16 @@ def test_error_handling_not_enough_data():
     gpis = list(range(npoints))
 
     for handle_errors in ["ignore", "deprecated", "raise", "returncode"]:
-        results = val.calc(gpis, gpis, gpis, rename_cols=False,
-                           only_with_reference=True, handle_errors=handle_errors)
+        with pytest.warns(
+                UserWarning,
+                match="Not enough observations to calculate metrics."):
+            results = val.calc(
+                gpis,
+                gpis,
+                gpis,
+                rename_cols=False,
+                only_with_reference=True,
+                handle_errors=handle_errors)
         for key in results:
             for metric in results[key]:
                 assert len(results[key][metric]) == npoints
@@ -128,7 +174,7 @@ def test_error_handling_ok():
     # everything should work out nicely here
     n_datasets = 5
     npoints = 5
-    nsamples = 100 
+    nsamples = 100
 
     datasets = create_datasets(n_datasets, npoints, nsamples)
     metric_calculator = PairwiseIntercomparisonMetrics()
@@ -142,8 +188,13 @@ def test_error_handling_ok():
     gpis = list(range(npoints))
 
     for handle_errors in ["ignore", "deprecated", "raise", "returncode"]:
-        results = val.calc(gpis, gpis, gpis, rename_cols=False,
-                           only_with_reference=True, handle_errors=handle_errors)
+        results = val.calc(
+            gpis,
+            gpis,
+            gpis,
+            rename_cols=False,
+            only_with_reference=True,
+            handle_errors=handle_errors)
         for key in results:
             for metric in results[key]:
                 assert len(results[key][metric]) == npoints

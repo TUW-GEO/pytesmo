@@ -6,7 +6,6 @@ properly handled. An error code of -1 indicates failure in handling the error.
 0 indicates success.
 """
 
-
 # This is the default value, but it should normally not appear anywhere
 # outside, because the more specific failures should set a new return code
 UNCAUGHT = -1
@@ -21,7 +20,7 @@ METRICS_CALCULATION_FAILED = 2
 # Failure in temporal matching
 TEMPORAL_MATCHING_FAILED = 3
 # Temporal matching returned without error, but the data we need is not available
-NO_TEMP_MATCHED_DATA = 4 
+NO_TEMP_MATCHED_DATA = 4
 # the call to perform_validation failed due to other unforeseen reasons
 VALIDATION_FAILED = 5
 # the call to self.data_manager.get_data failed for the current gpi
@@ -33,17 +32,22 @@ class ValidationError(Exception):
     # different subclasses at once
     return_code = UNCAUGHT
 
+
 class MetricsCalculationError(ValidationError):
     return_code = METRICS_CALCULATION_FAILED
+
 
 class TemporalMatchingError(ValidationError):
     return_code = TEMPORAL_MATCHING_FAILED
 
+
 class NoTempMatchedDataError(ValidationError):
     return_code = NO_TEMP_MATCHED_DATA
 
+
 class ValidationFailError(ValidationError):
     return_code = VALIDATION_FAILED
+
 
 class NoGpiDataError(ValidationError):
     return_code = NO_GPI_DATA

@@ -151,7 +151,7 @@ def check_results(
         vars_should = [
             u"n_obs", u"tau", u"gpi", u"RMSD", u"lon", u"p_tau", u"BIAS",
             u"p_rho", u"rho", u"lat", u"R", u"p_R", u"time", u"idx",
-            u"_row_size"
+            u"_row_size", u"status"
         ]
 
     with nc.Dataset(filename, mode="r") as results:
@@ -383,7 +383,7 @@ def test_ascat_ismn_validation_metadata(ascat_reader, ismn_reader):
     vars_should = [
         'BIAS', 'R', 'RMSD', '_row_size', 'climate', 'gpi', 'idx', 'landcover',
         'lat', 'lon', 'n_obs', 'network', 'p_R', 'p_rho', 'p_tau', 'rho',
-        'station', 'tau', 'time'
+        'station', 'tau', 'time', 'status'
     ]
 
     check_results(
@@ -1127,7 +1127,7 @@ def test_ascat_ismn_validation_metadata_rolling(ascat_reader, ismn_reader):
     }
     vars_should = [
         u"gpi", u"RMSD", u"lon", u"lat", u"R", u"p_R", u"time", u"idx",
-        u"_row_size"
+        u"_row_size", u"status"
     ]
     for key, value in metadata_dict_template.items():
         vars_should.append(key)
