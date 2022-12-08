@@ -9,6 +9,7 @@ import pandas as pd
 from pygeogrids.grids import CellGrid
 import warnings
 import logging
+from typing import Mapping, Tuple, List
 
 from pytesmo.validation_framework.data_manager import DataManager
 from pytesmo.validation_framework.data_manager import get_result_names
@@ -17,6 +18,8 @@ from pytesmo.validation_framework.data_scalers import DefaultScaler
 import pytesmo.validation_framework.temporal_matchers as temporal_matchers
 from pytesmo.utils import ensure_iterable
 from distutils.version import LooseVersion
+
+import pytesmo.validation_framework.error_handling as eh
 
 
 class Validation(object):
@@ -191,7 +194,7 @@ class Validation(object):
         rename_cols=True,
         only_with_reference=False,
         handle_errors='raise',
-    ):
+    ) -> Mapping[Tuple[str], Mapping[str, np.ndarray]]:
         """
         The argument iterables (lists or numpy.ndarrays) are processed one
         after the other in tuples of the form (gpis[n], lons[n], lats[n],
@@ -220,10 +223,24 @@ class Validation(object):
         only_with_reference : bool, optional
             If this is enabled, only combinations that include the reference
             dataset (from the data manager) are calculated.
-        handle_errors: Literal['raise', 'ignore'], optional (default: 'raise')
-            `raise`: If an error occurs during validation, raise exception.
-            `ignore`: If an error occurs during validation, log it and
-             continue with next GPI.
+        handle_errors: str, optional (default: 'raise')
+            Governs how to handle errors::
+        
+            * `raise`: If an error occurs during validation, raise exception.
+            * `returncode`: If an error occurs, assign the correct return code
+              to the result template and continue with the next GPI. The main
+              difference to `ignore` is that the result for this GPI will still
+              be returned, but the metric values will be set to NaN. `ignore`
+              just completely skips over the GPI and does not return a result
+              for it.
+            * `ignore`: If an error occurs during validation, log it and
+               continue with next GPI.
+            * `deprecated`: Mix of `raise` and `ignore` to reproduce the
+              original behaviour. 
+
+            It is recommended to either use `raise` or `returncode`, the other
+            two options are only for reproducing behaviour of older versions of
+            pytesmo.
 
         Returns
         -------
@@ -234,7 +251,24 @@ class Validation(object):
                   by metrics_calculator
 
         """
-        results = {}
+        handle_errors = handle_errors.lower()
+        error_handling_options = ["raise", "ignore", "deprecated", "returncode"]
+        assert handle_errors in error_handling_options, (
+            f"'handle_errors' must be one of {error_handling_options}"
+        )
+
+        def handle_error_returncode(e, gpi_info):
+            logging.error(f"{gpi_info}: {e}")
+            results = self.dummy_validation_result(
+                gpi_info, rename_cols=rename_cols,
+                only_with_reference=only_with_reference)
+            if isinstance(e, eh.ValidationError):
+                retcode = e.return_code
+            else:
+                retcode = eh.UNCAUGHT
+            for key in results:
+                results[key][0]["status"][0] = retcode
+            return results
 
         if len(args) > 0:
             gpis, lons, lats, args = args_to_iterable(
@@ -243,6 +277,7 @@ class Validation(object):
         else:
             gpis, lons, lats = args_to_iterable(gpis, lons, lats)
 
+        results = {}
         for gpi_info in zip(gpis, lons, lats, *args):
 
             try:
@@ -252,33 +287,41 @@ class Validation(object):
 
                 # if no data is available continue with the next gpi
                 if len(df_dict) == 0:
-                    continue
+                    raise eh.NoGpiDataError(f"No data for gpi {gpi_info}")
                 matched_data, result, used_data = self.perform_validation(
                     df_dict,
                     gpi_info,
                     rename_cols=rename_cols,
                     only_with_reference=only_with_reference,
+                    handle_errors=handle_errors,
                 )
             except Exception as e:
-                if handle_errors.lower() == 'ignore':
+                if handle_errors == 'ignore':
                     logging.error(f"{gpi_info}: {e}")
                     continue
-                elif handle_errors.lower() == 'raise':
+                elif handle_errors == "deprecated":
+                    if isinstance(e, eh.ValidationError):
+                        logging.error(f"{gpi_info}: {e}")
+                        continue
+                    else:
+                        raise e
+                elif handle_errors == 'raise':
                     raise e
-                else:
-                    raise NotImplementedError(
-                        f"Unknown `handle_errors` option: "
-                        f"{handle_errors.lower()}. "
-                        f"Choose `ignore` or `raise`."
-                    )
+                elif handle_errors == "returncode":
+                    result = handle_error_returncode(e, gpi_info)
+
             # add result of one gpi to global results dictionary
             for r in result:
                 if r not in results:
                     results[r] = []
                 results[r] = results[r] + result[r]
 
+        # So far, results is a dictionary mapping from a validation name/key
+        # (the involved datasets) to lists of individual result dictionaries
+        # for each gpi.
+        # Here, these lists are summarized to have a single dictionary of numpy
+        # arrays for each validation key
         compact_results = {}
-
         for key in results.keys():
             compact_results[key] = {}
             for field_name in results[key][0].keys():
@@ -297,7 +340,8 @@ class Validation(object):
         gpi_info,
         rename_cols=True,
         only_with_reference=False,
-    ):
+        handle_errors="raise",
+    ) -> Mapping[Tuple[str], List[Mapping[str, np.ndarray]]]:
         """
         Perform the validation for one grid point index and return the
         matched datasets as well as the calculated metrics.
@@ -324,6 +368,14 @@ class Validation(object):
             tuples.
         used_data: dict
             The DataFrame used for calculation of each set of metrics.
+        
+        Raises
+        ------
+        eh.TemporalMatchingError : 
+            If temporal matching failed
+        eh.NoTempMatchedDataError :
+            If there is insufficient data or the temporal matching did not
+            return data.
         """
         results = {}
         used_data = {}
@@ -343,12 +395,25 @@ class Validation(object):
             columns = self.data_manager.datasets[ds]["columns"]
             data_df_dict[ds] = df_dict[ds][columns]
 
-        matched_n = self.temporal_match_datasets(data_df_dict)
+        # matched_n is a dictionary mapping from dataset combinations as keys
+        # to pandas dataframes
+        try:
+            matched_n = self.temporal_match_datasets(data_df_dict)
+        except:
+            raise eh.TemporalMatchingError("Temporal matching failed!")
 
         for n, k in self.metrics_c:
             n_matched_data = matched_n[(n, k)]
             if len(n_matched_data) == 0:
-                continue
+                # this would happen if self.temp_matching returns an empty list
+                # or dictionary for n=n, k=k
+                if handle_errors == "deprecated":
+                    continue
+                else:
+                    raise eh.NoTempMatchedDataError(
+                        f"No temporally matched data for ({n}, {k})"
+                        " and metric calculator {self.metrics_c[(n,k)]}!"
+                    )
             result_names = get_result_combinations(
                 self.data_manager.ds_dict, n=k
             )
@@ -364,7 +429,13 @@ class Validation(object):
                         continue
 
                 if len(data) == 0:
-                    continue
+                    if handle_errors == "deprecated":
+                        continue
+                    else:
+                        raise eh.NoTempMatchedDataError(
+                            f"Temporal matching resulted in empty dataset for"
+                            f" {result_key}"
+                        )
 
                 # at this stage we can drop the column multiindex and just use
                 # the dataset name
@@ -402,10 +473,50 @@ class Validation(object):
 
                 metrics_calculator = self.metrics_c[(n, k)]
                 used_data[result_key] = data
-                metrics = metrics_calculator(data, gpi_info)
+                try:
+                    metrics = metrics_calculator(data, gpi_info)
+                except:
+                    if handle_errors in ["raise", "deprecated"]:
+                        raise
+                    # to get only an empty template returned, we pass an empty
+                    # dataframe here, with the correct column names
+                    dummy_df = pd.DataFrame([], columns=result_ds_names)
+                    metrics = metrics_calculator(dummy_df, gpi_info)
+                    metrics["status"][0] = eh.METRICS_CALCULATION_FAILED
                 results[result_key].append(metrics)
 
         return matched_n, results, used_data
+
+    def dummy_validation_result(
+        self,
+        gpi_info,
+        rename_cols=True,
+        only_with_reference=False,
+    ) -> Mapping[Tuple[str], List[Mapping[str, np.ndarray]]]:
+        """
+        Creates an empty result dictionary to be used if perform_validation fails
+        """
+        results = {}
+        for n, k in self.metrics_c:
+            result_names = get_result_combinations(
+                self.data_manager.ds_dict, n=k
+            )
+            for result_key in result_names:
+                # it might also be a good idea to move this to
+                # `get_result_combinations`
+                result_ds_names = [key[0] for key in result_key]
+                if only_with_reference:
+                    if self.data_manager.reference_name not in result_ds_names:
+                        continue
+                metrics_calculator = self.metrics_c[(n, k)]
+                # to get only an empty template returned, we pass an empty
+                # dataframe here, with the correct column names
+                dummy_df = pd.DataFrame([], columns=result_ds_names)
+                metrics = metrics_calculator(dummy_df, gpi_info)
+                if result_key not in results.keys():
+                    results[result_key] = []
+                results[result_key].append(metrics)
+        return results
 
     def mask_dataset(self, ref_df, gpi_info):
         """
