@@ -225,7 +225,7 @@ class Validation(object):
             dataset (from the data manager) are calculated.
         handle_errors: str, optional (default: 'raise')
             Governs how to handle errors::
-        
+
             * `raise`: If an error occurs during validation, raise exception.
             * `returncode`: If an error occurs, assign the correct return code
               to the result template and continue with the next GPI. The main
@@ -236,7 +236,7 @@ class Validation(object):
             * `ignore`: If an error occurs during validation, log it and
                continue with next GPI.
             * `deprecated`: Mix of `raise` and `ignore` to reproduce the
-              original behaviour. 
+              original behaviour.
 
             It is recommended to either use `raise` or `returncode`, the other
             two options are only for reproducing behaviour of older versions of
@@ -265,7 +265,7 @@ class Validation(object):
             if isinstance(e, eh.ValidationError):
                 retcode = e.return_code
             else:
-                retcode = eh.UNCAUGHT
+                retcode = eh.VALIDATION_FAILED
             for key in results:
                 results[key][0]["status"][0] = retcode
             return results
@@ -281,9 +281,19 @@ class Validation(object):
         for gpi_info in zip(gpis, lons, lats, *args):
 
             try:
-                df_dict = self.data_manager.get_data(
-                    gpi_info[0], gpi_info[1], gpi_info[2]
-                )
+                try:
+                    df_dict = self.data_manager.get_data(
+                        gpi_info[0], gpi_info[1], gpi_info[2]
+                    )
+                except Exception as e:
+                    # for these two old options we just raise it as it is,
+                    # because they have not been caught previously, and will
+                    # then be handled later
+                    if handle_errors in ["ignore", "deprecated"]:
+                        raise e
+                    else:
+                        raise eh.DataManagerError(
+                            "Getting the data for gpi {gpi_info} failed!")
 
                 # if no data is available continue with the next gpi
                 if len(df_dict) == 0:
@@ -368,14 +378,16 @@ class Validation(object):
             tuples.
         used_data: dict
             The DataFrame used for calculation of each set of metrics.
-        
+
         Raises
         ------
-        eh.TemporalMatchingError : 
+        eh.TemporalMatchingError :
             If temporal matching failed
         eh.NoTempMatchedDataError :
             If there is insufficient data or the temporal matching did not
             return data.
+        eh.ScalingError :
+            If scaling failed
         """
         results = {}
         used_data = {}
@@ -399,8 +411,13 @@ class Validation(object):
         # to pandas dataframes
         try:
             matched_n = self.temporal_match_datasets(data_df_dict)
-        except:
-            raise eh.TemporalMatchingError("Temporal matching failed!")
+        except Exception:
+            if handle_errors in ["ignore", "deprecated"]:
+                raise
+            else:
+                raise eh.TemporalMatchingError(
+                    f"Temporal matching failed for gpi {gpi_info}!"
+                )
 
         for n, k in self.metrics_c:
             n_matched_data = matched_n[(n, k)]
@@ -412,7 +429,8 @@ class Validation(object):
                 else:
                     raise eh.NoTempMatchedDataError(
                         f"No temporally matched data for ({n}, {k})"
-                        " and metric calculator {self.metrics_c[(n,k)]}!"
+                        f" and metric calculator {self.metrics_c[(n,k)]}"
+                        f" for gpi {gpi_info}!"
                     )
             result_names = get_result_combinations(
                 self.data_manager.ds_dict, n=k
@@ -434,7 +452,7 @@ class Validation(object):
                     else:
                         raise eh.NoTempMatchedDataError(
                             f"Temporal matching resulted in empty dataset for"
-                            f" {result_key}"
+                            f" {result_key} for gpi {gpi_info}"
                         )
 
                 # at this stage we can drop the column multiindex and just use
@@ -454,8 +472,18 @@ class Validation(object):
                         data = self.scaling.scale(
                             data, scaling_index, gpi_info
                         )
-                    except ValueError:
-                        continue
+                    except Exception as e:
+                        if handle_errors == "ignore":
+                            continue
+                        if (handle_errors == "deprecated"
+                                and isinstance(e, ValueError)):
+                            continue
+                        else:
+                            raise eh.ScalingError(
+                                f"Scaling failed for {result_key} for gpi"
+                                f" {gpi_info}!"
+                            )
+
                     # Drop the scaling reference if it was not in the intended
                     # results
                     if self.scaling_ref not in [key[0] for key in result_key]:
@@ -475,14 +503,20 @@ class Validation(object):
                 used_data[result_key] = data
                 try:
                     metrics = metrics_calculator(data, gpi_info)
-                except:
-                    if handle_errors in ["raise", "deprecated"]:
+                except Exception:
+                    if handle_errors in ["deprecated", "ignore"]:
                         raise
-                    # to get only an empty template returned, we pass an empty
-                    # dataframe here, with the correct column names
-                    dummy_df = pd.DataFrame([], columns=result_ds_names)
-                    metrics = metrics_calculator(dummy_df, gpi_info)
-                    metrics["status"][0] = eh.METRICS_CALCULATION_FAILED
+                    elif handle_errors == "raise":
+                        raise eh.MetricsCalculationError(
+                            f"Metrics calculation failed for {result_key}"
+                            f" for gpi {gpi_info}!"
+                        )
+                    else:
+                        # to get only an empty template returned, we pass an
+                        # empty dataframe here, with the correct column names
+                        dummy_df = pd.DataFrame([], columns=result_ds_names)
+                        metrics = metrics_calculator(dummy_df, gpi_info)
+                        metrics["status"][0] = eh.METRICS_CALCULATION_FAILED
                 results[result_key].append(metrics)
 
         return matched_n, results, used_data
@@ -494,7 +528,8 @@ class Validation(object):
         only_with_reference=False,
     ) -> Mapping[Tuple[str], List[Mapping[str, np.ndarray]]]:
         """
-        Creates an empty result dictionary to be used if perform_validation fails
+        Creates an empty result dictionary to be used if perform_validation
+        fails
         """
         results = {}
         for n, k in self.metrics_c:

@@ -19,12 +19,17 @@ INSUFFICIENT_DATA = 1
 METRICS_CALCULATION_FAILED = 2
 # Failure in temporal matching
 TEMPORAL_MATCHING_FAILED = 3
-# Temporal matching returned without error, but the data we need is not available
+# Temporal matching returned without error, but the data we need is not
+# available
 NO_TEMP_MATCHED_DATA = 4
+# the scaling failed
+SCALING_FAILED = 5
 # the call to perform_validation failed due to other unforeseen reasons
-VALIDATION_FAILED = 5
-# the call to self.data_manager.get_data failed for the current gpi
-NO_GPI_DATA = 6
+VALIDATION_FAILED = 6
+# the call to self.data_manager.get_data returned no data
+NO_GPI_DATA = 7
+# The call to self.data_manager.get_data failed
+DATA_MANAGER_FAILED = 8
 
 
 class ValidationError(Exception):
@@ -45,9 +50,17 @@ class NoTempMatchedDataError(ValidationError):
     return_code = NO_TEMP_MATCHED_DATA
 
 
-class ValidationFailError(ValidationError):
+class ScalingError(ValidationError):
+    return_code = SCALING_FAILED
+
+
+class ValidationFailedError(ValidationError):
     return_code = VALIDATION_FAILED
 
 
 class NoGpiDataError(ValidationError):
     return_code = NO_GPI_DATA
+
+
+class DataManagerError(ValidationError):
+    return_code = DATA_MANAGER_FAILED

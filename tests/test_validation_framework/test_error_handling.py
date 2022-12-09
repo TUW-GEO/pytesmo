@@ -1,13 +1,17 @@
+import pandas as pd
+import numpy as np
 import pytest
 
 from pytesmo.validation_framework.validation import Validation
 from pytesmo.validation_framework.metric_calculators import (
-    PairwiseIntercomparisonMetrics)
+    PairwiseIntercomparisonMetrics,
+)
 from pytesmo.validation_framework.temporal_matchers import (
-    make_combined_temporal_matcher)
+    make_combined_temporal_matcher,
+)
 import pytesmo.validation_framework.error_handling as eh
 
-from .utils import *
+from .utils import create_datasets
 
 
 def test_error_handling_empty_df():
@@ -32,38 +36,22 @@ def test_error_handling_empty_df():
         temporal_matcher=make_combined_temporal_matcher(pd.Timedelta(12, "H")),
     )
     gpis = list(range(npoints))
+    args = (gpis, gpis, gpis)
+    kwargs = dict(rename_cols=False, only_with_reference=True)
 
     for handle_errors in ["ignore", "deprecated"]:
         with pytest.warns(UserWarning, match="No data for dataset 4-missing"):
-            results = val.calc(
-                gpis,
-                gpis,
-                gpis,
-                rename_cols=False,
-                only_with_reference=True,
-                handle_errors=handle_errors)
+            results = val.calc(*args, **kwargs, handle_errors=handle_errors)
         assert results == {}
 
     # 'raise' should raise an error
     with pytest.raises(eh.NoTempMatchedDataError):
         with pytest.warns(UserWarning, match="No data for dataset 4-missing"):
-            results = val.calc(
-                gpis,
-                gpis,
-                gpis,
-                rename_cols=False,
-                only_with_reference=True,
-                handle_errors="raise")
+            results = val.calc(*args, **kwargs, handle_errors="raise")
 
     # 'returncode' should modify the status code, but not raise an error
     with pytest.warns(UserWarning, match="No data for dataset 4-missing"):
-        results = val.calc(
-            gpis,
-            gpis,
-            gpis,
-            rename_cols=False,
-            only_with_reference=True,
-            handle_errors="returncode")
+        results = val.calc(*args, **kwargs, handle_errors="returncode")
     for key in results:
         for metric in results[key]:
             assert len(results[key][metric]) == npoints
@@ -91,38 +79,22 @@ def test_error_handling_nodata():
         temporal_matcher=make_combined_temporal_matcher(pd.Timedelta(12, "H")),
     )
     gpis = list(range(npoints))
+    args = (gpis, gpis, gpis)
+    kwargs = dict(rename_cols=False, only_with_reference=True)
 
     for handle_errors in ["ignore", "deprecated"]:
         with pytest.warns(UserWarning, match="No data for dataset 1-missing"):
-            results = val.calc(
-                gpis,
-                gpis,
-                gpis,
-                rename_cols=False,
-                only_with_reference=True,
-                handle_errors=handle_errors)
+            results = val.calc(*args, **kwargs, handle_errors=handle_errors)
         assert results == {}
 
     # 'raise' should raise an error
     with pytest.raises(eh.NoGpiDataError):
         with pytest.warns(UserWarning, match="No data for dataset 1-missing"):
-            results = val.calc(
-                gpis,
-                gpis,
-                gpis,
-                rename_cols=False,
-                only_with_reference=True,
-                handle_errors="raise")
+            results = val.calc(*args, **kwargs, handle_errors="raise")
 
     # 'returncode' should modify the status code, but not raise an error
     with pytest.warns(UserWarning, match="No data for dataset 1-missing"):
-        results = val.calc(
-            gpis,
-            gpis,
-            gpis,
-            rename_cols=False,
-            only_with_reference=True,
-            handle_errors="returncode")
+        results = val.calc(*args, **kwargs, handle_errors="returncode")
     for key in results:
         for metric in results[key]:
             assert len(results[key][metric]) == npoints
@@ -150,18 +122,14 @@ def test_error_handling_not_enough_data():
         temporal_matcher=make_combined_temporal_matcher(pd.Timedelta(12, "H")),
     )
     gpis = list(range(npoints))
+    args = (gpis, gpis, gpis)
+    kwargs = dict(rename_cols=False, only_with_reference=True)
 
     for handle_errors in ["ignore", "deprecated", "raise", "returncode"]:
         with pytest.warns(
-                UserWarning,
-                match="Not enough observations to calculate metrics."):
-            results = val.calc(
-                gpis,
-                gpis,
-                gpis,
-                rename_cols=False,
-                only_with_reference=True,
-                handle_errors=handle_errors)
+            UserWarning, match="Not enough observations to calculate metrics."
+        ):
+            results = val.calc(*args, **kwargs, handle_errors=handle_errors)
         for key in results:
             for metric in results[key]:
                 assert len(results[key][metric]) == npoints
@@ -186,18 +154,155 @@ def test_error_handling_ok():
         temporal_matcher=make_combined_temporal_matcher(pd.Timedelta(12, "H")),
     )
     gpis = list(range(npoints))
+    args = (gpis, gpis, gpis)
+    kwargs = dict(rename_cols=False, only_with_reference=True)
 
     for handle_errors in ["ignore", "deprecated", "raise", "returncode"]:
-        results = val.calc(
-            gpis,
-            gpis,
-            gpis,
-            rename_cols=False,
-            only_with_reference=True,
-            handle_errors=handle_errors)
+        results = val.calc(*args, **kwargs, handle_errors=handle_errors)
         for key in results:
             for metric in results[key]:
                 assert len(results[key][metric]) == npoints
                 if metric not in ["status", "gpi", "lat", "lon", "n_obs"]:
                     assert np.all(np.isfinite(results[key][metric]))
             assert np.all(results[key]["status"] == eh.OK)
+
+
+def test_error_handling_scaling_failed():
+    # This tests whether a scaling error is raised if the scaling fails due to
+    # insufficient data.
+    n_datasets = 5
+    npoints = 5
+    nsamples = 100
+
+    class BadScaler:
+        def scale(self, data, ref_idx, gpi_info):
+            raise ValueError("This is a test.")
+
+    datasets = create_datasets(n_datasets, npoints, nsamples)
+    metric_calculator = PairwiseIntercomparisonMetrics()
+
+    val = Validation(
+        datasets,
+        scaling=BadScaler(),
+        spatial_ref="0-ERA5",
+        metrics_calculators={(n_datasets, 2): metric_calculator.calc_metrics},
+        temporal_matcher=make_combined_temporal_matcher(pd.Timedelta(12, "H")),
+    )
+    gpis = list(range(npoints))
+    args = (gpis, gpis, gpis)
+    kwargs = dict(rename_cols=False, only_with_reference=True)
+
+    # test if raising raises
+    with pytest.raises(eh.ScalingError, match="Scaling failed"):
+        results = val.calc(*args, **kwargs, handle_errors="raise")
+
+    # test if returncode returns code
+    results = val.calc(*args, **kwargs, handle_errors="returncode")
+    for key in results:
+        for metric in results[key]:
+            assert len(results[key][metric]) == npoints
+            if metric not in ["status", "gpi", "lat", "lon", "n_obs"]:
+                assert np.all(np.isnan(results[key][metric]))
+        assert np.all(results[key]["status"] == eh.SCALING_FAILED)
+
+    # test if ignore ignores, and deprecated is deprecated
+    for handle_errors in ["ignore", "deprecated"]:
+        results = val.calc(*args, **kwargs, handle_errors=handle_errors)
+        for key in results:
+            for metric in results[key]:
+                assert len(results[key][metric]) == npoints
+                if metric not in ["status", "gpi", "lat", "lon", "n_obs"]:
+                    assert np.all(np.isfinite(results[key][metric]))
+            assert np.all(results[key]["status"] == eh.OK)
+
+
+def test_error_handling_temp_matching_failed():
+    # This tests whether a TemporalMatchingError is raised if the matching
+    # fails
+    n_datasets = 5
+    npoints = 5
+    nsamples = 100
+
+    def bad_matching(*args, **kwargs):
+        raise ValueError("This is a test.")
+
+    datasets = create_datasets(n_datasets, npoints, nsamples)
+    metric_calculator = PairwiseIntercomparisonMetrics()
+
+    val = Validation(
+        datasets,
+        spatial_ref="0-ERA5",
+        metrics_calculators={(n_datasets, 2): metric_calculator.calc_metrics},
+        temporal_matcher=bad_matching,
+    )
+    gpis = list(range(npoints))
+    args = (gpis, gpis, gpis)
+    kwargs = dict(rename_cols=False, only_with_reference=True)
+
+    # raise should raise a TemporalMatchingError
+    with pytest.raises(eh.TemporalMatchingError,
+                       match="Temporal matching failed"):
+        results = val.calc(*args, **kwargs, handle_errors="raise")
+
+    # deprecated should raise the original error
+    with pytest.raises(ValueError, match="This is a test."):
+        results = val.calc(*args, **kwargs, handle_errors="deprecated")
+
+    # returncode should just log the correct return code
+    results = val.calc(*args, **kwargs, handle_errors="returncode")
+    for key in results:
+        for metric in results[key]:
+            assert len(results[key][metric]) == npoints
+            if metric not in ["status", "gpi", "lat", "lon", "n_obs"]:
+                assert np.all(np.isnan(results[key][metric]))
+        assert np.all(results[key]["status"] == eh.TEMPORAL_MATCHING_FAILED)
+
+    # ignore should return an empty result
+    results = val.calc(*args, **kwargs, handle_errors="ignore")
+    assert results == {}
+
+
+def test_error_handling_metrics_calculation_failed():
+    # This tests whether a MetricsCalculationError is raised if metrics
+    # calculation fails
+    n_datasets = 5
+    npoints = 5
+    nsamples = 100
+
+    def bad_metrics(data, gpi_info):
+        if len(data) == 0:
+            return {"status": np.int32([-1])}
+        raise ValueError("This is a test.")
+
+    datasets = create_datasets(n_datasets, npoints, nsamples)
+
+    val = Validation(
+        datasets,
+        spatial_ref="0-ERA5",
+        metrics_calculators={(n_datasets, 2): bad_metrics},
+        temporal_matcher=make_combined_temporal_matcher(pd.Timedelta(12, "H")),
+    )
+    gpis = list(range(npoints))
+    args = (gpis, gpis, gpis)
+    kwargs = dict(rename_cols=False, only_with_reference=True)
+
+    # raise should raise the MetricsCalculationError
+    with pytest.raises(eh.MetricsCalculationError,
+                       match="Metrics calculation failed"):
+        results = val.calc(*args, **kwargs, handle_errors="raise")
+
+    # deprecated should raise the original exception
+    with pytest.raises(ValueError,
+                       match="This is a test."):
+        results = val.calc(*args, **kwargs, handle_errors="deprecated")
+
+    # returncode should just log the correct return code
+    results = val.calc(*args, **kwargs, handle_errors="returncode")
+    for key in results:
+        for metric in results[key]:
+            assert len(results[key][metric]) == npoints
+        assert np.all(results[key]["status"] == eh.METRICS_CALCULATION_FAILED)
+
+    # ignore should return an empty result
+    results = val.calc(*args, **kwargs, handle_errors="ignore")
+    assert results == {}
