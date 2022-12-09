@@ -65,7 +65,7 @@ with warnings.catch_warnings():
     warnings.filterwarnings("ignore")
     from ascat.read_native.cdr import AscatGriddedNcTs
 
-from .utils import *
+from .utils import create_datasets
 
 if __name__ != "__main__":
     from tests.test_validation_framework.test_datasets import (
