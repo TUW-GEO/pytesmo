@@ -5,6 +5,11 @@ Changelog
 Unreleased
 ==========
 
+Version 0.14.2, 2022-12-14
+==========================
+- small bug fixes/doc updates (PRs `#273 <https://github.com/TUW-GEO/pytesmo/pull/273>`_, `#275 <https://github.com/TUW-GEO/pytesmo/pull/275>`_, `#276 <https://github.com/TUW-GEO/pytesmo/pull/276>`_,  `#278 <https://github.com/TUW-GEO/pytesmo/pull/278>`_)
+- more consistent error handling (PR `#277 <https://github.com/TUW-GEO/pytesmo/pull/277>`_
+
 Version 0.14.1, 2022-10-25
 ==========================
 - small bug fixes and documentation updates (PRs `#272 <https://github.com/TUW-GEO/pytesmo/pull/272>`_, `#271 <https://github.com/TUW-GEO/pytesmo/pull/271>`_, `#270 <https://github.com/TUW-GEO/pytesmo/pull/270>`_)
