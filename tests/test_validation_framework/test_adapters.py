@@ -268,6 +268,21 @@ def test_column_comb_adapter():
         nptest.assert_equal(ds_mean["xy_mean"].values,
                             (ds_mean["x"] + ds_mean["y"]) / 2.)
 
+    # try an empty DataFrame
+    def read_empty():
+        return pd.DataFrame(columns=['x', 'y'])
+
+    setattr(ds, "read", read_empty)
+    ds_adapted = ColumnCombineAdapter(
+        ds,
+        func=pd.DataFrame.mean,
+        columns=["x", "y"],
+        func_kwargs={'skipna': True},
+        new_name='xy_mean')
+
+    pd.testing.assert_frame_equal(ds_adapted.read(),
+                                  pd.DataFrame(columns=['x', 'y', 'xy_mean']))
+
 
 def test_timestamp_adapter():
     ds = TestDataset("", n=20)
