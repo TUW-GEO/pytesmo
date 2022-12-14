@@ -502,6 +502,12 @@ class ColumnCombineAdapter(BasicAdapter):
 
     def _adapt(self, data: DataFrame) -> DataFrame:
         data = super()._adapt(data)
+
+        # if DataFrame is empty, needs to be returned in expected format
+        if data.empty:
+            data[self.new_name] = None
+            return data
+
         columns = data.columns if self.columns is None else self.columns
         new_col = data[columns].apply(self.func, **self.func_kwargs)
         data[self.new_name] = new_col
