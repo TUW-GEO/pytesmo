@@ -427,8 +427,8 @@ class AnomalyClimAdapter(BasicAdapter):
             ite = self.columns
         for column in ite:
             clim = calc_climatology(data[column], **self.kwargs)
-            anom = calc_anomaly(data[column], climatology=clim,
-                                return_clim=self.return_clim)
+            anom = calc_anomaly(
+                data[column], climatology=clim, return_clim=self.return_clim)
             if self.return_clim:
                 data[column] = anom['anomaly']
                 data[f"{column}_climatology"] = anom['climatology']
@@ -502,6 +502,12 @@ class ColumnCombineAdapter(BasicAdapter):
 
     def _adapt(self, data: DataFrame) -> DataFrame:
         data = super()._adapt(data)
+
+        # if DataFrame is empty, needs to be returned in expected format
+        if data.empty:
+            data[self.new_name] = None
+            return data
+
         columns = data.columns if self.columns is None else self.columns
         new_col = data[columns].apply(self.func, **self.func_kwargs)
         data[self.new_name] = new_col
@@ -613,7 +619,9 @@ class TimestampAdapter(BasicAdapter):
 
         self.drop_original = drop_original
 
-    def convert_generic(self, time_arr: np.array, units: str = 'D') -> np.array:
+    def convert_generic(self,
+                        time_arr: np.array,
+                        units: str = 'D') -> np.array:
         """Convert the generic time field to np.datetime[64] dtype"""
         time_delta = time_arr.astype(int).astype(f'timedelta64[{units}]')
         time_date = np.full(time_delta.shape,
@@ -659,7 +667,8 @@ class TimestampAdapter(BasicAdapter):
             return original
 
         if self.base_time_reference is not None:
-            base_time_values = self.convert_generic(base_time_values, self.base_time_units)
+            base_time_values = self.convert_generic(base_time_values,
+                                                    self.base_time_units)
 
         # If no offset is specified
         if self.time_offset_fields is None:
