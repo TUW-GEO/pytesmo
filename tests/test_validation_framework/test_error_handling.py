@@ -39,19 +39,14 @@ def test_error_handling_empty_df():
     args = (gpis, gpis, gpis)
     kwargs = dict(rename_cols=False, only_with_reference=True)
 
-    for handle_errors in ["ignore", "deprecated"]:
-        with pytest.warns(UserWarning, match="No data for dataset 4-missing"):
-            results = val.calc(*args, **kwargs, handle_errors=handle_errors)
-        assert results == {}
-
     # 'raise' should raise an error
     with pytest.raises(eh.NoTempMatchedDataError):
         with pytest.warns(UserWarning, match="No data for dataset 4-missing"):
             results = val.calc(*args, **kwargs, handle_errors="raise")
 
-    # 'returncode' should modify the status code, but not raise an error
+    # 'ignore' should modify the status code, but not raise an error
     with pytest.warns(UserWarning, match="No data for dataset 4-missing"):
-        results = val.calc(*args, **kwargs, handle_errors="returncode")
+        results = val.calc(*args, **kwargs, handle_errors="ignore")
     for key in results:
         for metric in results[key]:
             assert len(results[key][metric]) == npoints
@@ -82,19 +77,14 @@ def test_error_handling_nodata():
     args = (gpis, gpis, gpis)
     kwargs = dict(rename_cols=False, only_with_reference=True)
 
-    for handle_errors in ["ignore", "deprecated"]:
-        with pytest.warns(UserWarning, match="No data for dataset 1-missing"):
-            results = val.calc(*args, **kwargs, handle_errors=handle_errors)
-        assert results == {}
-
     # 'raise' should raise an error
     with pytest.raises(eh.NoGpiDataError):
         with pytest.warns(UserWarning, match="No data for dataset 1-missing"):
             results = val.calc(*args, **kwargs, handle_errors="raise")
 
-    # 'returncode' should modify the status code, but not raise an error
+    # 'ignore' should modify the status code, but not raise an error
     with pytest.warns(UserWarning, match="No data for dataset 1-missing"):
-        results = val.calc(*args, **kwargs, handle_errors="returncode")
+        results = val.calc(*args, **kwargs, handle_errors="ignore")
     for key in results:
         for metric in results[key]:
             assert len(results[key][metric]) == npoints
@@ -125,7 +115,7 @@ def test_error_handling_not_enough_data():
     args = (gpis, gpis, gpis)
     kwargs = dict(rename_cols=False, only_with_reference=True)
 
-    for handle_errors in ["ignore", "deprecated", "raise", "returncode"]:
+    for handle_errors in ["ignore", "raise"]:
         with pytest.warns(
             UserWarning, match="Not enough observations to calculate metrics."
         ):
@@ -157,7 +147,7 @@ def test_error_handling_ok():
     args = (gpis, gpis, gpis)
     kwargs = dict(rename_cols=False, only_with_reference=True)
 
-    for handle_errors in ["ignore", "deprecated", "raise", "returncode"]:
+    for handle_errors in ["ignore", "raise"]:
         results = val.calc(*args, **kwargs, handle_errors=handle_errors)
         for key in results:
             for metric in results[key]:
@@ -196,24 +186,14 @@ def test_error_handling_scaling_failed():
     with pytest.raises(eh.ScalingError, match="Scaling failed"):
         results = val.calc(*args, **kwargs, handle_errors="raise")
 
-    # test if returncode returns code
-    results = val.calc(*args, **kwargs, handle_errors="returncode")
+    # test if ignore returns code
+    results = val.calc(*args, **kwargs, handle_errors="ignore")
     for key in results:
         for metric in results[key]:
             assert len(results[key][metric]) == npoints
             if metric not in ["status", "gpi", "lat", "lon", "n_obs"]:
                 assert np.all(np.isnan(results[key][metric]))
         assert np.all(results[key]["status"] == eh.SCALING_FAILED)
-
-    # test if ignore ignores, and deprecated is deprecated
-    for handle_errors in ["ignore", "deprecated"]:
-        results = val.calc(*args, **kwargs, handle_errors=handle_errors)
-        for key in results:
-            for metric in results[key]:
-                assert len(results[key][metric]) == npoints
-                if metric not in ["status", "gpi", "lat", "lon", "n_obs"]:
-                    assert np.all(np.isfinite(results[key][metric]))
-            assert np.all(results[key]["status"] == eh.OK)
 
 
 def test_error_handling_temp_matching_failed():
@@ -244,22 +224,14 @@ def test_error_handling_temp_matching_failed():
                        match="Temporal matching failed"):
         results = val.calc(*args, **kwargs, handle_errors="raise")
 
-    # deprecated should raise the original error
-    with pytest.raises(ValueError, match="This is a test."):
-        results = val.calc(*args, **kwargs, handle_errors="deprecated")
-
-    # returncode should just log the correct return code
-    results = val.calc(*args, **kwargs, handle_errors="returncode")
+    # ignore should just log the correct return code
+    results = val.calc(*args, **kwargs, handle_errors="ignore")
     for key in results:
         for metric in results[key]:
             assert len(results[key][metric]) == npoints
             if metric not in ["status", "gpi", "lat", "lon", "n_obs"]:
                 assert np.all(np.isnan(results[key][metric]))
         assert np.all(results[key]["status"] == eh.TEMPORAL_MATCHING_FAILED)
-
-    # ignore should return an empty result
-    results = val.calc(*args, **kwargs, handle_errors="ignore")
-    assert results == {}
 
 
 def test_error_handling_metrics_calculation_failed():
@@ -291,18 +263,9 @@ def test_error_handling_metrics_calculation_failed():
                        match="Metrics calculation failed"):
         results = val.calc(*args, **kwargs, handle_errors="raise")
 
-    # deprecated should raise the original exception
-    with pytest.raises(ValueError,
-                       match="This is a test."):
-        results = val.calc(*args, **kwargs, handle_errors="deprecated")
-
-    # returncode should just log the correct return code
-    results = val.calc(*args, **kwargs, handle_errors="returncode")
+    # ignore should just log the correct return code
+    results = val.calc(*args, **kwargs, handle_errors="ignore")
     for key in results:
         for metric in results[key]:
             assert len(results[key][metric]) == npoints
         assert np.all(results[key]["status"] == eh.METRICS_CALCULATION_FAILED)
-
-    # ignore should return an empty result
-    results = val.calc(*args, **kwargs, handle_errors="ignore")
-    assert results == {}

@@ -227,20 +227,8 @@ class Validation(object):
             Governs how to handle errors::
 
             * `raise`: If an error occurs during validation, raise exception.
-            * `returncode`: If an error occurs, assign the correct return code
-              to the result template and continue with the next GPI. The main
-              difference to `ignore` is that the result for this GPI will still
-              be returned, but the metric values will be set to NaN. `ignore`
-              just completely skips over the GPI and does not return a result
-              for it.
-            * `ignore`: If an error occurs during validation, log it and
-               continue with next GPI.
-            * `deprecated`: Mix of `raise` and `ignore` to reproduce the
-              original behaviour.
-
-            It is recommended to either use `raise` or `returncode`, the other
-            two options are only for reproducing behaviour of older versions of
-            pytesmo.
+            * `ignore`: If an error occurs, assign the correct return code
+              to the result template and continue with the next GPI.
 
         Returns
         -------
@@ -252,23 +240,11 @@ class Validation(object):
 
         """
         handle_errors = handle_errors.lower()
-        error_handling_options = ["raise", "ignore", "deprecated", "returncode"]
+        error_handling_options = ["raise", "ignore"]
         assert handle_errors in error_handling_options, (
             f"'handle_errors' must be one of {error_handling_options}"
         )
 
-        def handle_error_returncode(e, gpi_info):
-            logging.error(f"{gpi_info}: {e}")
-            results = self.dummy_validation_result(
-                gpi_info, rename_cols=rename_cols,
-                only_with_reference=only_with_reference)
-            if isinstance(e, eh.ValidationError):
-                retcode = e.return_code
-            else:
-                retcode = eh.VALIDATION_FAILED
-            for key in results:
-                results[key][0]["status"][0] = retcode
-            return results
 
         if len(args) > 0:
             gpis, lons, lats, args = args_to_iterable(
@@ -286,14 +262,8 @@ class Validation(object):
                         gpi_info[0], gpi_info[1], gpi_info[2]
                     )
                 except Exception as e:
-                    # for these two old options we just raise it as it is,
-                    # because they have not been caught previously, and will
-                    # then be handled later
-                    if handle_errors in ["ignore", "deprecated"]:
-                        raise e
-                    else:
-                        raise eh.DataManagerError(
-                            "Getting the data for gpi {gpi_info} failed!")
+                    raise eh.DataManagerError(
+                        "Getting the data for gpi {gpi_info} failed!")
 
                 # if no data is available continue with the next gpi
                 if len(df_dict) == 0:
@@ -306,19 +276,19 @@ class Validation(object):
                     handle_errors=handle_errors,
                 )
             except Exception as e:
-                if handle_errors == 'ignore':
-                    logging.error(f"{gpi_info}: {e}")
-                    continue
-                elif handle_errors == "deprecated":
-                    if isinstance(e, eh.ValidationError):
-                        logging.error(f"{gpi_info}: {e}")
-                        continue
-                    else:
-                        raise e
-                elif handle_errors == 'raise':
+                if handle_errors == 'raise':
                     raise e
-                elif handle_errors == "returncode":
-                    result = handle_error_returncode(e, gpi_info)
+                elif handle_errors == "ignore":
+                    logging.error(f"{gpi_info}: {e}")
+                    result = self.dummy_validation_result(
+                        gpi_info, rename_cols=rename_cols,
+                        only_with_reference=only_with_reference)
+                    if isinstance(e, eh.ValidationError):
+                        retcode = e.return_code
+                    else:
+                        retcode = eh.VALIDATION_FAILED
+                    for key in result:
+                        result[key][0]["status"][0] = retcode
 
             # add result of one gpi to global results dictionary
             for r in result:
@@ -412,26 +382,29 @@ class Validation(object):
         try:
             matched_n = self.temporal_match_datasets(data_df_dict)
         except Exception:
-            if handle_errors in ["ignore", "deprecated"]:
-                raise
-            else:
-                raise eh.TemporalMatchingError(
-                    f"Temporal matching failed for gpi {gpi_info}!"
-                )
+            raise eh.TemporalMatchingError(
+                f"Temporal matching failed for gpi {gpi_info}!"
+            )
 
         for n, k in self.metrics_c:
+            metrics_calculator = self.metrics_c[(n, k)]
+
+            def dummy_result():
+                # to get only an empty template returned, we pass an
+                # empty dataframe here, with the correct column names
+                dummy_df = pd.DataFrame([], columns=result_ds_names)
+                metrics = metrics_calculator(dummy_df, gpi_info)
+                return metrics
+
             n_matched_data = matched_n[(n, k)]
             if len(n_matched_data) == 0:
                 # this would happen if self.temp_matching returns an empty list
                 # or dictionary for n=n, k=k
-                if handle_errors == "deprecated":
-                    continue
-                else:
-                    raise eh.NoTempMatchedDataError(
-                        f"No temporally matched data for ({n}, {k})"
-                        f" and metric calculator {self.metrics_c[(n,k)]}"
-                        f" for gpi {gpi_info}!"
-                    )
+                raise eh.NoTempMatchedDataError(
+                    f"No temporally matched data for ({n}, {k})"
+                    f" and metric calculator {self.metrics_c[(n,k)]}"
+                    f" for gpi {gpi_info}!"
+                )
             result_names = get_result_combinations(
                 self.data_manager.ds_dict, n=k
             )
@@ -446,14 +419,20 @@ class Validation(object):
                     if self.data_manager.reference_name not in result_ds_names:
                         continue
 
+                if result_key not in results.keys():
+                    results[result_key] = []
+
                 if len(data) == 0:
-                    if handle_errors == "deprecated":
-                        continue
-                    else:
+                    if handle_errors == "raise":
                         raise eh.NoTempMatchedDataError(
                             f"Temporal matching resulted in empty dataset for"
                             f" {result_key} for gpi {gpi_info}"
                         )
+                    else:
+                        metrics = dummy_result()
+                        metrics["status"][0] = eh.NO_TEMP_MATCHED_DATA
+                        results[result_key].append(metrics)
+                        continue
 
                 # at this stage we can drop the column multiindex and just use
                 # the dataset name
@@ -473,16 +452,10 @@ class Validation(object):
                             data, scaling_index, gpi_info
                         )
                     except Exception as e:
-                        if handle_errors == "ignore":
-                            continue
-                        if (handle_errors == "deprecated"
-                                and isinstance(e, ValueError)):
-                            continue
-                        else:
-                            raise eh.ScalingError(
-                                f"Scaling failed for {result_key} for gpi"
-                                f" {gpi_info}!"
-                            )
+                        raise eh.ScalingError(
+                            f"Scaling failed for {result_key} for gpi"
+                            f" {gpi_info}!"
+                        )
 
                     # Drop the scaling reference if it was not in the intended
                     # results
@@ -496,26 +469,17 @@ class Validation(object):
                         rename_dict[r[0]] = f"k{i}" if i > 0 else "ref"
                     data.rename(columns=rename_dict, inplace=True)
 
-                if result_key not in results.keys():
-                    results[result_key] = []
-
-                metrics_calculator = self.metrics_c[(n, k)]
                 used_data[result_key] = data
                 try:
                     metrics = metrics_calculator(data, gpi_info)
                 except Exception:
-                    if handle_errors in ["deprecated", "ignore"]:
-                        raise
-                    elif handle_errors == "raise":
+                    if handle_errors == "raise":
                         raise eh.MetricsCalculationError(
                             f"Metrics calculation failed for {result_key}"
                             f" for gpi {gpi_info}!"
                         )
                     else:
-                        # to get only an empty template returned, we pass an
-                        # empty dataframe here, with the correct column names
-                        dummy_df = pd.DataFrame([], columns=result_ds_names)
-                        metrics = metrics_calculator(dummy_df, gpi_info)
+                        metrics = dummy_result()
                         metrics["status"][0] = eh.METRICS_CALCULATION_FAILED
                 results[result_key].append(metrics)
 

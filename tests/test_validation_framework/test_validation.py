@@ -523,7 +523,23 @@ def test_validation_error_n2_k2():
 
 
 def test_validation_n3_k2_temporal_matching_no_matches():
-    tst_results = {}
+    tst_results = {
+        (("DS1", "x"), ("DS2", "y")): {
+            'gpi': np.array([4], dtype=np.int32),
+            'lon': np.array([4.]),
+            'lat': np.array([4.]),
+            'status': np.array([eh.NO_TEMP_MATCHED_DATA], dtype=np.int32),
+            'n_obs': np.array([0], dtype=np.int32),
+            'R': np.array([np.nan], dtype=np.float32),
+            'p_R': np.array([np.nan], dtype=np.float32),
+            'rho': np.array([np.nan], dtype=np.float32),
+            'p_rho': np.array([np.nan], dtype=np.float32),
+            'RMSD': np.array([np.nan], dtype=np.float32),
+            'BIAS': np.array([np.nan], dtype=np.float32),
+            'tau': np.array([np.nan], dtype=np.float32),
+            'p_tau': np.array([np.nan], dtype=np.float32)
+        }
+    }
 
     datasets = setup_two_without_overlap()
 
@@ -545,16 +561,14 @@ def test_validation_n3_k2_temporal_matching_no_matches():
         },
     )
 
-    # new behaviour
     jobs = process.get_processing_jobs()
     for job in jobs:
         with pytest.raises(eh.NoTempMatchedDataError):
             results = process.calc(*job, handle_errors="raise")
 
-    # old behaviour
     jobs = process.get_processing_jobs()
     for job in jobs:
-        results = process.calc(*job, handle_errors="deprecated")
+        results = process.calc(*job, handle_errors="ignore")
         assert sorted(list(results)) == sorted(list(tst_results))
 
 
@@ -781,21 +795,26 @@ def test_validation_n3_k2():
 
 
 def test_validation_n3_k2_temporal_matching_no_matches2():
+
+    empty_result = {
+        'gpi': np.array([4], dtype=np.int32),
+        'lon': np.array([4.]),
+        'lat': np.array([4.]),
+        'status': np.array([eh.NO_TEMP_MATCHED_DATA], dtype=np.int32),
+        'n_obs': np.array([0], dtype=np.int32),
+        'R': np.array([np.nan], dtype=np.float32),
+        'p_R': np.array([np.nan], dtype=np.float32),
+        'rho': np.array([np.nan], dtype=np.float32),
+        'p_rho': np.array([np.nan], dtype=np.float32),
+        'RMSD': np.array([np.nan], dtype=np.float32),
+        'BIAS': np.array([np.nan], dtype=np.float32),
+        'tau': np.array([np.nan], dtype=np.float32),
+        'p_tau': np.array([np.nan], dtype=np.float32)
+    }
+
+    # only DS1 and DS3 overlap, so we only get two valid results
     tst_results = {
-        (("DS1", "x"), ("DS3", "y")): {
-            "n_obs": np.array([1000], dtype=np.int32),
-            "tau": np.array([np.nan], dtype=np.float32),
-            "gpi": np.array([4], dtype=np.int32),
-            "RMSD": np.array([0.0], dtype=np.float32),
-            "lon": np.array([4.0]),
-            "p_tau": np.array([np.nan], dtype=np.float32),
-            "BIAS": np.array([0.0], dtype=np.float32),
-            "p_rho": np.array([0.0], dtype=np.float32),
-            "rho": np.array([1.0], dtype=np.float32),
-            "lat": np.array([4.0]),
-            "R": np.array([1.0], dtype=np.float32),
-            "p_R": np.array([0.0], dtype=np.float32),
-        },
+        (("DS1", "x"), ("DS2", "y")): empty_result,
         (("DS1", "x"), ("DS3", "x")): {
             "n_obs": np.array([1000], dtype=np.int32),
             "tau": np.array([np.nan], dtype=np.float32),
@@ -810,6 +829,22 @@ def test_validation_n3_k2_temporal_matching_no_matches2():
             "R": np.array([1.0], dtype=np.float32),
             "p_R": np.array([0.0], dtype=np.float32),
         },
+        (("DS1", "x"), ("DS3", "y")): {
+            "n_obs": np.array([1000], dtype=np.int32),
+            "tau": np.array([np.nan], dtype=np.float32),
+            "gpi": np.array([4], dtype=np.int32),
+            "RMSD": np.array([0.0], dtype=np.float32),
+            "lon": np.array([4.0]),
+            "p_tau": np.array([np.nan], dtype=np.float32),
+            "BIAS": np.array([0.0], dtype=np.float32),
+            "p_rho": np.array([0.0], dtype=np.float32),
+            "rho": np.array([1.0], dtype=np.float32),
+            "lat": np.array([4.0]),
+            "R": np.array([1.0], dtype=np.float32),
+            "p_R": np.array([0.0], dtype=np.float32),
+        },
+        (("DS2", "y"), ("DS3", "x")): empty_result,
+        (("DS2", "y"), ("DS3", "y")): empty_result,
     }
 
     datasets = setup_three_with_two_overlapping()
@@ -831,13 +866,11 @@ def test_validation_n3_k2_temporal_matching_no_matches2():
         },
     )
 
-    # old behaviour
     jobs = process.get_processing_jobs()
     for job in jobs:
-        results = process.calc(*job, handle_errors="deprecated")
+        results = process.calc(*job, handle_errors="ignore")
         assert sorted(list(results)) == sorted(list(tst_results))
 
-    # new behaviour
     jobs = process.get_processing_jobs()
     for job in jobs:
         with pytest.raises(eh.NoTempMatchedDataError):
