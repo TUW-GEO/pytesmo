@@ -94,7 +94,7 @@ def test_MetadataMetrics_calculator():
     metriccalc = MetadataMetrics(other_name="k1")
     res = metriccalc.calc_metrics(data, gpi_info=(0, 0, 0))
 
-    assert sorted(list(res.keys())) == sorted(["gpi", "lon", "lat"])
+    assert sorted(list(res.keys())) == sorted(["gpi", "lon", "lat", "status"])
 
     metadata_dict_template = {
         "network": np.array(["None"], dtype="U256"),

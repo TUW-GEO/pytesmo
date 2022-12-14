@@ -40,6 +40,7 @@ import pytest
 import tempfile
 import warnings
 import pandas as pd
+import pytest
 
 import pygeogrids.grids as grids
 from pygeobase.io_base import GriddedTsBase
@@ -51,6 +52,7 @@ from pytesmo.validation_framework.data_manager import DataManager
 from pytesmo.validation_framework.results_manager import PointDataResults
 from pytesmo.validation_framework.validation import Validation
 from pytesmo.validation_framework.validation import args_to_iterable
+import pytesmo.validation_framework.error_handling as eh
 
 from pytesmo.validation_framework.metric_calculators import (
     PairwiseIntercomparisonMetrics)
@@ -62,6 +64,8 @@ from ismn.interface import ISMN_Interface
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore")
     from ascat.read_native.cdr import AscatGriddedNcTs
+
+from .utils import create_datasets
 
 if __name__ != "__main__":
     from tests.test_validation_framework.test_datasets import (
@@ -147,7 +151,7 @@ def check_results(
         vars_should = [
             u"n_obs", u"tau", u"gpi", u"RMSD", u"lon", u"p_tau", u"BIAS",
             u"p_rho", u"rho", u"lat", u"R", u"p_R", u"time", u"idx",
-            u"_row_size"
+            u"_row_size", u"status"
         ]
 
     with nc.Dataset(filename, mode="r") as results:
@@ -379,7 +383,7 @@ def test_ascat_ismn_validation_metadata(ascat_reader, ismn_reader):
     vars_should = [
         'BIAS', 'R', 'RMSD', '_row_size', 'climate', 'gpi', 'idx', 'landcover',
         'lat', 'lon', 'n_obs', 'network', 'p_R', 'p_rho', 'p_tau', 'rho',
-        'station', 'tau', 'time'
+        'station', 'tau', 'time', 'status'
     ]
 
     check_results(
@@ -519,7 +523,23 @@ def test_validation_error_n2_k2():
 
 
 def test_validation_n3_k2_temporal_matching_no_matches():
-    tst_results = {}
+    tst_results = {
+        (("DS1", "x"), ("DS2", "y")): {
+            'gpi': np.array([4], dtype=np.int32),
+            'lon': np.array([4.]),
+            'lat': np.array([4.]),
+            'status': np.array([eh.NO_TEMP_MATCHED_DATA], dtype=np.int32),
+            'n_obs': np.array([0], dtype=np.int32),
+            'R': np.array([np.nan], dtype=np.float32),
+            'p_R': np.array([np.nan], dtype=np.float32),
+            'rho': np.array([np.nan], dtype=np.float32),
+            'p_rho': np.array([np.nan], dtype=np.float32),
+            'RMSD': np.array([np.nan], dtype=np.float32),
+            'BIAS': np.array([np.nan], dtype=np.float32),
+            'tau': np.array([np.nan], dtype=np.float32),
+            'p_tau': np.array([np.nan], dtype=np.float32)
+        }
+    }
 
     datasets = setup_two_without_overlap()
 
@@ -543,7 +563,12 @@ def test_validation_n3_k2_temporal_matching_no_matches():
 
     jobs = process.get_processing_jobs()
     for job in jobs:
-        results = process.calc(*job)
+        with pytest.raises(eh.NoTempMatchedDataError):
+            results = process.calc(*job, handle_errors="raise")
+
+    jobs = process.get_processing_jobs()
+    for job in jobs:
+        results = process.calc(*job, handle_errors="ignore")
         assert sorted(list(results)) == sorted(list(tst_results))
 
 
@@ -770,21 +795,26 @@ def test_validation_n3_k2():
 
 
 def test_validation_n3_k2_temporal_matching_no_matches2():
+
+    empty_result = {
+        'gpi': np.array([4], dtype=np.int32),
+        'lon': np.array([4.]),
+        'lat': np.array([4.]),
+        'status': np.array([eh.NO_TEMP_MATCHED_DATA], dtype=np.int32),
+        'n_obs': np.array([0], dtype=np.int32),
+        'R': np.array([np.nan], dtype=np.float32),
+        'p_R': np.array([np.nan], dtype=np.float32),
+        'rho': np.array([np.nan], dtype=np.float32),
+        'p_rho': np.array([np.nan], dtype=np.float32),
+        'RMSD': np.array([np.nan], dtype=np.float32),
+        'BIAS': np.array([np.nan], dtype=np.float32),
+        'tau': np.array([np.nan], dtype=np.float32),
+        'p_tau': np.array([np.nan], dtype=np.float32)
+    }
+
+    # only DS1 and DS3 overlap, so we only get two valid results
     tst_results = {
-        (("DS1", "x"), ("DS3", "y")): {
-            "n_obs": np.array([1000], dtype=np.int32),
-            "tau": np.array([np.nan], dtype=np.float32),
-            "gpi": np.array([4], dtype=np.int32),
-            "RMSD": np.array([0.0], dtype=np.float32),
-            "lon": np.array([4.0]),
-            "p_tau": np.array([np.nan], dtype=np.float32),
-            "BIAS": np.array([0.0], dtype=np.float32),
-            "p_rho": np.array([0.0], dtype=np.float32),
-            "rho": np.array([1.0], dtype=np.float32),
-            "lat": np.array([4.0]),
-            "R": np.array([1.0], dtype=np.float32),
-            "p_R": np.array([0.0], dtype=np.float32),
-        },
+        (("DS1", "x"), ("DS2", "y")): empty_result,
         (("DS1", "x"), ("DS3", "x")): {
             "n_obs": np.array([1000], dtype=np.int32),
             "tau": np.array([np.nan], dtype=np.float32),
@@ -799,6 +829,22 @@ def test_validation_n3_k2_temporal_matching_no_matches2():
             "R": np.array([1.0], dtype=np.float32),
             "p_R": np.array([0.0], dtype=np.float32),
         },
+        (("DS1", "x"), ("DS3", "y")): {
+            "n_obs": np.array([1000], dtype=np.int32),
+            "tau": np.array([np.nan], dtype=np.float32),
+            "gpi": np.array([4], dtype=np.int32),
+            "RMSD": np.array([0.0], dtype=np.float32),
+            "lon": np.array([4.0]),
+            "p_tau": np.array([np.nan], dtype=np.float32),
+            "BIAS": np.array([0.0], dtype=np.float32),
+            "p_rho": np.array([0.0], dtype=np.float32),
+            "rho": np.array([1.0], dtype=np.float32),
+            "lat": np.array([4.0]),
+            "R": np.array([1.0], dtype=np.float32),
+            "p_R": np.array([0.0], dtype=np.float32),
+        },
+        (("DS2", "y"), ("DS3", "x")): empty_result,
+        (("DS2", "y"), ("DS3", "y")): empty_result,
     }
 
     datasets = setup_three_with_two_overlapping()
@@ -822,8 +868,13 @@ def test_validation_n3_k2_temporal_matching_no_matches2():
 
     jobs = process.get_processing_jobs()
     for job in jobs:
-        results = process.calc(*job)
+        results = process.calc(*job, handle_errors="ignore")
         assert sorted(list(results)) == sorted(list(tst_results))
+
+    jobs = process.get_processing_jobs()
+    for job in jobs:
+        with pytest.raises(eh.NoTempMatchedDataError):
+            results = process.calc(*job, handle_errors="raise")
 
 
 def test_validation_n3_k2_masking_no_data_remains():
@@ -1109,7 +1160,7 @@ def test_ascat_ismn_validation_metadata_rolling(ascat_reader, ismn_reader):
     }
     vars_should = [
         u"gpi", u"RMSD", u"lon", u"lat", u"R", u"p_R", u"time", u"idx",
-        u"_row_size"
+        u"_row_size", u"status"
     ]
     for key, value in metadata_dict_template.items():
         vars_should.append(key)
@@ -1192,94 +1243,6 @@ def test_args_to_iterable_mixed_strings():
 #######################################################################
 # Tests for new temporal matcher & metric calculators
 #######################################################################
-
-
-def create_correlated_data(n_datasets, n, r):
-    """Creates n_datasets random timeseries with specified correlation"""
-    C = np.ones((n_datasets, n_datasets)) * r
-    for i in range(n_datasets):
-        C[i, i] = 1
-    A = np.linalg.cholesky(C)
-
-    return (A @ np.random.randn(n_datasets, n)).T
-
-
-class DummyReader:
-
-    def __init__(self, dfs, name):
-        self.data = [pd.DataFrame(dfs[i][name]) for i in range(len(dfs))]
-
-    def read(self, gpi, *args, **kwargs):
-        return self.data[gpi]
-
-
-class DummyNoneReader:
-
-    def __init__(self, dfs, name):
-        self.data = [pd.DataFrame(dfs[i][name]) for i in range(len(dfs))]
-
-    def read(self, gpi, *args, **kwargs):
-        names = self.data[gpi].columns
-        return pd.DataFrame(np.zeros((0, len(names))), columns=names)
-
-
-def create_datasets(n_datasets, npoints, nsamples, missing=False):
-    """
-    Creates three datasets with given number of points to compare, each
-    having number of samples given
-    """
-    dfs = []
-    for gpi in range(npoints):
-        r = np.random.rand()
-        data = create_correlated_data(n_datasets, nsamples, r)
-        index = pd.date_range("1980", periods=nsamples, freq="D")
-        dfs.append(
-            pd.DataFrame(
-                data,
-                index=index,
-                columns=(["refcol"] +
-                         [f"other{i}col" for i in range(1, n_datasets)])))
-
-    datasets = {}
-    datasets["0-ERA5"] = {
-        "columns": ["refcol"],
-        "class": DummyReader(dfs, "refcol")
-    }
-    for i in range(1, n_datasets - 1):
-        datasets[f"{i}-ESA_CCI_SM_combined"] = {
-            "columns": [f"other{i}col"],
-            "class": DummyReader(dfs, f"other{i}col")
-        }
-    if missing:
-        datasets[f"{n_datasets - 1}-missing"] = {
-            "columns": [f"other{n_datasets - 1}col"],
-            "class": DummyNoneReader(dfs, f"other{n_datasets - 1}col")
-        }
-    else:
-        datasets[f"{n_datasets - 1}-ESA_CCI_SM_combined"] = {
-            "columns": [f"other{n_datasets - 1}col"],
-            "class": DummyReader(dfs, f"other{n_datasets - 1}col")
-        }
-    return datasets
-
-
-def test_missing_data():
-    n_datasets = 5
-    npoints = 5
-    nsamples = 100
-
-    datasets = create_datasets(n_datasets, npoints, nsamples, missing=True)
-
-    metric_calculator = PairwiseIntercomparisonMetrics()
-
-    val = Validation(
-        datasets,
-        spatial_ref="0-ERA5",
-        metrics_calculators={(n_datasets, 2): metric_calculator.calc_metrics},
-        temporal_matcher=make_combined_temporal_matcher(pd.Timedelta(12, "H")),
-    )
-    gpis = list(range(npoints))
-    val.calc(gpis, gpis, gpis, rename_cols=False, only_with_reference=True)
 
 
 def test_combined_matching_scaling():

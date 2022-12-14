@@ -39,6 +39,7 @@ import pytesmo.metrics as metrics
 import pytesmo.df_metrics as df_metrics
 from pytesmo.scaling import scale
 from pytesmo.validation_framework.data_manager import get_result_names
+import pytesmo.validation_framework.error_handling as eh
 from pytesmo.df_metrics import n_combinations
 from pytesmo.metrics import (
     pairwise,
@@ -178,6 +179,7 @@ class MetadataMetrics(object):
             "gpi": np.int32([-1]),
             "lon": np.float64([np.nan]),
             "lat": np.float64([np.nan]),
+            "status": np.int32([eh.UNCAUGHT]),
         }
 
         self.metadata_template = metadata_template
@@ -299,6 +301,7 @@ class BasicMetrics(MetadataMetrics):
         dataset = super(BasicMetrics, self).calc_metrics(data, gpi_info)
 
         if len(data) < self.min_obs:
+            dataset["status"][0] = eh.INSUFFICIENT_DATA
             return dataset
 
         x, y = data["ref"].values, data[self.other_name].values
@@ -317,6 +320,7 @@ class BasicMetrics(MetadataMetrics):
             tau, p_tau = metrics.kendalltau(x, y)
             dataset["tau"][0], dataset["p_tau"][0] = tau, p_tau
 
+        dataset["status"][0] = eh.OK
         return dataset
 
 
@@ -338,7 +342,10 @@ class BasicMetricsPlusMSE(BasicMetrics):
         dataset = super(BasicMetricsPlusMSE, self).calc_metrics(
             data, gpi_info
         )
+        # setting back to uncaught in case something goes wrong
+        dataset["status"][0] = eh.UNCAUGHT
         if len(data) < self.min_obs:
+            dataset["status"][0] = eh.INSUFFICIENT_DATA
             return dataset
         x, y = data["ref"].values, data[self.other_name].values
         mse, mse_corr, mse_bias, mse_var = metrics.mse_decomposition(x, y)
@@ -346,7 +353,7 @@ class BasicMetricsPlusMSE(BasicMetrics):
         dataset["mse_corr"][0] = mse_corr
         dataset["mse_bias"][0] = mse_bias
         dataset["mse_var"][0] = mse_var
-
+        dataset["status"][0] = eh.OK
         return dataset
 
 
@@ -406,6 +413,7 @@ class FTMetrics(MetadataMetrics):
         dataset = super(FTMetrics, self).calc_metrics(data, gpi_info)
 
         if len(data) < self.min_obs:
+            dataset["status"][0] = eh.INSUFFICIENT_DATA
             return dataset
 
         ssf, temp = data["ref"].values, data[self.other_name].values
@@ -434,6 +442,7 @@ class FTMetrics(MetadataMetrics):
 
         dataset["n_obs"][0] = len(data)
 
+        dataset["status"][0] = eh.OK
         return dataset
 
 
@@ -624,6 +633,7 @@ class HSAF_Metrics(MetadataMetrics):
                     0
                 ] = ubRMSD
 
+        dataset["status"][0] = eh.OK
         return dataset
 
 
@@ -784,10 +794,11 @@ class IntercomparisonMetrics(MetadataMetrics):
         subset = np.ones(len(data), dtype=bool)
 
         n_obs = subset.sum()
+        dataset["n_obs"][0] = n_obs
         if n_obs < self.min_obs:
+            dataset["status"][0] = eh.INSUFFICIENT_DATA
             return dataset
 
-        dataset["n_obs"][0] = n_obs
 
         # make sure we have the correct order
         data = data[self.df_columns]
@@ -908,6 +919,7 @@ class IntercomparisonMetrics(MetadataMetrics):
                     0
                 ] = p_tau
 
+        dataset["status"][0] = eh.OK
         return dataset
 
 
@@ -1129,10 +1141,11 @@ class TCMetrics(MetadataMetrics):
         subset = np.ones(len(data), dtype=bool)
 
         n_obs = subset.sum()
+        dataset["n_obs"][0] = n_obs
         if n_obs < self.min_obs:
+            dataset["status"][0] = eh.INSUFFICIENT_DATA
             return dataset
 
-        dataset["n_obs"][0] = n_obs
 
         # calculate Pearson correlation
         pearson_R, pearson_p = df_metrics.pearsonr(data)
@@ -1269,6 +1282,7 @@ class TCMetrics(MetadataMetrics):
                     0
                 ] = p_tau
 
+        dataset["status"][0] = eh.OK
         return dataset
 
 
@@ -1326,6 +1340,7 @@ class RollingMetrics(MetadataMetrics):
         dataset = super(RollingMetrics, self).calc_metrics(data, gpi_info)
 
         if len(data) < self.min_obs:
+            dataset["status"][0] = eh.INSUFFICIENT_DATA
             return dataset
 
         xy = data.to_numpy()
@@ -1347,6 +1362,7 @@ class RollingMetrics(MetadataMetrics):
         dataset["p_R"] = np.array([pr_arr[:, 1]])
         dataset["RMSD"] = np.array([rmsd_arr[:]])
 
+        dataset["status"][0] = eh.OK
         return dataset
 
 
@@ -1626,6 +1642,7 @@ class PairwiseIntercomparisonMetrics(MetadataMetrics, PairwiseMetricsMixin):
         n_obs = len(data)
         result["n_obs"][0] = n_obs
         if n_obs < self.min_obs:
+            result["status"][0] = eh.INSUFFICIENT_DATA
             warnings.warn(
                 "Not enough observations to calculate metrics.", UserWarning
             )
@@ -1638,6 +1655,7 @@ class PairwiseIntercomparisonMetrics(MetadataMetrics, PairwiseMetricsMixin):
         # we can calculate almost all metrics from moments
         mx, my, varx, vary, cov = _moments_welford(x, y)
         self._calc_pairwise_metrics(x, y, mx, my, varx, vary, cov, result)
+        result["status"][0] = eh.OK
         return result
 
 
@@ -1664,8 +1682,6 @@ class TripleCollocationMetrics(MetadataMetrics, PairwiseMetricsMixin):
         will also be used to name the results. **Make sure that you set
         ``rename_cols=False`` in the call to ``Validation.calc``, otherwise the
         names will be wrong.**
-    othernames : list
-        List of the names of the other datasets (>=2).
     min_obs : int, optional
         Minimum number of observations required to calculate metrics. Default
         is 10.
@@ -1748,6 +1764,7 @@ class TripleCollocationMetrics(MetadataMetrics, PairwiseMetricsMixin):
         result.update(self._get_metric_template(self.refname, othernames))
 
         if n_obs < self.min_obs:
+            result["status"][0] = eh.INSUFFICIENT_DATA
             warnings.warn(
                 "Not enough observations to calculate metrics.", UserWarning
             )
@@ -1776,4 +1793,5 @@ class TripleCollocationMetrics(MetadataMetrics, PairwiseMetricsMixin):
             except ValueError:
                 # if the calculation fails, the template results (np.nan) are used
                 pass
+        result["status"][0] = eh.OK
         return result
