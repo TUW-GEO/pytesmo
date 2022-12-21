@@ -65,7 +65,9 @@ class DataManager(MixinReadTs):
                 Maximum allowed distance in meters for the lut calculation.
                 default: None
     ref_name : string
-        Name of the reference dataset
+        Name of the reference dataset. The reference dataset is used as spatial
+        reference, i.e. all other dataset will be interpolated to the locations
+        of the reference dataset.
     period : list, optional
         Of type [datetime start, datetime end]. If given then the two input
         datasets will be truncated to start <= dates <= end.
