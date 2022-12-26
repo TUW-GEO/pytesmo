@@ -323,7 +323,10 @@ cpdef _pearsonr_from_moments(floating varx, floating vary, floating cov, int n):
     cdef floating R, p_R, t_squared, df, z
 
     # due to rounding errors, values slightly above 1 are possible
-    R = min(cov / sqrt(varx * vary), 1)
+    if varx == 0 or vary == 0:
+        R = 0
+    else:
+        R = max(-1, min(cov / sqrt(varx * vary), 1))
 
     # p-value for R
     if fabs(R) == 1.0:

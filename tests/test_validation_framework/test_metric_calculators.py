@@ -627,8 +627,8 @@ def testdata_known_results():
     expected = {
         (("plus2_name", "plus2"), ("reference_name", "reference")): {
             "n_obs": n - 1,
-            "R": np.nan,
-            "p_R": np.nan,
+            "R": 0,
+            "p_R": 1,
             "BIAS": 2,
             "RMSD": 2,
             "mse": 4,
@@ -643,8 +643,8 @@ def testdata_known_results():
         },
         (("minus4_name", "minus4"), ("reference_name", "reference")): {
             "n_obs": n - 1,
-            "R": np.nan,
-            "p_R": np.nan,
+            "R": 0,
+            "p_R": 1,
             "BIAS": -4,
             "RMSD": 4,
             "mse": 16,
@@ -659,8 +659,8 @@ def testdata_known_results():
         },
         (("plus1_name", "plus1"), ("reference_name", "reference")): {
             "n_obs": n - 1,
-            "R": np.nan,
-            "p_R": np.nan,
+            "R": 0,
+            "p_R": 1,
             "BIAS": 1,
             "RMSD": 1,
             "mse": 1,
@@ -900,22 +900,27 @@ def test_PairwiseIntercomparisonMetrics(testdata_generator, seas_metrics):
             else:
                 seas = None
                 old_m_key = f"{m}_between_{refname}_and_{othername}"
+            val = res[(seas, m)] if seas else res[m]
             if m == "BIAS":
                 # PairwiseIntercomparisonMetrics has the result as (other,
                 # ref), and therefore "bias between other and ref", compared to
                 # "bias between ref and bias" in IntercomparisonMetrics
                 # this is related to issue #220
-                assert_equal(
-                    np.abs(res[(seas, m)] if seas else res[m]),
-                    np.abs(res_old[old_m_key]),
-                )
+                assert_equal(np.abs(val), np.abs(res_old[old_m_key]))
             elif m == "urmsd":
                 # the old implementation differs from the new implementation
                 pass
+            elif m == "R" and m == "p_R" and res:
+                # the old implementation differs from the new implementation
+                pass
             else:
-                assert_equal(
-                    res[(seas, m)] if seas else res[m], res_old[old_m_key]
-                )
+                R = res[(seas, "R")] if seas else res["R"]
+                if (m == "R" or m == "p_R") and R == 0:
+                    # the case of constant input arrays is captured by the new
+                    # implementation but not the old
+                    pass
+                else:
+                    assert_equal(val, res_old[old_m_key])
 
 
 def test_PairwiseIntercomparisonMetrics_confidence_intervals():
