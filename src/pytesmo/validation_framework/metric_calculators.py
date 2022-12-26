@@ -1473,7 +1473,7 @@ class PairwiseMetricsMixin:
         mse_corr = _mse_corr_from_moments(mx, my, varx, vary, cov)
         mse_var = _mse_var_from_moments(mx, my, varx, vary, cov)
         mse_bias = _mse_bias_from_moments(mx, my, varx, vary, cov)
-        mse = mse_corr + mse_var + mse_bias
+        mse = max(mse_corr + mse_var + mse_bias, 0)
         result["mse_corr" + suffix][0] = mse_corr
         result["mse_var" + suffix][0] = mse_var
         result["mse_bias" + suffix][0] = mse_bias

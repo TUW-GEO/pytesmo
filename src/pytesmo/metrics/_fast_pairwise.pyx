@@ -132,7 +132,7 @@ cpdef mse_corr(floating [:] x, floating [:] y):
 cpdef _mse_corr_from_moments(
     floating mx, floating my, floating vx, floating vy, floating cov
 ):
-    return 2 * sqrt(vx) * sqrt(vy) - 2 * cov
+    return max(2 * sqrt(vx) * sqrt(vy) - 2 * cov, 0)
 
 
 
@@ -322,7 +322,8 @@ cpdef _ubrmsd(floating [:] x, floating [:] y):
 cpdef _pearsonr_from_moments(floating varx, floating vary, floating cov, int n):
     cdef floating R, p_R, t_squared, df, z
 
-    R = cov / sqrt(varx * vary)
+    # due to rounding errors, values slightly above 1 are possible
+    R = min(cov / sqrt(varx * vary), 1)
 
     # p-value for R
     if fabs(R) == 1.0:

@@ -20,7 +20,8 @@ METRICS_CALCULATION_FAILED = 2
 # Failure in temporal matching
 TEMPORAL_MATCHING_FAILED = 3
 # Temporal matching returned without error, but the data we need is not
-# available
+# available. This can happen if there is no temporal overlap of the required
+# datasets, or if there is no data at all for one of the required datasets.
 NO_TEMP_MATCHED_DATA = 4
 # the scaling failed
 SCALING_FAILED = 5
