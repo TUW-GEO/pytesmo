@@ -5,6 +5,10 @@ Changelog
 Unreleased
 ==========
 
+Version 0.14.3, 2022-12-26
+==========================
+- fixing rounding error issues in metric calculations (PR `#281 <https://github.com/TUW-GEO/pytesmo/pull/281>`_)
+
 Version 0.14.2, 2022-12-14
 ==========================
 - small bug fixes/doc updates (PRs `#273 <https://github.com/TUW-GEO/pytesmo/pull/273>`_, `#275 <https://github.com/TUW-GEO/pytesmo/pull/275>`_, `#276 <https://github.com/TUW-GEO/pytesmo/pull/276>`_,  `#278 <https://github.com/TUW-GEO/pytesmo/pull/278>`_)
