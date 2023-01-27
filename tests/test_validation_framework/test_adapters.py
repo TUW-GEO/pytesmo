@@ -103,6 +103,59 @@ def test_advanced_masking_adapter():
         data_masked = ds_mask.read_ts()
 
 
+def test_advanced_masking_adapter_nans_ignored():
+    ds = TestDataset("", n=20)
+    # introduce nan
+    ts = ds.read()
+    ts.iloc[7]["x"] = np.nan
+
+    def _read():
+        return ts
+
+    setattr(ds, "read", _read)
+
+    # the NaN in the flag field (x) is filtered out normally
+    ds_mask = AdvancedMaskingAdapter(
+        ds,
+        [
+            ("x", ">=", 5),
+            ("x", "<", 15),
+        ],
+    )
+
+    data_masked = ds_mask.read_ts()
+    data_masked2 = ds_mask.read()
+
+    ref_x = np.array([5., 6., 8., 9., 10., 11., 12., 13., 14.])
+    ref_y = ref_x * 0.5
+
+    nptest.assert_almost_equal(data_masked["x"].values, ref_x)
+    nptest.assert_almost_equal(data_masked2["x"].values, ref_x)
+    nptest.assert_almost_equal(data_masked["y"].values, ref_y)
+    nptest.assert_almost_equal(data_masked2["y"].values, ref_y)
+
+    # the NaN is now ignored
+    ds_mask = AdvancedMaskingAdapter(
+        ds,
+        [
+            ("x", ">=", 5),
+            ("x", "<", 15),
+        ],
+        ignore_nans=True,
+    )
+
+    data_masked = ds_mask.read_ts()
+    data_masked2 = ds_mask.read()
+
+    ref_x = np.array([5., 6., np.nan, 8., 9., 10., 11., 12., 13., 14.])
+    ref_y = np.arange(5, 15) * 0.5
+
+    nptest.assert_almost_equal(data_masked["x"].values, ref_x)
+    nptest.assert_almost_equal(data_masked2["x"].values, ref_x)
+    nptest.assert_almost_equal(data_masked["y"].values, ref_y)
+    nptest.assert_almost_equal(data_masked2["y"].values, ref_y)
+
+
 def test_anomaly_adapter():
     ds = TestDataset("", n=20)
     ds_anom = AnomalyAdapter(ds)
