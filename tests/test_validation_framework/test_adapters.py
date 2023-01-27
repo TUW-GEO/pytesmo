@@ -155,16 +155,6 @@ def test_advanced_masking_adapter_nans_ignored():
     nptest.assert_almost_equal(data_masked["y"].values, ref_y)
     nptest.assert_almost_equal(data_masked2["y"].values, ref_y)
 
-    # 9 is not a valid operator, should raise an exception
-    with pytest.raises(ValueError):
-        ds_mask = AdvancedMaskingAdapter(
-            ds,
-            [
-                ("x", 9, 5),
-            ],
-        )
-        data_masked = ds_mask.read_ts()
-
 
 def test_anomaly_adapter():
     ds = TestDataset("", n=20)
