@@ -91,8 +91,8 @@ class BasicAdapter:
 
     def __get_dataframe(self, data):
         if ((not isinstance(data, DataFrame)) and
-                (hasattr(data, self.data_property_name)) and
-                (isinstance(getattr(data, self.data_property_name), DataFrame))):
+            (hasattr(data, self.data_property_name)) and
+            (isinstance(getattr(data, self.data_property_name), DataFrame))):
             data = getattr(data, self.data_property_name)
         return data
 
@@ -315,7 +315,8 @@ class AdvancedMaskingAdapter(BasicAdapter):
                 raise ValueError('"{}" is not a valid operator'.format(op))
 
             if self.ignore_nans:
-                new_mask = operator(data[column_name], threshold) | np.isnan(data[column_name])
+                new_mask = operator(data[column_name], threshold) | np.isnan(
+                    data[column_name])
             else:
                 new_mask = operator(data[column_name], threshold)
 
@@ -456,13 +457,13 @@ class ColumnCombineAdapter(BasicAdapter):
     """
 
     def __init__(
-            self,
-            cls,
-            func,
-            func_kwargs=None,
-            columns=None,
-            new_name="merged",
-            **kwargs,
+        self,
+        cls,
+        func,
+        func_kwargs=None,
+        columns=None,
+        new_name="merged",
+        **kwargs,
     ):
         """
         Parameters
