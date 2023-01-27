@@ -91,8 +91,8 @@ class BasicAdapter:
 
     def __get_dataframe(self, data):
         if ((not isinstance(data, DataFrame)) and
-            (hasattr(data, self.data_property_name)) and
-            (isinstance(getattr(data, self.data_property_name), DataFrame))):
+                (hasattr(data, self.data_property_name)) and
+                (isinstance(getattr(data, self.data_property_name), DataFrame))):
             data = getattr(data, self.data_property_name)
         return data
 
@@ -290,13 +290,18 @@ class AdvancedMaskingAdapter(BasicAdapter):
         The output of this method will be changed by the adapter.
         If None is passed, only data from `read` and `read_ts` of cls
         will be adapted.
+    ignore_nans: bool, optional (default: False)
+        Should be set to True in case the NaNs in the mask field(s) should
+        be ignored, i.e. the main field should not be masked when NaNs
+        are present elswehere in the row
     """
 
-    def __init__(self, cls, filter_list, **kwargs):
+    def __init__(self, cls, filter_list, ignore_nans: bool = False, **kwargs):
 
         super().__init__(cls, **kwargs)
 
         self.filter_list = filter_list
+        self.ignore_nans = ignore_nans
 
     def _adapt(self, data):
         data = super()._adapt(data)
@@ -309,14 +314,17 @@ class AdvancedMaskingAdapter(BasicAdapter):
             else:
                 raise ValueError('"{}" is not a valid operator'.format(op))
 
-            new_mask = operator(data[column_name], threshold)
+            if self.ignore_nans:
+                new_mask = operator(data[column_name], threshold) | np.isnan(data[column_name])
+            else:
+                new_mask = operator(data[column_name], threshold)
 
             if mask is not None:
                 mask = mask & new_mask
             else:
                 mask = new_mask
 
-        return data[mask]
+        return data[mask].dropna(how="all")
 
 
 class AnomalyAdapter(BasicAdapter):
@@ -448,13 +456,13 @@ class ColumnCombineAdapter(BasicAdapter):
     """
 
     def __init__(
-        self,
-        cls,
-        func,
-        func_kwargs=None,
-        columns=None,
-        new_name="merged",
-        **kwargs,
+            self,
+            cls,
+            func,
+            func_kwargs=None,
+            columns=None,
+            new_name="merged",
+            **kwargs,
     ):
         """
         Parameters

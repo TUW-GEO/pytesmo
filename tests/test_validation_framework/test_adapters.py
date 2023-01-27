@@ -1,6 +1,7 @@
 import pytest
 
 from src.pytesmo.validation_framework.adapters import TimestampAdapter
+
 """
 Test for the adapters.
 """
@@ -103,6 +104,67 @@ def test_advanced_masking_adapter():
         data_masked = ds_mask.read_ts()
 
 
+def test_advanced_masking_adapter_nans_ignored():
+    ds = TestDataset("", n=20)
+    # introduce nan
+    ts = ds.read()
+    ts.iloc[7]["x"] = np.nan
+
+    def _read(): return ts
+    setattr(ds, "read", _read)
+
+    # the NaN in the flag field (x) is filtered out normally
+    ds_mask = AdvancedMaskingAdapter(
+        ds,
+        [
+            ("x", ">=", 5),
+            ("x", "<", 15),
+        ],
+    )
+
+    data_masked = ds_mask.read_ts()
+    data_masked2 = ds_mask.read()
+
+    ref_x = np.array([5., 6., 8., 9., 10., 11., 12., 13., 14.])
+    ref_y = ref_x * 0.5
+
+    nptest.assert_almost_equal(data_masked["x"].values, ref_x)
+    nptest.assert_almost_equal(data_masked2["x"].values, ref_x)
+    nptest.assert_almost_equal(data_masked["y"].values, ref_y)
+    nptest.assert_almost_equal(data_masked2["y"].values, ref_y)
+
+    # the NaN is now ignored
+    ds_mask = AdvancedMaskingAdapter(
+        ds,
+        [
+            ("x", ">=", 5),
+            ("x", "<", 15),
+        ],
+        ignore_nans=True,
+    )
+
+    data_masked = ds_mask.read_ts()
+    data_masked2 = ds_mask.read()
+
+    ref_x = np.array([ 5.,  6., np.nan,  8.,  9., 10., 11., 12., 13., 14.])
+    ref_y = np.arange(5, 15) * 0.5
+
+    nptest.assert_almost_equal(data_masked["x"].values, ref_x)
+    nptest.assert_almost_equal(data_masked2["x"].values, ref_x)
+    nptest.assert_almost_equal(data_masked["y"].values, ref_y)
+    nptest.assert_almost_equal(data_masked2["y"].values, ref_y)
+
+    # 9 is not a valid operator, should raise an exception
+    with pytest.raises(ValueError):
+        ds_mask = AdvancedMaskingAdapter(
+            ds,
+            [
+                ("x", 9, 5),
+            ],
+        )
+        data_masked = ds_mask.read_ts()
+
+
 def test_anomaly_adapter():
     ds = TestDataset("", n=20)
     ds_anom = AnomalyAdapter(ds)
@@ -142,7 +204,6 @@ def test_anomaly_clim_adapter_one_column():
 
 
 def test_adapters_custom_fct_name():
-
     def assert_all_read_fcts(reader):
         assert (np.all(reader.read() == reader.read_ts()))
         assert (np.all(reader.read() == reader.alias_read()))
@@ -400,7 +461,7 @@ def test_timestamp_adapter():
     # -----------------------
 
     def _read_empty():
-        return pd.DataFrame(columns=["sm", "offset"],)
+        return pd.DataFrame(columns=["sm", "offset"], )
 
     setattr(ds, "read", _read_empty)
     origin = ds.read()
@@ -446,8 +507,8 @@ def test_timestamp_adapter():
     should_be = origin.apply(
         lambda row: np.datetime64("2005-02-01") + np.timedelta64(
             int(row["base_time"]), "D") + np.timedelta64(
-                int(row["offset_min"]), "m") + np.timedelta64(
-                    int(row["offset_sec"]), "s"),
+            int(row["offset_min"]), "m") + np.timedelta64(
+            int(row["offset_sec"]), "s"),
         axis=1).values
 
     assert (adapted.index.values == should_be).all()
