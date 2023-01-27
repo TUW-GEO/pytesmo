@@ -5,6 +5,10 @@ Changelog
 Unreleased
 ==========
 
+Version 0.14.4, 2023-01-27
+==========================
+- option to ignore NaN values in filter fields (PR `#282 <https://github.com/TUW-GEO/pytesmo/pull/282>`_)
+
 Version 0.14.3, 2022-12-26
 ==========================
 - fixing rounding error issues in metric calculations (PR `#281 <https://github.com/TUW-GEO/pytesmo/pull/281>`_)
