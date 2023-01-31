@@ -38,6 +38,7 @@ import shutil
 
 from pytesmo.metrics import with_analytical_ci, with_bootstrapped_ci, pairwise
 from pytesmo.validation_framework.validation import Validation
+import pytesmo.validation_framework.error_handling as eh
 from pytesmo.validation_framework.metric_calculators import (
     MetadataMetrics,
     BasicMetrics,
@@ -1178,6 +1179,20 @@ def test_temporal_matching_ascat_ismn():
 
     assert old_results[old_key]["n_obs"] == new_results[new_key]["n_obs"]
 
+
+def test_TripleCollocationMetrics_failure():
+    """
+    Test if TripleCollocationMetrics returns the correct status attribute if
+    there is not enough data for bootstrapping.
+    """
+    df = make_some_data()
+    data = df.iloc[0:50][["ref", "k1", "k2"]]
+
+    triplet_metrics_calculator = TripleCollocationMetrics(
+        "ref", bootstrap_cis=True
+    )
+    res = triplet_metrics_calculator.calc_metrics(data, gpi_info=(0, 0, 0))
+    assert res["status"] == eh.METRICS_CALCULATION_FAILED
 
 # def test_sorting_issue():
 # GH #220
