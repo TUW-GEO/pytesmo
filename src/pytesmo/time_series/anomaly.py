@@ -70,7 +70,10 @@ def calc_anomaly(Ser,
         df['absolute'] = Ser
         df['doy'] = doys
 
-        clim = pd.DataFrame({'climatology': climatology})
+        if isinstance(climatology, pd.Series):
+            clim = pd.DataFrame({'climatology': climatology})
+        else:
+            clim = climatology
 
         df = df.join(clim, on='doy', how='left')
 
@@ -80,6 +83,8 @@ def calc_anomaly(Ser,
         if return_clim:
             anomaly = pd.DataFrame({'anomaly': anomaly})
             anomaly['climatology'] = df['climatology']
+            if 'std' in df.columns:
+                anomaly['climatology_std'] = df['std']
 
     else:
         reference = moving_average(Ser, window_size=window_size)
@@ -111,6 +116,7 @@ def calc_climatology(Ser,
                      moving_avg_orig=5,
                      moving_avg_clim=None,
                      median=False,
+                     std=False,
                      timespan=None,
                      fill=np.nan,
                      wraparound=True,
@@ -142,6 +148,10 @@ def calc_climatology(Ser,
 
     median : boolean, optional
         if set to True, the climatology will be based on the median conditions
+
+    std: boolean, optional
+        if set to True, there will be 2 columns, one for the median or mean
+        and one of the standard deviation of the aggregated data points.
 
     timespan : [timespan_from, timespan_to], datetime.datetime(y,m,d), optional
         Set this to calculate the climatology based on a subset of the input
@@ -231,10 +241,19 @@ def calc_climatology(Ser,
 
     if median:
         clim = Ser.groupby('unit').median()
+        clim.name = 'climatology'
     else:
         clim = Ser.groupby('unit').mean()
+        clim.name = 'climatology'
 
-    clim_ser = pd.Series(clim.values.flatten(), index=clim.index.values)
+    if std:
+        std_ser = Ser.groupby('unit').std()
+        clim_ser = pd.concat([clim.loc[:, 0].rename(clim.name),
+                              std_ser.loc[:, 0].rename('std')], axis=1)
+    else:
+        clim_ser = pd.DataFrame(data={'climatology': clim.values.flatten()},
+                                index=clim.index.values)
+
 
     clim_ser = clim_ser.reindex(np.arange(n_idx) + 1)
 
@@ -248,26 +267,23 @@ def calc_climatology(Ser,
         clim_ser.index = clim_ser.index + n_idx
         clim_ser = pd.concat([left_mirror, clim_ser, right_mirror])
 
-        clim_ser = moving_average(
-            clim_ser,
-            window_size=moving_avg_clim,
-            fillna=fillna,
-            min_obs=min_obs_clim)
+    clim_ser['climatology'] = moving_average(
+        clim_ser['climatology'], window_size=moving_avg_clim,
+        fillna=fillna, min_obs=min_obs_clim)
+
+    if wraparound:
         clim_ser = clim_ser.iloc[moving_avg_clim:-moving_avg_clim]
         clim_ser.index = index_old
-    else:
-        clim_ser = moving_average(
-            clim_ser,
-            window_size=moving_avg_clim,
-            fillna=fillna,
-            min_obs=min_obs_clim)
 
     # keep hardcoding as it's only for doys
     if interpolate_leapday and not respect_leap_years:
-        clim_ser[60] = np.mean((clim_ser[59], clim_ser[61]))
+        clim_ser.loc[60, :] = np.mean((clim_ser.loc[59, :], clim_ser.loc[61, :]))
     elif interpolate_leapday and respect_leap_years:
-        clim_ser[366] = np.mean((clim_ser[365], clim_ser[1]))
+        clim_ser.loc[366, :] = np.mean((clim_ser.loc[365, :], clim_ser.loc[1, :]))
 
     clim_ser = clim_ser.fillna(fill)
 
-    return clim_ser
+    if len(clim_ser.columns) == 1:
+        return clim_ser.iloc[:, 0]
+    else:
+        return clim_ser
