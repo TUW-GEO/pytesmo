@@ -87,7 +87,7 @@ class PointDataResults(Dataset):
             # default variables, along loc dim
             self.write_var(
                 "lon",
-                dim=("loc"),
+                dim=("loc",),
                 dtype="float",
                 attr=dict(
                     long_name="location longitude",
@@ -100,7 +100,7 @@ class PointDataResults(Dataset):
 
             self.write_var(
                 "lat",
-                dim=("loc"),
+                dim=("loc",),
                 dtype="float",
                 attr=dict(
                     long_name="location latitude",
@@ -113,7 +113,7 @@ class PointDataResults(Dataset):
 
             self.write_var(
                 "idx",
-                dim=("loc"),
+                dim=("loc",),
                 dtype="int",
                 attr=dict(
                     long_name="observation point index",
@@ -125,7 +125,7 @@ class PointDataResults(Dataset):
             # indexing var for time series
             self.write_var(
                 "_row_size",
-                dim=("loc"),
+                dim=("loc",),
                 dtype="int",
                 attr=dict(
                     long_name="number of timestamps for this loc",
@@ -136,7 +136,7 @@ class PointDataResults(Dataset):
             self.write_var(
                 "time",
                 dtype="float",
-                dim=("obs"),
+                dim=("obs",),
                 attr=dict(
                     long_name="metric time stamp",
                     standard_name="time",
@@ -227,8 +227,8 @@ class PointDataResults(Dataset):
             if name not in self.variables:
                 var_attr = self._sel_attr(attr, name, False)
                 self.write_var(
-                    name, data=data, dim=("obs"), attr=var_attr
-                )  # todo: one or both?
+                    name, data=data, dim=("obs",), attr=var_attr
+                )
             else:
                 self[name][sel] = data
 
@@ -281,7 +281,7 @@ class PointDataResults(Dataset):
                 name = "__".join(name)
             if name not in self.variables:
                 var_attr = self._sel_attr(attr, name, False)
-                self.write_var(name, data=data, dim=("loc"), attr=var_attr)
+                self.write_var(name, data=data, dim=("loc",), attr=var_attr)
             else:
                 self[name][sel] = data
 

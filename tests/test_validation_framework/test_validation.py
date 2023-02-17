@@ -113,8 +113,8 @@ def ascat_reader():
         "TUW_METOP_ASCAT_WARP55R22_{:04d}",
         grid_filename=grid_fname,
         static_layer_path=static_layers_folder,
+        ioclass_kws={'read_bulk': True}
     )
-    ascat_reader.read_bulk = True
     return ascat_reader
 
 
@@ -184,12 +184,6 @@ def test_ascat_ismn_validation(ascat_reader, ismn_reader):
         metadata = ismn_reader.read_metadata(idx)
         jobs.append((idx, metadata["longitude"].val, metadata["latitude"].val))
 
-    # Create the variable ***save_path*** which is a string representing the
-    # path where the results will be saved. **DO NOT CHANGE** the name
-    # ***save_path*** because it will be searched during the parallel
-    # processing!
-
-    save_path = tempfile.mkdtemp()
 
     # Create the validation object.
 
@@ -228,35 +222,43 @@ def test_ascat_ismn_validation(ascat_reader, ismn_reader):
         period=period,
     )
 
-    for job in jobs:
-        results = process.calc(*job)
-        netcdf_results_manager(results, save_path)
+    # Create the variable ***save_path*** which is a string representing the
+    # path where the results will be saved. **DO NOT CHANGE** the name
+    # ***save_path*** because it will be searched during the parallel
+    # processing!
+    #
 
-    results_fname = os.path.join(save_path,
-                                 "ASCAT.sm_with_ISMN.soil_moisture.nc")
-    # targets
-    target_vars = {
-        "n_obs": [357, 384, 1646, 1875, 1915, 467, 141, 251],
-        "rho":
-            np.array([
-                0.53934574, 0.7002289, 0.62200236, 0.53647155, 0.30413666,
-                0.6740655, 0.8418981, 0.74206454
-            ],
-                     dtype=np.float32),
-        "RMSD":
-            np.array([
-                11.583476, 7.729667, 17.441547, 21.125721, 14.31557, 14.187225,
-                13.0622425, 12.903898
-            ],
-                     dtype=np.float32)
-    }
+    with tempfile.TemporaryDirectory() as save_path:
+        for job in jobs:
+            results = process.calc(*job)
+            netcdf_results_manager(results, save_path)
 
-    check_results(
-        filename=results_fname,
-        target_vars=target_vars,
-    )
+        results_fname = os.path.join(save_path,
+                                     "ASCAT.sm_with_ISMN.soil_moisture.nc")
+        # targets
+        target_vars = {
+            "n_obs": [357, 384, 1646, 1875, 1915, 467, 141, 251],
+            "rho":
+                np.array([
+                    0.53934574, 0.7002289, 0.62200236, 0.53647155, 0.30413666,
+                    0.6740655, 0.8418981, 0.74206454
+                ],
+                         dtype=np.float32),
+            "RMSD":
+                np.array([
+                    11.583476, 7.729667, 17.441547, 21.125721, 14.31557, 14.187225,
+                    13.0622425, 12.903898
+                ],
+                         dtype=np.float32)
+        }
 
-    ascat_reader.close()
+        check_results(
+            filename=results_fname,
+            target_vars=target_vars,
+        )
+
+        ascat_reader.close()
+        del ascat_reader
 
 
 @pytest.mark.slow
