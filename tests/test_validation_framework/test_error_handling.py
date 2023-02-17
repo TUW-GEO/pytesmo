@@ -10,6 +10,7 @@ from pytesmo.validation_framework.temporal_matchers import (
     make_combined_temporal_matcher,
 )
 import pytesmo.validation_framework.error_handling as eh
+from pytesmo.validation_framework.data_manager import DataManager
 
 from .utils import create_datasets
 
@@ -194,6 +195,49 @@ def test_error_handling_scaling_failed():
             if metric not in ["status", "gpi", "lat", "lon", "n_obs"]:
                 assert np.all(np.isnan(results[key][metric]))
         assert np.all(results[key]["status"] == eh.SCALING_FAILED)
+
+
+def test_error_handling_datamanager_failed():
+    # This tests whether a scaling error is raised if the scaling fails due to
+    # insufficient data.
+    n_datasets = 5
+    npoints = 5
+    nsamples = 100
+
+    datasets = create_datasets(n_datasets, npoints, nsamples)
+
+    spatial_ref = "0-ERA5"
+    data_manager = DataManager(datasets, spatial_ref, None)
+
+    def bad_get_data(*args):
+        raise ValueError("This is a test.")
+
+    data_manager.get_data = bad_get_data
+
+    metric_calculator = PairwiseIntercomparisonMetrics()
+
+    val = Validation(
+        data_manager,
+        spatial_ref=spatial_ref,
+        metrics_calculators={(n_datasets, 2): metric_calculator.calc_metrics},
+        temporal_matcher=make_combined_temporal_matcher(pd.Timedelta(12, "H")),
+    )
+    gpis = list(range(npoints))
+    args = (gpis, gpis, gpis)
+    kwargs = dict(rename_cols=False, only_with_reference=True)
+
+    # test if raising raises
+    with pytest.raises(eh.DataManagerError, match="Getting the data for gpi"):
+        results = val.calc(*args, **kwargs, handle_errors="raise")
+
+    # test if ignore returns code
+    results = val.calc(*args, **kwargs, handle_errors="ignore")
+    for key in results:
+        for metric in results[key]:
+            assert len(results[key][metric]) == npoints
+            if metric not in ["status", "gpi", "lat", "lon", "n_obs"]:
+                assert np.all(np.isnan(results[key][metric]))
+        assert np.all(results[key]["status"] == eh.DATA_MANAGER_FAILED)
 
 
 def test_error_handling_temp_matching_failed():
