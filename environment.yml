@@ -7,10 +7,10 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - numpy
+  - numpy<=1.23.5  # v1.24 not yet supported by numba
   - scipy
   - pandas
-  - netCDF4
+  - netcdf4!=1.6.2  # at v1.6.2 only defaults channel worked properly
   - cython
   - pykdtree
   - pyresample
@@ -38,5 +38,3 @@ dependencies:
     - pre-commit
     - flake8
     - yapf
-    - sphinx_rtd_theme
-    - nbsphinx
