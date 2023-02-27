@@ -5,6 +5,9 @@ Changelog
 Unreleased
 ==========
 - fixing setting of status code for bootstrapped triple collocation  (PR `#285 <https://github.com/TUW-GEO/pytesmo/pull/285>`_)
+- Exclude netCDF4 at version 1.6.2 due to bug when writing strings with zlib compression (PR `#288 <https://github.com/TUW-GEO/pytesmo/pull/288>`_)
+- added test for data_manager_failed (PR `#287 <https://github.com/TUW-GEO/pytesmo/pull/287>`_)
+- `read_ts` is not longer used in pytesmo (PR `#289 <https://github.com/TUW-GEO/pytesmo/pull/289>`_)
 
 Version 0.14.4, 2023-01-27
 ==========================
