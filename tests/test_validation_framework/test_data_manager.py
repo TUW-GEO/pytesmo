@@ -137,7 +137,7 @@ def test_DataManager_default_add():
             'args': [],
             'kwargs': {},
             'use_lut': False,
-            'lut_max_dist': None,
+            'max_dist': np.inf,
             'grids_compatible': False
         },
         'DS2': {
@@ -146,7 +146,7 @@ def test_DataManager_default_add():
             'args': [],
             'kwargs': {},
             'use_lut': False,
-            'lut_max_dist': None,
+            'max_dist': np.inf,
             'grids_compatible': False
         }}
 

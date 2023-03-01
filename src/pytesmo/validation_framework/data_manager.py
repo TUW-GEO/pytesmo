@@ -27,6 +27,7 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import itertools
+import numpy as np
 
 from pytesmo.validation_framework.upscaling import Upscaling, MixinReadTs
 
@@ -61,7 +62,7 @@ class DataManager(MixinReadTs):
                 reading other, if False then lon, lat is used and a
                 nearest neighbour search is necessary.
                 default: False
-            'lut_max_dist' : float, optional
+            'max_dist' : float, optional
                 Maximum allowed distance in meters for the lut calculation.
                 default: None
     ref_name : string
@@ -152,14 +153,14 @@ class DataManager(MixinReadTs):
     def _add_default_values(self):
         """
         Add defaults for args, kwargs, grids_compatible, use_lut and
-        lut_max_dist to dataset dictionary.
+        max_dist to dataset dictionary.
         """
         defaults = {
             "use_lut": False,
             "args": [],
             "kwargs": {},
             "grids_compatible": False,
-            "lut_max_dist": None,
+            "max_dist": np.inf,
         }
         for dataset in self.datasets.keys():
             new_defaults = dict(defaults)
@@ -182,7 +183,7 @@ class DataManager(MixinReadTs):
             if self.datasets[other_name]["use_lut"]:
                 luts[other_name] = self.reference_grid.calc_lut(
                     self.datasets[other_name]["class"].grid,
-                    max_dist=self.datasets[other_name]["lut_max_dist"],
+                    max_dist=self.datasets[other_name]["max_dist"],
                 )
             else:
                 luts[other_name] = None
@@ -327,7 +328,18 @@ class DataManager(MixinReadTs):
                     continue
                 other_dataframe = self.read_other(other_name, other_gpi)
             else:
-                other_dataframe = self.read_other(other_name, lon, lat)
+                # other_dataframe = self.read_other(other_name, lon, lat)
+                max_dist = self.datasets[other_name].get("max_dist", np.inf)
+                grid = self.datasets[other_name]["class"].grid
+                other_gpi, dist = grid.find_nearest_gpi(
+                    lon, lat, max_dist=max_dist
+                )
+                if np.isinf(dist):
+                    # no other point found in range, currently this is handled
+                    # by returning None
+                    other_dataframe = None
+                else:
+                    other_dataframe = self.read_other(other_name, other_gpi)
 
             if other_dataframe is not None:
                 other_dataframes[other_name] = other_dataframe

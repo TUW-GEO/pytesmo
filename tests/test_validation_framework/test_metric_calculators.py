@@ -63,6 +63,9 @@ from pytesmo.validation_framework.results_manager import netcdf_results_manager
 import pytesmo.metrics as metrics
 
 
+from .utils import DummyReader
+
+
 def make_some_data():
     """
     Create a data frame with 3 columns and a pre defined bias.
@@ -592,12 +595,12 @@ def test_RollingMetrics():
 # Tests for new QA4SM metrics calculators
 
 
-class DummyReader:
-    def __init__(self, df, name):
-        self.data = pd.DataFrame(df[name])
+# class DummyReader:
+#     def __init__(self, df, name):
+#         self.data = pd.DataFrame(df[name])
 
-    def read(self, *args, **kwargs):
-        return self.data
+#     def read(self, *args, **kwargs):
+#         return self.data
 
 
 def make_datasets(df):
@@ -638,7 +641,7 @@ def testdata_known_results():
             "mse_bias": 4,
             "mse_var": 0,
             "urmsd": 0,
-            "gpi": 1,
+            "gpi": 0,
             "lon": 1,
             "lat": 1,
         },
@@ -654,7 +657,7 @@ def testdata_known_results():
             "mse_bias": 16,
             "mse_var": 0,
             "urmsd": 0,
-            "gpi": 1,
+            "gpi": 0,
             "lon": 1,
             "lat": 1,
         },
@@ -670,7 +673,7 @@ def testdata_known_results():
             "mse_bias": 1,
             "mse_var": 0,
             "urmsd": 0,
-            "gpi": 1,
+            "gpi": 0,
             "lon": 1,
             "lat": 1,
         },
@@ -723,19 +726,19 @@ def testdata_random():
     expected = {
         (("col1_name", "col1"), ("reference_name", "reference")): {
             "n_obs": n - 2,
-            "gpi": 1,
+            "gpi": 0,
             "lon": 1,
             "lat": 1,
         },
         (("col2_name", "col2"), ("reference_name", "reference")): {
             "n_obs": n - 2,
-            "gpi": 1,
+            "gpi": 0,
             "lon": 1,
             "lat": 1,
         },
         (("reference_name", "reference"), ("zcol3_name", "zcol3")): {
             "n_obs": n - 2,
-            "gpi": 1,
+            "gpi": 0,
             "lon": 1,
             "lat": 1,
         },
@@ -784,7 +787,7 @@ def test_PairwiseIntercomparisonMetrics(testdata_generator, seas_metrics):
         metrics_calculators={(4, 2): (metrics_calculator.calc_metrics)},
     )
     results_pw = val.calc(
-        [1], [1], [1], rename_cols=False, only_with_reference=True
+        [0], [1], [1], rename_cols=False, only_with_reference=True
     )
 
     # in results_pw, there are four entries with keys (("c1name", "c1"),
@@ -853,7 +856,7 @@ def test_PairwiseIntercomparisonMetrics(testdata_generator, seas_metrics):
 
     print("running old setup")
 
-    results = val.calc(1, 1, 1, rename_cols=False)
+    results = val.calc(0, 1, 1, rename_cols=False)
 
     # results is a dictionary with one entry and key
     # (('c1name', 'c1'), ('c2name', 'c2'), ('c3name', 'c3'), ('refname',
@@ -941,7 +944,7 @@ def test_PairwiseIntercomparisonMetrics_confidence_intervals():
         },
     )
     results_pw = val.calc(
-        [1], [1], [1], rename_cols=False, only_with_reference=True
+        [0], [1], [1], rename_cols=False, only_with_reference=True
     )
 
     metrics_with_ci = {
@@ -962,7 +965,7 @@ def test_PairwiseIntercomparisonMetrics_confidence_intervals():
     # reconstruct dataframe
     frames = []
     for key in datasets:
-        frames.append(datasets[key]["class"].data)
+        frames.append(datasets[key]["class"].data[0])
     data = pd.concat(frames, axis=1)
     data.dropna(how="any", inplace=True)
 
@@ -1025,7 +1028,7 @@ def test_TripleCollocationMetrics(testdata_generator, seas_metrics):
         metrics_calculators={(4, 3): triplet_metrics_calculator.calc_metrics},
     )
     results_triplet = val_triplet.calc(
-        [1], [1], [1], rename_cols=False, only_with_reference=True
+        [0], [1], [1], rename_cols=False, only_with_reference=True
     )
 
     if "col1_name" in datasets.keys():
@@ -1089,7 +1092,7 @@ def test_TripleCollocationMetrics(testdata_generator, seas_metrics):
             },
         )
         results_triplet = val_triplet.calc(
-            [1], [1], [1], rename_cols=False, only_with_reference=True
+            [0], [1], [1], rename_cols=False, only_with_reference=True
         )
         for key in results_triplet:
             for dset, _ in key:
@@ -1153,7 +1156,7 @@ def test_temporal_matching_ascat_ismn():
         },
     )
     new_results = new_val.calc(
-        1, 1, 1, rename_cols=False, only_with_reference=True
+        0, 1, 1, rename_cols=False, only_with_reference=True
     )
 
     # old setup
@@ -1172,7 +1175,7 @@ def test_temporal_matching_ascat_ismn():
         temporal_matcher=old_matcher,
         metrics_calculators={(2, 2): metrics.calc_metrics},
     )
-    old_results = old_val.calc(1, 1, 1, rename_cols=False)
+    old_results = old_val.calc(0, 1, 1, rename_cols=False)
 
     old_key = (("ASCAT", "sm"), ("ISMN", "soil_moisture"))
     new_key = (("ASCAT", "sm"), ("ISMN", "soil_moisture"))

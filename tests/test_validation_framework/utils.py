@@ -12,10 +12,19 @@ def create_correlated_data(n_datasets, n, r):
     return (A @ np.random.randn(n_datasets, n)).T
 
 
+class DummyGrid:
+    # required for the dummy reader
+    def find_nearest_gpi(self, lon, lat, max_dist=np.inf):
+        return 0, 0
+
+
 class DummyReader:
 
     def __init__(self, dfs, name):
+        if not isinstance(dfs, (list, tuple)):
+            dfs = [dfs]
         self.data = [pd.DataFrame(dfs[i][name]) for i in range(len(dfs))]
+        self.grid = DummyGrid()
 
     def read(self, gpi, *args, **kwargs):
         return self.data[gpi]
@@ -26,15 +35,17 @@ class DummyEmptyDataFrameReader:
 
     def __init__(self, dfs, name):
         self.data = [pd.DataFrame(dfs[i][name]) for i in range(len(dfs))]
+        self.grid = DummyGrid()
 
     def read(self, gpi, *args, **kwargs):
         names = self.data[gpi].columns
         return pd.DataFrame(np.zeros((0, len(names))), columns=names)
 
+
 class DummyNoDataReader:
     # has no data at all
     def __init__(self, dfs, name):
-        pass
+        self.grid = DummyGrid()
 
     def read(self, gpi, *args, **kwargs):
         return []
