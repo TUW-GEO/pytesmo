@@ -4,8 +4,8 @@
 
 name: pytesmo
 channels:
-  - conda-forge
   - defaults
+  - conda-forge
 dependencies:
   - numpy<=1.23.5  # v1.24 not yet supported by numba
   - scipy>=0.12
