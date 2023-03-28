@@ -4,12 +4,37 @@ Changelog
 
 Unreleased
 ==========
+- fixing setting of status code for bootstrapped triple collocation  (PR `#285 <https://github.com/TUW-GEO/pytesmo/pull/285>`_)
+- Exclude netCDF4 at version 1.6.2 due to bug when writing strings with zlib compression (PR `#288 <https://github.com/TUW-GEO/pytesmo/pull/288>`_)
+- added test for data_manager_failed (PR `#287 <https://github.com/TUW-GEO/pytesmo/pull/287>`_)
+- `read_ts` is not longer used in pytesmo (PR `#289 <https://github.com/TUW-GEO/pytesmo/pull/289>`_)
+
+Version 0.14.4, 2023-01-27
+==========================
+- option to ignore NaN values in filter fields (PR `#282 <https://github.com/TUW-GEO/pytesmo/pull/282>`_)
+
+Version 0.14.3, 2022-12-26
+==========================
+- fixing rounding error issues in metric calculations (PR `#281 <https://github.com/TUW-GEO/pytesmo/pull/281>`_)
+
+Version 0.14.2, 2022-12-14
+==========================
+- small bug fixes/doc updates (PRs `#273 <https://github.com/TUW-GEO/pytesmo/pull/273>`_, `#275 <https://github.com/TUW-GEO/pytesmo/pull/275>`_, `#276 <https://github.com/TUW-GEO/pytesmo/pull/276>`_,  `#278 <https://github.com/TUW-GEO/pytesmo/pull/278>`_)
+- more consistent error handling (PR `#277 <https://github.com/TUW-GEO/pytesmo/pull/277>`_
+
+Version 0.14.1, 2022-10-25
+==========================
+- small bug fixes and documentation updates (PRs `#272 <https://github.com/TUW-GEO/pytesmo/pull/272>`_, `#271 <https://github.com/TUW-GEO/pytesmo/pull/271>`_, `#270 <https://github.com/TUW-GEO/pytesmo/pull/270>`_)
+
+Version 0.14.0, 2022-05-13
+==========================
 - fixed bugs in resample_mean (PR `#262 <https://github.com/TUW-GEO/pytesmo/pull/262>`_)
 - Integration tests with new ISMN Interface (PR `#263 <https://github.com/TUW-GEO/pytesmo/pull/263>`_)
 - Add option to Validation Framework to ignore errors in ``Validation.calc()`` (PR `#263 <https://github.com/TUW-GEO/pytesmo/pull/263>`_)
 - ipynb files from docs/examples are now also used as (optional) tests (PR `#263 <https://github.com/TUW-GEO/pytesmo/pull/263>`_)
 - ``yapf`` for code formatting (see developers guide) (Fix #248, PR `#263 <https://github.com/TUW-GEO/pytesmo/pull/263>`_)
 - validation framework option to force dataset combinations that include reference dataset updated (PR `#265 <https://github.com/TUW-GEO/pytesmo/pull/265>`_)
+- Added `TimestampAdapter` to the validation framework to deal with datasets that have different date/time specification fields (PR `#268 <https://github.com/TUW-GEO/pytesmo/pull/268>`_)
 
 Version 0.13.4, 2022-01-12
 ==========================

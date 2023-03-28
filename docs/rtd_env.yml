@@ -1,0 +1,10 @@
+# To keep the RTD build as small as possible, we define a separate .yml here
+name: pytesmo_docs
+channels:
+- conda-forge
+- defaults
+dependencies:
+- python=3.9
+- ipykernel
+- nbsphinx
+# Note: RTD will add packages it needs automatically such as sphinx, sphinx_rtd_theme

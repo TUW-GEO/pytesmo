@@ -328,15 +328,15 @@ def _jackknife(metric_func, x, y):
 
 def _percentile_bs_ci(bs_m, m, alpha):
     """Calculates the CI using percentiles"""
-    lower = np.quantile(bs_m, alpha / 2)
-    upper = np.quantile(bs_m, 1 - alpha / 2)
+    lower = np.nanquantile(bs_m, alpha / 2)
+    upper = np.nanquantile(bs_m, 1 - alpha / 2)
     return lower, upper
 
 
 def _basic_bs_ci(bs_m, m, alpha):
     """Basic bootstrap"""
-    lower = 2 * m - np.quantile(bs_m, 1 - alpha / 2)
-    upper = 2 * m - np.quantile(bs_m, alpha / 2)
+    lower = 2 * m - np.nanquantile(bs_m, 1 - alpha / 2)
+    upper = 2 * m - np.nanquantile(bs_m, alpha / 2)
     return lower, upper
 
 
@@ -363,6 +363,6 @@ def _BCa_bs_ci(bs_m, m, alpha, jk):
     alpha_upper = stats.norm.cdf(
         z0 + (z0 + z_1_alpha) / (1 - a * (z0 + z_1_alpha))
     )
-    lower = np.quantile(bs_m, alpha_lower)
-    upper = np.quantile(bs_m, alpha_upper)
+    lower = np.nanquantile(bs_m, alpha_lower)
+    upper = np.nanquantile(bs_m, alpha_upper)
     return lower, upper

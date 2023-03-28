@@ -39,6 +39,7 @@ import pytesmo.metrics as metrics
 import pytesmo.df_metrics as df_metrics
 from pytesmo.scaling import scale
 from pytesmo.validation_framework.data_manager import get_result_names
+import pytesmo.validation_framework.error_handling as eh
 from pytesmo.df_metrics import n_combinations
 from pytesmo.metrics import (
     pairwise,
@@ -178,6 +179,7 @@ class MetadataMetrics(object):
             "gpi": np.int32([-1]),
             "lon": np.float64([np.nan]),
             "lat": np.float64([np.nan]),
+            "status": np.int32([eh.UNCAUGHT]),
         }
 
         self.metadata_template = metadata_template
@@ -299,6 +301,7 @@ class BasicMetrics(MetadataMetrics):
         dataset = super(BasicMetrics, self).calc_metrics(data, gpi_info)
 
         if len(data) < self.min_obs:
+            dataset["status"][0] = eh.INSUFFICIENT_DATA
             return dataset
 
         x, y = data["ref"].values, data[self.other_name].values
@@ -317,6 +320,7 @@ class BasicMetrics(MetadataMetrics):
             tau, p_tau = metrics.kendalltau(x, y)
             dataset["tau"][0], dataset["p_tau"][0] = tau, p_tau
 
+        dataset["status"][0] = eh.OK
         return dataset
 
 
@@ -338,7 +342,10 @@ class BasicMetricsPlusMSE(BasicMetrics):
         dataset = super(BasicMetricsPlusMSE, self).calc_metrics(
             data, gpi_info
         )
+        # setting back to uncaught in case something goes wrong
+        dataset["status"][0] = eh.UNCAUGHT
         if len(data) < self.min_obs:
+            dataset["status"][0] = eh.INSUFFICIENT_DATA
             return dataset
         x, y = data["ref"].values, data[self.other_name].values
         mse, mse_corr, mse_bias, mse_var = metrics.mse_decomposition(x, y)
@@ -346,7 +353,7 @@ class BasicMetricsPlusMSE(BasicMetrics):
         dataset["mse_corr"][0] = mse_corr
         dataset["mse_bias"][0] = mse_bias
         dataset["mse_var"][0] = mse_var
-
+        dataset["status"][0] = eh.OK
         return dataset
 
 
@@ -406,6 +413,7 @@ class FTMetrics(MetadataMetrics):
         dataset = super(FTMetrics, self).calc_metrics(data, gpi_info)
 
         if len(data) < self.min_obs:
+            dataset["status"][0] = eh.INSUFFICIENT_DATA
             return dataset
 
         ssf, temp = data["ref"].values, data[self.other_name].values
@@ -434,6 +442,7 @@ class FTMetrics(MetadataMetrics):
 
         dataset["n_obs"][0] = len(data)
 
+        dataset["status"][0] = eh.OK
         return dataset
 
 
@@ -624,6 +633,7 @@ class HSAF_Metrics(MetadataMetrics):
                     0
                 ] = ubRMSD
 
+        dataset["status"][0] = eh.OK
         return dataset
 
 
@@ -784,10 +794,11 @@ class IntercomparisonMetrics(MetadataMetrics):
         subset = np.ones(len(data), dtype=bool)
 
         n_obs = subset.sum()
+        dataset["n_obs"][0] = n_obs
         if n_obs < self.min_obs:
+            dataset["status"][0] = eh.INSUFFICIENT_DATA
             return dataset
 
-        dataset["n_obs"][0] = n_obs
 
         # make sure we have the correct order
         data = data[self.df_columns]
@@ -908,6 +919,7 @@ class IntercomparisonMetrics(MetadataMetrics):
                     0
                 ] = p_tau
 
+        dataset["status"][0] = eh.OK
         return dataset
 
 
@@ -1129,10 +1141,11 @@ class TCMetrics(MetadataMetrics):
         subset = np.ones(len(data), dtype=bool)
 
         n_obs = subset.sum()
+        dataset["n_obs"][0] = n_obs
         if n_obs < self.min_obs:
+            dataset["status"][0] = eh.INSUFFICIENT_DATA
             return dataset
 
-        dataset["n_obs"][0] = n_obs
 
         # calculate Pearson correlation
         pearson_R, pearson_p = df_metrics.pearsonr(data)
@@ -1269,6 +1282,7 @@ class TCMetrics(MetadataMetrics):
                     0
                 ] = p_tau
 
+        dataset["status"][0] = eh.OK
         return dataset
 
 
@@ -1326,6 +1340,7 @@ class RollingMetrics(MetadataMetrics):
         dataset = super(RollingMetrics, self).calc_metrics(data, gpi_info)
 
         if len(data) < self.min_obs:
+            dataset["status"][0] = eh.INSUFFICIENT_DATA
             return dataset
 
         xy = data.to_numpy()
@@ -1347,6 +1362,7 @@ class RollingMetrics(MetadataMetrics):
         dataset["p_R"] = np.array([pr_arr[:, 1]])
         dataset["RMSD"] = np.array([rmsd_arr[:]])
 
+        dataset["status"][0] = eh.OK
         return dataset
 
 
@@ -1457,7 +1473,7 @@ class PairwiseMetricsMixin:
         mse_corr = _mse_corr_from_moments(mx, my, varx, vary, cov)
         mse_var = _mse_var_from_moments(mx, my, varx, vary, cov)
         mse_bias = _mse_bias_from_moments(mx, my, varx, vary, cov)
-        mse = mse_corr + mse_var + mse_bias
+        mse = max(mse_corr + mse_var + mse_bias, 0)
         result["mse_corr" + suffix][0] = mse_corr
         result["mse_var" + suffix][0] = mse_var
         result["mse_bias" + suffix][0] = mse_bias
@@ -1517,7 +1533,13 @@ class PairwiseMetricsMixin:
                     metric_func = pairwise.rmsd
                 else:
                     metric_func = getattr(pairwise, m)
-                _, lb, ub = with_bootstrapped_ci(metric_func, x, y)
+                kwargs = {}
+                if hasattr(self, 'bootstrap_alpha'):
+                    kwargs['alpha'] = getattr(self, 'bootstrap_alpha')
+                if hasattr(self, 'bootstrap_min_obs'):
+                    kwargs['minimum_data_length'] = getattr(
+                        self, 'bootstrap_min_obs')
+                _, lb, ub = with_bootstrapped_ci(metric_func, x, y, **kwargs)
                 result[f"{m}_ci_lower" + suffix][0] = lb
                 result[f"{m}_ci_upper" + suffix][0] = ub
 
@@ -1555,29 +1577,28 @@ class PairwiseIntercomparisonMetrics(MetadataMetrics, PairwiseMetricsMixin):
     calc_kendall : bool, optional
         Whether to calculate Kendall's rank correlation coefficient. Default is
         True.
-    analytical_cis : bool, optional
+    analytical_cis : bool, optional (default: True)
         Whether to calculate analytical confidence intervals for the following
         metrics:
-
-        - BIAS
-        - mse_bias
-        - RMSD
-        - urmsd
-        - mse
-        - R
-        - rho (only if ``calc_spearman=True``)
-        - tau (only if ``calc_kendall=True``)
-
-        The default is `True`.
-
-    bootstrap_cis
+            - BIAS
+            - mse_bias
+            - RMSD
+            - urmsd
+            - mse
+            - R
+            - rho (only if ``calc_spearman=True``)
+            - tau (only if ``calc_kendall=True``)
+    bootstrap_cis: bool, optional (default: False)
         Whether to calculate bootstrap confidence intervals for the following
         metrics:
-
-        - mse_corr
-        - mse_var
-
+            - mse_corr
+            - mse_var
         The default is `False`. This might be a lot of computational effort.
+    bootstrap_min_obs: int, optional (default: 100)
+        Minimum number of observations to draw from the time series for boot-
+        strapping.
+    bootstrap_alpha: float, optional (default: 0.05)
+        Confidence level.
     """
 
     def __init__(
@@ -1587,14 +1608,18 @@ class PairwiseIntercomparisonMetrics(MetadataMetrics, PairwiseMetricsMixin):
         calc_kendall=True,
         analytical_cis=True,
         bootstrap_cis=False,
+        bootstrap_min_obs=100,
+        bootstrap_alpha=0.05,
         metadata_template=None,
     ):
-        super().__init__(min_obs=10, metadata_template=metadata_template)
+        super().__init__(min_obs=min_obs, metadata_template=metadata_template)
 
         self.calc_spearman = calc_spearman
         self.calc_kendall = calc_kendall
         self.analytical_cis = analytical_cis
         self.bootstrap_cis = bootstrap_cis
+        self.bootstrap_min_obs = bootstrap_min_obs
+        self.bootstrap_alpha = bootstrap_alpha
 
         metrics = self._pairwise_metric_names()
         metrics.append("n_obs")
@@ -1617,6 +1642,7 @@ class PairwiseIntercomparisonMetrics(MetadataMetrics, PairwiseMetricsMixin):
         n_obs = len(data)
         result["n_obs"][0] = n_obs
         if n_obs < self.min_obs:
+            result["status"][0] = eh.INSUFFICIENT_DATA
             warnings.warn(
                 "Not enough observations to calculate metrics.", UserWarning
             )
@@ -1629,6 +1655,7 @@ class PairwiseIntercomparisonMetrics(MetadataMetrics, PairwiseMetricsMixin):
         # we can calculate almost all metrics from moments
         mx, my, varx, vary, cov = _moments_welford(x, y)
         self._calc_pairwise_metrics(x, y, mx, my, varx, vary, cov, result)
+        result["status"][0] = eh.OK
         return result
 
 
@@ -1655,8 +1682,6 @@ class TripleCollocationMetrics(MetadataMetrics, PairwiseMetricsMixin):
         will also be used to name the results. **Make sure that you set
         ``rename_cols=False`` in the call to ``Validation.calc``, otherwise the
         names will be wrong.**
-    othernames : list
-        List of the names of the other datasets (>=2).
     min_obs : int, optional
         Minimum number of observations required to calculate metrics. Default
         is 10.
@@ -1664,6 +1689,17 @@ class TripleCollocationMetrics(MetadataMetrics, PairwiseMetricsMixin):
         Whether to calculate bootstrap confidence intervals for triple
         collocation metrics.
         The default is `False`. This might be a lot of computational effort.
+    bootstrap_min_obs: int, optional (default: 100)
+        Minimum number of observations to draw from the time series for boot-
+        strapping.
+    bootstrap_alpha: float, optional (default: 0.05)
+        Confidence level.
+    metadata_template: dict, optional (default: None)
+        A dictionary containing additional fields (and types) of the form
+        dict = {'field': np.float32([np.nan]}. Allows users to specify
+        information in the job tuple, i.e. jobs.append((idx,
+        metadata['longitude'], metadata['latitude'], metadata_dict)) which
+        is then propagated to the end netCDF results file.
     """
 
     def __init__(
@@ -1671,12 +1707,16 @@ class TripleCollocationMetrics(MetadataMetrics, PairwiseMetricsMixin):
         refname,
         min_obs=10,
         bootstrap_cis=False,
+        bootstrap_min_obs=100,
+        bootstrap_alpha=0.05,
         metadata_template=None,
     ):
 
         super().__init__(min_obs=min_obs, metadata_template=metadata_template)
 
         self.bootstrap_cis = bootstrap_cis
+        self.bootstrap_min_obs = bootstrap_min_obs
+        self.bootstrap_alpha = bootstrap_alpha
         self.refname = refname
         self.result_template.update(_get_metric_template(["n_obs"]))
 
@@ -1724,6 +1764,7 @@ class TripleCollocationMetrics(MetadataMetrics, PairwiseMetricsMixin):
         result.update(self._get_metric_template(self.refname, othernames))
 
         if n_obs < self.min_obs:
+            result["status"][0] = eh.INSUFFICIENT_DATA
             warnings.warn(
                 "Not enough observations to calculate metrics.", UserWarning
             )
@@ -1741,13 +1782,16 @@ class TripleCollocationMetrics(MetadataMetrics, PairwiseMetricsMixin):
             try:
                 # handle failing bootstrapping because e.g.
                 # too small sample size
-                res = tcol_metrics_with_bootstrapped_ci(*arrays)
+                res = tcol_metrics_with_bootstrapped_ci(
+                    *arrays, minimum_data_length=self.bootstrap_min_obs,
+                    alpha=self.bootstrap_alpha)
                 for i, name in enumerate(ds_names):
                     for j, metric in enumerate(["snr", "err_std", "beta"]):
                         result[(metric, name)][0] = res[j][0][i]
                         result[(metric + "_ci_lower", name)][0] = res[j][1][i]
                         result[(metric + "_ci_upper", name)][0] = res[j][2][i]
+                result["status"][0] = eh.OK
             except ValueError:
                 # if the calculation fails, the template results (np.nan) are used
-                pass
+                result["status"] = eh.METRICS_CALCULATION_FAILED
         return result

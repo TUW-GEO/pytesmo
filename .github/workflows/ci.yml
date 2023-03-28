@@ -9,15 +9,20 @@ name: Automated Tests
 on:
   push:
   pull_request:
+  workflow_dispatch:
   schedule: # only upstream, won't trigger on forks!
     - cron: '0 0 * * *' # daily
 jobs:
   build:
     strategy:
       matrix:
-        os: ["ubuntu-latest", "windows-latest"]
-        python-version: ['3.7', '3.8', '3.9']
-        ymlfile: ['environment.yml']
+        python-version: [ '3.8', '3.9', '3.10' ]
+        os: ["ubuntu-latest"]
+        ymlfile: ["environment.yml"]
+        include:
+          - os: "windows-latest"
+            python-version: "3.10"
+            ymlfile: "environment.yml"
     name: Py${{ matrix.python-version }}@${{ matrix.os }}🐍
     runs-on: ${{ matrix.os }}
 
@@ -30,8 +35,10 @@ jobs:
         with:
           miniconda-version: "latest"
           auto-update-conda: true
+          channel-priority: flexible
           python-version: ${{ matrix.python-version }}
           environment-file: ${{ matrix.ymlfile }}
+          mamba-version: "*"
           activate-environment: pytesmo # todo: must match with name in environment.yml
           auto-activate-base: false
       - name: Print Infos
@@ -47,6 +54,7 @@ jobs:
         shell: bash -l {0}
         run: |
           mkdir -p .artifacts
+          # Here we could exclude pinned environments (not used):
           if [ ${{ matrix.ymlfile }} == "environment.yml" ]
           then
               filename=env_py${{ matrix.python-version }}_${{ matrix.os }}.yml
