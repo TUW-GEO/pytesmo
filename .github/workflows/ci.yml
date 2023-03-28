@@ -21,7 +21,10 @@ jobs:
         ymlfile: ["environment.yml"]
         include:
           - os: "windows-latest"
-            python-version: ["3.10", "3.11"]
+            python-version: "3.10"
+            ymlfile: "environment.yml"
+          - os: "windows-latest"
+            python-version: "3.11"
             ymlfile: "environment.yml"
     name: Py${{ matrix.python-version }}@${{ matrix.os }}🐍
     runs-on: ${{ matrix.os }}
