@@ -108,7 +108,7 @@ def get_scaling_method_lut():
         "mean_std": mean_std,
         "min_max": min_max,
         "cdf_match": cdf_match,
-        "cdf_beta_match": cdf_match,
+        "cdf_beta_match": cdf_beta_match,
     }
 
     return lut
@@ -251,7 +251,7 @@ def mean_std(src, ref, **kwargs):
 
 
 @utils.deprecated
-def cdf_match(*args, **kwargs):
+def cdf_beta_match(*args, **kwargs):
     return cdf_match(*args, **kwargs)
 
 
