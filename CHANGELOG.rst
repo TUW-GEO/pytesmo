@@ -8,6 +8,8 @@ Unreleased
 - Exclude netCDF4 at version 1.6.2 due to bug when writing strings with zlib compression (PR `#288 <https://github.com/TUW-GEO/pytesmo/pull/288>`_)
 - added test for data_manager_failed (PR `#287 <https://github.com/TUW-GEO/pytesmo/pull/287>`_)
 - `read_ts` is not longer used in pytesmo (PR `#289 <https://github.com/TUW-GEO/pytesmo/pull/289>`_)
+- support for `max_dist` keyword in validation framework to limit comparisons to close data points (PR `#291 <https://github.com/TUW-GEO/pytesmo/pull/291>`_)
+- Reimplementation of CDF matching (PR `#259 <https://github.com/TUW-GEO/pytesmo/pull/259>`_). This removed all other implementations, i.e. ``lin_cdf_match`` and ``cdf_beta_match``. These now are either removed (``lin_cdf_match``), or point to the new implementation (``cdf_beta_match``)
 
 Version 0.14.4, 2023-01-27
 ==========================
