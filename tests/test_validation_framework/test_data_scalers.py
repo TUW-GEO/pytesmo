@@ -85,8 +85,8 @@ def test_CDF_storage_scaler_scale_df_3_columns_load_precomputed(tmpdir):
     path = str(tmpdir)
     grid = genreg_grid(1, 1).to_cell_grid(10, 10)
     scaler = CDFStoreParamsScaler(path, grid)
-    scaler.get_parameters(df, 1)
-    scaler.get_parameters(df, 100)
+    scaler.get_parameters(df, 0, 1)
+    scaler.get_parameters(df, 0, 100)
     scaled_data = scaler.scale(df, 0, (1, 10, 10))
     np.testing.assert_almost_equal(scaled_data['x'].values,
                                    scaled_data['y'].values)
@@ -100,17 +100,16 @@ def test_CDF_storage_scaler_calc_parameters():
     path = 'test'
     grid = genreg_grid(1, 1).to_cell_grid(10, 10)
     scaler = CDFStoreParamsScaler(path, grid)
-    parameters = scaler.calc_parameters(df)
-    parameters_should = {'y': np.array([0., 24.975, 49.95, 149.85, 249.75,
-                                        349.65, 449.55, 474.525, 499.5]),
-                         'x': np.array([0., 49.95, 99.9,
-                                        299.7, 499.5, 699.3, 899.1,
-                                        949.05, 999.])}
+    parameters = scaler.calc_parameters(df, 0)
+    parameters_should = {'y_x': np.array([
+        [0., 24.75, 49.75, 149.75, 249.75, 349.75, 449.75, 474.75, 499.5],
+        [0., 49.5, 99.5, 299.5, 499.5, 699.5, 899.5, 949.5, 999.]
+    ])}
     assert sorted(
         list(parameters_should.keys())) == sorted(list(parameters.keys()))
     for key in parameters_should:
         np.testing.assert_allclose(parameters[key],
-                                   parameters_should[key])
+                                   parameters_should[key], atol=1e-10)
 
 
 def test_CDF_storage_scaler_store_load_parameters(tmpdir):
@@ -118,18 +117,17 @@ def test_CDF_storage_scaler_store_load_parameters(tmpdir):
     path = str(tmpdir)
     grid = genreg_grid(1, 1).to_cell_grid(10, 10)
     scaler = CDFStoreParamsScaler(path, grid)
-    data_written = {'y': np.array([0., 24.975, 49.95, 149.85, 249.75,
-                                   349.65, 449.55, 474.525, 499.5]),
-                    'x': np.array([0., 49.95, 99.9,
-                                   299.7, 499.5, 699.3, 899.1,
-                                   949.05, 999.])}
+    data_written = {'y_x': np.array([
+        [0., 24.75, 49.75, 149.75, 249.75, 349.75, 449.75, 474.75, 499.5],
+        [0., 49.5, 99.5, 299.5, 499.5, 699.5, 899.5, 949.5, 999.]
+    ])}
     scaler.store_parameters(1, data_written)
     params_loaded = scaler.load_parameters(1)
     assert sorted(
         list(data_written.keys())) == sorted(list(params_loaded.keys()))
     for key in params_loaded:
         np.testing.assert_allclose(params_loaded[key],
-                                   data_written[key])
+                                   data_written[key], rtol=1e-10)
 
 
 def test_CDF_storage_scaler_get_parameters(tmpdir):
@@ -138,17 +136,16 @@ def test_CDF_storage_scaler_get_parameters(tmpdir):
     path = str(tmpdir)
     grid = genreg_grid(1, 1).to_cell_grid(10, 10)
     scaler = CDFStoreParamsScaler(path, grid)
-    data_written = {'y': np.array([0., 24.975, 49.95, 149.85, 249.75,
-                                   349.65, 449.55, 474.525, 499.5]),
-                    'x': np.array([0., 49.95, 99.9,
-                                   299.7, 499.5, 699.3, 899.1,
-                                   949.05, 999.])}
-    params_loaded = scaler.get_parameters(df, 1)
+    data_written = {'y_x': np.array([
+        [0., 24.75, 49.75, 149.75, 249.75, 349.75, 449.75, 474.75, 499.5],
+        [0., 49.5, 99.5, 299.5, 499.5, 699.5, 899.5, 949.5, 999.]
+    ])}
+    params_loaded = scaler.get_parameters(df, 0, 1)
     assert sorted(
         list(data_written.keys())) == sorted(list(params_loaded.keys()))
     for key in params_loaded:
         np.testing.assert_allclose(params_loaded[key],
-                                   data_written[key])
+                                   data_written[key], atol=1e-10)
 
     # ensure that get_parameters has also stored them
     params_loaded = scaler.load_parameters(1)
@@ -156,4 +153,4 @@ def test_CDF_storage_scaler_get_parameters(tmpdir):
         list(data_written.keys())) == sorted(list(params_loaded.keys()))
     for key in params_loaded:
         np.testing.assert_allclose(params_loaded[key],
-                                   data_written[key])
+                                   data_written[key], atol=1e-10)

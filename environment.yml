@@ -12,6 +12,7 @@ dependencies:
   - pandas>=0.11.0,!=0.15.2
   - netcdf4>=1.0.1,!=1.6.2  # at v1.6.2 only defaults channel worked properly
   - cython>=0.29.21
+  - scikit-learn
   - pykdtree
   - pyresample
   - numba
