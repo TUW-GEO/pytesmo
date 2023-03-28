@@ -130,7 +130,7 @@ class Validation(object):
         temporal_ref=None,
         masking_datasets=None,
         period=None,
-        scaling="lin_cdf_match",
+        scaling="cdf_match",
         scaling_ref=None,
     ):
 
