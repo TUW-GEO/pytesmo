@@ -16,12 +16,12 @@ jobs:
   build:
     strategy:
       matrix:
-        python-version: [ '3.8', '3.9', '3.10' ]
+        python-version: [ '3.8', '3.9', '3.10', '3.11']
         os: ["ubuntu-latest"]
         ymlfile: ["environment.yml"]
         include:
           - os: "windows-latest"
-            python-version: "3.10"
+            python-version: ["3.10", "3.11"]
             ymlfile: "environment.yml"
     name: Py${{ matrix.python-version }}@${{ matrix.os }}🐍
     runs-on: ${{ matrix.os }}
