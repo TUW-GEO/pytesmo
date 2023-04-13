@@ -36,6 +36,7 @@ import pandas.testing as pdt
 import numpy as np
 
 import pytesmo.time_series.anomaly as anomaly
+from pytesmo.time_series.anomaly import moving_average
 
 
 def test_anomaly_calc_given_climatology():
@@ -133,3 +134,37 @@ def test_climatology_closed():
     assert clim.size == 366
     # test that the arange was closed during the second moving average
     assert clim.iloc[365] - 187.90 < 0.01
+
+
+def test_climatology_std():
+    np.random.seed(451)
+    idx = pd.date_range('2000-01-01', '2010-12-31', freq='D')
+    ts = pd.Series(index=idx, data=np.random.rand(len(idx)))
+
+    # remove a part of the time series
+    clim = anomaly.calc_climatology(ts, std=True)
+
+    # use same kwargs as in the function above (default)
+    ser = moving_average(ts, window_size=5, fillna=False, min_obs=1)
+
+    # in the clac_climatology function std is computed after first smoothing
+    assert clim.loc[3, 'std'] == ser.groupby(ser.index.dayofyear).std().loc[3]
+
+    assert clim.index.size == 366
+    assert 'std' in clim.columns
+    assert 'climatology' in clim.columns
+
+
+def test_zscores():
+    np.random.seed(451)
+    idx = pd.date_range('2000-01-01', '2010-12-31', freq='D')
+    ts = pd.Series(index=idx, data=np.random.rand(len(idx)))
+    clim = anomaly.calc_climatology(ts, std=True)
+    anom = anomaly.calc_anomaly(ts, climatology=clim, return_clim=True)
+    assert 'anomaly' in anom.columns
+    assert 'climatology' in anom.columns
+    assert 'climatology_std' in anom.columns
+
+    zscore = anom['anomaly'] / anom['climatology_std']
+    assert np.all(zscore.values[np.where(anom.anomaly < 0)[0]] < 0)
+    assert np.all(zscore.values[np.where(anom.anomaly >= 0)[0]] >= 0)
