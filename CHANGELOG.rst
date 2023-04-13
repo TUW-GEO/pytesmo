@@ -5,6 +5,7 @@ Changelog
 Unreleased
 ==========
 - fixing setting of status code for bootstrapped triple collocation  (PR `#285 <https://github.com/TUW-GEO/pytesmo/pull/285>`_)
+- add kwarg to `time_series.anomaly.calc_climatology` to compute the standard deviation of the climatology.
 
 Version 0.14.4, 2023-01-27
 ==========================
