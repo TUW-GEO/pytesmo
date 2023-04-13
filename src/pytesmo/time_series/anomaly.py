@@ -235,10 +235,10 @@ def calc_climatology(Ser,
 
     if std:
         std_ser = Ser.groupby('unit').std()
-        clim_ser = pd.concat([
-            clim.loc[:, 0].rename(clim.name), std_ser.loc[:, 0].rename('std')
-        ],
-                             axis=1)
+
+        clim_ser = pd.concat(
+            [clim.loc[:, 0].rename(clim.name),
+             std_ser.loc[:, 0].rename('std')], axis=1)  # yapf: disable
     else:
         clim_ser = pd.DataFrame(
             data={'climatology': clim.values.flatten()},
