@@ -22,32 +22,32 @@ def calc_anomaly(Ser,
 
     Parameters
     ----------
-    Ser : pandas.Series (index must be a DateTimeIndex)
-
-    window_size : float, optional
+    Ser : pandas.Series
+        Input data (index must be a DateTimeIndex)
+    window_size : float, optional (default: 35)
         The window-size [days] of the moving-average window to calculate the
         anomaly reference (only used if climatology is not provided)
-        Default: 35 (days)
-
-    climatology : pandas.Series (index: 1-366), optional
+    climatology : pandas.Series (index: 1-366), optional (default: None)
         if provided, anomalies will be based on the climatology
-
     timespan : [timespan_from, timespan_to], datetime.datetime(y,m,d), optional
         If set, only a subset
-
-    respect_leap_years : boolean, optional
-        If set then leap years will be respected during matching of the climatology
-        to the time series
-
-    return_clim : boolean, optional
+    respect_leap_years : boolean, optional (default: True)
+        If set then leap years will be respected during matching of the
+        climatology to the time series
+    return_clim : boolean, optional (default: False)
         if set to true the return argument will be a DataFrame which
         also contains the climatology time series.
         Only has an effect if climatology is used.
 
     Returns
     -------
-    anomaly : pandas.Series
-        Series containing the calculated anomalies
+    anomaly : pandas.Series or pandas.DataFrame
+        Series containing the calculated anomalies.
+        If `return_clim` is set to true, a DataFrame will be returned, where
+        one column contains the anomalies and another the climatology
+        broadcasted over the whole index. If a climatology with a 'std' column
+        was passed initially, this column will also be returned in the
+        DataFrame if `return_clim` is chosen.
     '''
 
     if climatology is not None:
@@ -179,12 +179,14 @@ def calc_climatology(Ser,
 
     Returns
     -------
-    climatology : pandas.Series
+    climatology : pandas.Series or pandas.DataFrame
         Containing the calculated climatology. The size of the series depends
         on the type of climatology being calculated, based on the value of
         'output_freq':
             - 366 values for a daily climatology, behaving as a leap year
             - 12 values for a monthly climatology
+        If 'std' is set to True, the output will be a DataFrame with 2 columns:
+            'climatology' and 'std'.
     """
     # establish the moving window size
     default_moving_avg_clim = {"day": 35, "month": 3}
@@ -236,9 +238,9 @@ def calc_climatology(Ser,
     if std:
         std_ser = Ser.groupby('unit').std()
 
-        clim_ser = pd.concat(
-            [clim.loc[:, 0].rename(clim.name),
-             std_ser.loc[:, 0].rename('std')], axis=1)  # yapf: disable
+        clim_ser = pd.concat([
+            clim.loc[:, 0].rename(clim.name),
+            std_ser.loc[:, 0].rename('std')], axis=1)  # yapf: disable
     else:
         clim_ser = pd.DataFrame(
             data={'climatology': clim.values.flatten()},
