@@ -30,6 +30,7 @@
 Test for the data manager
 '''
 
+import pandas as pd
 import pandas.testing as pdtest
 import pytest
 import numpy as np
@@ -137,7 +138,7 @@ def test_DataManager_default_add():
             'args': [],
             'kwargs': {},
             'use_lut': False,
-            'lut_max_dist': None,
+            'max_dist': np.inf,
             'grids_compatible': False
         },
         'DS2': {
@@ -146,7 +147,7 @@ def test_DataManager_default_add():
             'args': [],
             'kwargs': {},
             'use_lut': False,
-            'lut_max_dist': None,
+            'max_dist': np.inf,
             'grids_compatible': False
         }}
 
@@ -247,3 +248,68 @@ def test_get_result_combinations():
                             (('DS1', 'soil moisture'), ('DS3', 'sm2')),
                             (('DS2', 'sm'), ('DS3', 'sm')),
                             (('DS2', 'sm'), ('DS3', 'sm2'))]
+
+
+def test_maxdist():
+
+    testdf = pd.DataFrame([1, 1, 1], columns=["sm"])
+    class TestDataset(object):
+        """Test dataset that acts as a fake object for the base classes."""
+
+        def __init__(self, filename, mode='r'):
+            self.filename = filename
+            self.mode = mode
+
+        def read(self, gpi):
+            return testdf
+
+        def read_ts(self, gpi):
+            return self.read(gpi)
+
+        def close(self):
+            pass
+
+        def flush(self):
+            pass
+
+    grid1 = grids.CellGrid(np.array([0, 1]), np.array([0, 1]),
+                           np.array([0, 0]))
+    grid2 = grids.CellGrid(np.array([0.1, 1]), np.array([0.1, -1]),
+                           np.array([0, 0]))
+
+    ds1 = GriddedTsBase("", grid1, TestDataset)
+    ds2 = GriddedTsBase("", grid2, TestDataset)
+
+    datasets = {
+        'DS1': {
+            'class': ds1,
+            'columns': ['sm'],
+            'args': [],
+            'kwargs': {},
+            'max_dist': 25e3,  # max dist is in m
+        },
+        'DS2': {
+            'class': ds2,
+            'columns': ['sm'],
+            'args': [],
+            'kwargs': {},
+            'max_dist': 25e3,  # max dist is in m
+        },
+    }
+
+    dm = DataManager(datasets, 'DS1')
+
+    expected = {
+        "DS1": testdf,
+        "DS2": testdf,
+    }
+
+    # test if the close point can be found
+    df_dict = dm.get_data(0, 0, 0)
+    assert df_dict == expected
+
+    # test if the far away point in the other dataset can be found (should not happen)
+    df_dict = dm.get_data(1, 1, 1)
+    assert df_dict == {}
+
+

@@ -130,7 +130,7 @@ class Validation(object):
         temporal_ref=None,
         masking_datasets=None,
         period=None,
-        scaling="lin_cdf_match",
+        scaling="cdf_match",
         scaling_ref=None,
     ):
 
@@ -245,7 +245,6 @@ class Validation(object):
             f"'handle_errors' must be one of {error_handling_options}"
         )
 
-
         if len(args) > 0:
             gpis, lons, lats, args = args_to_iterable(
                 gpis, lons, lats, *args, n=3
@@ -263,7 +262,7 @@ class Validation(object):
                     )
                 except Exception as e:
                     raise eh.DataManagerError(
-                        "Getting the data for gpi {gpi_info} failed!")
+                        f"Getting the data for gpi {gpi_info} failed!")
 
                 # if no data is available continue with the next gpi
                 if len(df_dict) == 0:
