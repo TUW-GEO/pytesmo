@@ -6,10 +6,13 @@ Unreleased changes in master
 ============================
 -
 
-
-Version 0.15.1, 2023-06-14
+Version 0.15.2, 2023-06-14
 ==========================
-- add kwarg to `time_series.anomaly.calc_climatology` to compute the standard deviation of the climatology.
+- Add kwarg to `time_series.anomaly.calc_climatology` to compute the standard deviation of the climatology (e.g. for anomaly z-scores)
+
+Version 0.15.1, 2023-03-29
+==========================
+- Adding scikit-learn as installation dependency.
 
 Version 0.15.0, 2023-03-28
 ==========================
