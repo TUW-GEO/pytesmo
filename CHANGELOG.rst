@@ -2,8 +2,13 @@
 Changelog
 =========
 
-Unreleased
-==========
+Unreleased changes in master
+============================
+-
+
+
+Version 0.15.1, 2023-06-14
+==========================
 - add kwarg to `time_series.anomaly.calc_climatology` to compute the standard deviation of the climatology.
 
 Version 0.15.0, 2023-03-28
