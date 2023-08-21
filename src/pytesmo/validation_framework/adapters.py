@@ -133,16 +133,14 @@ class BasicAdapter:
             return self.cls.grid
 
 
-@deprecated(
-    "`MaskingAdapter` is deprecated, use `SelfMaskingAdapter` "
-    "or `AdvancedMaskingAdapter` instead."
-)
 class MaskingAdapter(BasicAdapter):
     """
     Transform the given class to return a boolean dataset given the operator
     and threshold. This class calls the read_ts and read methods
     of the given instance and applies boolean masking to the returned data
-    using the given operator and threshold.
+    using the given operator and threshold. This adapter does not filter the
+    time series (see the AdvancedMaskingAdapter and SelfMaskingAdapter for
+    that) but only turns it into a boolean dataset.
 
     Parameters
     ----------
@@ -271,8 +269,8 @@ class AdvancedMaskingAdapter(BasicAdapter):
         Reader object, has to have a `read_ts` or `read` method or a method
         name must be specified in the `read_name` kwarg. The same method will
         be available for the adapted version of the reader.
-    filter_list: list[tuple, tuple, tuple]
-        [column_name, operator, threshold]
+    filter_list: list[tuple]
+        [(column_name, operator, threshold), ...]
         'column_name': string
             name of the column to apply the operator to
         'operator': Callable or str;
