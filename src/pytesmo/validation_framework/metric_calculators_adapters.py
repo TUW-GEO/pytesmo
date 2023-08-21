@@ -183,14 +183,10 @@ class MonthsMetricsAdapter(SubsetsMetricsAdapter):
             }
 
         for name, months in sets.items():
-            distr = TsDistributor(generic_date_ranges=[(
+            distr = TsDistributor(yearless_date_ranges=[(
                 YearlessDatetime(m, 1, 0, 0, 0),
                 YearlessDatetime(m, days_in_month(m), 23, 59, 59))
                                                        for m in months])
             sets[name] = distr
 
         super().__init__(calculator, subsets=sets)
-
-
-if __name__ == '__main__':
-    dt = YearlessDatetime(2, 29).to_datetime(2001)
