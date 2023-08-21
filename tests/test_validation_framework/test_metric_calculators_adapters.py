@@ -10,30 +10,20 @@ from datetime import datetime
 class Test_YearlessDateTime(unittest.TestCase):
 
     def setUp(self) -> None:
-        self.now = datetime.now()
         self.past = datetime(1900, 1, 2, 3, 4, 5)
         self.future = datetime(2104, 6, 7, 8, 9, 10)
-        self.gnow = YearlessDatetime(self.now.month, self.now.day,
-                                     self.now.hour, self.now.minute,
-                                     self.now.second)
+        self.yearless = YearlessDatetime(3, 10, 0, 0, 0)
 
     def test_comparisons(self):
-        assert self.gnow > YearlessDatetime.from_datetime(self.past)
-        assert self.gnow < YearlessDatetime.from_datetime(self.future)
-        assert self.gnow == self.gnow
-        assert self.gnow <= self.gnow
-        assert self.gnow >= self.gnow
+        assert self.yearless > YearlessDatetime.from_datetime(self.past)
+        assert self.yearless < YearlessDatetime.from_datetime(self.future)
+        assert self.yearless == self.yearless
 
     def test_doy(self):
         assert YearlessDatetime.from_datetime(self.future).doy == 159
-        try:
-            _ = datetime(self.now.year, 2, 29)
-            assert self.now.timetuple().tm_yday == self.gnow.doy
-        except ValueError:
-            if self.now > datetime(self.now.year, 2, 28):
-                assert self.now.timetuple().tm_yday + 1 == self.gnow.doy
-            else:
-                assert self.now.timetuple().tm_yday == self.gnow.doy
+        assert YearlessDatetime(12, 31).doy == 366
+        assert YearlessDatetime(2, 29).doy == 60
+        assert YearlessDatetime(1, 1).doy == 1
 
     def test_to_dt(self):
         assert YearlessDatetime.from_datetime(self.past).to_datetime(
@@ -113,7 +103,7 @@ class Test_TimeSeriesDistributionSet(unittest.TestCase):
         date_ranges = [(datetime(2004, 4, 6), datetime(2004, 4, 8, 12))]
         yearless_dates = [YearlessDatetime(4, 10, 12)]
         yearless_date_ranges = [(YearlessDatetime(2, 27),
-                                YearlessDatetime(2, 29, 23))]
+                                 YearlessDatetime(2, 29, 23))]
 
         set = TsDistributor(
             dates=dates,
@@ -125,17 +115,17 @@ class Test_TimeSeriesDistributionSet(unittest.TestCase):
 
         assert np.all(dt in d.index for dt in dates)
         for dt in [
-                datetime(2004, 4, 6, 12),
-                datetime(2004, 4, 7, 12),
-                datetime(2004, 4, 8, 12)
+            datetime(2004, 4, 6, 12),
+            datetime(2004, 4, 7, 12),
+            datetime(2004, 4, 8, 12)
         ]:
             assert dt in d.index
 
         assert datetime(2008, 4, 10, 12) in d.index
 
         for dt in [
-                datetime(2007, 2, 27, 12),
-                datetime(2007, 2, 28, 12),
-                datetime(2008, 2, 29, 12)
+            datetime(2007, 2, 27, 12),
+            datetime(2007, 2, 28, 12),
+            datetime(2008, 2, 29, 12)
         ]:
             assert dt in d.index
