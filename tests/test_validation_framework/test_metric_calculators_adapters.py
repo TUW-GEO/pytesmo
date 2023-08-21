@@ -3,30 +3,29 @@ import unittest
 import pandas as pd
 import numpy as np
 
-from pytesmo.validation_framework.metric_calculators_adapters import (
-    GenericDatetime, TsDistributor)
+from pytesmo.time_series.grouping import YearlessDatetime, TsDistributor
 from datetime import datetime
 
 
-class Test_GenericDateTime(unittest.TestCase):
+class Test_YearlessDateTime(unittest.TestCase):
 
     def setUp(self) -> None:
         self.now = datetime.now()
         self.past = datetime(1900, 1, 2, 3, 4, 5)
         self.future = datetime(2104, 6, 7, 8, 9, 10)
-        self.gnow = GenericDatetime(self.now.month, self.now.day,
-                                    self.now.hour, self.now.minute,
-                                    self.now.second)
+        self.gnow = YearlessDatetime(self.now.month, self.now.day,
+                                     self.now.hour, self.now.minute,
+                                     self.now.second)
 
     def test_comparisons(self):
-        assert self.gnow > GenericDatetime.from_datetime(self.past)
-        assert self.gnow < GenericDatetime.from_datetime(self.future)
+        assert self.gnow > YearlessDatetime.from_datetime(self.past)
+        assert self.gnow < YearlessDatetime.from_datetime(self.future)
         assert self.gnow == self.gnow
         assert self.gnow <= self.gnow
         assert self.gnow >= self.gnow
 
     def test_doy(self):
-        assert GenericDatetime.from_datetime(self.future).doy == 159
+        assert YearlessDatetime.from_datetime(self.future).doy == 159
         try:
             _ = datetime(self.now.year, 2, 29)
             assert self.now.timetuple().tm_yday == self.gnow.doy
@@ -37,9 +36,9 @@ class Test_GenericDateTime(unittest.TestCase):
                 assert self.now.timetuple().tm_yday == self.gnow.doy
 
     def test_to_dt(self):
-        assert GenericDatetime.from_datetime(self.past).to_datetime(
+        assert YearlessDatetime.from_datetime(self.past).to_datetime(
             self.past.year) == self.past
-        assert GenericDatetime.from_datetime(
+        assert YearlessDatetime.from_datetime(
             self.future).to_datetime(years=[2104, 2111])[0] == self.future
 
 
@@ -80,25 +79,25 @@ class Test_TimeSeriesDistributionSet(unittest.TestCase):
         assert datetime(2005, 2, 1, 12) in d.index
         assert len(d.index) == (12 + (10 - 1)) + 3
 
-    def test_filter_generic_dates_only(self):
-        generic_dates = (
-            GenericDatetime(6, 6, 12, 0, 0),
-            GenericDatetime(2, 29, 12, 0, 0),
-            GenericDatetime.from_datetime(datetime(2000, 5, 5, 12)),
-            GenericDatetime(1, 1, 12),  # not in input/output !!
+    def test_filter_yearless_dates_only(self):
+        yearless_dates = (
+            YearlessDatetime(6, 6, 12, 0, 0),
+            YearlessDatetime(2, 29, 12, 0, 0),
+            YearlessDatetime.from_datetime(datetime(2000, 5, 5, 12)),
+            YearlessDatetime(1, 1, 12),  # not in input/output !!
         )
-        set3 = TsDistributor(generic_dates=generic_dates)
+        set3 = TsDistributor(yearless_dates=yearless_dates)
 
         d = set3.select(self.df)
         assert datetime(2005, 5, 5, 12) in d.index
         assert datetime(2008, 2, 29, 12) in d.index
         assert len(d.index) == 2 * len(np.unique(self.df.index.year)) + 3
 
-    def test_filter_generic_date_ranges_only(self):
-        set4 = TsDistributor(generic_date_ranges=[
-            (GenericDatetime(12, 20),
-             GenericDatetime(2, 10, 0)),  # 12 + 9 elements
-            (GenericDatetime(2, 27), GenericDatetime(2, 29, 12))  # 3 or 2
+    def test_filter_yearless_date_ranges_only(self):
+        set4 = TsDistributor(yearless_date_ranges=[
+            (YearlessDatetime(12, 20),
+             YearlessDatetime(2, 10, 0)),  # 12 + 9 elements
+            (YearlessDatetime(2, 27), YearlessDatetime(2, 29, 12))  # 3 or 2
         ])
         d = set4.select(self.df)
         ny = len(np.unique(self.df.index.year))
@@ -112,15 +111,15 @@ class Test_TimeSeriesDistributionSet(unittest.TestCase):
             datetime(2005, 5, 5, 12),
         )
         date_ranges = [(datetime(2004, 4, 6), datetime(2004, 4, 8, 12))]
-        generic_dates = [GenericDatetime(4, 10, 12)]
-        generic_date_ranges = [(GenericDatetime(2, 27),
-                                GenericDatetime(2, 29, 23))]
+        yearless_dates = [YearlessDatetime(4, 10, 12)]
+        yearless_date_ranges = [(YearlessDatetime(2, 27),
+                                YearlessDatetime(2, 29, 23))]
 
         set = TsDistributor(
             dates=dates,
-            generic_dates=generic_dates,
+            yearless_dates=yearless_dates,
             date_ranges=date_ranges,
-            generic_date_ranges=generic_date_ranges,
+            yearless_date_ranges=yearless_date_ranges,
         )
         d = set.select(self.df)
 
