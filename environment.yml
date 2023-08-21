@@ -4,39 +4,37 @@
 
 name: pytesmo
 channels:
-  - conda-forge
   - defaults
+  - conda-forge
 dependencies:
-  - numpy
-  - scipy
-  - pandas
-  - netCDF4
-  - cython
+  - numpy<=1.23.5  # v1.24 not yet supported by numba
+  - scipy>=0.12
+  - pandas>=0.11.0,!=0.15.2
+  - netcdf4>=1.0.1,!=1.6.2  # at v1.6.2 only defaults channel worked properly
+  - cython>=0.29.21
+  - scikit-learn
   - pykdtree
   - pyresample
-  - matplotlib
+  - numba
+  - matplotlib>=1.2.0
   # optional, for documentation and testing:
   - nb_conda
   - ipykernel
   - pip
   - pip:
-      - pynetcf
-      - pygeogrids
-      - pynetcf
-      - pygeobase
-      - more_itertools
-      - build
-      - repurpose
-      - cadati
-      - numba
-      # optional, for documentation and testing:
-      - ascat>=2.0
-      - ismn>=1.2.0
-      - pytest
-      - pytest-cov
-      - pytest-mpl
-      - pre-commit
-      - flake8
-      - yapf
-      - sphinx_rtd_theme
-      - nbsphinx
+    - pynetcf>=0.4.0
+    - pygeogrids
+    - pygeobase>=0.6.0
+    - more_itertools
+    - build
+    - repurpose>=0.7.1
+    - cadati>=0.0.2
+    # optional, for documentation and testing:
+    - ascat>=2.0
+    - ismn>=1.2.0
+    - pytest
+    - pytest-cov
+    - pytest-mpl
+    - pre-commit
+    - flake8
+    - yapf

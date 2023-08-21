@@ -9,6 +9,7 @@ import pandas as pd
 from pygeogrids.grids import CellGrid
 import warnings
 import logging
+from typing import Mapping, Tuple, List
 
 from pytesmo.validation_framework.data_manager import DataManager
 from pytesmo.validation_framework.data_manager import get_result_names
@@ -17,6 +18,8 @@ from pytesmo.validation_framework.data_scalers import DefaultScaler
 import pytesmo.validation_framework.temporal_matchers as temporal_matchers
 from pytesmo.utils import ensure_iterable
 from distutils.version import LooseVersion
+
+import pytesmo.validation_framework.error_handling as eh
 
 
 class Validation(object):
@@ -127,7 +130,7 @@ class Validation(object):
         temporal_ref=None,
         masking_datasets=None,
         period=None,
-        scaling="lin_cdf_match",
+        scaling="cdf_match",
         scaling_ref=None,
     ):
 
@@ -191,7 +194,7 @@ class Validation(object):
         rename_cols=True,
         only_with_reference=False,
         handle_errors='raise',
-    ):
+    ) -> Mapping[Tuple[str], Mapping[str, np.ndarray]]:
         """
         The argument iterables (lists or numpy.ndarrays) are processed one
         after the other in tuples of the form (gpis[n], lons[n], lats[n],
@@ -220,10 +223,12 @@ class Validation(object):
         only_with_reference : bool, optional
             If this is enabled, only combinations that include the reference
             dataset (from the data manager) are calculated.
-        handle_errors: Literal['raise', 'ignore'], optional (default: 'raise')
-            `raise`: If an error occurs during validation, raise exception.
-            `ignore`: If an error occurs during validation, log it and
-             continue with next GPI.
+        handle_errors: str, optional (default: 'raise')
+            Governs how to handle errors::
+
+            * `raise`: If an error occurs during validation, raise exception.
+            * `ignore`: If an error occurs, assign the correct return code
+              to the result template and continue with the next GPI.
 
         Returns
         -------
@@ -234,7 +239,11 @@ class Validation(object):
                   by metrics_calculator
 
         """
-        results = {}
+        handle_errors = handle_errors.lower()
+        error_handling_options = ["raise", "ignore"]
+        assert handle_errors in error_handling_options, (
+            f"'handle_errors' must be one of {error_handling_options}"
+        )
 
         if len(args) > 0:
             gpis, lons, lats, args = args_to_iterable(
@@ -243,42 +252,56 @@ class Validation(object):
         else:
             gpis, lons, lats = args_to_iterable(gpis, lons, lats)
 
+        results = {}
         for gpi_info in zip(gpis, lons, lats, *args):
 
             try:
-                df_dict = self.data_manager.get_data(
-                    gpi_info[0], gpi_info[1], gpi_info[2]
-                )
+                try:
+                    df_dict = self.data_manager.get_data(
+                        gpi_info[0], gpi_info[1], gpi_info[2]
+                    )
+                except Exception as e:
+                    raise eh.DataManagerError(
+                        f"Getting the data for gpi {gpi_info} failed with"
+                        f" error: {e}")
 
                 # if no data is available continue with the next gpi
                 if len(df_dict) == 0:
-                    continue
+                    raise eh.NoGpiDataError(f"No data for gpi {gpi_info}")
                 matched_data, result, used_data = self.perform_validation(
                     df_dict,
                     gpi_info,
                     rename_cols=rename_cols,
                     only_with_reference=only_with_reference,
+                    handle_errors=handle_errors,
                 )
             except Exception as e:
-                if handle_errors.lower() == 'ignore':
-                    logging.error(f"{gpi_info}: {e}")
-                    continue
-                elif handle_errors.lower() == 'raise':
+                if handle_errors == 'raise':
                     raise e
-                else:
-                    raise NotImplementedError(
-                        f"Unknown `handle_errors` option: "
-                        f"{handle_errors.lower()}. "
-                        f"Choose `ignore` or `raise`."
-                    )
+                elif handle_errors == "ignore":
+                    logging.error(f"{gpi_info}: {e}")
+                    result = self.dummy_validation_result(
+                        gpi_info, rename_cols=rename_cols,
+                        only_with_reference=only_with_reference)
+                    if isinstance(e, eh.ValidationError):
+                        retcode = e.return_code
+                    else:
+                        retcode = eh.VALIDATION_FAILED
+                    for key in result:
+                        result[key][0]["status"][0] = retcode
+
             # add result of one gpi to global results dictionary
             for r in result:
                 if r not in results:
                     results[r] = []
                 results[r] = results[r] + result[r]
 
+        # So far, results is a dictionary mapping from a validation name/key
+        # (the involved datasets) to lists of individual result dictionaries
+        # for each gpi.
+        # Here, these lists are summarized to have a single dictionary of numpy
+        # arrays for each validation key
         compact_results = {}
-
         for key in results.keys():
             compact_results[key] = {}
             for field_name in results[key][0].keys():
@@ -297,7 +320,8 @@ class Validation(object):
         gpi_info,
         rename_cols=True,
         only_with_reference=False,
-    ):
+        handle_errors="raise",
+    ) -> Mapping[Tuple[str], List[Mapping[str, np.ndarray]]]:
         """
         Perform the validation for one grid point index and return the
         matched datasets as well as the calculated metrics.
@@ -324,6 +348,16 @@ class Validation(object):
             tuples.
         used_data: dict
             The DataFrame used for calculation of each set of metrics.
+
+        Raises
+        ------
+        eh.TemporalMatchingError :
+            If temporal matching failed
+        eh.NoTempMatchedDataError :
+            If there is insufficient data or the temporal matching did not
+            return data.
+        eh.ScalingError :
+            If scaling failed
         """
         results = {}
         used_data = {}
@@ -343,12 +377,34 @@ class Validation(object):
             columns = self.data_manager.datasets[ds]["columns"]
             data_df_dict[ds] = df_dict[ds][columns]
 
-        matched_n = self.temporal_match_datasets(data_df_dict)
+        # matched_n is a dictionary mapping from dataset combinations as keys
+        # to pandas dataframes
+        try:
+            matched_n = self.temporal_match_datasets(data_df_dict)
+        except Exception:
+            raise eh.TemporalMatchingError(
+                f"Temporal matching failed for gpi {gpi_info}!"
+            )
 
         for n, k in self.metrics_c:
+            metrics_calculator = self.metrics_c[(n, k)]
+
+            def dummy_result():
+                # to get only an empty template returned, we pass an
+                # empty dataframe here, with the correct column names
+                dummy_df = pd.DataFrame([], columns=result_ds_names)
+                metrics = metrics_calculator(dummy_df, gpi_info)
+                return metrics
+
             n_matched_data = matched_n[(n, k)]
             if len(n_matched_data) == 0:
-                continue
+                # this would happen if self.temp_matching returns an empty list
+                # or dictionary for n=n, k=k
+                raise eh.NoTempMatchedDataError(
+                    f"No temporally matched data for ({n}, {k})"
+                    f" and metric calculator {self.metrics_c[(n,k)]}"
+                    f" for gpi {gpi_info}!"
+                )
             result_names = get_result_combinations(
                 self.data_manager.ds_dict, n=k
             )
@@ -363,8 +419,20 @@ class Validation(object):
                     if self.data_manager.reference_name not in result_ds_names:
                         continue
 
+                if result_key not in results.keys():
+                    results[result_key] = []
+
                 if len(data) == 0:
-                    continue
+                    if handle_errors == "raise":
+                        raise eh.NoTempMatchedDataError(
+                            f"Temporal matching resulted in empty dataset for"
+                            f" {result_key} for gpi {gpi_info}"
+                        )
+                    else:
+                        metrics = dummy_result()
+                        metrics["status"][0] = eh.NO_TEMP_MATCHED_DATA
+                        results[result_key].append(metrics)
+                        continue
 
                 # at this stage we can drop the column multiindex and just use
                 # the dataset name
@@ -383,8 +451,12 @@ class Validation(object):
                         data = self.scaling.scale(
                             data, scaling_index, gpi_info
                         )
-                    except ValueError:
-                        continue
+                    except Exception as e:
+                        raise eh.ScalingError(
+                            f"Scaling failed for {result_key} for gpi"
+                            f" {gpi_info} with error {e}!"
+                        )
+
                     # Drop the scaling reference if it was not in the intended
                     # results
                     if self.scaling_ref not in [key[0] for key in result_key]:
@@ -397,15 +469,53 @@ class Validation(object):
                         rename_dict[r[0]] = f"k{i}" if i > 0 else "ref"
                     data.rename(columns=rename_dict, inplace=True)
 
-                if result_key not in results.keys():
-                    results[result_key] = []
-
-                metrics_calculator = self.metrics_c[(n, k)]
                 used_data[result_key] = data
-                metrics = metrics_calculator(data, gpi_info)
+                try:
+                    metrics = metrics_calculator(data, gpi_info)
+                except Exception:
+                    if handle_errors == "raise":
+                        raise eh.MetricsCalculationError(
+                            f"Metrics calculation failed for {result_key}"
+                            f" for gpi {gpi_info}!"
+                        )
+                    else:
+                        metrics = dummy_result()
+                        metrics["status"][0] = eh.METRICS_CALCULATION_FAILED
                 results[result_key].append(metrics)
 
         return matched_n, results, used_data
+
+    def dummy_validation_result(
+        self,
+        gpi_info,
+        rename_cols=True,
+        only_with_reference=False,
+    ) -> Mapping[Tuple[str], List[Mapping[str, np.ndarray]]]:
+        """
+        Creates an empty result dictionary to be used if perform_validation
+        fails
+        """
+        results = {}
+        for n, k in self.metrics_c:
+            result_names = get_result_combinations(
+                self.data_manager.ds_dict, n=k
+            )
+            for result_key in result_names:
+                # it might also be a good idea to move this to
+                # `get_result_combinations`
+                result_ds_names = [key[0] for key in result_key]
+                if only_with_reference:
+                    if self.data_manager.reference_name not in result_ds_names:
+                        continue
+                metrics_calculator = self.metrics_c[(n, k)]
+                # to get only an empty template returned, we pass an empty
+                # dataframe here, with the correct column names
+                dummy_df = pd.DataFrame([], columns=result_ds_names)
+                metrics = metrics_calculator(dummy_df, gpi_info)
+                if result_key not in results.keys():
+                    results[result_key] = []
+                results[result_key].append(metrics)
+        return results
 
     def mask_dataset(self, ref_df, gpi_info):
         """
