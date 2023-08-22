@@ -145,7 +145,7 @@ class MonthsMetricsAdapter(SubsetsMetricsAdapter):
     Adapt MetricCalculators to calculate metrics for groups across months
     """
 
-    def __init__(self, calculator, sets=None):
+    def __init__(self, calculator, month_subsets=None, group_results='tuple'):
         """
         Add functionality to a metric calculator to calculate validation
         metrics for subsets of certain months in a time series (e.g. seasonal).
@@ -155,7 +155,7 @@ class MonthsMetricsAdapter(SubsetsMetricsAdapter):
         calculator : PairwiseIntercomparisonMetrics or TripleCollocationMetrics
             A metric calculator to adapt. Preferably an instance of a metric
              calculator listed in `_supported_metric_calculators`
-        sets : dict, optional (default: None)
+        month_subsets : dict, optional (default: None)
             Define groups of data. With group names as key and a list of
             months (1-12) that belong to the group as values.
 
@@ -166,15 +166,21 @@ class MonthsMetricsAdapter(SubsetsMetricsAdapter):
 
             The name will be used in the results to distinguish between the
             same metrics for different groups:
-            e.g. ('Group1', 'BIAS'): ..., ('Group2', 'BIAS'): ..., etc.
+            e.g. ('Group1', 'BIAS'): ..., ('Group2', 'BIAS'): ..., etc. or
+            'Group1|BIAS': ..., 'Group2|BIAS': ..., etc.
+            denpending on the chosen `group_results` parameter.
 
             The default groups are based on 4 seasons plus one group that uses
             all data (as the unadapted metric calculator would do):
             {'DJF': [12,1,2], 'MAM': [3,4,5], 'JJA': [6, 7, 8],
              'SON': [9, 10, 11], 'ALL': list(range(1, 13))}
+        group_results: str, optional (default: 'tuple')
+            How to group the results.
+            - 'tuple' will group the results by (group, metric)
+            - 'join' will join group and metric name with a '|'
         """
-        if sets is None:
-            sets = {
+        if month_subsets is None:
+            month_subsets = {
                 'DJF': [12, 1, 2],
                 'MAM': [3, 4, 5],
                 'JJA': [6, 7, 8],
@@ -182,11 +188,12 @@ class MonthsMetricsAdapter(SubsetsMetricsAdapter):
                 'ALL': list(range(1, 13)),
             }
 
-        for name, months in sets.items():
+        for name, months in month_subsets.items():
             distr = TsDistributor(yearless_date_ranges=[(
                 YearlessDatetime(m, 1, 0, 0, 0),
                 YearlessDatetime(m, days_in_month(m), 23, 59, 59))
                                                        for m in months])
-            sets[name] = distr
+            month_subsets[name] = distr
 
-        super().__init__(calculator, subsets=sets)
+        super().__init__(calculator, subsets=month_subsets,
+                         group_results=group_results)
