@@ -10,17 +10,17 @@ dependencies:
   - numpy<=1.23.5  # v1.24 not yet supported by numba
   - scipy>=0.12
   - pandas>=0.11.0,!=0.15.2
-  - netcdf4>=1.0.1,!=1.6.2  # at v1.6.2 only defaults channel worked properly
+  - netcdf4>=1.0.1,!=1.6.2
   - cython>=0.29.21
   - scikit-learn
   - pykdtree
   - pyresample
   - numba
   - matplotlib>=1.2.0
+  - pip
   # optional, for documentation and testing:
   - nb_conda
-  - ipykernel
-  - pip
+  # ----------------------------------------
   - pip:
     - pynetcf>=0.4.0
     - pygeogrids
@@ -30,6 +30,8 @@ dependencies:
     - repurpose>=0.7.1
     - cadati>=0.0.2
     # optional, for documentation and testing:
+    - nbconvert
+    - ipykernel
     - ascat>=2.0
     - ismn>=1.2.0
     - pytest
@@ -38,3 +40,4 @@ dependencies:
     - pre-commit
     - flake8
     - yapf
+    # ----------------------------------------
