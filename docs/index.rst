@@ -3,9 +3,17 @@
    :hidden:
    :glob:
 
+
    README <readme>
    Introduction <introduction>
-   Examples <examples/index>
+
+   Validation Framework <examples/validation_framework>
+   Temporal Collocation <examples/temporal_collocation>
+   Anomaly Computation <examples/anomalies>
+   Triple Collocation Analysis <examples/triple_collocation>
+   Soil Water Index Computation <examples/swi_calc>
+   Example: Validate ASCAT with ISMN <examples/compare_ASCAT_ISMN>
+
    License <license>
    Authors <authors>
    Changelog <changelog>

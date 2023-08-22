@@ -49,13 +49,12 @@ This package should be installable through `pip
 <https://pip.pypa.io/en/latest/installing.html>`__ which downloads the package
 from the `python package repository Pypi <https://pypi.python.org/>`__.
 However, pytesmo also needs some packages that depend on C or Fortran libraries (like ``netCDF4``).
-They should be installed first with conda. See http://conda.pydata.org/docs/ on how to use it.
-We recommend using either `Anaconda <https://www.anaconda.com/>`__ or
-`Miniconda <https://conda.io/en/latest/miniconda.html>`__.
+They should be installed first with conda or mamba. We recommend installing `Mambaforge <https://github.com/conda-forge/miniforge#mambaforge>`__.
+Then the following command should install all dependencies:
 
 .. code-block:: bash
 
-    conda install -c conda-forge numpy scipy pandas netCDF4 cython pyresample
+    mamba install -c conda-forge numpy scipy pandas netCDF4 cython pyresample
 
 Afterwards ``pytesmo`` can be installed via pip.
 
@@ -71,16 +70,10 @@ clone the Github repository and install from source:
 
     git clone https://github.com/TUW-GEO/pytesmo.git --recursive
     cd pytesmo
-    conda create -n pytesmo python=3.7 # or any supported python version
-    source activate pytesmo
-    conda env update -f environment.yml -n pytesmo
+    mamba create -n pytesmo python=3.10 # or any supported python version
+    conda activate pytesmo
+    mamba env update -f environment.yml -n pytesmo
     pip install -e .
-
-.. note::
-
-    If you are using windows and conda is missing a package then always check
-    http://www.lfd.uci.edu/~gohlke/pythonlibs/ to see if there is already a
-    precompiled .exe or .whl file for you to easily install.
 
 Supported Products
 ==================
@@ -123,4 +116,3 @@ against our master branch for new features or bug fixes.
 
 Please follow the `developers guide
 <https://github.com/TUW-GEO/pytesmo/blob/master/DEVELOPERS_GUIDE.md>`_.
-
