@@ -98,7 +98,7 @@ class Validation(object):
         method of these datasets has to return pandas.DataFrames with only
         boolean columns. True means that the observations at this timestamp
         should be masked and False means that it should be kept.
-    scaling : string, None or class instance
+    scaling : str or None or class instance
         - If set then the data will be scaled into the reference space using
           the method specified by the string using the
           :py:class:`pytesmo.validation_framework.data_scalers.DefaultScaler`
@@ -262,7 +262,8 @@ class Validation(object):
                     )
                 except Exception as e:
                     raise eh.DataManagerError(
-                        f"Getting the data for gpi {gpi_info} failed!")
+                        f"Getting the data for gpi {gpi_info} failed with"
+                        f" error: {e}")
 
                 # if no data is available continue with the next gpi
                 if len(df_dict) == 0:
@@ -453,7 +454,7 @@ class Validation(object):
                     except Exception as e:
                         raise eh.ScalingError(
                             f"Scaling failed for {result_key} for gpi"
-                            f" {gpi_info}!"
+                            f" {gpi_info} with error {e}!"
                         )
 
                     # Drop the scaling reference if it was not in the intended

@@ -24,31 +24,126 @@
 # ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 # THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-
 """
 Metric Calculator Adapters change how metrics are calculated by calling
 the `calc_metric` function of the adapted calculator instead of the unadapted
 version.
 """
 
+from pytesmo.time_series.grouping import YearlessDatetime, TsDistributor
 from pytesmo.validation_framework.metric_calculators import (
-    PairwiseIntercomparisonMetrics,
-    TripleCollocationMetrics
-)
+    PairwiseIntercomparisonMetrics, TripleCollocationMetrics)
 import warnings
 import numpy as np
+from cadati.conv_doy import days_past
 
 
-class MonthsMetricsAdapter(object):
+def days_in_month(month: int) -> int:
     """
-    Adapt MetricCalculators to calculate metrics for groups across months
+    Get number of days in this month (in a LEAP YEAR)
+    """
+    return days_past[month] - days_past[month - 1]
+
+
+class SubsetsMetricsAdapter:
+    """
+    Adapt MetricCalculators to calculate metrics for groups of temporal
+    subsets (also across multiple years).
     """
 
     _supported_metric_calculators = (
         PairwiseIntercomparisonMetrics,
         TripleCollocationMetrics,
     )
+
+    def __init__(self, calculator, subsets, group_results='tuple'):
+        """
+        Add functionality to a metric calculator to calculate validation
+        metrics for subsets of certain datetimes in a time series
+        (e.g. seasonal).
+
+        Parameters
+        ----------
+        calculator : PairwiseIntercomparisonMetrics or TripleCollocationMetrics
+            A metric calculator to adapt. Preferably an instance of a metric
+             calculator listed in `_supported_metric_calculators`
+        subsets : dict[str, TsDistributor], optional (default: None)
+            Define subsets of data. With group names as key and a
+            data distributor as values.
+        group_results: str, optional (default: 'tuple')
+            How to group the results.
+            - 'tuple' will group the results by (group, metric)
+            - 'join' will join group and metric name with a '|'
+        """
+        if not isinstance(calculator, self._supported_metric_calculators):
+            warnings.warn(f"Adapting {calculator.__class__} is not supported.")
+
+        self.cls = calculator
+        self.subsets = subsets
+        self.group_results = group_results
+
+        assert group_results in ('tuple', 'join'), \
+            f"Unknown group_results: {group_results}"
+
+        # metadata metrics and lon, lat, gpi are excluded from applying
+        # seasonally
+        self.non_seas_metrics = ["gpi", "lon", "lat"]
+        if hasattr(self.cls, 'metadata_template'):
+            if self.cls.metadata_template is not None:
+                self.non_seas_metrics += list(
+                    self.cls.metadata_template.keys())
+
+        all_metrics = calculator.result_template
+        subset_metrics = {}
+
+        # for each subset create a copy of the metric template
+        for name in subsets.keys():
+            for k, v in all_metrics.items():
+                subset_metrics[self._genname(name, k)] = np.array(v)
+
+        self.result_template = subset_metrics
+
+    def _genname(self, setname: str, metric: str) -> str or tuple:
+        if metric in self.non_seas_metrics:
+            k = f"{metric}"
+        elif self.group_results == 'tuple':
+            k = (f"{setname}", *np.atleast_1d(metric))
+        elif self.group_results == 'join':
+            k = f"{setname}|{metric}"
+        else:
+            raise NotImplementedError(
+                f"Unknown group_results: {self.group_results}")
+        return k
+
+    def calc_metrics(self, data, gpi_info):
+        """
+        Calculates the desired statistics, for each set that was defined.
+
+        Parameters
+        ----------
+        data : pandas.DataFrame
+            with 2 columns, the first column is the reference dataset
+            named 'ref'
+            the second column the dataset to compare against named 'other'
+        gpi_info : tuple
+            Grid point info (i.e. gpi, lon, lat)
+        """
+        dataset = self.result_template.copy()
+
+        for setname, distr in self.subsets.items():
+            df = distr.select(data)
+            ds = self.cls.calc_metrics(df, gpi_info=gpi_info)
+            for metric, res in ds.items():
+                k = self._genname(setname, metric)
+                dataset[k] = res
+
+        return dataset
+
+
+class MonthsMetricsAdapter(SubsetsMetricsAdapter):
+    """
+    Adapt MetricCalculators to calculate metrics for groups across months
+    """
 
     def __init__(self, calculator, sets=None):
         """
@@ -78,97 +173,20 @@ class MonthsMetricsAdapter(object):
             {'DJF': [12,1,2], 'MAM': [3,4,5], 'JJA': [6, 7, 8],
              'SON': [9, 10, 11], 'ALL': list(range(1, 13))}
         """
-        if not isinstance(calculator, self._supported_metric_calculators):
-            warnings.warn(f"Adapting {calculator.__class__} is not supported.")
-        self.cls = calculator
         if sets is None:
             sets = {
-                "DJF": [12, 1, 2],
-                "MAM": [3, 4, 5],
-                "JJA": [6, 7, 8],
-                "SON": [9, 10, 11],
-                "ALL": list(range(1, 13)),
+                'DJF': [12, 1, 2],
+                'MAM': [3, 4, 5],
+                'JJA': [6, 7, 8],
+                'SON': [9, 10, 11],
+                'ALL': list(range(1, 13)),
             }
 
-        self.sets = sets
+        for name, months in sets.items():
+            distr = TsDistributor(yearless_date_ranges=[(
+                YearlessDatetime(m, 1, 0, 0, 0),
+                YearlessDatetime(m, days_in_month(m), 23, 59, 59))
+                                                       for m in months])
+            sets[name] = distr
 
-        # metadata metrics and lon, lat, gpi are excluded from applying
-        # seasonally
-        self.non_seas_metrics = ["gpi", "lon", "lat"]
-        if self.cls.metadata_template is not None:
-            self.non_seas_metrics += list(self.cls.metadata_template.keys())
-
-        all_metrics = calculator.result_template
-        subset_metrics = {}
-
-        # for each subset create a copy of the metric template
-        for name in sets.keys():
-            for k, v in all_metrics.items():
-                if k in self.non_seas_metrics:
-                    subset_metrics[k] = np.array(v)
-                else:
-                    subset_metrics[(name, k)] = np.array(v)
-
-        self.result_template = subset_metrics
-
-    @staticmethod
-    def filter_months(df, months, dropna=False):
-        """
-        Select only entries of a time series that are within certain month(s)
-
-        Parameters
-        ----------
-        df : pd.DataFrame
-            Time series (index.month must exist) that is split up into the
-            selected groups.
-        months : list
-            Months for which data is kept, e.g. [12,1,2] to keep data for
-            winter
-        dropna : bool, optional (default: False)
-            Drop lines for months that are not to be kept, if this is false,
-            the original index is not changed, but filtered values are replaced
-            with nan.
-
-        Returns
-        -------
-        df_filtered : pd.DataFrame
-            The filtered series
-        """
-        dat = df.copy(True)
-        dat["__index_month"] = dat.index.month
-        cond = ["__index_month == {}".format(m) for m in months]
-        selection = dat.query(" | ".join(cond)).index
-        dat.drop("__index_month", axis=1, inplace=True)
-
-        if dropna:
-            return dat.loc[selection]
-        else:
-            dat.loc[dat.index.difference(selection)] = np.nan
-            return dat
-
-    def calc_metrics(self, data, gpi_info):
-        """
-        Calculates the desired statistics, for each set that was defined.
-
-        Parameters
-        ----------
-        data : pandas.DataFrame
-            with 2 columns, the first column is the reference dataset
-            named 'ref'
-            the second column the dataset to compare against named 'other'
-        gpi_info : tuple
-            Grid point info (i.e. gpi, lon, lat)
-        """
-        dataset = self.result_template.copy()
-
-        for setname, months in self.sets.items():
-            df = self.filter_months(data, months=months, dropna=True)
-            ds = self.cls.calc_metrics(df, gpi_info=gpi_info)
-            for metric, res in ds.items():
-                if metric in self.non_seas_metrics:
-                    k = f"{metric}"
-                else:
-                    k = (f"{setname}", *np.atleast_1d(metric))
-                dataset[k] = res
-
-        return dataset
+        super().__init__(calculator, subsets=sets)

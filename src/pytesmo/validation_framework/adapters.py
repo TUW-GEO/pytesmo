@@ -31,10 +31,8 @@ framework.
 
 import operator
 
-import pandas as pd
 from pytesmo.time_series.anomaly import calc_anomaly
 from pytesmo.time_series.anomaly import calc_climatology
-from pytesmo.utils import deprecated
 from pandas import DataFrame
 import numpy as np
 import warnings
@@ -90,9 +88,10 @@ class BasicAdapter:
             setattr(self, read_name, self._adapt_custom)
 
     def __get_dataframe(self, data):
-        if ((not isinstance(data, DataFrame)) and
-            (hasattr(data, self.data_property_name)) and
-            (isinstance(getattr(data, self.data_property_name), DataFrame))):
+        if (not isinstance(data, DataFrame)) and \
+                (hasattr(data, self.data_property_name)) and \
+                (isinstance(getattr(data, self.data_property_name),
+                            DataFrame)):
             data = getattr(data, self.data_property_name)
         return data
 
@@ -131,14 +130,14 @@ class BasicAdapter:
             return self.cls.grid
 
 
-@deprecated("`MaskingAdapter` is deprecated, use `SelfMaskingAdapter` "
-            "or `AdvancedMaskingAdapter` instead.")
 class MaskingAdapter(BasicAdapter):
     """
     Transform the given class to return a boolean dataset given the operator
     and threshold. This class calls the read_ts and read methods
     of the given instance and applies boolean masking to the returned data
-    using the given operator and threshold.
+    using the given operator and threshold. This adapter does not filter the
+    time series (see the AdvancedMaskingAdapter and SelfMaskingAdapter for
+    that) but only turns it into a boolean dataset.
 
     Parameters
     ----------
@@ -267,8 +266,8 @@ class AdvancedMaskingAdapter(BasicAdapter):
         Reader object, has to have a `read_ts` or `read` method or a method
         name must be specified in the `read_name` kwarg. The same method will
         be available for the adapted version of the reader.
-    filter_list: list[tuple, tuple, tuple]
-        [column_name, operator, threshold]
+    filter_list: list[tuple]
+        [(column_name, operator, threshold), ...]
         'column_name': string
             name of the column to apply the operator to
         'operator': Callable or str;
@@ -555,16 +554,17 @@ class TimestampAdapter(BasicAdapter):
         name must be specified in the `read_name` kwarg. The same method will
         be available for the adapted version of the reader.
     time_offset_fields: str, list or None
-        name or list of names of the fields that provide information on the time offset.
-        If a list is given, all values will contribute to the offset, assuming that
-        each refers to the previous. For instance:
+        name or list of names of the fields that provide information on the
+        time offset.
+        If a list is given, all values will contribute to the offset, assuming
+        that each refers to the previous. For instance:
         offset = minutes + seconds in the minute + µs in the second
         NOTE: np.nan values are counted as 0 offset
         NOTE: if None, no offset is considered
     time_units: str or list
-        time units that the time_offset_fields are specified in. If a list is given,
-        it should have the same size as the 'time_offset_fields' parameter
-        Can be any of the np.datetime[64] units:
+        time units that the time_offset_fields are specified in. If a list is
+        given, it should have the same size as the 'time_offset_fields'
+        parameter. Can be any of the np.datetime[64] units:
         https://numpy.org/doc/stable/reference/arrays.datetime.html
     base_time_field: str, optional. Default is None.
         If a name is provided, the generic time field will be searched for
@@ -573,19 +573,20 @@ class TimestampAdapter(BasicAdapter):
     base_time_reference: str, optional. Default is None.
         String of format 'YYYY-mm-dd' that can be specified to tranform the
         'base_time_field' from [units since base_time_reference] to
-        np.datetime[64]. If not provided, it will be assumed that the base_time_field
-        is already in np.datetime[64] units
+        np.datetime[64]. If not provided, it will be assumed that the
+        base_time_field is already in np.datetime[64] units
     base_time_units: str, optional. Default is "D"
-        Units that the base_time_field is specified in. Only applicable with 'base_time_reference'
+        Units that the base_time_field is specified in. Only applicable with
+        'base_time_reference'
     replace_index: bool, optional. Default is True.
         If True, the exact timestamp is used as index. Else, it will be added
         to the dataframe on the column 'output_field'
     output_field: str, optional. Default is None.
-        If a name is specified, an additional column is generated under the name,
-        with the exact timestamp. Only with 'replace_index' == False
+        If a name is specified, an additional column is generated under the
+        name, with the exact timestamp. Only with 'replace_index' == False
     drop_original: bool, optional. Default is True.
-        Whether the base_time_field and time_offset_fields should be dropped in the
-        final DataFrame
+        Whether the base_time_field and time_offset_fields should be dropped
+        in the final DataFrame
     """
 
     def __init__(self,
@@ -617,12 +618,13 @@ class TimestampAdapter(BasicAdapter):
         if not replace_index and output_field is None:
             raise ValueError(
                 "'output_field' should be specified in case the new timestamp"
-                "should not be used as index. Alternatively, set 'replace_index' to True"
+                "should not be used as index. Alternatively, set "
+                "'replace_index' to True"
             )
         elif replace_index and output_field is not None:
             warnings.warn(
-                "Ignoring the 'output_field' value. Set 'replace_index' to True to"
-                "avoid this behavior")
+                "Ignoring the 'output_field' value. Set 'replace_index' to "
+                "True to avoid this behavior")
         else:
             self.output_field = output_field
 
@@ -639,7 +641,9 @@ class TimestampAdapter(BasicAdapter):
         return time_date
 
     def add_offset_cumulative(self, data: DataFrame) -> np.array:
-        """Return an array of timedelta calculated with all the time_offset_fields"""
+        """
+        Return an array of timedelta calculated with all the time_offset_fields
+        """
         total_offset = np.full(data.index.shape, 0, dtype='timedelta64[s]')
         for field, unit in zip(self.time_offset_fields, self.time_units):
             total_offset += data[field].map(
