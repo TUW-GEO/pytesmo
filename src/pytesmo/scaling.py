@@ -250,7 +250,7 @@ def mean_std(src, ref, **kwargs):
     return ((src - np.mean(src)) / np.std(src)) * np.std(ref) + np.mean(ref)
 
 
-@utils.deprecated
+@utils.deprecated("Use the new implementation 'cdf_match' instead.")
 def cdf_beta_match(*args, **kwargs):
     return cdf_match(*args, **kwargs)
 

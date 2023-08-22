@@ -2,8 +2,20 @@
 Changelog
 =========
 
-Unreleased
-==========
+Unreleased changes in master
+============================
+-
+
+Version 0.15.2, 2023-06-14
+==========================
+- Add kwarg to `time_series.anomaly.calc_climatology` to compute the standard deviation of the climatology (e.g. for anomaly z-scores)
+
+Version 0.15.1, 2023-03-29
+==========================
+- Adding scikit-learn as installation dependency.
+
+Version 0.15.0, 2023-03-28
+==========================
 - fixing setting of status code for bootstrapped triple collocation  (PR `#285 <https://github.com/TUW-GEO/pytesmo/pull/285>`_)
 - Exclude netCDF4 at version 1.6.2 due to bug when writing strings with zlib compression (PR `#288 <https://github.com/TUW-GEO/pytesmo/pull/288>`_)
 - added test for data_manager_failed (PR `#287 <https://github.com/TUW-GEO/pytesmo/pull/287>`_)
