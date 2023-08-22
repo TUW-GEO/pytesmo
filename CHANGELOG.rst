@@ -4,15 +4,15 @@ Changelog
 
 Unreleased changes in master
 ============================
--
+- Adapters for metric calculatores were introduced. The here implemented adapters compute metrics based on temporal subsets of the time series, which can be used for rolling window metrics, seasonal metrics or multiple arbitrary sub-periods. (PR `#266 <https://github.com/TUW-GEO/pytesmo/pull/266>`_),
 
 Version 0.15.2, 2023-06-14
 ==========================
-- Add kwarg to `time_series.anomaly.calc_climatology` to compute the standard deviation of the climatology (e.g. for anomaly z-scores)
+- Add kwarg to `time_series.anomaly.calc_climatology` to compute the standard deviation of the climatology (e.g. for anomaly z-scores) (PR `#290 <https://github.com/TUW-GEO/pytesmo/pull/290>`_)
 
 Version 0.15.1, 2023-03-29
 ==========================
-- Adding scikit-learn as installation dependency.
+- Adding scikit-learn as installation dependency. (PR `#298 <https://github.com/TUW-GEO/pytesmo/pull/298>`_)
 
 Version 0.15.0, 2023-03-28
 ==========================

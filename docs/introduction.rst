@@ -23,26 +23,8 @@ Features
   as more complex ones like :ref:`triple-collocation-example` or MSE as a
   decomposition of the RMSD see :mod:`pytesmo.metrics`
 
-Prerequisites
-=============
-
-Necessary Python packages
--------------------------
-
-In order to enjoy all pytesmo features, a recent Python 3 installtation with the
-conda/pip packages listed in :download:`requirements.txt <../requirements.txt>`
-should be installed:
-
-Some packages are optional:
-
-* pykdtree: https://github.com/storpipfugl/pykdtree
-
-	which makes Nearest Neighbor search faster
-
-* pyresample: https://github.com/pytroll/pyresample
-
-	for resampling of irregular images onto a regular grid for e.g. plotting
-
-* matplotlib with cartopy/basemap: http://matplotlib.org
-
-  for plotting maps of ISMN stations, maps in general
+Notebooks
+=========
+The following documentation is created from ipython notebooks in ``pytesmo/docs/examples``.
+The notebooks can be run interactively and the results can be reproduced locally using `jupyter <http://jupyter.org/>`__.
+Some of the examples require the packages `ascat` and `ismn`, which can be installed with `pip`.
