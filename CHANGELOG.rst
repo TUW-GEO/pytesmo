@@ -5,7 +5,7 @@ Changelog
 Unreleased changes in master
 ============================
 - Adapters for metric calculatores were introduced. The here implemented adapters compute metrics based on temporal subsets of the time series, which can be used for rolling window metrics, seasonal metrics or multiple arbitrary sub-periods. (PR `#266 <https://github.com/TUW-GEO/pytesmo/pull/266>`_)
-- Fixed a bug where the status code of a successful Triple Collocation run was still set to -1 ("unknown error"). (PR `#266 <https://github.com/TUW-GEO/pytesmo/pull/266>`_)
+- Fixed a bug where the status code of a successful Triple Collocation run was still set to -1 ("unknown error"). (PR `#266 <https://github.com/TUW-GEO/pytesmo/pull/301>`_)
 
 Version 0.15.2, 2023-06-14
 ==========================
