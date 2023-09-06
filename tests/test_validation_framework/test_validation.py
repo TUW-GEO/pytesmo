@@ -157,6 +157,7 @@ def check_results(
     with nc.Dataset(filename, mode="r") as results:
         vars = results.variables.keys()
         assert sorted(vars) == sorted(vars_should)
+        assert np.all(results['status'][:] != -1)
 
         for varname, should_values in target_vars.items():
             values = results.variables[varname][:]
