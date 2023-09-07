@@ -368,23 +368,22 @@ class TsDistributor:
         if self.yearless_date_ranges is not None:
             for i, gdrange in enumerate(self.yearless_date_ranges):
                 for y in np.unique(idx.year):
+                    start = gdrange[0]
 
                     if not calendar.isleap(y) and (gdrange[0].doy == 60):
                         start = YearlessDatetime(3, 1)
-                    else:
-                        start = gdrange[0]
-
-                    if (not calendar.isleap(y)) and (gdrange[1].doy == 60):
-                        end = YearlessDatetime(2, 28, 23, 59, 59)
-                    else:
-                        end = gdrange[1]
 
                     start_dt = start.to_datetime(years=y)
 
+                    end = gdrange[1]
+
                     if end < start:
-                        end_dt = end.to_datetime(years=y + 1)
-                    else:
-                        end_dt = end.to_datetime(years=y)
+                        y += 1
+
+                    if (not calendar.isleap(y)) and (end.doy == 60):
+                        end = YearlessDatetime(2, 28, 23, 59, 59)
+
+                    end_dt = end.to_datetime(years=y)
 
                     mask[f"gen_range{y}-{i}"] = (idx >= start_dt) & (
                         idx <= end_dt)
