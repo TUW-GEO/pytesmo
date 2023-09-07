@@ -1774,10 +1774,14 @@ class TripleCollocationMetrics(MetadataMetrics, PairwiseMetricsMixin):
         ds_names = (self.refname, *othernames)
         arrays = (data[name].values for name in ds_names)
         if not self.bootstrap_cis:
-            res = tcol_metrics(*arrays)
-            for i, name in enumerate(ds_names):
-                for j, metric in enumerate(["snr", "err_std", "beta"]):
-                    result[(metric, name)][0] = res[j][i]
+            try:
+                res = tcol_metrics(*arrays)
+                for i, name in enumerate(ds_names):
+                    for j, metric in enumerate(["snr", "err_std", "beta"]):
+                        result[(metric, name)][0] = res[j][i]
+                result["status"][0] = eh.OK
+            except ValueError:
+                result["status"] = eh.METRICS_CALCULATION_FAILED
         else:
             try:
                 # handle failing bootstrapping because e.g.
