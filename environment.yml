@@ -19,7 +19,7 @@ dependencies:
   - matplotlib>=1.2.0
   - pip
   # optional, for documentation and testing:
-  - nb_conda
+  # - nb_conda   # excluded until https://github.com/conda-forge/nb_conda-feedstock/issues/21 is fixed
   # ----------------------------------------
   - pip:
     - pynetcf>=0.4.0
