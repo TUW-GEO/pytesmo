@@ -1,6 +1,6 @@
 import pytest
 
-from src.pytesmo.validation_framework.adapters import TimestampAdapter
+from pytesmo.validation_framework.adapters import TimestampAdapter
 """
 Test for the adapters.
 """
@@ -278,7 +278,7 @@ def test_column_comb_adapter():
     orig = ds.read()
     ds_adapted = ColumnCombineAdapter(
         ds,
-        func=pd.DataFrame.mean,
+        func=pd.Series.mean,
         columns=["x", "y"],
         func_kwargs={'skipna': True},
         new_name='xy_mean')
