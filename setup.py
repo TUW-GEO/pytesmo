@@ -42,7 +42,7 @@ def get_ext_modules(ext):
 def cythonize_extensions():
     from Cython.Build import cythonize
 
-    cythonize(
+    cythonized_modules = cythonize(
         get_ext_modules(".pyx"),
         compiler_directives={
             "embedsignature": True,
@@ -55,6 +55,7 @@ def cythonize_extensions():
         },
         # include_path=[numpy.get_include()],
     )
+    return cythonized_modules
 
 
 class CythonizeMixin(object):
@@ -69,7 +70,7 @@ class CythonizeMixin(object):
 
     def run(self):
         if self.cythonize:
-            cythonize_extensions()
+            self.distribution.ext_modules = cythonize_extensions()
         super().run()
 
 
@@ -84,6 +85,7 @@ class build_ext(CythonizeMixin, _build_ext):
 
 
 if __name__ == "__main__":
+    # to create .c files run `python setup.py build_ext --cythonize`
     try:
         cmdclass = {}
         cmdclass["sdist"] = sdist
