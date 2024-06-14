@@ -60,7 +60,7 @@ def cythonize_extensions():
 class CythonizeMixin(object):
 
     user_options = [
-        ("cythonize", None, "recreate the c extionsions with cython")
+        ("cythonize", None, "recreate the c extensions with cython")
     ]
 
     def initialize_options(self):
@@ -85,7 +85,15 @@ class build_ext(CythonizeMixin, _build_ext):
 
 if __name__ == "__main__":
     try:
-        setup(use_scm_version={"version_scheme": "no-guess-dev"})
+        cmdclass = {}
+        cmdclass["sdist"] = sdist
+        cmdclass["build_ext"] = build_ext
+        setup(
+            cmdclass=cmdclass,
+            # at this point the C modules have already been generated if necessary  # noqa: E501
+            ext_modules=get_ext_modules(".c"),
+            use_scm_version={"version_scheme": "no-guess-dev"}
+        )
     except:  # noqa
         print(
             "\n\nAn error occurred while building the project, "
