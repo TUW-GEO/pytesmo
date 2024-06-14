@@ -16,6 +16,9 @@ jobs:
   build:
     strategy:
       matrix:
+        # as we build C extension for users to download, we want to include as many python versions
+        # and OS versions as possible (especially windows to create .whl packages,
+        # see step "Create wheel and dist package")
         python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
         os: ["ubuntu-latest", "windows-latest"]
     name: py${{ matrix.python-version }} @ ${{ matrix.os }}
@@ -53,6 +56,7 @@ jobs:
       - name: Install package and test
         shell: bash -l {0}
         run: |
+          pip install .
           pip install -e .[testing]
           pytest --cache-clear
       - name: Upload Coverage
