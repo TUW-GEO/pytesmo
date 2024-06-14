@@ -783,7 +783,7 @@ def test_PairwiseIntercomparisonMetrics(testdata_generator, seas_metrics):
         datasets,
         "reference_name",
         scaling=None,  # doesn't work with the constant test data
-        temporal_matcher=make_combined_temporal_matcher(pd.Timedelta(6, "H")),
+        temporal_matcher=make_combined_temporal_matcher(pd.Timedelta(6, "h")),
         metrics_calculators={(4, 2): (metrics_calculator.calc_metrics)},
     )
     results_pw = val.calc(
@@ -926,7 +926,7 @@ def test_PairwiseIntercomparisonMetrics_confidence_intervals():
     # tests if the correct confidence intervals are returned
 
     datasets, _ = testdata_random()
-    matcher = make_combined_temporal_matcher(pd.Timedelta(6, "H"))
+    matcher = make_combined_temporal_matcher(pd.Timedelta(6, "h"))
     val = Validation(
         datasets,
         "reference_name",
@@ -1018,7 +1018,7 @@ def test_TripleCollocationMetrics(testdata_generator, seas_metrics):
     if seas_metrics:
         triplet_metrics_calculator = seas_metrics(triplet_metrics_calculator)
 
-    matcher = make_combined_temporal_matcher(pd.Timedelta(6, "H"))
+    matcher = make_combined_temporal_matcher(pd.Timedelta(6, "h"))
 
     val_triplet = Validation(
         datasets,
@@ -1132,7 +1132,7 @@ def test_temporal_matching_ascat_ismn():
     dfs = {"ASCAT": ascat, "ISMN": ismn}
     columns = {"ASCAT": "sm", "ISMN": "soil_moisture"}
     refname = "ISMN"
-    window = pd.Timedelta(12, "H")
+    window = pd.Timedelta(12, "h")
 
     old_matcher = BasicTemporalMatching().combinatory_matcher
     new_matcher = make_combined_temporal_matcher(window)
@@ -1224,7 +1224,7 @@ def test_TripleCollocationMetrics_failure():
 #     scaling=None,  # doesn't work with the constant test data
 #     # temporal_matcher=None,
 #     temporal_matcher=make_combined_temporal_matcher(
-#          pd.Timedelta(6, "H")
+#          pd.Timedelta(6, "h")
 #     ),
 #     metrics_calculators={
 #         (3, 2): PairwiseIntercomparisonMetrics().calc_metrics

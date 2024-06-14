@@ -16,26 +16,26 @@ jobs:
   build:
     strategy:
       matrix:
-        python-version: [ '3.8', '3.9', '3.10' ]
+        python-version: [ '3.8', '3.9', '3.10', '3.11', '3.12' ]
         os: ["ubuntu-latest", "windows-latest"]
-        ymlfile: ["environment.yml"]
-    name: Py${{ matrix.python-version }}@${{ matrix.os }}🐍
+    name: py${{ matrix.python-version }} @ ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: true # does not work with self-hosted testdata
           fetch-depth: 0
-      - uses: conda-incubator/setup-miniconda@v2
+      - uses: conda-incubator/setup-miniconda@v3
         with:
-          miniforge-variant: Mambaforge
-          miniforge-version: "latest"
-          channel-priority: flexible
-          python-version: ${{ matrix.python-version }}
-          environment-file: ${{ matrix.ymlfile }}
-          activate-environment: pytesmo # todo: must match with name in environment.yml
-          auto-activate-base: false
+           miniconda-version: "latest"
+           auto-update-conda: true
+           channel-priority: flexible
+           python-version: ${{ matrix.python-version }}
+           environment-file: environment.yml
+           activate-environment: pytesmo # todo: must match with name in environment.yml
+           mamba-version: "*"
+           auto-activate-base: false
       - name: Print Infos
         shell: bash -l {0}
         run: |
@@ -49,12 +49,8 @@ jobs:
         shell: bash -l {0}
         run: |
           mkdir -p .artifacts
-          # Here we could exclude pinned environments (not used):
-          if [ ${{ matrix.ymlfile }} == "environment.yml" ]
-          then
-              filename=env_py${{ matrix.python-version }}_${{ matrix.os }}.yml
-              conda env export --no-builds | grep -v "prefix" > .artifacts/$filename
-          fi
+          filename=env_py${{ matrix.python-version }}_${{ matrix.os }}.yml
+          conda env export --no-builds | grep -v "prefix" > .artifacts/$filename
       - name: Install package and test
         shell: bash -l {0}
         run: |
@@ -84,9 +80,9 @@ jobs:
           fi
           ls .artifacts/dist
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
-          name: Artifacts
+          name: Artifacts-${{ matrix.python-version }}-${{ matrix.os }}
           path: .artifacts/*
   coveralls:
     name: Submit Coveralls 👚
@@ -112,7 +108,11 @@ jobs:
           echo "GITHUB_REF = $GITHUB_REF"
           echo "GITHUB_REPOSITORY = $GITHUB_REPOSITORY"
       - name: Download Artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
+        with:
+          path: Artifacts
+          pattern: Artifacts-*
+          merge-multiple: true
       - name: Display downloaded files
         run: ls -aR
       - name: Upload to PyPI

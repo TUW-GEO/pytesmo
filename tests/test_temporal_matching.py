@@ -242,8 +242,8 @@ def test_data():
     ref_dr = pd.date_range("1970", "2020", freq="D", tz="UTC")
 
     test_dr = {}
-    test_dr["shifted_3"] = ref_dr + pd.Timedelta(3, "H")
-    test_dr["shifted_7"] = ref_dr + pd.Timedelta(7, "H")
+    test_dr["shifted_3"] = ref_dr + pd.Timedelta(3, "h")
+    test_dr["shifted_7"] = ref_dr + pd.Timedelta(7, "h")
     test_dr["shifted_3_asia"] = test_dr["shifted_3"].tz_convert(
         "Asia/Yekaterinburg"
     )
@@ -252,7 +252,7 @@ def test_data():
     # random shifts
     random_hours = np.random.uniform(-12.0, 12.0, len(ref_dr))
     random_mask = np.abs(random_hours) > 6
-    dr_random_shift = ref_dr + pd.to_timedelta(random_hours, "H")
+    dr_random_shift = ref_dr + pd.to_timedelta(random_hours, "h")
     test_dr["random_shift"] = dr_random_shift
 
     # missing data
@@ -332,7 +332,7 @@ def assert_equal_except_nan(res, ref, nan_mask, index_shifted=False):
 def test_collocation_nearest_neighbour(test_data, key):
     ref_frame, test_frame, expected_nan = setup_data(test_data, key)
     res = tmatching.temporal_collocation(
-        ref_frame, test_frame, pd.Timedelta(6, "H")
+        ref_frame, test_frame, pd.Timedelta(6, "h")
     )
     assert_equal_except_nan(res, test_frame, expected_nan)
 
@@ -343,7 +343,7 @@ def test_collocation_missing_duplicates(test_data, key):
     res = tmatching.temporal_collocation(
         ref_frame,
         test_frame,
-        pd.Timedelta(6, "H"),
+        pd.Timedelta(6, "h"),
     )
     # indices of test_frame are shifted w.r.t expected_nan, therefore we can't
     # compare values
@@ -367,7 +367,7 @@ def test_collocation_input(test_data, key):
     # test with series and index:
     for ref in [ref_frame[0], ref_frame.index, no_timezone]:
         res = tmatching.temporal_collocation(
-            ref, test_frame, pd.Timedelta(6, "H")
+            ref, test_frame, pd.Timedelta(6, "h")
         )
         assert_equal_except_nan(res, test_frame, expected_nan)
 
@@ -385,7 +385,7 @@ def test_collocation_input(test_data, key):
 def test_collocation_dropna(test_data, key):
     ref_frame, test_frame, expected_nan = setup_data(test_data, key)
     res = tmatching.temporal_collocation(
-        ref_frame, test_frame, pd.Timedelta(6, "H"), dropna=True
+        ref_frame, test_frame, pd.Timedelta(6, "h"), dropna=True
     )
     expected_nonan_idx = (~expected_nan).nonzero()[0]
     assert np.all(test_frame.iloc[expected_nonan_idx, :].values == res.values)
@@ -409,7 +409,7 @@ def test_collocation_flag(test_data, key):
     res = tmatching.temporal_collocation(
         ref_frame,
         test_frame,
-        pd.Timedelta(6, "H"),
+        pd.Timedelta(6, "h"),
         flag=flag,
     )
 
@@ -422,7 +422,7 @@ def test_collocation_flag(test_data, key):
     res = tmatching.temporal_collocation(
         ref_frame,
         test_frame,
-        pd.Timedelta(6, "H"),
+        pd.Timedelta(6, "h"),
         flag=flag,
         use_invalid=True,
     )
@@ -433,7 +433,7 @@ def test_collocation_flag(test_data, key):
     res = tmatching.temporal_collocation(
         ref_frame,
         test_frame,
-        pd.Timedelta(6, "H"),
+        pd.Timedelta(6, "h"),
         flag="flag",
     )
     compare_with_nan(
@@ -447,7 +447,7 @@ def test_collocation_flag(test_data, key):
 def test_return_index(test_data, key):
     ref_frame, test_frame, expected_nan = setup_data(test_data, key)
     res = tmatching.temporal_collocation(
-        ref_frame, test_frame, pd.Timedelta(6, "H"), return_index=True
+        ref_frame, test_frame, pd.Timedelta(6, "h"), return_index=True
     )
     assert_equal_except_nan(res, test_frame, expected_nan)
     assert np.all(test_frame.index.values == res["index_other"].values)
@@ -458,11 +458,11 @@ def test_return_index(test_data, key):
 def test_return_distance(test_data, key):
     ref_frame, test_frame, expected_nan = setup_data(test_data, key)
     res = tmatching.temporal_collocation(
-        ref_frame, test_frame, pd.Timedelta(6, "H"), return_distance=True
+        ref_frame, test_frame, pd.Timedelta(6, "h"), return_distance=True
     )
     assert_equal_except_nan(res, test_frame, expected_nan)
     if key == "shifted_3":
-        assert np.all(res["distance_other"] == pd.Timedelta(3, "H"))
+        assert np.all(res["distance_other"] == pd.Timedelta(3, "h"))
     if key == "shifted_7":
         assert np.all(np.isnan(res["distance_other"]))
 
@@ -491,7 +491,7 @@ def test_timezone_handling():
     matched = tmatching.temporal_collocation(
         ref_df,
         match_df,
-        pd.Timedelta(12, "H"),
+        pd.Timedelta(12, "h"),
         dropna=True,
     )
 
@@ -504,7 +504,7 @@ def test_warning_on_no_match(test_data):
     ref_frame, test_frame, expected_nan = setup_data(test_data, "shifted_7")
     with pytest.warns(UserWarning):
         tmatching.temporal_collocation(
-            ref_frame, test_frame, pd.Timedelta(6, "H"), checkna=True
+            ref_frame, test_frame, pd.Timedelta(6, "h"), checkna=True
         )
 
 
@@ -526,7 +526,7 @@ def test_combined_matching():
     merged = tmatching.combined_temporal_collocation(
         ref,
         (frames[name] for name in frames),
-        pd.Timedelta(6, "H"),
+        pd.Timedelta(6, "h"),
         combined_dropna=False,
     )
 
@@ -541,7 +541,7 @@ def test_combined_matching():
     merged = tmatching.combined_temporal_collocation(
         ref,
         (frames[name] for name in frames),
-        pd.Timedelta(6, "H"),
+        pd.Timedelta(6, "h"),
         combined_dropna=False,
         dropna=True,
     )
@@ -557,7 +557,7 @@ def test_combined_matching():
     merged = tmatching.combined_temporal_collocation(
         ref,
         (frames[name] for name in frames),
-        pd.Timedelta(6, "H"),
+        pd.Timedelta(6, "h"),
         combined_dropna="any",
         dropna=True,
     )
@@ -576,7 +576,7 @@ def test_combined_matching():
     merged = tmatching.combined_temporal_collocation(
         ref,
         (frames["missing"], df2d),
-        pd.Timedelta(6, "H"),
+        pd.Timedelta(6, "h"),
         combined_dropna=False,
     )
     assert len(merged) == 10
@@ -586,7 +586,7 @@ def test_combined_matching():
         merged = tmatching.combined_temporal_collocation(
             ref,
             (frames["missing"], df2d),
-            pd.Timedelta(1, "H"),
+            pd.Timedelta(1, "h"),
             combined_dropna=comb_drop,
             dropna=True,
         )
@@ -603,7 +603,7 @@ def test_timezone_warning():
         matched = tmatching.temporal_collocation(
             pd.DataFrame(np.random.randn(n), index=dr),
             pd.DataFrame(np.random.randn(n), index=dr_berlin),
-            pd.Timedelta(6, "H"),
+            pd.Timedelta(6, "h"),
         )
         assert str(matched.index.tz) == "Europe/Berlin"
 
@@ -623,7 +623,7 @@ def test_combined_timezones():
             pd.DataFrame(np.random.randn(n), index=dr),
             pd.DataFrame(np.random.randn(n), index=dr),
         ),
-        pd.Timedelta(6, "H"),
+        pd.Timedelta(6, "h"),
         add_ref_data=True,
     )
     assert merged.index.tz is None
@@ -635,7 +635,7 @@ def test_combined_timezones():
             pd.DataFrame(np.random.randn(n), index=dr_berlin),
             pd.DataFrame(np.random.randn(n), index=dr_berlin),
         ),
-        pd.Timedelta(6, "H"),
+        pd.Timedelta(6, "h"),
         add_ref_data=True,
     )
     assert str(merged.index.tz) == "Europe/Berlin"
@@ -648,7 +648,7 @@ def test_combined_timezones():
                 pd.DataFrame(np.random.randn(n), index=dr_berlin),
                 pd.DataFrame(np.random.randn(n), index=dr),
             ),
-            pd.Timedelta(6, "H"),
+            pd.Timedelta(6, "h"),
             add_ref_data=True,
         )
         assert str(merged.index.tz) == "Europe/Berlin"
@@ -661,7 +661,7 @@ def test_combined_timezones():
                 pd.DataFrame(np.random.randn(n), index=dr_berlin),
                 pd.DataFrame(np.random.randn(n), index=dr_utc),
             ),
-            pd.Timedelta(6, "H"),
+            pd.Timedelta(6, "h"),
             add_ref_data=True,
         )
         assert str(merged.index.tz) == "UTC"
@@ -679,7 +679,7 @@ def test_combined_timezones():
             pd.DataFrame(np.random.randn(n), index=dr_berlin),
             pd.DataFrame(np.random.randn(n), index=dr_utc),
         ),
-        pd.Timedelta(6, "H"),
+        pd.Timedelta(6, "h"),
         add_ref_data=True,
     )
     assert str(merged.index.tz) == "Europe/Berlin"
@@ -741,8 +741,8 @@ def test_mean_collocation_missing_start_end():
 
     dr = pd.date_range("2019", "2020", freq="D", tz="UTC")
     other_dr = pd.date_range("2019", "2020", freq="D", tz="UTC").values
-    other_dr[0:10] += pd.Timedelta(12, "H")
-    other_dr[-10:] -= pd.Timedelta(12, "H")
+    other_dr[0:10] += pd.Timedelta(12, "h")
+    other_dr[-10:] -= pd.Timedelta(12, "h")
     other = pd.DataFrame(
         np.vstack(
             (np.arange(len(dr), dtype=float), np.arange(len(dr), dtype=float))
@@ -751,7 +751,7 @@ def test_mean_collocation_missing_start_end():
     )
 
     resampled = tmatching.temporal_collocation(
-        dr, other, pd.Timedelta(6, "H"), method="mean"
+        dr, other, pd.Timedelta(6, "h"), method="mean"
     )
 
     assert np.all(np.isnan(resampled[0:10]))
@@ -764,7 +764,7 @@ def test_mean_collocation_missing_start_end():
     values = np.random.randn(len(ref), 3)
     random_shift = np.random.uniform(-12, 12, len(ref))
     random = pd.DataFrame(
-        values, index=ref + pd.to_timedelta(random_shift, "H"),
+        values, index=ref + pd.to_timedelta(random_shift, "h"),
         columns=list(map(lambda x: f"random_{x}", range(3)))
     )
     window = pd.Timedelta(hours=6)

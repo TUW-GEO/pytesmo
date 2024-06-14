@@ -35,6 +35,7 @@ from pytesmo.validation_framework.metric_calculators import (
     PairwiseIntercomparisonMetrics, TripleCollocationMetrics)
 import warnings
 import numpy as np
+import pandas as pd
 from cadati.conv_doy import days_past
 
 
@@ -131,7 +132,10 @@ class SubsetsMetricsAdapter:
         dataset = self.result_template.copy()
 
         for setname, distr in self.subsets.items():
-            df = distr.select(data)
+            if len(data.index) == 0:
+                df = pd.DataFrame()
+            else:
+                df = distr.select(data)
             ds = self.cls.calc_metrics(df, gpi_info=gpi_info)
             for metric, res in ds.items():
                 k = self._genname(setname, metric)

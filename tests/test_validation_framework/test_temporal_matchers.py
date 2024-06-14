@@ -167,7 +167,7 @@ def test_dfdict_combined_temporal_collocation():
 
     dfs = {"ASCAT": ascat[["sm"]], "ISMN": ismn[["soil_moisture"]]}
     refname = "ISMN"
-    window = pd.Timedelta(12, "H")
+    window = pd.Timedelta(12, "h")
 
     old_matcher = temporal_matchers.BasicTemporalMatching().combinatory_matcher
     new_matcher = temporal_matchers.make_combined_temporal_matcher(window)
