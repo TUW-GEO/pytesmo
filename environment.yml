@@ -7,7 +7,8 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - numba  # let numba pick numpy version
+  - numpy
+  - numba
   - scipy>=0.12
   - pandas>=0.11.0,!=0.15.2
   - netcdf4>=1.0.1,!=1.6.2
@@ -18,7 +19,7 @@ dependencies:
   - matplotlib>=1.2.0
   - pip
   # optional, for documentation and testing:
-  # - nb_conda   # excluded until https://github.com/conda-forge/nb_conda-feedstock/issues/21 is fixed
+  # - nb_conda
   # ----------------------------------------
   - pip:
     - pynetcf>=0.4.0
@@ -31,6 +32,7 @@ dependencies:
     # optional, for documentation and testing:
     - nbconvert
     - ipykernel
+    - sphinx_rtd_theme
     - ascat>=2.0
     - ismn==1.3.4
     - pytest

@@ -10,6 +10,37 @@
 import os
 import sys
 import shutil
+import subprocess
+
+# Create kernel for notebooks
+on_rtd = "READTHEDOCS" in os.environ and os.environ["READTHEDOCS"]
+if on_rtd:
+    rtd_project = os.environ["READTHEDOCS_PROJECT"]
+    rtd_version = os.environ["READTHEDOCS_VERSION"]
+    interpreter = (
+        f"/home/docs/checkouts/readthedocs.org/user_builds/{rtd_project}/"
+        f"conda/{rtd_version}/bin/python"
+    )
+else:
+    interpreter = "python"
+
+print("Installing kernel")
+subprocess.run(
+    [
+        interpreter,
+        "-m",
+        "ipykernel",
+        "install",
+        "--user",
+        "--name",
+        "conda-env-pytesmo-py",
+        "--display-name",
+        "Python [conda env:pytesmo]"
+    ],
+    check=True,
+    capture_output=True,
+)
+print("Done")
 
 # -- Path setup --------------------------------------------------------------
 
@@ -72,6 +103,7 @@ extensions = [
     "sphinx.ext.ifconfig",
     "sphinx.ext.mathjax",
     "sphinx.ext.napoleon",
+    "nbsphinx"
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -153,15 +185,14 @@ todo_emit_warnings = True
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = "alabaster"
+html_theme = "sphinx_rtd_theme"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-html_theme_options = {
-    "sidebar_width": "300px",
-    "page_width": "1200px"
-}
+html_theme_options = {"sidebar_width": "300px", "page_width": "1200px",
+                      "show_navbar_depth": 2
+                      }
 
 # Add any paths that contain custom themes here, relative to this directory.
 # html_theme_path = []
