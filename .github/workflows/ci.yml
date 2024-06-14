@@ -16,7 +16,7 @@ jobs:
   build:
     strategy:
       matrix:
-        python-version: [ '3.8', '3.9', '3.10', '3.11', '3.12' ]
+        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
         os: ["ubuntu-latest", "windows-latest"]
     name: py${{ matrix.python-version }} @ ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
@@ -30,7 +30,6 @@ jobs:
         with:
            miniconda-version: "latest"
            auto-update-conda: true
-           channel-priority: flexible
            python-version: ${{ matrix.python-version }}
            environment-file: environment.yml
            activate-environment: pytesmo # todo: must match with name in environment.yml
