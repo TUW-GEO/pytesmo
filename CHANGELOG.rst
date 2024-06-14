@@ -4,6 +4,7 @@ Changelog
 
 Unreleased changes in master
 ============================
+- Fixed an issue with the intra-annual metrics adapter when an empty time series is passed
 
 Version 0.16.0, 2023-09-12
 ==========================
