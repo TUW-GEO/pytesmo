@@ -34,7 +34,7 @@ def test_error_handling_empty_df():
         datasets,
         spatial_ref="0-ERA5",
         metrics_calculators={(n_datasets, 2): metric_calculator.calc_metrics},
-        temporal_matcher=make_combined_temporal_matcher(pd.Timedelta(12, "H")),
+        temporal_matcher=make_combined_temporal_matcher(pd.Timedelta(12, "h")),
     )
     gpis = list(range(npoints))
     args = (gpis, gpis, gpis)
@@ -72,7 +72,7 @@ def test_error_handling_nodata():
         datasets,
         spatial_ref="0-ERA5",
         metrics_calculators={(n_datasets, 2): metric_calculator.calc_metrics},
-        temporal_matcher=make_combined_temporal_matcher(pd.Timedelta(12, "H")),
+        temporal_matcher=make_combined_temporal_matcher(pd.Timedelta(12, "h")),
     )
     gpis = list(range(npoints))
     args = (gpis, gpis, gpis)
@@ -110,7 +110,7 @@ def test_error_handling_not_enough_data():
         datasets,
         spatial_ref="0-ERA5",
         metrics_calculators={(n_datasets, 2): metric_calculator.calc_metrics},
-        temporal_matcher=make_combined_temporal_matcher(pd.Timedelta(12, "H")),
+        temporal_matcher=make_combined_temporal_matcher(pd.Timedelta(12, "h")),
     )
     gpis = list(range(npoints))
     args = (gpis, gpis, gpis)
@@ -142,7 +142,7 @@ def test_error_handling_ok():
         datasets,
         spatial_ref="0-ERA5",
         metrics_calculators={(n_datasets, 2): metric_calculator.calc_metrics},
-        temporal_matcher=make_combined_temporal_matcher(pd.Timedelta(12, "H")),
+        temporal_matcher=make_combined_temporal_matcher(pd.Timedelta(12, "h")),
     )
     gpis = list(range(npoints))
     args = (gpis, gpis, gpis)
@@ -177,7 +177,7 @@ def test_error_handling_scaling_failed():
         scaling=BadScaler(),
         spatial_ref="0-ERA5",
         metrics_calculators={(n_datasets, 2): metric_calculator.calc_metrics},
-        temporal_matcher=make_combined_temporal_matcher(pd.Timedelta(12, "H")),
+        temporal_matcher=make_combined_temporal_matcher(pd.Timedelta(12, "h")),
     )
     gpis = list(range(npoints))
     args = (gpis, gpis, gpis)
@@ -220,7 +220,7 @@ def test_error_handling_datamanager_failed():
         data_manager,
         spatial_ref=spatial_ref,
         metrics_calculators={(n_datasets, 2): metric_calculator.calc_metrics},
-        temporal_matcher=make_combined_temporal_matcher(pd.Timedelta(12, "H")),
+        temporal_matcher=make_combined_temporal_matcher(pd.Timedelta(12, "h")),
     )
     gpis = list(range(npoints))
     args = (gpis, gpis, gpis)
@@ -296,7 +296,7 @@ def test_error_handling_metrics_calculation_failed():
         datasets,
         spatial_ref="0-ERA5",
         metrics_calculators={(n_datasets, 2): bad_metrics},
-        temporal_matcher=make_combined_temporal_matcher(pd.Timedelta(12, "H")),
+        temporal_matcher=make_combined_temporal_matcher(pd.Timedelta(12, "h")),
     )
     gpis = list(range(npoints))
     args = (gpis, gpis, gpis)

@@ -4,6 +4,9 @@ Changelog
 
 Unreleased changes in master
 ============================
+- Fixed an issue with the intra-annual metrics adapter when an empty time series is passed (PR `#307 <https://github.com/TUW-GEO/pytesmo/pull/307>`_)
+- Metapackage updated (pyscaffold 4.5) (PR `#307 <https://github.com/TUW-GEO/pytesmo/pull/307>`_)
+- C modules were outdated and could not be compiled, therefore rebuilt (PR `#307 <https://github.com/TUW-GEO/pytesmo/pull/307>`_)
 
 Version 0.16.0, 2023-09-12
 ==========================

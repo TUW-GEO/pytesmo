@@ -288,7 +288,11 @@ class Validation(object):
                     else:
                         retcode = eh.VALIDATION_FAILED
                     for key in result:
-                        result[key][0]["status"][0] = retcode
+                        for k in result[key][0].keys():
+                            # default case or subgroups status update
+                            if (isinstance(k, str) and k == "status") or \
+                               (isinstance(k, tuple) and k[1] == "status"):
+                                result[key][0][k][0] = retcode
 
             # add result of one gpi to global results dictionary
             for r in result:

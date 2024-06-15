@@ -1,5 +1,11 @@
-# -*- coding: utf-8 -*-
+"""
+    Setup file for pytesmo.
+    Use setup.cfg to configure your project.
 
+    This file was generated with PyScaffold 4.5.
+    PyScaffold helps you to put up the scaffold of your new Python project.
+    Learn more under: https://pyscaffold.org/
+"""
 from setuptools import setup
 from setuptools.command.build_ext import build_ext as _build_ext
 from setuptools.command.sdist import sdist as _sdist
@@ -36,7 +42,7 @@ def get_ext_modules(ext):
 def cythonize_extensions():
     from Cython.Build import cythonize
 
-    cythonize(
+    cythonized_modules = cythonize(
         get_ext_modules(".pyx"),
         compiler_directives={
             "embedsignature": True,
@@ -49,12 +55,13 @@ def cythonize_extensions():
         },
         # include_path=[numpy.get_include()],
     )
+    return cythonized_modules
 
 
 class CythonizeMixin(object):
 
     user_options = [
-        ("cythonize", None, "recreate the c extionsions with cython")
+        ("cythonize", None, "recreate the c extensions with cython")
     ]
 
     def initialize_options(self):
@@ -63,7 +70,7 @@ class CythonizeMixin(object):
 
     def run(self):
         if self.cythonize:
-            cythonize_extensions()
+            self.distribution.ext_modules = cythonize_extensions()
         super().run()
 
 
@@ -78,12 +85,22 @@ class build_ext(CythonizeMixin, _build_ext):
 
 
 if __name__ == "__main__":
-    cmdclass = {}
-    cmdclass["sdist"] = sdist
-    cmdclass["build_ext"] = build_ext
-    setup(
-        cmdclass=cmdclass,
-        # at this point the C modules have already been generated if necessary
-        ext_modules=get_ext_modules(".c"),
-        use_scm_version={"version_scheme": "no-guess-dev"}
-    )
+    # to create .c files run `python setup.py build_ext --cythonize`
+    try:
+        cmdclass = {}
+        cmdclass["sdist"] = sdist
+        cmdclass["build_ext"] = build_ext
+        setup(
+            cmdclass=cmdclass,
+            # at this point the C modules have already been generated if necessary  # noqa: E501
+            ext_modules=get_ext_modules(".c"),
+            use_scm_version={"version_scheme": "no-guess-dev"}
+        )
+    except:  # noqa
+        print(
+            "\n\nAn error occurred while building the project, "
+            "please ensure you have the most updated version of setuptools, "
+            "setuptools_scm and wheel with:\n"
+            "   pip install -U setuptools setuptools_scm wheel\n\n"
+        )
+        raise

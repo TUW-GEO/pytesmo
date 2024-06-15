@@ -1292,7 +1292,7 @@ def test_combined_matching_scaling():
         datasets,
         spatial_ref="0-ERA5",
         metrics_calculators={(n_datasets, 2): metric_calculator.calc_metrics},
-        temporal_matcher=make_combined_temporal_matcher(pd.Timedelta(12, "H")),
+        temporal_matcher=make_combined_temporal_matcher(pd.Timedelta(12, "h")),
         scaling="mean_std",
         scaling_ref="0-ERA5",
     )
