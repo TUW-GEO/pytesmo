@@ -54,7 +54,7 @@ Then the following command should install all dependencies:
 
 .. code-block:: bash
 
-    mamba install -c conda-forge numpy scipy pandas netCDF4 cython pyresample
+    mamba install -c conda-forge 'numpy<2.0.0' scipy pandas netCDF4 cython pyresample
 
 Afterwards ``pytesmo`` can be installed via pip.
 
