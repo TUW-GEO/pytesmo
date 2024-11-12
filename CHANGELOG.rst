@@ -4,6 +4,12 @@ Changelog
 
 Unreleased changes in master
 ============================
+
+Version 0.16.1, 2024-11-13
+==========================
+- THIS VERSION IS STILL COMPATIBLE WITH ``NUMPY<2.0``, from v0.17 on pytesmo will require ``numpy>=2.0``
+- Old ``pytesmo.timeseries.plotting`` module was removed
+- Fixed and filtered many warnings that were printed by tests until now
 - Fixed an issue with the intra-annual metrics adapter when an empty time series is passed (PR `#307 <https://github.com/TUW-GEO/pytesmo/pull/307>`_)
 - Metapackage updated (pyscaffold 4.5) (PR `#307 <https://github.com/TUW-GEO/pytesmo/pull/307>`_)
 - C modules were outdated and could not be compiled, therefore rebuilt (PR `#307 <https://github.com/TUW-GEO/pytesmo/pull/307>`_)

@@ -1,6 +1,7 @@
 import pytest
 
 from pytesmo.validation_framework.adapters import TimestampAdapter
+
 """
 Test for the adapters.
 """
@@ -92,7 +93,7 @@ def test_advanced_masking_adapter_nans_ignored():
     ds = TestDataset("", n=20)
     # introduce nan
     ts = ds.read()
-    ts.iloc[7]["x"] = np.nan
+    ts.iloc[7, ts.columns.get_loc('x')] = np.nan
 
     def _read():
         return ts
@@ -168,7 +169,6 @@ def test_anomaly_clim_adapter_one_column():
 
 
 def test_adapters_custom_fct_name():
-
     def assert_all_read_fcts(reader):
         assert (np.all(reader.read() == reader.read()))
         assert (np.all(reader.read() == reader.alias_read()))
@@ -305,6 +305,8 @@ def test_column_comb_adapter():
                                   pd.DataFrame(columns=['x', 'y', 'xy_mean']))
 
 
+@pytest.mark.filterwarnings(
+    "ignore:The input DataFrame is either empty or has.*:UserWarning")
 def test_timestamp_adapter():
     ds = TestDataset("", n=20)
 
@@ -421,7 +423,7 @@ def test_timestamp_adapter():
     # -----------------------
 
     def _read_empty():
-        return pd.DataFrame(columns=["sm", "offset"],)
+        return pd.DataFrame(columns=["sm", "offset"], )
 
     setattr(ds, "read", _read_empty)
     origin = ds.read()
@@ -467,8 +469,8 @@ def test_timestamp_adapter():
     should_be = origin.apply(
         lambda row: np.datetime64("2005-02-01") + np.timedelta64(
             int(row["base_time"]), "D") + np.timedelta64(
-                int(row["offset_min"]), "m") + np.timedelta64(
-                    int(row["offset_sec"]), "s"),
+            int(row["offset_min"]), "m") + np.timedelta64(
+            int(row["offset_sec"]), "s"),
         axis=1).values
 
     assert (adapted.index.values == should_be).all()

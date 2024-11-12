@@ -366,6 +366,8 @@ class TsDistributor:
     # selection = dat.query(" | ".join(cond)).index
 
         if self.yearless_date_ranges is not None:
+            cols = {}
+
             for i, gdrange in enumerate(self.yearless_date_ranges):
                 for y in np.unique(idx.year):
                     start = gdrange[0]
@@ -385,7 +387,11 @@ class TsDistributor:
 
                     end_dt = end.to_datetime(years=y)
 
-                    mask[f"gen_range{y}-{i}"] = (idx >= start_dt) & (
+                    cols[f"gen_range{y}-{i}"] = (idx >= start_dt) & (
                         idx <= end_dt)
+
+            mask = pd.concat(
+                [mask, pd.DataFrame(index=mask.index, data=cols)],
+                axis=1)
 
         return mask.any(axis=1, bool_only=True)

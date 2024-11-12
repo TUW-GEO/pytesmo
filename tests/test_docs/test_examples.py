@@ -5,6 +5,7 @@ build correctly on readthedocs.
 """
 
 import os
+import subprocess
 from nbconvert.preprocessors import ExecutePreprocessor
 import nbformat
 import pytest
@@ -34,6 +35,11 @@ def test_ipython_notebook(notebook):
     applicable to the tests here, this file must be within a sub-folder of
     the tests/ directory (assuming that examples are in docs/examples)!
     """
+    # Handles jupyter warning (can probably be removed again in future):
+    os.environ["JUPYTER_PLATFORM_DIRS"] = "1"
+    subprocess.call(["jupyter", "--paths"])
+
+    # Run ipynb files and check if they pass
     preprocessor = ExecutePreprocessor(timeout=600, kernel_name="python3")
     with open(os.path.join(examples_path, notebook)) as f:
         nb = nbformat.read(f, as_version=4)

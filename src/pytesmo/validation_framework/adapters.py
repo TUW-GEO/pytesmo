@@ -699,9 +699,9 @@ class TimestampAdapter(BasicAdapter):
 
         if self.drop_original:
             if self.time_offset_fields is not None:
-                data.drop(columns=self.time_offset_fields, inplace=True)
+                data = data.drop(columns=self.time_offset_fields)
             if self.base_time_field in data.columns:
-                data.drop(columns=[self.base_time_field], inplace=True)
+                data = data.drop(columns=[self.base_time_field])
 
         # Remove NaNs from index, if present
         data = data.loc[data.index.dropna()]
