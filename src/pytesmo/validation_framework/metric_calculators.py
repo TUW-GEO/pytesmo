@@ -256,7 +256,7 @@ class BasicMetrics(MetadataMetrics):
     """
 
     def __init__(
-        self, other_name="k1", calc_tau=False, metadata_template=None
+            self, other_name="k1", calc_tau=False, metadata_template=None
     ):
         super(BasicMetrics, self).__init__(
             other_name=other_name, metadata_template=metadata_template
@@ -373,7 +373,7 @@ class FTMetrics(MetadataMetrics):
     """
 
     def __init__(
-        self, frozen_flag=2, other_name="k1", metadata_template=None
+            self, frozen_flag=2, other_name="k1", metadata_template=None
     ):
         super(FTMetrics, self).__init__(
             other_name=other_name, metadata_template=metadata_template
@@ -454,11 +454,11 @@ class HSAF_Metrics(MetadataMetrics):
     """
 
     def __init__(
-        self,
-        other_name1="k1",
-        other_name2="k2",
-        dataset_names=None,
-        metadata_template=None,
+            self,
+            other_name1="k1",
+            other_name2="k2",
+            dataset_names=None,
+            metadata_template=None,
     ):
 
         super(HSAF_Metrics, self).__init__(
@@ -677,16 +677,21 @@ class IntercomparisonMetrics(MetadataMetrics):
     """
 
     def __init__(
-        self,
-        refname="ref",
-        other_names=("k1", "k2", "k3"),
-        calc_tau=False,
-        metrics_between_nonref=False,
-        calc_rho=True,
-        dataset_names=None,
-        metadata_template=None,
+            self,
+            refname="ref",
+            other_names=("k1", "k2", "k3"),
+            calc_tau=False,
+            metrics_between_nonref=False,
+            calc_rho=True,
+            dataset_names=None,
+            metadata_template=None,
     ):
-
+        warnings.warn(
+            "pytesmo IntercomparisonMetrics calculator "
+            "is deprecated and will be removed in a future "
+            "release. Use the PairwiseIntercomparisonMetrics "
+            "class instead.", DeprecationWarning
+        )
         other_names = list(other_names)
         super(IntercomparisonMetrics, self).__init__(
             other_name=other_names, metadata_template=metadata_template
@@ -798,7 +803,6 @@ class IntercomparisonMetrics(MetadataMetrics):
         if n_obs < self.min_obs:
             dataset["status"][0] = eh.INSUFFICIENT_DATA
             return dataset
-
 
         # make sure we have the correct order
         data = data[self.df_columns]
@@ -932,13 +936,13 @@ class TCMetrics(MetadataMetrics):
     """
 
     def __init__(
-        self,
-        other_names=("k1", "k2"),
-        calc_tau=False,
-        dataset_names=None,
-        tc_metrics_for_ref=True,
-        metrics_between_nonref=False,
-        metadata_template=None,
+            self,
+            other_names=("k1", "k2"),
+            calc_tau=False,
+            dataset_names=None,
+            tc_metrics_for_ref=True,
+            metrics_between_nonref=False,
+            metadata_template=None,
     ):
         """
         Triple Collocation metrics as implemented in the QA4SM project.
@@ -970,6 +974,13 @@ class TCMetrics(MetadataMetrics):
             which is then propagated to the end netCDF results file.
 
         """
+        warnings.warn(
+            "pytesmo TCMetrics calculator "
+            "is deprecated and will be removed in a future "
+            "release. Use the TripleCollocationMetrics "
+            "class instead.", DeprecationWarning
+        )
+
         self.ref_name = "ref"
         other_names = list(other_names)
         super(TCMetrics, self).__init__(
@@ -1056,10 +1067,11 @@ class TCMetrics(MetadataMetrics):
             )
             for metric, ds in metrics_thds.keys():
                 if not any(
-                    [
-                        self.ds_names_lut[other_ds] == ds
-                        for other_ds in thds_name.split(self.ds_names_split)
-                    ]
+                        [
+                            self.ds_names_lut[other_ds] == ds
+                            for other_ds in thds_name.split(
+                                self.ds_names_split)
+                        ]
                 ):
                     continue
                 full_name = "_".join([metric, ds])
@@ -1146,7 +1158,6 @@ class TCMetrics(MetadataMetrics):
             dataset["status"][0] = eh.INSUFFICIENT_DATA
             return dataset
 
-
         # calculate Pearson correlation
         pearson_R, pearson_p = df_metrics.pearsonr(data)
         pearson_R, pearson_p = pearson_R._asdict(), pearson_p._asdict()
@@ -1204,7 +1215,7 @@ class TCMetrics(MetadataMetrics):
             )
 
             for metr, res in dict(
-                snr=snr, err_std=err_std, beta=beta
+                    snr=snr, err_std=err_std, beta=beta
             ).items():
                 for ds, ds_res in res.items():
                     m_ds = "{}_{}".format(metr, self.ds_names_lut[ds])
@@ -1308,7 +1319,6 @@ class RollingMetrics(MetadataMetrics):
     """
 
     def __init__(self, other_name="k1", metadata_template=None):
-
         super(RollingMetrics, self).__init__(
             other_name=other_name, metadata_template=metadata_template
         )
@@ -1317,7 +1327,7 @@ class RollingMetrics(MetadataMetrics):
         self.result_template.update(_get_metric_template(self.basic_metrics))
 
     def calc_metrics(
-        self, data, gpi_info, window_size="30d", center=True, min_periods=2
+            self, data, gpi_info, window_size="30d", center=True, min_periods=2
     ):
         """
         Calculate the desired statistics.
@@ -1444,7 +1454,7 @@ class PairwiseMetricsMixin:
         return metrics
 
     def _calc_pairwise_metrics(
-        self, x, y, mx, my, varx, vary, cov, result, suffix=""
+            self, x, y, mx, my, varx, vary, cov, result, suffix=""
     ):
         """
         Calculates pairwise metrics, making use of pre-computed moments.
@@ -1602,15 +1612,15 @@ class PairwiseIntercomparisonMetrics(MetadataMetrics, PairwiseMetricsMixin):
     """
 
     def __init__(
-        self,
-        min_obs=10,
-        calc_spearman=True,
-        calc_kendall=True,
-        analytical_cis=True,
-        bootstrap_cis=False,
-        bootstrap_min_obs=100,
-        bootstrap_alpha=0.05,
-        metadata_template=None,
+            self,
+            min_obs=10,
+            calc_spearman=True,
+            calc_kendall=True,
+            analytical_cis=True,
+            bootstrap_cis=False,
+            bootstrap_min_obs=100,
+            bootstrap_alpha=0.05,
+            metadata_template=None,
     ):
         super().__init__(min_obs=min_obs, metadata_template=metadata_template)
 
@@ -1703,13 +1713,13 @@ class TripleCollocationMetrics(MetadataMetrics, PairwiseMetricsMixin):
     """
 
     def __init__(
-        self,
-        refname,
-        min_obs=10,
-        bootstrap_cis=False,
-        bootstrap_min_obs=100,
-        bootstrap_alpha=0.05,
-        metadata_template=None,
+            self,
+            refname,
+            min_obs=10,
+            bootstrap_cis=False,
+            bootstrap_min_obs=100,
+            bootstrap_alpha=0.05,
+            metadata_template=None,
     ):
 
         super().__init__(min_obs=min_obs, metadata_template=metadata_template)

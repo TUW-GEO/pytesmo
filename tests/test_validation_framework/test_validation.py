@@ -137,9 +137,9 @@ def ismn_reader():
 
 
 def check_results(
-    filename: str,
-    target_vars: dict,
-    variables: list = None,
+        filename: str,
+        target_vars: dict,
+        variables: list = None,
 ):
     """
     Check that standard vars are present and that nobs, rho and rmsd match
@@ -185,7 +185,6 @@ def test_ascat_ismn_validation(ascat_reader, ismn_reader):
         metadata = ismn_reader.read_metadata(idx)
         jobs.append((idx, metadata["longitude"].val, metadata["latitude"].val))
 
-
     # Create the validation object.
 
     datasets = {
@@ -205,7 +204,8 @@ def test_ascat_ismn_validation(ascat_reader, ismn_reader):
     }
 
     read_ts_names = {"ASCAT": "read", "ISMN": "read"}
-    period = [datetime(2007, 1, 1), datetime(2014, 12, 31)]
+    period = [datetime(2007, 1, 1),
+              datetime(2014, 12, 31)]
 
     datasets = DataManager(
         datasets, "ISMN", period, read_ts_names=read_ts_names)
@@ -216,6 +216,8 @@ def test_ascat_ismn_validation(ascat_reader, ismn_reader):
         temporal_ref="ASCAT",
         scaling="cdf_match",
         scaling_ref="ASCAT",
+        temporal_matcher=make_combined_temporal_matcher(
+            pd.Timedelta(1, "h")),
         metrics_calculators={
             (2, 2):
                 metrics_calculators.BasicMetrics(other_name="k1").calc_metrics
@@ -337,6 +339,8 @@ def test_ascat_ismn_validation_metadata(ascat_reader, ismn_reader):
         temporal_ref="ASCAT",
         scaling="cdf_match",
         scaling_ref="ASCAT",
+        temporal_matcher=make_combined_temporal_matcher(
+            pd.Timedelta(1, "h")),
         metrics_calculators={
             (2, 2):
                 metrics_calculators.BasicMetrics(
@@ -396,7 +400,7 @@ def test_ascat_ismn_validation_metadata(ascat_reader, ismn_reader):
             "SOILSCAPE",
             "SOILSCAPE",
             "SOILSCAPE",
-        ], dtype="U256",)
+        ], dtype="U256", )
     }
     vars_should = [
         'BIAS', 'R', 'RMSD', '_row_size', 'climate', 'gpi', 'idx', 'landcover',
@@ -432,14 +436,10 @@ def test_validation_with_averager(ascat_reader, ismn_reader):
                       (7, -120.80639, 38.17353)]
         }
     }
-    gpis = (1814367, 1803695, 1856312)
-    lons, lats = [], []
-    for gpi in gpis:
-        lon, lat = ascat_reader.grid.gpi2lonlat(gpi)
-        lons.append(lon)
-        lats.append(lat)
 
-    jobs = [(gpis, lons, lats)]
+    jobs = [((1814367, 1803695, 1856312),
+             (0, 0, 0),
+             (0, 0, 0))]   # coords not needed here
 
     # Create the variable ***save_path*** which is a string representing the
     # path where the results will be saved. **DO NOT CHANGE** the name
@@ -467,7 +467,8 @@ def test_validation_with_averager(ascat_reader, ismn_reader):
     }
 
     read_ts_names = {"ASCAT": "read", "ISMN": "read"}
-    period = [datetime(2007, 1, 1), datetime(2014, 12, 31)]
+    period = [datetime(2007, 1, 1),
+              datetime(2014, 12, 31)]
 
     datasets = DataManager(
         datasets,
@@ -486,6 +487,8 @@ def test_validation_with_averager(ascat_reader, ismn_reader):
         temporal_ref="ISMN",
         scaling="cdf_match",
         scaling_ref="ISMN",
+        temporal_matcher=make_combined_temporal_matcher(
+            pd.Timedelta(1, "h")),
         metrics_calculators={
             (2, 2):
                 metrics_calculators.BasicMetrics(other_name="k1").calc_metrics
@@ -829,7 +832,6 @@ def test_validation_n3_k2():
 
 
 def test_validation_n3_k2_temporal_matching_no_matches2():
-
     empty_result = {
         'gpi': np.array([4], dtype=np.int32),
         'lon': np.array([4.]),
@@ -1159,6 +1161,8 @@ def test_ascat_ismn_validation_metadata_rolling(ascat_reader, ismn_reader):
         temporal_ref="ASCAT",
         scaling="cdf_match",
         scaling_ref="ASCAT",
+        temporal_matcher=make_combined_temporal_matcher(
+            window=pd.Timedelta(1, "h")),
         metrics_calculators={
             (2, 2):
                 metrics_calculators.RollingMetrics(

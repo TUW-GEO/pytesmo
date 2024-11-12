@@ -212,8 +212,8 @@ class Upscaling(MixinReadTs):
         for n, df in enumerate(to_match):
             if df is None:
                 continue
-            points = int(df.count())
-            if int(ref.count()) >= points:
+            points = int(df.count().iloc[0])
+            if int(ref.count().iloc[0]) >= points:
                 continue
             else:
                 ref = df
@@ -225,7 +225,7 @@ class Upscaling(MixinReadTs):
         matched = combined_temporal_collocation(
             ref,
             to_match,
-            pd.Timedelta(hours, "H"),
+            pd.Timedelta(hours, "h"),
             combined_dropna=combined_dropna,
             checkna=True,
         )

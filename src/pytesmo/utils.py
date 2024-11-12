@@ -47,7 +47,7 @@ def rootdir() -> Path:
 
 def deprecated(message: str = None):
     """
-    Decorator for classes or functions to mark them as deprecated.
+    Decorator for class methods or functions to mark them as deprecated.
     If the decorator is applied without a specific message (`@deprecated()`),
     the default warning is shown when using the function/class. To specify
     a custom message use it like:
@@ -67,13 +67,11 @@ def deprecated(message: str = None):
 
         @functools.wraps(src)
         def new_func(*args, **kwargs):
-            warnings.simplefilter('always', DeprecationWarning)
-
             warnings.warn(
                 default_msg if message is None else message,
                 category=DeprecationWarning,
                 stacklevel=2)
-            warnings.simplefilter('default', DeprecationWarning)
+
             return src(*args, **kwargs)
 
         return new_func
