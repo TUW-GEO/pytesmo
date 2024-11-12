@@ -51,9 +51,9 @@ jobs:
       - name: Export Environment
         shell: bash -l {0}
         run: |
-          mkdir -p .artifacts
+          mkdir -p artifacts
           filename=env_py${{ matrix.python-version }}_${{ matrix.os }}.yml
-          conda env export --no-builds | grep -v "prefix" > .artifacts/$filename
+          conda env export --no-builds | grep -v "prefix" > artifacts/$filename
       - name: Install package and test
         shell: bash -l {0}
         run: |
@@ -71,22 +71,23 @@ jobs:
         shell: bash -l {0}
         run: |
           git status
-          pip install setuptools_scm
+          pip install setuptools_scm twine
           if [ ${{ matrix.os }} == "windows-latest" ]
           then
             # build whls on windows
             pip install wheel
-            python setup.py bdist_wheel --dist-dir .artifacts/dist
+            python setup.py bdist_wheel --dist-dir artifacts/dist
           else
             # build dist on linux
-            python setup.py sdist --dist-dir .artifacts/dist
+            python setup.py sdist --dist-dir artifacts/dist
           fi
-          ls .artifacts/dist
+          ls artifacts/dist
+          twine check artifacts/dist/*
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: Artifacts-${{ matrix.python-version }}-${{ matrix.os }}
-          path: .artifacts/*
+          path: artifacts/*
   coveralls:
     name: Submit Coveralls 👚
     needs: build
