@@ -1639,6 +1639,8 @@ class PairwiseIntercomparisonMetrics(MetadataMetrics, PairwiseMetricsMixin):
         """
         result = super().calc_metrics(data, gpi_info)
 
+        data = data.dropna()
+
         n_obs = len(data)
         result["n_obs"][0] = n_obs
         if n_obs < self.min_obs:
