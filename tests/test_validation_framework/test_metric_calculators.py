@@ -62,7 +62,6 @@ from pytesmo.validation_framework.temporal_matchers import (
 from pytesmo.validation_framework.results_manager import netcdf_results_manager
 import pytesmo.metrics as metrics
 
-
 from .utils import DummyReader
 
 
@@ -155,7 +154,8 @@ def test_BasicMetrics_calculator_metadata():
     df = make_some_data()
     data = df[["ref", "k1"]]
 
-    metadata_dict_template = {"network": np.array(["None"], dtype="U256")}
+    metadata_dict_template = {
+        "network": np.array(["None"], dtype="U256")}
 
     metriccalc = BasicMetrics(
         other_name="k1",
@@ -219,7 +219,8 @@ def test_BasicMetricsPlusMSE_calculator_metadata():
     df = make_some_data()
     data = df[["ref", "k1"]]
 
-    metadata_dict_template = {"network": np.array(["None"], dtype="U256")}
+    metadata_dict_template = {
+        "network": np.array(["None"], dtype="U256")}
 
     metriccalc = BasicMetricsPlusMSE(
         other_name="k1", metadata_template=metadata_dict_template
@@ -253,9 +254,10 @@ def test_IntercompMetrics_calculator():
     df = make_some_data()
     data = df[["ref", "k1", "k2"]]
 
-    metriccalc = IntercomparisonMetrics(
-        other_names=("k1", "k2"), calc_tau=True
-    )
+    with pytest.warns(DeprecationWarning):
+        metriccalc = IntercomparisonMetrics(
+            other_names=("k1", "k2"), calc_tau=True
+        )
 
     res = metriccalc.calc_metrics(data, gpi_info=(0, 0, 0))
 
@@ -275,34 +277,42 @@ def test_IntercompMetrics_calculator():
     )
 
     np.testing.assert_almost_equal(
-        res["mse_corr_between_ref_and_k1"], np.array([0], dtype=np.float32)
+        res["mse_corr_between_ref_and_k1"],
+        np.array([0], dtype=np.float32)
     )
     np.testing.assert_almost_equal(
-        res["mse_corr_between_ref_and_k2"], np.array([0], dtype=np.float32)
+        res["mse_corr_between_ref_and_k2"],
+        np.array([0], dtype=np.float32)
     )
 
     np.testing.assert_almost_equal(
-        res["mse_bias_between_ref_and_k1"], np.array([0.04], dtype=np.float32)
+        res["mse_bias_between_ref_and_k1"],
+        np.array([0.04], dtype=np.float32)
     )
     np.testing.assert_almost_equal(
-        res["mse_bias_between_ref_and_k2"], np.array([0.04], dtype=np.float32)
+        res["mse_bias_between_ref_and_k2"],
+        np.array([0.04], dtype=np.float32)
     )
 
     # scipy 1.3.0 is not built for python 2.7 so we allow both for now
     assert (
-        np.isnan(res["p_R_between_ref_and_k1"])
-        or res["p_R_between_ref_and_k1"] == 1.0
+            np.isnan(res["p_R_between_ref_and_k1"])
+            or res["p_R_between_ref_and_k1"] == 1.0
     )
     assert (
-        np.isnan(res["p_R_between_ref_and_k2"])
-        or res["p_R_between_ref_and_k2"] == 1.0
+            np.isnan(res["p_R_between_ref_and_k2"])
+            or res["p_R_between_ref_and_k2"] == 1.0
     )
 
-    assert res["RMSD_between_ref_and_k1"] == np.array([0.2], dtype="float32")
-    assert res["RMSD_between_ref_and_k2"] == np.array([0.2], dtype="float32")
+    assert (res["RMSD_between_ref_and_k1"] ==
+            np.array([0.2], dtype="float32"))
+    assert (res["RMSD_between_ref_and_k2"] ==
+            np.array([0.2], dtype="float32"))
 
-    assert res["BIAS_between_ref_and_k1"] == np.array([-0.2], dtype="float32")
-    assert res["BIAS_between_ref_and_k2"] == np.array([0.2], dtype="float32")
+    assert (res["BIAS_between_ref_and_k1"] ==
+            np.array([-0.2], dtype="float32"))
+    assert (res["BIAS_between_ref_and_k2"] ==
+            np.array([0.2], dtype="float32"))
 
     np.testing.assert_almost_equal(
         res["urmsd_between_ref_and_k1"], np.array([0.0], dtype="float32")
@@ -322,13 +332,15 @@ def test_IntercompMetrics_calculator_metadata():
     df = make_some_data()
     data = df[["ref", "k1", "k2"]]
 
-    metadata_dict_template = {"network": np.array(["None"], dtype="U256")}
+    metadata_dict_template = {
+        "network": np.array(["None"], dtype="U256")}
 
-    metriccalc = IntercomparisonMetrics(
-        other_names=("k1", "k2"),
-        calc_tau=True,
-        metadata_template=metadata_dict_template,
-    )
+    with pytest.warns(DeprecationWarning):
+        metriccalc = IntercomparisonMetrics(
+            other_names=("k1", "k2"),
+            calc_tau=True,
+            metadata_template=metadata_dict_template,
+        )
     res = metriccalc.calc_metrics(
         data, gpi_info=(0, 0, 0, {"network": "SOILSCAPE"})
     )
@@ -344,11 +356,12 @@ def test_TC_metrics_calculator():
     df = make_some_data()
     data = df[["ref", "k1", "k2", "k3"]]
 
-    metriccalc = TCMetrics(
-        other_names=("k1", "k2", "k3"),
-        calc_tau=True,
-        dataset_names=("ref", "k1", "k2", "k3"),
-    )
+    with pytest.warns(DeprecationWarning):
+        metriccalc = TCMetrics(
+            other_names=("k1", "k2", "k3"),
+            calc_tau=True,
+            dataset_names=("ref", "k1", "k2", "k3"),
+        )
 
     res = metriccalc.calc_metrics(data, gpi_info=(0, 0, 0))
 
@@ -361,47 +374,59 @@ def test_TC_metrics_calculator():
     assert np.isnan(res["rho_between_ref_and_k2"])
 
     np.testing.assert_almost_equal(
-        res["mse_between_ref_and_k1"], np.array([0.04], dtype=np.float32)
+        res["mse_between_ref_and_k1"],
+        np.array([0.04], dtype=np.float32)
     )
     np.testing.assert_almost_equal(
-        res["mse_between_ref_and_k2"], np.array([0.04], dtype=np.float32)
-    )
-
-    np.testing.assert_almost_equal(
-        res["mse_corr_between_ref_and_k1"], np.array([0], dtype=np.float32)
-    )
-    np.testing.assert_almost_equal(
-        res["mse_corr_between_ref_and_k2"], np.array([0], dtype=np.float32)
+        res["mse_between_ref_and_k2"],
+        np.array([0.04], dtype=np.float32)
     )
 
     np.testing.assert_almost_equal(
-        res["mse_bias_between_ref_and_k1"], np.array([0.04], dtype=np.float32)
+        res["mse_corr_between_ref_and_k1"],
+        np.array([0], dtype=np.float32)
     )
     np.testing.assert_almost_equal(
-        res["mse_bias_between_ref_and_k2"], np.array([0.04], dtype=np.float32)
+        res["mse_corr_between_ref_and_k2"],
+        np.array([0], dtype=np.float32)
+    )
+
+    np.testing.assert_almost_equal(
+        res["mse_bias_between_ref_and_k1"],
+        np.array([0.04], dtype=np.float32)
+    )
+    np.testing.assert_almost_equal(
+        res["mse_bias_between_ref_and_k2"],
+        np.array([0.04], dtype=np.float32)
     )
 
     # scipy 1.3.0 is not built for python 2.7 so we allow both for now
     assert (
-        np.isnan(res["p_R_between_ref_and_k1"])
-        or res["p_R_between_ref_and_k1"] == 1.0
+            np.isnan(res["p_R_between_ref_and_k1"])
+            or res["p_R_between_ref_and_k1"] == 1.0
     )
     assert (
-        np.isnan(res["p_R_between_ref_and_k2"])
-        or res["p_R_between_ref_and_k2"] == 1.0
+            np.isnan(res["p_R_between_ref_and_k2"])
+            or res["p_R_between_ref_and_k2"] == 1.0
     )
 
-    assert res["RMSD_between_ref_and_k1"] == np.array([0.2], dtype="float32")
-    assert res["RMSD_between_ref_and_k2"] == np.array([0.2], dtype="float32")
+    assert (res["RMSD_between_ref_and_k1"] ==
+            np.array([0.2], dtype="float32"))
+    assert (res["RMSD_between_ref_and_k2"] ==
+            np.array([0.2], dtype="float32"))
 
-    assert res["BIAS_between_ref_and_k1"] == np.array([-0.2], dtype="float32")
-    assert res["BIAS_between_ref_and_k2"] == np.array([0.2], dtype="float32")
+    assert (res["BIAS_between_ref_and_k1"] ==
+            np.array([-0.2], dtype="float32"))
+    assert (res["BIAS_between_ref_and_k2"] ==
+            np.array([0.2], dtype="float32"))
 
     np.testing.assert_almost_equal(
-        res["urmsd_between_ref_and_k1"], np.array([0.0], dtype="float32")
+        res["urmsd_between_ref_and_k1"],
+        np.array([0.0], dtype="float32")
     )
     np.testing.assert_almost_equal(
-        res["urmsd_between_ref_and_k2"], np.array([0.0], dtype="float32")
+        res["urmsd_between_ref_and_k2"],
+        np.array([0.0], dtype="float32")
     )
 
     assert "RSS_between_ref_and_k1" in res.keys()
@@ -430,14 +455,16 @@ def test_TC_metrics_calculator_metadata():
     df = make_some_data()
     data = df[["ref", "k1", "k2"]]
 
-    metadata_dict_template = {"network": np.array(["None"], dtype="U256")}
+    metadata_dict_template = {
+        "network": np.array(["None"], dtype="U256")}
 
-    metriccalc = TCMetrics(
-        other_names=("k1", "k2"),
-        calc_tau=True,
-        dataset_names=["ref", "k1", "k2"],
-        metadata_template=metadata_dict_template,
-    )
+    with pytest.warns(DeprecationWarning):
+        metriccalc = TCMetrics(
+            other_names=("k1", "k2"),
+            calc_tau=True,
+            dataset_names=["ref", "k1", "k2"],
+            metadata_template=metadata_dict_template,
+        )
     res = metriccalc.calc_metrics(
         data, gpi_info=(0, 0, 0, {"network": "SOILSCAPE"})
     )
@@ -472,7 +499,8 @@ def test_FTMetrics_metadata():
     df = make_some_data()
     data = df[["ref", "k1"]]
 
-    metadata_dict_template = {"network": np.array(["None"], dtype="U256")}
+    metadata_dict_template = {
+        "network": np.array(["None"], dtype="U256")}
 
     metriccalc = FTMetrics(
         frozen_flag=2,
@@ -510,7 +538,8 @@ def test_BasicSeasonalMetrics_metadata():
     df = make_some_data()
     data = df[["ref", "k1"]]
 
-    metadata_dict_template = {"network": np.array(["None"], dtype="U256")}
+    metadata_dict_template = {
+        "network": np.array(["None"], dtype="U256")}
 
     with pytest.warns(UserWarning):
         metriccalc = MonthsMetricsAdapter(
@@ -525,6 +554,8 @@ def test_BasicSeasonalMetrics_metadata():
     assert res["network"] == np.array(["SOILSCAPE"], dtype="U256")
 
 
+@pytest.mark.filterwarnings(
+    "ignore:invalid value encountered in divide*:RuntimeWarning")
 def test_HSAF_Metrics():
     """
     Test HSAF Metrics
@@ -542,6 +573,8 @@ def test_HSAF_Metrics():
     assert np.isnan(res["ref_k2_ALL_rho"])
 
 
+@pytest.mark.filterwarnings(
+    "ignore:invalid value encountered in divide*:RuntimeWarning")
 def test_HSAF_Metrics_metadata():
     """
     Test HSAF Metrics with metadata.
@@ -583,7 +616,8 @@ def test_RollingMetrics():
     for i in range(indexer.shape[0]):
         rmsd_arr.append(
             metrics.rmsd(
-                df["ref"][indexer[i, :]].values, df["k1"][indexer[i, :]].values
+                df.iloc[indexer[i, :], df.columns.get_loc("ref")].values,
+                df.iloc[indexer[i, :], df.columns.get_loc("k1")].values
             )
         )
 
@@ -611,7 +645,7 @@ def make_datasets(df):
     return datasets
 
 
-def testdata_known_results():
+def make_testdata_known_results():
     dr = pd.date_range("2000", "2020", freq="D")
     n = len(dr)
     x = np.ones(n) * 2
@@ -684,16 +718,19 @@ def testdata_known_results():
     for ck in expected:
         for m in expected[ck]:
             if m in ["n_obs", "gpi"]:
-                expected[ck][m] = np.array([expected[ck][m]], dtype=np.int32)
+                expected[ck][m] = np.array([expected[ck][m]],
+                                           dtype=np.int32)
             elif m in ["lat", "lon"]:
-                expected[ck][m] = np.array([expected[ck][m]], dtype=np.float64)
+                expected[ck][m] = np.array([expected[ck][m]],
+                                           dtype=np.float64)
             else:
-                expected[ck][m] = np.array([expected[ck][m]], dtype=np.float32)
+                expected[ck][m] = np.array([expected[ck][m]],
+                                           dtype=np.float32)
 
     return make_datasets(df), expected
 
 
-def testdata_random():
+def make_testdata_random():
     np.random.seed(42)
     dr = pd.date_range("2000", "2020", freq="D")
     n = len(dr)
@@ -749,11 +786,14 @@ def testdata_random():
     for ck in expected:
         for m in expected[ck]:
             if m in ["n_obs", "gpi"]:
-                expected[ck][m] = np.array([expected[ck][m]], dtype=np.int32)
+                expected[ck][m] = np.array([expected[ck][m]],
+                                           dtype=np.int32)
             elif m in ["lat", "lon"]:
-                expected[ck][m] = np.array([expected[ck][m]], dtype=np.float64)
+                expected[ck][m] = np.array([expected[ck][m]],
+                                           dtype=np.float64)
             else:
-                expected[ck][m] = np.array([expected[ck][m]], dtype=np.float32)
+                expected[ck][m] = np.array([expected[ck][m]],
+                                           dtype=np.float32)
 
     return make_datasets(df), expected
 
@@ -818,13 +858,18 @@ def test_PairwiseIntercomparisonMetrics_adapted(testdata_generator,
             if m in expected[key]:
                 assert_equal(results_pw[key][m], expected[key][m])
 
+
 @pytest.mark.parametrize(
-    "testdata_generator", [testdata_known_results, testdata_random]
+    "testdata_generator", [make_testdata_known_results, make_testdata_random]
 )
-def test_PairwiseIntercomparisonMetrics(testdata_generator):
+@pytest.mark.parametrize("seas_metrics", [None, MonthsMetricsAdapter])
+@pytest.mark.filterwarnings(
+    "ignore:invalid value encountered in divide.*:RuntimeWarning")
+def test_PairwiseIntercomparisonMetrics(testdata_generator, seas_metrics):
     # This test first compares the PairwiseIntercomparisonMetrics to known
     # results and then confirms that it agrees with IntercomparisonMetrics as
     # expected
+
     datasets, expected = testdata_generator()
 
     # for the pairwise intercomparison metrics it's important that we use
@@ -834,10 +879,13 @@ def test_PairwiseIntercomparisonMetrics(testdata_generator):
         calc_spearman=True, analytical_cis=False
     )
 
+    if seas_metrics:
+        metrics_calculator = seas_metrics(metrics_calculator)
+
     val = Validation(
         datasets,
         "reference_name",
-        scaling="mean_std",  # doesn't work with the constant test data
+        scaling=None,  # doesn't work with the constant test data
         temporal_matcher=make_combined_temporal_matcher(pd.Timedelta(6, "h")),
         metrics_calculators={(4, 2): (metrics_calculator.calc_metrics)},
     )
@@ -869,6 +917,14 @@ def test_PairwiseIntercomparisonMetrics(testdata_generator):
         "tau",
         "p_tau",
     ]
+    seasons = ["ALL", "DJF", "MAM", "JJA", "SON"]
+
+    if seas_metrics:
+        metrics = []
+        for seas in seasons:
+            metrics += list(map(lambda x: (seas, x), expected_metrics))
+    else:
+        metrics = expected_metrics
 
     for key in results_pw:
         assert isinstance(key, tuple)
@@ -877,32 +933,32 @@ def test_PairwiseIntercomparisonMetrics(testdata_generator):
         assert isinstance(results_pw[key], dict)
         res_metrics = list(results_pw[key].keys())
         assert all([v in res_metrics for v in ["lon", "lat", "gpi"]])
-        for m in expected_metrics:
+        for m in metrics:
             if m in expected[key]:
                 assert_equal(results_pw[key][m], expected[key][m])
 
     # preparation of IntercomparisonMetrics run for comparison
     ds_names = list(datasets.keys())
-    metrics = IntercomparisonMetrics(
-        dataset_names=ds_names,
-        # passing the names here explicitly, see GH issue #220
-        refname="reference_name",
-        other_names=ds_names[1:],
-        calc_tau=True,
-    )
+    with pytest.warns(DeprecationWarning):
+        metrics = IntercomparisonMetrics(
+            dataset_names=ds_names,
+            # passing the names here explicitly, see GH issue #220
+            refname="reference_name",
+            other_names=ds_names[1:],
+            calc_tau=True,
+        )
     if seas_metrics:
         with pytest.warns(UserWarning):
             metrics = seas_metrics(metrics)
-    val = Validation(
-        datasets,
-        "reference_name",
-        scaling=None,
-        temporal_matcher=None,  # use default here
-        metrics_calculators={(4, 4): metrics.calc_metrics},
-    )
 
-    print("running old setup")
-
+    with pytest.warns(UserWarning):
+        val = Validation(
+            datasets,
+            "reference_name",
+            scaling=None,
+            temporal_matcher=None,  # use default here
+            metrics_calculators={(4, 4): metrics.calc_metrics},
+        )
     results = val.calc(0, 1, 1, rename_cols=False)
 
     # results is a dictionary with one entry and key
@@ -972,7 +1028,7 @@ def test_PairwiseIntercomparisonMetrics(testdata_generator):
 def test_PairwiseIntercomparisonMetrics_confidence_intervals():
     # tests if the correct confidence intervals are returned
 
-    datasets, _ = testdata_random()
+    datasets, _ = make_testdata_random()
     matcher = make_combined_temporal_matcher(pd.Timedelta(6, "h"))
     val = Validation(
         datasets,
@@ -991,7 +1047,8 @@ def test_PairwiseIntercomparisonMetrics_confidence_intervals():
         },
     )
     results_pw = val.calc(
-        [0], [1], [1], rename_cols=False, only_with_reference=True
+        [0], [1], [1], rename_cols=False,
+        only_with_reference=True
     )
 
     metrics_with_ci = {
@@ -1046,7 +1103,7 @@ def test_PairwiseIntercomparisonMetrics_confidence_intervals():
 
 
 @pytest.mark.parametrize(
-    "testdata_generator", [testdata_known_results, testdata_random]
+    "testdata_generator", [make_testdata_known_results, make_testdata_random]
 )
 @pytest.mark.parametrize("seas_metrics", [None, MonthsMetricsAdapter])
 def test_TripleCollocationMetrics(testdata_generator, seas_metrics):
@@ -1075,7 +1132,8 @@ def test_TripleCollocationMetrics(testdata_generator, seas_metrics):
         metrics_calculators={(4, 3): triplet_metrics_calculator.calc_metrics},
     )
     results_triplet = val_triplet.calc(
-        [0], [1], [1], rename_cols=False, only_with_reference=True
+        [0], [1], [1], rename_cols=False,
+        only_with_reference=True
     )
 
     if "col1_name" in datasets.keys():
@@ -1139,7 +1197,8 @@ def test_TripleCollocationMetrics(testdata_generator, seas_metrics):
             },
         )
         results_triplet = val_triplet.calc(
-            [0], [1], [1], rename_cols=False, only_with_reference=True
+            [0], [1], [1], rename_cols=False,
+            only_with_reference=True
         )
         for key in results_triplet:
             for dset, _ in key:
@@ -1155,12 +1214,12 @@ def test_TripleCollocationMetrics(testdata_generator, seas_metrics):
                     assert (*lkey, dset) in results_triplet[key]
                     assert (*ukey, dset) in results_triplet[key]
                     assert (
-                        results_triplet[key][(*lkey, dset)]
-                        <= results_triplet[key][(*mkey, dset)]
+                            results_triplet[key][(*lkey, dset)]
+                            <= results_triplet[key][(*mkey, dset)]
                     )
                     assert (
-                        results_triplet[key][(*mkey, dset)]
-                        <= results_triplet[key][(*ukey, dset)]
+                            results_triplet[key][(*mkey, dset)]
+                            <= results_triplet[key][(*ukey, dset)]
                     )
 
 
@@ -1208,13 +1267,14 @@ def test_temporal_matching_ascat_ismn():
 
     # old setup
     ds_names = list(datasets.keys())
-    metrics = IntercomparisonMetrics(
-        dataset_names=ds_names,
-        # passing the names here explicitly, see GH issue #220
-        refname=refname,
-        other_names=ds_names[1:],
-        calc_tau=True,
-    )
+    with pytest.warns(DeprecationWarning):
+        metrics = IntercomparisonMetrics(
+            dataset_names=ds_names,
+            # passing the names here explicitly, see GH issue #220
+            refname=refname,
+            other_names=ds_names[1:],
+            calc_tau=True,
+        )
     old_val = Validation(
         datasets,
         refname,

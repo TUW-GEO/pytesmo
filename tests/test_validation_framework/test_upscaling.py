@@ -60,20 +60,20 @@ def averager():
 def test_upscale(averager):
     """Test all upscaling functions"""
     to_upscale = pd.concat(
-        [pd.Series(2, index=np.linspace(1,10), name='sm'),
-         pd.Series(4, index=np.linspace(1,10), name='sm')],
+        [pd.Series(2, index=np.linspace(1, 10), name='sm'),
+         pd.Series(4, index=np.linspace(1, 10), name='sm')],
         axis=1
     )
     # simple check of series averaging
     upscaled = averager.upscale(to_upscale, method="average")
-    should = pd.Series(float(3), index=np.linspace(1,10))
+    should = pd.Series(float(3), index=np.linspace(1, 10))
     assert upscaled.equals(should)
 
 
 def test_tstability(averager):
     """Test temporal stability filtering with noisy or uncorrelated series"""
     n_obs = 1000
-    points = np.linspace(0, 2*np.pi, n_obs)
+    points = np.linspace(0, 2 * np.pi, n_obs)
     ts = np.sin(points)
     low_corr = np.sin(points + np.pi)
     high_sterr = np.sin(points) + np.random.normal(0, 2, n_obs)
@@ -99,12 +99,14 @@ def series_2_match():
 
     ref_ser = pd.Series(
         data_ref,
-        index=pd.date_range("2007-01-01 01:00:00", "2007-01-30 01:00:00", freq="D"),
+        index=pd.date_range("2007-01-01 01:00:00",
+                            "2007-01-30 01:00:00", freq="D"),
         name="ref"
     ).to_frame()
     match_ser = pd.Series(
         data2match,
-        index=pd.date_range("2007-01-01 05:00:00", "2007-01-29 05:00:00", freq="D"),
+        index=pd.date_range("2007-01-01 05:00:00",
+                            "2007-01-29 05:00:00", freq="D"),
         name="ref"
     ).to_frame()
     to_match = [ref_ser, match_ser]
@@ -115,25 +117,29 @@ def series_2_match():
 def test_temporal_matching(averager, series_2_match):
     """Test temporal matching"""
     matched = averager.temporal_match(series_2_match, drop_missing=False)
-    assert len(matched.index) == 30, "Should be matched to the longest timeseries"
+    assert len(matched.index) == 30, \
+        "Should be matched to the longest timeseries"
 
     matched = averager.temporal_match(series_2_match, drop_missing=True)
-    assert len(matched.index) == 28, "Should drop the row and the missing timestep with a missing value"
+    assert len(matched.index) == 28, \
+        "Should drop the row and the missing timestep with a missing value"
 
-    matched = averager.temporal_match(series_2_match, hours=3)
-    assert matched.equals(series_2_match[0]), "Should not be matched"
+    with pytest.warns(UserWarning):
+        matched = averager.temporal_match(series_2_match, hours=3)
+        assert matched.equals(series_2_match[0]), "Should not be matched"
 
 
 def test_capture_warning(averager, series_2_match):
     def override_read(points, other_name):
         return series_2_match
 
-    averager.lut = {"other_ds": {0 : [0]}}
+    averager.lut = {"other_ds": {0: [0]}}
     averager.datasets = {"other_ds": {"columns": ["ref"]}}
     averager._read = override_read
-    res = averager.get_upscaled_ts(
-        gpi=0,
-        other_name="other_ds",
-        **{"hours": 3}
-    )
+    with pytest.warns(UserWarning):
+        res = averager.get_upscaled_ts(
+            gpi=0,
+            other_name="other_ds",
+            **{"hours": 3}
+        )
     assert res.equals(series_2_match[0])

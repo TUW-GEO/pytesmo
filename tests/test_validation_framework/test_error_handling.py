@@ -15,6 +15,7 @@ from pytesmo.validation_framework.data_manager import DataManager
 from .utils import create_datasets
 
 
+@pytest.mark.filterwarnings("ignore:Not enough observations.*:UserWarning")
 def test_error_handling_empty_df():
     # This tests whether error handling works if one of the datasets consists
     # of an empty dataframe.
@@ -34,7 +35,8 @@ def test_error_handling_empty_df():
         datasets,
         spatial_ref="0-ERA5",
         metrics_calculators={(n_datasets, 2): metric_calculator.calc_metrics},
-        temporal_matcher=make_combined_temporal_matcher(pd.Timedelta(12, "h")),
+        temporal_matcher=make_combined_temporal_matcher(
+            pd.Timedelta(12, "h")),
     )
     gpis = list(range(npoints))
     args = (gpis, gpis, gpis)
@@ -56,6 +58,7 @@ def test_error_handling_empty_df():
         assert np.all(results[key]["status"] == eh.NO_TEMP_MATCHED_DATA)
 
 
+@pytest.mark.filterwarnings("ignore:Not enough observations.*:UserWarning")
 def test_error_handling_nodata():
     # this tests if we get the NoGpiDataError if one dataset doesn't have any
     # values.  Here we use only 2 datasets, otherwise the third one will be
@@ -72,7 +75,8 @@ def test_error_handling_nodata():
         datasets,
         spatial_ref="0-ERA5",
         metrics_calculators={(n_datasets, 2): metric_calculator.calc_metrics},
-        temporal_matcher=make_combined_temporal_matcher(pd.Timedelta(12, "h")),
+        temporal_matcher=make_combined_temporal_matcher(
+            pd.Timedelta(12, "h")),
     )
     gpis = list(range(npoints))
     args = (gpis, gpis, gpis)
@@ -94,6 +98,7 @@ def test_error_handling_nodata():
         assert np.all(results[key]["status"] == eh.NO_GPI_DATA)
 
 
+@pytest.mark.filterwarnings("ignore:Not enough observations.*:UserWarning")
 def test_error_handling_not_enough_data():
     # This tests if we get a proper warning if we have not enough data to
     # calculate correlations (nsamples = 5). In this case, the behaviour of all
@@ -110,7 +115,8 @@ def test_error_handling_not_enough_data():
         datasets,
         spatial_ref="0-ERA5",
         metrics_calculators={(n_datasets, 2): metric_calculator.calc_metrics},
-        temporal_matcher=make_combined_temporal_matcher(pd.Timedelta(12, "h")),
+        temporal_matcher=make_combined_temporal_matcher(
+            pd.Timedelta(12, "h")),
     )
     gpis = list(range(npoints))
     args = (gpis, gpis, gpis)
@@ -118,9 +124,11 @@ def test_error_handling_not_enough_data():
 
     for handle_errors in ["ignore", "raise"]:
         with pytest.warns(
-            UserWarning, match="Not enough observations to calculate metrics."
+                UserWarning,
+                match="Not enough observations to calculate metrics."
         ):
-            results = val.calc(*args, **kwargs, handle_errors=handle_errors)
+            results = val.calc(*args, **kwargs,
+                               handle_errors=handle_errors)
         for key in results:
             for metric in results[key]:
                 assert len(results[key][metric]) == npoints
@@ -142,7 +150,8 @@ def test_error_handling_ok():
         datasets,
         spatial_ref="0-ERA5",
         metrics_calculators={(n_datasets, 2): metric_calculator.calc_metrics},
-        temporal_matcher=make_combined_temporal_matcher(pd.Timedelta(12, "h")),
+        temporal_matcher=make_combined_temporal_matcher(
+            pd.Timedelta(12, "h")),
     )
     gpis = list(range(npoints))
     args = (gpis, gpis, gpis)
@@ -158,6 +167,7 @@ def test_error_handling_ok():
             assert np.all(results[key]["status"] == eh.OK)
 
 
+@pytest.mark.filterwarnings("ignore:Not enough observations.*:UserWarning")
 def test_error_handling_scaling_failed():
     # This tests whether a scaling error is raised if the scaling fails due to
     # insufficient data.
@@ -177,7 +187,8 @@ def test_error_handling_scaling_failed():
         scaling=BadScaler(),
         spatial_ref="0-ERA5",
         metrics_calculators={(n_datasets, 2): metric_calculator.calc_metrics},
-        temporal_matcher=make_combined_temporal_matcher(pd.Timedelta(12, "h")),
+        temporal_matcher=make_combined_temporal_matcher(
+            pd.Timedelta(12, "h")),
     )
     gpis = list(range(npoints))
     args = (gpis, gpis, gpis)
@@ -197,6 +208,7 @@ def test_error_handling_scaling_failed():
         assert np.all(results[key]["status"] == eh.SCALING_FAILED)
 
 
+@pytest.mark.filterwarnings("ignore:Not enough observations.*:UserWarning")
 def test_error_handling_datamanager_failed():
     # This tests whether a scaling error is raised if the scaling fails due to
     # insufficient data.
@@ -220,7 +232,8 @@ def test_error_handling_datamanager_failed():
         data_manager,
         spatial_ref=spatial_ref,
         metrics_calculators={(n_datasets, 2): metric_calculator.calc_metrics},
-        temporal_matcher=make_combined_temporal_matcher(pd.Timedelta(12, "h")),
+        temporal_matcher=make_combined_temporal_matcher(
+            pd.Timedelta(12, "h")),
     )
     gpis = list(range(npoints))
     args = (gpis, gpis, gpis)
@@ -240,6 +253,7 @@ def test_error_handling_datamanager_failed():
         assert np.all(results[key]["status"] == eh.DATA_MANAGER_FAILED)
 
 
+@pytest.mark.filterwarnings("ignore:Not enough observations.*:UserWarning")
 def test_error_handling_temp_matching_failed():
     # This tests whether a TemporalMatchingError is raised if the matching
     # fails
@@ -278,6 +292,7 @@ def test_error_handling_temp_matching_failed():
         assert np.all(results[key]["status"] == eh.TEMPORAL_MATCHING_FAILED)
 
 
+@pytest.mark.filterwarnings("ignore:Not enough observations.*:UserWarning")
 def test_error_handling_metrics_calculation_failed():
     # This tests whether a MetricsCalculationError is raised if metrics
     # calculation fails
@@ -296,7 +311,8 @@ def test_error_handling_metrics_calculation_failed():
         datasets,
         spatial_ref="0-ERA5",
         metrics_calculators={(n_datasets, 2): bad_metrics},
-        temporal_matcher=make_combined_temporal_matcher(pd.Timedelta(12, "h")),
+        temporal_matcher=make_combined_temporal_matcher(
+            pd.Timedelta(12, "h")),
     )
     gpis = list(range(npoints))
     args = (gpis, gpis, gpis)

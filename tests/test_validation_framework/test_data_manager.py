@@ -197,8 +197,10 @@ def test_DataManager_dataset_names():
 
     dm = setup_TestDataManager()
     result_names = dm.get_results_names(3)
-    assert result_names == [(('DS1', 'soil moisture'), ('DS2', 'sm'), ('DS3', 'sm')),
-                            (('DS1', 'soil moisture'), ('DS2', 'sm'), ('DS3', 'sm2'))]
+    assert result_names == [
+        (('DS1', 'soil moisture'), ('DS2', 'sm'), ('DS3', 'sm')),
+        (('DS1', 'soil moisture'), ('DS2', 'sm'), ('DS3', 'sm2'))
+    ]
 
     result_names = dm.get_results_names(2)
     assert result_names == [(('DS1', 'soil moisture'), ('DS2', 'sm')),
@@ -209,7 +211,8 @@ def test_DataManager_dataset_names():
 def test_DataManager_get_data():
 
     datasets = setup_TestDatasets()
-    dm = DataManager(datasets, 'DS1', read_ts_names={f'DS{i}': 'read' for i in range(1,4)})
+    dm = DataManager(datasets, 'DS1',
+                     read_ts_names={f'DS{i}': 'read' for i in range(1, 4)})
     data = dm.get_data(1, 1, 1)
     assert sorted(list(data)) == ['DS1', 'DS2', 'DS3']
 
@@ -220,8 +223,10 @@ def test_get_result_names():
                    'DS2': ['sm'],
                    'DS3': ['sm', 'sm2']}
     result_names = get_result_names(tst_ds_dict, 'DS1', 3)
-    assert result_names == [(('DS1', 'soil moisture'), ('DS2', 'sm'), ('DS3', 'sm')),
-                            (('DS1', 'soil moisture'), ('DS2', 'sm'), ('DS3', 'sm2'))]
+    assert result_names == [
+        (('DS1', 'soil moisture'), ('DS2', 'sm'), ('DS3', 'sm')),
+        (('DS1', 'soil moisture'), ('DS2', 'sm'), ('DS3', 'sm2'))
+    ]
 
     result_names = get_result_names(tst_ds_dict, 'DS1', 2)
     assert result_names == [(('DS1', 'soil moisture'), ('DS2', 'sm')),
@@ -239,8 +244,10 @@ def test_get_result_combinations():
                    'DS2': ['sm'],
                    'DS3': ['sm', 'sm2']}
     result_names = get_result_combinations(tst_ds_dict, n=3)
-    assert result_names == [(('DS1', 'soil moisture'), ('DS2', 'sm'), ('DS3', 'sm')),
-                            (('DS1', 'soil moisture'), ('DS2', 'sm'), ('DS3', 'sm2'))]
+    assert result_names == [
+        (('DS1', 'soil moisture'), ('DS2', 'sm'), ('DS3', 'sm')),
+        (('DS1', 'soil moisture'), ('DS2', 'sm'), ('DS3', 'sm2'))
+    ]
 
     result_names = get_result_combinations(tst_ds_dict, n=2)
     assert result_names == [(('DS1', 'soil moisture'), ('DS2', 'sm')),
@@ -250,6 +257,7 @@ def test_get_result_combinations():
                             (('DS2', 'sm'), ('DS3', 'sm2'))]
 
 
+@pytest.mark.filterwarnings("ignore:Less than k=1 points.*:UserWarning")
 def test_maxdist():
 
     testdf = pd.DataFrame([1, 1, 1], columns=["sm"])
@@ -308,8 +316,7 @@ def test_maxdist():
     df_dict = dm.get_data(0, 0, 0)
     assert df_dict == expected
 
-    # test if the far away point in the other dataset can be found (should not happen)
+    # test if the far away point in the other dataset can be found
+    # (should not happen)
     df_dict = dm.get_data(1, 1, 1)
     assert df_dict == {}
-
-
