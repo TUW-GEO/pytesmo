@@ -797,8 +797,9 @@ def make_testdata_random():
 
     return make_datasets(df), expected
 
+
 @pytest.mark.parametrize(
-    "testdata_generator", [testdata_known_results, testdata_random]
+    "testdata_generator", [make_testdata_known_results, make_testdata_random]
 )
 @pytest.mark.parametrize("metrics_adapter", [MonthsMetricsAdapter])  # todo
 def test_PairwiseIntercomparisonMetrics_adapted(testdata_generator,
