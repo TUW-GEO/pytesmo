@@ -4,7 +4,7 @@
 # For more information see:
 # https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
 
-name: Automated Tests
+name: CI/CD
 
 on:
   push:
@@ -19,7 +19,7 @@ jobs:
         # as we build C extension for users to download, we want to include as many python versions
         # and OS versions as possible (especially windows to create .whl packages,
         # see step "Create wheel and dist package")
-        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
+        python-version: ['3.9', '3.10', '3.11', '3.12']
         os: ["ubuntu-latest", "windows-latest"]
     name: py${{ matrix.python-version }} @ ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
@@ -27,16 +27,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: true # does not work with self-hosted testdata
+          submodules: true
           fetch-depth: 0
       - uses: conda-incubator/setup-miniconda@v3
         with:
            miniconda-version: "latest"
            auto-update-conda: true
            python-version: ${{ matrix.python-version }}
-           environment-file: environment.yml
-           activate-environment: pytesmo # todo: must match with name in environment.yml
-           mamba-version: "*"
+           channel-priority: flexible
            auto-activate-base: false
       - name: Print Infos
         shell: bash -l {0}
@@ -54,10 +52,13 @@ jobs:
           mkdir -p artifacts
           filename=env_py${{ matrix.python-version }}_${{ matrix.os }}.yml
           conda env export --no-builds | grep -v "prefix" > artifacts/$filename
-      - name: Install package and test
+      - name: Install package and dependencies
         shell: bash -l {0}
         run: |
           pip install -e .[testing]
+      - name: Run unit tests
+        shell: bash -l {0}
+        run: |
           pytest --cache-clear
       - name: Upload Coverage
         shell: bash -l {0}
@@ -70,17 +71,17 @@ jobs:
       - name: Create wheel and dist package
         shell: bash -l {0}
         run: |
-          git status
-          pip install setuptools_scm
-          python setup.py sdist --dist-dir .artifacts/dist
-          python setup.py bdist_wheel --dist-dir .artifacts/dist
-          ls .artifacts/dist
-          twine check dist/*
+          pip install setuptools_scm twine wheel
+          python setup.py sdist --dist-dir artifacts/dist
+          python setup.py bdist_wheel --dist-dir artifacts/dist
+          ls artifacts/dist
+          twine check artifacts/dist/*
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: Artifacts-${{ matrix.python-version }}-${{ matrix.os }}
           path: artifacts/*
+
   coveralls:
     name: Submit Coveralls 👚
     needs: build
@@ -92,6 +93,7 @@ jobs:
           pip3 install --upgrade coveralls && coveralls --service=github --finish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   publish:
     name: Upload to PyPI
     if: |
@@ -120,4 +122,4 @@ jobs:
           verify_metadata: true
           packages_dir: Artifacts/dist/
           user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }} # this needs to be uploaded to github actions secrets
+          password: ${{ secrets.PYPI_API_TOKEN }}  # this needs to be uploaded to github actions secrets

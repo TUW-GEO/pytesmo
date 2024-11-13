@@ -1,17 +1,19 @@
 pytesmo - a Python Toolbox for the Evaluation of Soil Moisture Observations
 ***************************************************************************
 
-.. image:: https://github.com/TUW-GEO/pytesmo/workflows/Automated%20Tests/badge.svg?branch=master
+|ci| |cov| |pip| |doc|
+
+.. |ci| image:: https://github.com/TUW-GEO/pytesmo/actions/workflows/ci.yml/badge.svg?branch=master
    :target: https://github.com/TUW-GEO/pytesmo/actions
 
-.. image:: https://coveralls.io/repos/TUW-GEO/pytesmo/badge.png?branch=master
+.. |cov| image:: https://coveralls.io/repos/TUW-GEO/pytesmo/badge.png?branch=master
   :target: https://coveralls.io/r/TUW-GEO/pytesmo?branch=master
 
-.. image:: https://badge.fury.io/py/pytesmo.svg
+.. |pip| image:: https://badge.fury.io/py/pytesmo.svg
     :target: https://badge.fury.io/py/pytesmo
 
-.. image:: https://readthedocs.org/projects/pytesmo/badge/?version=latest
-    :target: https://pytesmo.readthedocs.io/en/latest/?badge=latest
+.. |doc| image:: https://readthedocs.org/projects/pytesmo/badge/?version=latest
+   :target: https://pytesmo.readthedocs.io/en/latest/
 
 pytesmo, the Python Toolbox for the Evaluation of Soil Moisture Observations, is
 a package/python toolbox which aims to provide a library that can be used for
@@ -53,10 +55,10 @@ from the `python package repository Pypi <https://pypi.python.org/>`__.
 
     pip install pytesmo
 
-Note that ``pytesmo>=0.17`` will only work with ``numpy>=2.0``. If you still
-require a version compatible with numpy v1, install ``pytesmo<0.17``.
+Note that ``pytesmo>=0.17`` will only work with ``numpy>=2.0`` and ``python>=3.9``.
+If you still require a version compatible with numpy v1, install ``pytesmo<0.17``.
 
-Compiled C extensions are available Windows and Linux python 3.8 to 3.12.
+Compiled C extensions are available Windows and Linux python 3.9 to 3.12.
 
 For other operating systems and/or python versions, it might be necessary
 to compile the C extensions yourself and install pytesmo from source.
