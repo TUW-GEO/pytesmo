@@ -58,10 +58,13 @@ from the `python package repository Pypi <https://pypi.python.org/>`__.
 Note that ``pytesmo>=0.17`` will only work with ``numpy>=2.0`` and ``python>=3.9``.
 If you still require a version compatible with numpy v1, install ``pytesmo<0.17``.
 
-Compiled C extensions are available Windows and Linux python 3.9 to 3.12.
+Compiled C extensions are available as wheels for Windows and Linux for
+python 3.9 to 3.12.
 
 For other operating systems and/or python versions, it might be necessary
-to compile the C extensions yourself and install pytesmo from source.
+to compile the binaries yourself. This should
+happen automatically, if you have a C compiler installed (e.g.
+`GCC <https://gcc.gnu.org/>`_ ).
 
 .. code::
 
@@ -70,7 +73,7 @@ to compile the C extensions yourself and install pytesmo from source.
     mamba create -n pytesmo python=3.12 # or any supported python version
     conda activate pytesmo
     pip install -e .[testing]  # install source package
-    python setup.py build_ext --inplace --cythonize  # compile C extensions
+    python setup.py build_ext --inplace --cythonize  # optional compile cython C extensions
     pytest  # Run tests to check if everything works
 
 Supported Products
