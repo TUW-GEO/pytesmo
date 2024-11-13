@@ -1,6 +1,7 @@
 # cython: boundscheck=False, wraparound=False, cdivision=True, nonecheck=False
 import numpy as np
 cimport numpy as cnp
+cnp.import_array()
 from numpy.math cimport NAN
 cimport cython
 from cython cimport floating

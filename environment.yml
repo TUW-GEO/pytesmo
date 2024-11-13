@@ -7,7 +7,7 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - numpy<2.0.0
+  - numpy>=2.0.0
   - numba
   - scipy>=0.12
   - pandas>=0.23.0

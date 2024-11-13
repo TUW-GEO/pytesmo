@@ -36,8 +36,9 @@ Fast cython functions for calculating various filters
 
 import platform
 
-cimport numpy as np
 import numpy as np
+cimport numpy as cnp
+cnp.import_array()
 from libc.math cimport exp, fabs, isnan
 cimport cython
 from cython cimport floating
@@ -66,7 +67,7 @@ def exp_filter(floating [:] in_data,
     nan : double
         nan values to exclude from calculation
     """
-    cdef np.ndarray[floating, ndim = 1] filtered = np.empty(len(in_data))
+    cdef cnp.ndarray[floating, ndim = 1] filtered = np.empty(len(in_data))
     cdef double tdiff
     cdef float ef
     cdef float gain = 1
@@ -132,7 +133,7 @@ def boxcar_filter(floating [:] in_data,
     nan : double
         nan values to exclude from calculation
     """
-    cdef np.ndarray[floating, ndim = 1] filtered = np.empty(len(in_data))
+    cdef cnp.ndarray[floating, ndim = 1] filtered = np.empty(len(in_data))
     cdef double tdiff
     cdef unsigned int i
     cdef unsigned int j
