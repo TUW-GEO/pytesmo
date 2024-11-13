@@ -45,35 +45,31 @@ If you want to contribute, take a look at the `developers guide
 Installation
 ============
 
-This package should be installable through `pip
+This package can be installed through `pip
 <https://pip.pypa.io/en/latest/installing.html>`__ which downloads the package
 from the `python package repository Pypi <https://pypi.python.org/>`__.
-However, pytesmo also needs some packages that depend on C or Fortran libraries (like ``netCDF4``).
-They should be installed first with conda or mamba. We recommend installing `Mambaforge <https://github.com/conda-forge/miniforge#mambaforge>`__.
-Then the following command should install all dependencies:
-
-.. code-block:: bash
-
-    mamba install -c conda-forge 'numpy<2.0.0' scipy pandas netCDF4 cython pyresample
-
-Afterwards ``pytesmo`` can be installed via pip.
 
 .. code-block:: bash
 
     pip install pytesmo
 
+Note that ``pytesmo>=0.17`` will only work with ``numpy>=2.0``. If you still
+require a version compatible with numpy v1, install ``pytesmo<0.17``.
 
-As an alternative (e.g. if you want to contribute to the package), you can
-clone the Github repository and install from source:
+Compiled C extensions are available Windows and Linux python 3.8 to 3.12.
+
+For other operating systems and/or python versions, it might be necessary
+to compile the C extensions yourself and install pytesmo from source.
 
 .. code::
 
     git clone https://github.com/TUW-GEO/pytesmo.git --recursive
     cd pytesmo
-    mamba create -n pytesmo python=3.10 # or any supported python version
+    mamba create -n pytesmo python=3.12 # or any supported python version
     conda activate pytesmo
-    mamba env update -f environment.yml -n pytesmo
-    pip install -e .
+    pip install -e .[testing]  # install source package
+    python setup.py build_ext --inplace --cythonize  # compile C extensions
+    pytest  # Run tests to check if everything works
 
 Supported Products
 ==================

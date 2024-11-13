@@ -757,16 +757,74 @@ def testdata_random():
 
     return make_datasets(df), expected
 
+@pytest.mark.parametrize(
+    "testdata_generator", [testdata_known_results, testdata_random]
+)
+@pytest.mark.parametrize("metrics_adapter", [MonthsMetricsAdapter])  # todo
+def test_PairwiseIntercomparisonMetrics_adapted(testdata_generator,
+                                                metrics_adapter):
+    datasets, expected = testdata_generator()
+    metrics_calculator = PairwiseIntercomparisonMetrics(
+        calc_spearman=True, analytical_cis=False
+    )
+    metrics_calculator = metrics_adapter(metrics_calculator)
+
+    val = Validation(
+        datasets,
+        "reference_name",
+        scaling="mean_std",  # doesn't work with the constant test data
+        temporal_matcher=make_combined_temporal_matcher(pd.Timedelta(6, "h")),
+        metrics_calculators={(4, 2): (metrics_calculator.calc_metrics)},
+    )
+    results_pw = val.calc(
+        [0], [1], [1], rename_cols=False, only_with_reference=True
+    )
+
+    expected_metrics = [
+        "R",
+        "p_R",
+        "BIAS",
+        "RMSD",
+        "mse",
+        "RSS",
+        "mse_corr",
+        "mse_bias",
+        "urmsd",
+        "mse_var",
+        "n_obs",
+        "gpi",
+        "lat",
+        "lon",
+        "rho",
+        "p_rho",
+        "tau",
+        "p_tau",
+    ]
+
+    seasons = ["ALL", "DJF", "MAM", "JJA", "SON"]
+
+    metrics = []
+    for seas in seasons:
+        metrics += list(map(lambda x: (seas, x), expected_metrics))
+
+    for key in results_pw:
+        assert isinstance(key, tuple)
+        assert len(key) == 2
+        assert all(map(lambda x: isinstance(x, tuple), key))
+        assert isinstance(results_pw[key], dict)
+        res_metrics = list(results_pw[key].keys())
+        assert all([v in res_metrics for v in ["lon", "lat", "gpi"]])
+        for m in metrics:
+            if m in expected[key]:
+                assert_equal(results_pw[key][m], expected[key][m])
 
 @pytest.mark.parametrize(
     "testdata_generator", [testdata_known_results, testdata_random]
 )
-@pytest.mark.parametrize("seas_metrics", [None, MonthsMetricsAdapter])
-def test_PairwiseIntercomparisonMetrics(testdata_generator, seas_metrics):
+def test_PairwiseIntercomparisonMetrics(testdata_generator):
     # This test first compares the PairwiseIntercomparisonMetrics to known
     # results and then confirms that it agrees with IntercomparisonMetrics as
     # expected
-
     datasets, expected = testdata_generator()
 
     # for the pairwise intercomparison metrics it's important that we use
@@ -776,13 +834,10 @@ def test_PairwiseIntercomparisonMetrics(testdata_generator, seas_metrics):
         calc_spearman=True, analytical_cis=False
     )
 
-    if seas_metrics:
-        metrics_calculator = seas_metrics(metrics_calculator)
-
     val = Validation(
         datasets,
         "reference_name",
-        scaling=None,  # doesn't work with the constant test data
+        scaling="mean_std",  # doesn't work with the constant test data
         temporal_matcher=make_combined_temporal_matcher(pd.Timedelta(6, "h")),
         metrics_calculators={(4, 2): (metrics_calculator.calc_metrics)},
     )
@@ -814,14 +869,6 @@ def test_PairwiseIntercomparisonMetrics(testdata_generator, seas_metrics):
         "tau",
         "p_tau",
     ]
-    seasons = ["ALL", "DJF", "MAM", "JJA", "SON"]
-
-    if seas_metrics:
-        metrics = []
-        for seas in seasons:
-            metrics += list(map(lambda x: (seas, x), expected_metrics))
-    else:
-        metrics = expected_metrics
 
     for key in results_pw:
         assert isinstance(key, tuple)
@@ -830,7 +877,7 @@ def test_PairwiseIntercomparisonMetrics(testdata_generator, seas_metrics):
         assert isinstance(results_pw[key], dict)
         res_metrics = list(results_pw[key].keys())
         assert all([v in res_metrics for v in ["lon", "lat", "gpi"]])
-        for m in metrics:
+        for m in expected_metrics:
             if m in expected[key]:
                 assert_equal(results_pw[key][m], expected[key][m])
 
@@ -1233,3 +1280,14 @@ def test_TripleCollocationMetrics_failure():
 # results = val.calc(1, 1, 1)
 
 # assert 0
+
+if __name__ == '__main__':
+    test_PairwiseIntercomparisonMetrics(testdata_known_results)
+
+    #
+    # from pytesmo.df_metrics import mse_var
+    # data, results = testdata_known_results()
+    # ref = data['reference_name']['class'].read(0)
+    # can = data['plus2_name']['class'].read(0)
+    # mv = mse_var(pd.DataFrame(data={'one': ref.iloc[:, 0].values,
+    #                                 'two': can.iloc[:, 0].values}))
