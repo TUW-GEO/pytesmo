@@ -34,6 +34,8 @@ jobs:
            miniconda-version: "latest"
            auto-update-conda: true
            python-version: ${{ matrix.python-version }}
+           environment-file: environment.yml
+           activate-environment: pytesmo
            channel-priority: flexible
            auto-activate-base: false
       - name: Print Infos
@@ -60,14 +62,6 @@ jobs:
         shell: bash -l {0}
         run: |
           pytest --cache-clear
-      - name: Upload Coverage
-        shell: bash -l {0}
-        run: |
-          pip install coveralls && coveralls --service=github
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          COVERALLS_FLAG_NAME: ${{ matrix.python-version }}
-          COVERALLS_PARALLEL: true
       - name: Create wheel and dist package
         shell: bash -l {0}
         run: |
@@ -76,6 +70,15 @@ jobs:
           python setup.py bdist_wheel --dist-dir artifacts/dist
           ls artifacts/dist
           twine check artifacts/dist/*
+      - name: Upload Coverage
+        shell: bash -l {0}
+        run: |
+          pip install coveralls && coveralls --service=github
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COVERALLS_FLAG_NAME: ${{ matrix.python-version }}
+          COVERALLS_PARALLEL: true
+
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
