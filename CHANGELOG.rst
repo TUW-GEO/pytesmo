@@ -4,6 +4,13 @@ Changelog
 
 Unreleased changes in master
 ============================
+-
+
+Version 0.17.0, 2024-11-14
+==========================
+- THIS VERSION IS COMPATIBLE WITH NUMPY>=2, otherwise same content as ``v0.16.1`` (readme file was updated)
+- C files were recompiled for ``numpy>=2,<3``, ``pyproject.toml`` updated.
+- Wheels are now also provided for Linux and MacOS systems
 
 Version 0.16.1, 2024-11-13
 ==========================
