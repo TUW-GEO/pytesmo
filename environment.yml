@@ -18,6 +18,9 @@ dependencies:
   - pyresample
   - matplotlib>=1.2.0
   - pip
+  # optional, for documentation and testing:
+  # - nb_conda
+  # ----------------------------------------
   - pip:
     - pynetcf>=0.4.0
     - pygeogrids
