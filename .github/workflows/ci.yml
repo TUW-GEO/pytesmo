@@ -13,6 +13,7 @@ on:
   schedule: # only upstream, won't trigger on forks!
     - cron: '0 0 * * *' # daily
 jobs:
+
   build:
     strategy:
       matrix:
@@ -90,35 +91,31 @@ jobs:
           name: Artifacts-${{ matrix.python-version }}-${{ matrix.os }}
           path: artifacts/*
 
-  coveralls:
-    name: Submit Coveralls 👚
+  wrapup:
+    name: Post Build
     needs: build
     runs-on: ubuntu-latest
     container: python:3-slim
     steps:
-      - name: Finished
+      # Merge artifacts from multiple builds
+      - name: Merge Uploaded Artifacts
+        uses: actions/upload-artifact/merge@v4
+        with:
+          name: Artifacts
+      # Send the coverage reports to Coveralls.io
+      - name: Submit Coverage Report
         run: |
           pip3 install --upgrade coveralls && coveralls --service=github --finish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  artifacts:
-    name: Merge Artifacts
-    needs: build
-    runs-on: ubuntu-latest
-    container: python:3-slim
-    steps:
-      - name: Merge Artifacts
-        uses: actions/upload-artifact/merge@v4
-        with:
-          name: Artifacts
-
   publish:
+    # Upload the dist and whl packages from artifacts to pypi
     name: Upload to PyPI
     if: |
       startsWith(github.ref, 'refs/tags/v') &&
       startsWith(github.repository, 'TUW-GEO')
-    needs: build
+    needs: wrapup
     runs-on: ubuntu-latest
     steps:
       - name: Print environment variables
@@ -141,4 +138,5 @@ jobs:
           verify_metadata: true
           packages_dir: Artifacts/dist_whl/
           user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}  # this needs to be uploaded to github actions secrets
+          # token needs to be uploaded to github actions secrets
+          password: ${{ secrets.PYPI_API_TOKEN }}
