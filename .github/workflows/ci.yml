@@ -74,7 +74,7 @@ jobs:
           pytest --cache-clear
       - name: Build dist and whl packages
         env:
-          PY: ${{ matrix.python-version // '.' }}
+          PY: ${{ matrix.python-version//'.' }}
           OS: ${{ runner.os == 'Linux' && 'manylinux' || runner.os == 'macOS' && 'macosx' || runner.os == 'Windows' && 'win' }}
         run: |
           pip install setuptools_scm twine cibuildwheel
