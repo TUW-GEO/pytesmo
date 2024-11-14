@@ -75,9 +75,10 @@ jobs:
           elif [ "${{ runner.os }}" == "Windows" ]; then
             OS="win"
           fi
+          
           pip install setuptools_scm twine cibuildwheel
           python setup.py sdist --dist-dir artifacts/dist_whl
-          export CIBW_BUILD="cp${py}-${os}*"
+          export CIBW_BUILD="cp${PY}-${OS}*"
           cibuildwheel --output-dir artifacts/dist_whl
           twine check artifacts/dist_whl/*
       - name: Upload coverage
