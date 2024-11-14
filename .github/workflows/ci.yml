@@ -53,9 +53,23 @@ jobs:
           filename=env_py${{ matrix.python-version }}_${{ matrix.os }}.yml
           conda env export --no-builds | grep -v "prefix" > artifacts/$filename
       - name: Install package and dependencies
+        shell: bash -l {0}
         run: |
           pip install -e .[testing]
       - name: Run unit tests
+        shell: bash -l {0}
+        run: |
+          pytest --cache-clear
+      - name: Create wheel and dist package
+        shell: bash -l {0}
+        run: |
+          pip install setuptools_scm twine wheel
+          python setup.py sdist --dist-dir artifacts/dist
+          python setup.py bdist_wheel --dist-dir artifacts/dist
+          ls artifacts/dist
+          twine check artifacts/dist/*
+      - name: Upload Coverage
+        shell: bash -l {0}
         run: |
           pytest --cache-clear
       - name: Build dist and whl packages
