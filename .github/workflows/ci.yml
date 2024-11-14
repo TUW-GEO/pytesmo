@@ -106,6 +106,7 @@ jobs:
         uses: actions/upload-artifact/merge@v4
         with:
           name: Artifacts
+          delete-merged: true
       # Send the coverage reports to Coveralls.io
       - name: Finish Coverage
         run: |
