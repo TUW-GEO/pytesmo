@@ -60,18 +60,6 @@ jobs:
         shell: bash -l {0}
         run: |
           pytest --cache-clear
-      - name: Create wheel and dist package
-        shell: bash -l {0}
-        run: |
-          pip install setuptools_scm twine wheel
-          python setup.py sdist --dist-dir artifacts/dist
-          python setup.py bdist_wheel --dist-dir artifacts/dist
-          ls artifacts/dist
-          twine check artifacts/dist/*
-      - name: Upload Coverage
-        shell: bash -l {0}
-        run: |
-          pytest --cache-clear
       - name: Build dist and whl packages
         run: |
           # Remove dots from Python version for use with cibuildwheel
@@ -84,12 +72,11 @@ jobs:
           elif [ "${{ runner.os }}" == "Windows" ]; then
             OS="win"
           fi
-          
           pip install setuptools_scm twine cibuildwheel
           python setup.py sdist --dist-dir artifacts/dist_whl
           cibuildwheel --output-dir artifacts/dist_whl --only cp${PY}-${OS}*
           twine check artifacts/dist_whl/*
-      - name: Upload coverage data to coveralls.io
+      - name: Upload coverage
         run: coveralls
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
