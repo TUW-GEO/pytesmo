@@ -107,10 +107,11 @@ jobs:
         with:
           name: Artifacts
       # Send the coverage reports to Coveralls.io
-      - name: Coveralls Finished
-        uses: coverallsapp/github-action@v2
-        with:
-          parallel-finished: true
+      - name: Finish Coverage
+        run: |
+          pip3 install --upgrade coveralls && coveralls --service=github-actions --finish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   publish:
     # Upload the dist and whl packages from artifacts to pypi
