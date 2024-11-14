@@ -48,6 +48,7 @@ jobs:
           which python
           gcc -v
       - name: Export Environment
+        shell: bash -l {0}
         run: |
           mkdir -p artifacts
           filename=env_py${{ matrix.python-version }}_${{ matrix.os }}.yml
@@ -61,6 +62,7 @@ jobs:
         run: |
           pytest --cache-clear
       - name: Build dist and whl packages
+        shell: bash -l {0}
         run: |
           # Remove dots from Python version for use with cibuildwheel
           PY="${{ matrix.python-version }}"; PY="${PY//./}"
@@ -99,6 +101,12 @@ jobs:
           pip3 install --upgrade coveralls && coveralls --service=github --finish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  artifacts:
+    name: Merge Artifacts
+    uses: actions/upload-artifact/merge@v4
+    with:
+      name: Artifacts
 
   publish:
     name: Upload to PyPI
