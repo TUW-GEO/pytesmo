@@ -104,9 +104,14 @@ jobs:
 
   artifacts:
     name: Merge Artifacts
-    uses: actions/upload-artifact/merge@v4
-    with:
-      name: Artifacts
+    needs: build
+    runs-on: ubuntu-latest
+    container: python:3-slim
+    steps:
+      - name: Merge Artifacts
+        uses: actions/upload-artifact/merge@v4
+        with:
+          name: Artifacts
 
   publish:
     name: Upload to PyPI
