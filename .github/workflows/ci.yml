@@ -13,6 +13,7 @@ on:
   schedule: # only upstream, won't trigger on forks!
     - cron: '0 0 * * *' # daily
 jobs:
+
   build:
     strategy:
       matrix:
@@ -21,7 +22,7 @@ jobs:
         # see step "Create wheel and dist package")
         python-version: ['3.9', '3.10', '3.11', '3.12']
         os: ["ubuntu-latest", "windows-latest", "macos-latest"]
-    name: py${{ matrix.python-version }} @ ${{ matrix.os }}
+    name: py${{ matrix.python-version }}@${{ matrix.os }}
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -39,7 +40,6 @@ jobs:
            channel-priority: flexible
            auto-activate-base: false
       - name: Print Infos
-        shell: bash -l {0}
         run: |
           git status
           conda info -a
@@ -61,48 +61,66 @@ jobs:
       - name: Run unit tests
         shell: bash -l {0}
         run: |
-          pytest --cache-clear
-      - name: Create wheel and dist package
-        shell: bash -l {0}
-        run: |
-          pip install setuptools_scm twine wheel
-          python setup.py sdist --dist-dir artifacts/dist
-          python setup.py bdist_wheel --dist-dir artifacts/dist
-          ls artifacts/dist
-          twine check artifacts/dist/*
+          pytest
       - name: Upload Coverage
         shell: bash -l {0}
         run: |
-          pip install coveralls && coveralls --service=github
+          pip install coveralls && coveralls --service=github-actions
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COVERALLS_FLAG_NAME: ${{ matrix.python-version }}
           COVERALLS_PARALLEL: true
-
+      - name: Build dist and whl packages
+        shell: bash -l {0}
+        run: |
+          # Remove dots from Python version for use with cibuildwheel
+          PY="${{ matrix.python-version }}"; PY="${PY//./}"
+          # Get current OS on cibuildwheel compatible form
+          if [ "${{ runner.os }}" == "Linux" ]; then
+            OS="manylinux"
+          elif [ "${{ runner.os }}" == "macOS" ]; then
+            OS="macosx"
+          elif [ "${{ runner.os }}" == "Windows" ]; then
+            OS="win"
+          fi
+          
+          pip install setuptools_scm twine cibuildwheel
+          python setup.py sdist --dist-dir artifacts/dist_whl
+          export CIBW_BUILD="cp${PY}-${OS}*"
+          cibuildwheel --output-dir artifacts/dist_whl
+          twine check artifacts/dist_whl/*
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: Artifacts-${{ matrix.python-version }}-${{ matrix.os }}
           path: artifacts/*
 
-  coveralls:
-    name: Submit Coveralls 👚
+  wrapup:
+    name: Wrap-Up Builds
     needs: build
     runs-on: ubuntu-latest
     container: python:3-slim
     steps:
-      - name: Finished
+      # Merge artifacts from multiple builds
+      - name: Merge Uploaded Artifacts
+        uses: actions/upload-artifact/merge@v4
+        with:
+          name: Artifacts
+          delete-merged: true
+      # Send the coverage reports to Coveralls.io
+      - name: Finish Coverage
         run: |
-          pip3 install --upgrade coveralls && coveralls --service=github --finish
+          pip3 install --upgrade coveralls && coveralls --service=github-actions --finish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   publish:
+    # Upload the dist and whl packages from artifacts to pypi
     name: Upload to PyPI
     if: |
       startsWith(github.ref, 'refs/tags/v') &&
       startsWith(github.repository, 'TUW-GEO')
-    needs: build
+    needs: wrapup
     runs-on: ubuntu-latest
     steps:
       - name: Print environment variables
@@ -123,6 +141,7 @@ jobs:
           skip_existing: true
           verbose: true
           verify_metadata: true
-          packages_dir: Artifacts/dist/
+          packages_dir: Artifacts/dist_whl/
           user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}  # this needs to be uploaded to github actions secrets
+          # token needs to be uploaded to github actions secrets
+          password: ${{ secrets.PYPI_API_TOKEN }}
