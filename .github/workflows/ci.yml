@@ -61,7 +61,13 @@ jobs:
       - name: Run unit tests
         shell: bash -l {0}
         run: |
-          pytest --cache-clear
+          pytest
+      - name: Coveralls
+        uses: coverallsapp/github-action@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          flag-name: cov-${{ matrix.python-version }}-${{ matrix.os }}
+          parallel: true
       - name: Build dist and whl packages
         shell: bash -l {0}
         run: |
@@ -81,11 +87,6 @@ jobs:
           export CIBW_BUILD="cp${PY}-${OS}*"
           cibuildwheel --output-dir artifacts/dist_whl
           twine check artifacts/dist_whl/*
-      - name: Coveralls
-        uses: coverallsapp/github-action@v2
-        with:
-          flag-name: cov-${{ matrix.python-version }}-${{ matrix.os }}
-          parallel: true
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
