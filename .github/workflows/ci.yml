@@ -22,7 +22,7 @@ jobs:
         # see step "Create wheel and dist package")
         python-version: ['3.9', '3.10', '3.11', '3.12']
         os: ["ubuntu-latest", "windows-latest", "macos-latest"]
-    name: py${{ matrix.python-version }} @ ${{ matrix.os }}
+    name: py${{ matrix.python-version }}@${{ matrix.os }}
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -77,7 +77,8 @@ jobs:
           fi
           pip install setuptools_scm twine cibuildwheel
           python setup.py sdist --dist-dir artifacts/dist_whl
-          cibuildwheel --output-dir artifacts/dist_whl --only cp${PY}-${OS}*
+          export CIBW_BUILD="cp${py}-${os}*"
+          cibuildwheel --output-dir artifacts/dist_whl
           twine check artifacts/dist_whl/*
       - name: Upload coverage
         run: coveralls
@@ -92,7 +93,7 @@ jobs:
           path: artifacts/*
 
   wrapup:
-    name: Post Build
+    name: Wrap-Up Builds
     needs: build
     runs-on: ubuntu-latest
     container: python:3-slim
