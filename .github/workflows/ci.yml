@@ -73,10 +73,18 @@ jobs:
         run: |
           pytest --cache-clear
       - name: Build dist and whl packages
-        env:
-          PY: ${{ matrix.python-version//'.' }}
-          OS: ${{ runner.os == 'Linux' && 'manylinux' || runner.os == 'macOS' && 'macosx' || runner.os == 'Windows' && 'win' }}
         run: |
+          # Remove dots from Python version for use with cibuildwheel
+          PY="${{ matrix.python-version }}"; PY="${PY//./}"
+          # Get current OS on cibuildwheel compatible form
+          if [ "${{ runner.os }}" == "Linux" ]; then
+            OS="manylinux"
+          elif [ "${{ runner.os }}" == "macOS" ]; then
+            OS="macosx"
+          elif [ "${{ runner.os }}" == "Windows" ]; then
+            OS="win"
+          fi
+          
           pip install setuptools_scm twine cibuildwheel
           python setup.py sdist --dist-dir artifacts/dist_whl
           cibuildwheel --output-dir artifacts/dist_whl --only cp${PY}-${OS}*
