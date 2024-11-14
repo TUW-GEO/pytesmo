@@ -62,12 +62,14 @@ jobs:
         shell: bash -l {0}
         run: |
           pytest
-      - name: Coveralls
-        uses: coverallsapp/github-action@v2
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          flag-name: cov-${{ matrix.python-version }}-${{ matrix.os }}
-          parallel: true
+      - name: Upload Coverage
+        shell: bash -l {0}
+        run: |
+          pip install coveralls && coveralls --service=github-actions
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COVERALLS_FLAG_NAME: ${{ matrix.python-version }}
+          COVERALLS_PARALLEL: true
       - name: Build dist and whl packages
         shell: bash -l {0}
         run: |
