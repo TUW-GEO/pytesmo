@@ -81,12 +81,11 @@ jobs:
           export CIBW_BUILD="cp${PY}-${OS}*"
           cibuildwheel --output-dir artifacts/dist_whl
           twine check artifacts/dist_whl/*
-      - name: Upload coverage
-        run: coveralls
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          COVERALLS_FLAG_NAME: ${{ matrix.python-version }}
-          COVERALLS_PARALLEL: true
+      - name: Coveralls
+        uses: coverallsapp/github-action@v2
+        with:
+          flag-name: cov-${{ matrix.python-version }}-${{ matrix.os }}
+          parallel: true
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -105,11 +104,10 @@ jobs:
         with:
           name: Artifacts
       # Send the coverage reports to Coveralls.io
-      - name: Submit Coverage Report
-        run: |
-          pip3 install --upgrade coveralls && coveralls --service=github --finish
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Coveralls Finished
+        uses: coverallsapp/github-action@v2
+        with:
+          parallel-finished: true
 
   publish:
     # Upload the dist and whl packages from artifacts to pypi
