@@ -133,7 +133,7 @@ class SubsetsMetricsAdapter:
 
         for setname, distr in self.subsets.items():
             if len(data.index) == 0:
-                df = pd.DataFrame()
+                df = data
             else:
                 df = distr.select(data)
             ds = self.cls.calc_metrics(df, gpi_info=gpi_info)
