@@ -29,15 +29,21 @@
 Module containing utility functions that do not fit into other modules
 '''
 import numpy as np
-import scipy.interpolate as sc_int
-import scipy.optimize as sc_opt
-import scipy.special as sc_special
-
 import functools
 import inspect
 import warnings
 import os
 from pathlib import Path
+import logging
+
+# This logger should track all pytesmo internal stuff
+loglevel = logging.WARNING
+pytesmolog = logging.getLogger('pytesmo')
+ch = logging.StreamHandler()
+ch.setLevel(loglevel)
+formatter = logging.Formatter("%(levelname)s - %(asctime)s: %(message)s")
+ch.setFormatter(formatter)
+pytesmolog.addHandler(ch)
 
 
 def rootdir() -> Path:
