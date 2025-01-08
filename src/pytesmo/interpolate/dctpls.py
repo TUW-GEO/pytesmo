@@ -21,8 +21,7 @@ import sys
 import warnings
 import scipy.optimize as opt
 import numpy as np
-from typing import Literal, Optional, Union, Tuple
-from typing_extensions import Annotated
+from typing import Literal, Optional, Union, Tuple, Annotated
 from dataclasses import dataclass
 from scipy.fftpack import dct, idct
 from scipy.ndimage import distance_transform_edt
