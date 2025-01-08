@@ -38,12 +38,6 @@ class ValueRange:
     max: float
 
 
-exit_flags = {
-    1: 'OK',
-    2: 'less than 2 data samples',
-    3: 'Inner loop did not converge',
-}
-
 logger = pytesmolog
 streamHandler = logging.StreamHandler(sys.stdout)
 formatter = logging.Formatter(
@@ -359,7 +353,7 @@ def smoothn(
         axis: Optional[Union[int, Tuple[int, ...]]] = None,
         data_weights: Optional[np.ndarray] = None,
         smoothOrder: Optional[int] = 2,
-        init_guess=None,
+        init_guess: Optional[np.ndarray] = None,
         isrobust: Optional[bool] = True,
         MaxIter: Optional[int] = 100,
         TolZ: Annotated[float, ValueRange(0.0, 1.0)] = 0.001,
