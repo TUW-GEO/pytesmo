@@ -717,6 +717,7 @@ def smoothn(
                 mask=~isfinite,
                 method="cauchy",
                 simple=True)
+
             logger.debug(f"Wtot={Wtot.shape}")
 
             # --- re-initialize for another iterative weighted process
