@@ -20,6 +20,7 @@ examples_path = os.path.join(rootdir(), 'docs', 'examples')
     "temporal_collocation.ipynb",
     "triple_collocation.ipynb",
     "validation_framework.ipynb",
+    "dct_pls.ipynb",
 ])
 @pytest.mark.skipif(
     not os.path.isdir(examples_path),
