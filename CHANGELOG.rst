@@ -4,7 +4,8 @@ Changelog
 
 Unreleased changes in master
 ============================
--
+- `pytesmo.interpolate` module was added. This contains a python implementation of the DCT-PLS algorithm `(Garcia, 2010) <https://doi.org/10.1016/j.csda.2009.09.020>`_.
+  DCT-PLS docs and examples added (PR `#315 <https://github.com/TUW-GEO/pytesmo/pull/315>`_)
 
 Version 0.17.0, 2024-11-14
 ==========================

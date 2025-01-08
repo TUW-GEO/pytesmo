@@ -7,6 +7,8 @@
    README <readme>
    Introduction <introduction>
 
+   DCT-PLS algorithm <examples/dct_pls>
+
    Validation Framework <examples/validation_framework>
    Temporal Collocation <examples/temporal_collocation>
    Anomaly Computation <examples/anomalies>

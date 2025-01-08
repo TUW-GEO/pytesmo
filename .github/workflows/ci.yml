@@ -18,10 +18,9 @@ jobs:
     strategy:
       matrix:
         # as we build C extension for users to download, we want to include as many python versions
-        # and OS versions as possible (especially windows to create .whl packages,
-        # see step "Create wheel and dist package")
+        # and OS versions as possible
         python-version: ['3.9', '3.10', '3.11', '3.12']
-        os: ["ubuntu-22.04", "windows-2022", "macos-14"]
+        os: ["ubuntu-latest", "windows-latest", "macos-latest"]
     name: py${{ matrix.python-version }}@${{ matrix.os }}
     runs-on: ${{ matrix.os }}
 
