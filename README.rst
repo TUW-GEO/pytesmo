@@ -12,8 +12,8 @@ pytesmo - a Python Toolbox for the Evaluation of Soil Moisture Observations
 .. |pip| image:: https://badge.fury.io/py/pytesmo.svg
     :target: https://badge.fury.io/py/pytesmo
 
-.. |doc| image:: https://readthedocs.org/projects/pytesmo/badge/?version=latest
-   :target: https://pytesmo.readthedocs.io/en/latest/
+.. |doc| image:: https://app.readthedocs.org/projects/tuw-geo-pytesmo/badge/?version=latest
+   :target: https://tuw-geo-pytesmo.readthedocs.io/en/latest/
 
 pytesmo, the Python Toolbox for the Evaluation of Soil Moisture Observations, is
 a package/python toolbox which aims to provide a library that can be used for
@@ -26,7 +26,7 @@ Documentation & Software Citation
 .. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.596422.svg
    :target: https://doi.org/10.5281/zenodo.596422
 
-To see the latest `full documentation <https://pytesmo.readthedocs.io/en/latest/?badge=latest>`_
+To see the latest `full documentation <https://tuw-geo-pytesmo.readthedocs.io/en/latest/>`_
 click on the docs badge at the top.
 
 If you use the software in a publication then please cite it using the Zenodo
