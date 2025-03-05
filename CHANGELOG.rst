@@ -4,6 +4,10 @@ Changelog
 
 Unreleased changes in master
 ============================
+- 
+
+Version 0.18.0, 2025-03-05
+============================
 - Fix bug which caused missing results in validation with "triple collocation" together with stability or instra-annual options (PR `#314 <https://github.com/TUW-GEO/pytesmo/pull/314>`_) 
 - `pytesmo.interpolate` module was added. This contains a python implementation of the DCT-PLS algorithm `(Garcia, 2010) <https://doi.org/10.1016/j.csda.2009.09.020>`_.
   DCT-PLS docs and examples added (PR `#315 <https://github.com/TUW-GEO/pytesmo/pull/315>`_)
