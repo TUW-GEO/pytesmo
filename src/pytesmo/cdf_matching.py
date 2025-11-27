@@ -265,6 +265,8 @@ def _unique_percentile_interpolation(perc, percentiles):
         # we will interpolate the values for 5 and 10 to be between 1 and 2.
         # uniq_ind contains the first index of the non-unique values, so
         # selecting them will return [1, 2] and [0, 20].
+        percentiles = np.asarray(percentiles, dtype = float).ravel()
+        uniq_ind = np.asarray(uniq_ind, dtype = int).ravel()
         new_percentiles = percentiles[uniq_ind]
         new_perc = perc[uniq_ind]
         # However, if we have non-unique indices at the end of the array, e.g.
