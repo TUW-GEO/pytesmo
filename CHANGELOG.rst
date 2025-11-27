@@ -4,7 +4,7 @@ Changelog
 
 Unreleased changes in master
 ============================
-- 
+- Fix bug in ``_unique_percentile_interpolation()`` in ``cdf_matching``, by forcing percentiles to be np.array
 
 Version 0.18.0, 2025-03-05
 ============================
