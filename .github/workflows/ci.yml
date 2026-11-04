@@ -158,7 +158,7 @@ jobs:
       - name: Display downloaded files
         run: ls -aR
       - name: Upload to PyPI
-        uses: pypa/gh-action-pypi-publish@v1.13.0
+        uses: pypa/gh-action-pypi-publish@v1.14.3
         with:
           skip_existing: true
           verbose: true
